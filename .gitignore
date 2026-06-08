@@ -1,0 +1,50 @@
+# Botte Secrète .gitignore
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+
+# Node
+node_modules/
+*.min.js
+*.min.css
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Hailo models (large binaries)
+*.hef
+*.hn
+
+# ComfyUI models (large binaries)
+*.safetensors
+*.ckpt
+*.bin
+
+# Bonsai models
+*.gguf
+*.onnx
+
+# Reports (generated)
+reports/
+/tmp/
+
+# Secrets
+*.env.local
+*.secret
+
+# Large data files
+*.sqlite
+*.db
