@@ -10,7 +10,7 @@ class DeadCodeAnalyzer:
     def __init__(self, min_confidence: float = 0.8):
         self.min_confidence = min_confidence
 
-# DEAD CODE (Porthos):     def analyze(self, scan: ScanResult) -> list:
+    def analyze(self, scan: ScanResult) -> list:
         findings = []
         definitions: dict[str, list[tuple[str, Symbol]]] = defaultdict(list)
         usages: dict[str, int] = defaultdict(int)

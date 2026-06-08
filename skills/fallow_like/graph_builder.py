@@ -11,7 +11,7 @@ class DependencyGraph:
         self.graph = nx.DiGraph()
         self._built = False
 
-# DEAD CODE (Porthos):     def build(self, scan: ScanResult) -> nx.DiGraph:
+    def build(self, scan: ScanResult) -> nx.DiGraph:
         for file_ast in scan.files:
             self.graph.add_node(
                 file_ast.path,

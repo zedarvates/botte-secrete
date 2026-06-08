@@ -34,6 +34,6 @@ class FallowConfig(BaseSettings):
     runtime_data_path: Optional[Path] = None
     history_db_path: Optional[Path] = None
 
-# DEAD CODE (Porthos):     class Config:
+    class Config:
         env_prefix = "FALLOW_"
         env_file = ".env"

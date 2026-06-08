@@ -31,13 +31,13 @@ class SecretsAnalyzer:
     EXCLUDE_PATTERNS = [
         'example', 'placeholder', 'your_', 'my_', 'test_',
         r'xxx+', r'0000', r'1234', r'abcd', 'fake', 'dummy',
-        'process\.env', 'os\.environ', 'config\[', 'getenv',
-        'ENV\[', 'Settings\.', '\.env\.',
+        r'process\.env', r'os\.environ', r'config\[', 'getenv',
+        r'ENV\[', r'Settings\.', r'\.env\.',
     ]
 
     EXCLUDE_FILES = ['.env.example', '.env.template', '.env.sample', 'test', 'spec', 'mock']
 
-# DEAD CODE (Porthos):     def analyze(self, scan: ScanResult) -> list:
+    def analyze(self, scan: ScanResult) -> list:
         findings = []
 
         for file_ast in scan.files:

@@ -16,7 +16,7 @@ class RuntimeData(BaseModel):
 
 class RuntimeIngestion:
     @staticmethod
-# DEAD CODE (Porthos):     def from_json(path: Path) -> RuntimeData:
+    def from_json(path: Path) -> RuntimeData:
         data = json.loads(path.read_text())
         return RuntimeData(**data)
 

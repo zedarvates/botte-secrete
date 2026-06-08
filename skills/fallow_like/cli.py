@@ -115,7 +115,7 @@ def run_analysis(config: FallowConfig) -> AnalysisResult:
     return result
 
 
-# DEAD CODE (Porthos): def _format_text(result: AnalysisResult) -> str:
+def _format_text(result: AnalysisResult) -> str:
     from rich.text import Text
     t = Text()
     t.append("🔬 Fallow-Like Analysis\n\n", style="bold")

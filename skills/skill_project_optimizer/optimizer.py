@@ -68,7 +68,7 @@ SKILL_MATCHING_RULES = [
 
 
 @dataclass
-# DEAD CODE (Porthos): class OptimizationResult:
+class OptimizationResult:
     """Result of skill optimization for a project."""
     profile: ProjectProfile = field(default_factory=ProjectProfile)
     matched_skills: list[tuple[SkillInfo, str]] = field(default_factory=list)  # (skill, priority)

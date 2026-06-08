@@ -24,7 +24,7 @@ class ComplexityAnalyzer:
     def __init__(self, threshold: int = 10):
         self.threshold = threshold
 
-# DEAD CODE (Porthos):     def analyze(self, scan: ScanResult) -> list:
+    def analyze(self, scan: ScanResult) -> list:
         findings = []
 
         for file_ast in scan.files:

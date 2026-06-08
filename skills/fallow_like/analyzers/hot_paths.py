@@ -10,7 +10,7 @@ class HotPathAnalyzer:
     def __init__(self, min_calls: int = 100):
         self.min_calls = min_calls
 
-# DEAD CODE (Porthos):     def analyze(self, graph: DependencyGraph, runtime: RuntimeData | None = None) -> list:
+    def analyze(self, graph: DependencyGraph, runtime: RuntimeData | None = None) -> list:
         findings = []
         hot_paths = graph.hot_paths(call_counts=runtime.call_counts if runtime else None)
 

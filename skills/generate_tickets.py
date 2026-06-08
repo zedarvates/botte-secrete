@@ -32,7 +32,10 @@ class Ticket:
         self.file = finding.get("f", finding.get("file", "unknown"))
         self.type = finding.get("t", finding.get("type", "unknown"))
         self.severity = finding.get("s", finding.get("severity", "err"))
-        self.title = finding.get("d", finding.get("description", "No description"))
+        self.title = finding.get("d", finding.get("description", finding.get("message", "No description")))
+        # Truncate verbose repr strings
+        if len(self.title) > 120 or "severity=<" in self.title:
+            self.title = finding.get("message", finding.get("fix_hint", "No description"))[:120]
         self.project = project
 
         # Priority mapping

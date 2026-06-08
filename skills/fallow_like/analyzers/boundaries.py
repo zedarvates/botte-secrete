@@ -23,7 +23,7 @@ class BoundaryAnalyzer:
         "config": [],
     }
 
-# DEAD CODE (Porthos):     def analyze(self, scan: ScanResult) -> list:
+    def analyze(self, scan: ScanResult) -> list:
         findings = []
         file_layers: dict[str, str] = {}
 

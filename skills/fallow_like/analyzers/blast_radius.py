@@ -9,7 +9,7 @@ class BlastRadiusAnalyzer:
     def __init__(self, max_depth: int = 5):
         self.max_depth = max_depth
 
-# DEAD CODE (Porthos):     def analyze(self, graph: DependencyGraph, changed_files: list[str] | None = None) -> list:
+    def analyze(self, graph: DependencyGraph, changed_files: list[str] | None = None) -> list:
         findings = []
 
         if not changed_files:

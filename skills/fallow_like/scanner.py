@@ -92,7 +92,7 @@ class ProjectScanner:
                 return True
         return False
 
-# DEAD CODE (Porthos):     def scan(self) -> ScanResult:
+    def scan(self) -> ScanResult:
         result = ScanResult()
         lang_counts: dict[str, int] = {}
         total_lines = 0

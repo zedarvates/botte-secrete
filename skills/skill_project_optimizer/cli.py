@@ -89,7 +89,7 @@ def profile(
 
 
 @app.command()
-# DEAD CODE (Porthos): def optimize(
+def optimize(
     path: Path = typer.Argument(".", help="Project path"),
     output: Path = typer.Option(None, "--output", "-o", help="Output .skills-profile path"),
     skills_dir: str = typer.Option("~/.hermes/skills", "--skills-dir", "-d"),

@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
-"""Porthos Audit Script — Run fallow-like analysis on a project."""
+"""Porthos Audit Script — Compact JSON output, cache-aware."""
 
-import sys
-import json
-import datetime
+import sys, json
+from datetime import datetime
 from pathlib import Path
 
-# Setup path
 REPO_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
@@ -18,6 +16,7 @@ from skills.fallow_like.analyzers.secrets import SecretsAnalyzer
 from skills.fallow_like.analyzers.boundaries import BoundaryAnalyzer
 from skills.fallow_like.analyzers.feature_flags import FeatureFlagAnalyzer
 from skills.fallow_like.health import calculate_health
+from skills.cache import ProjectCache
 
 
 def main():
@@ -31,121 +30,88 @@ def main():
 
     print(f"🔬 Porthos — Scanning {project_path}...")
 
-    # Scan
+    # Cache: check if already scanned
+    cache = ProjectCache(project_path)
+    cached = cache.get("scan-result")
+    if cached:
+        print("  📦 Using cached scan...")
+
     scanner = ProjectScanner(
         project_path,
-        ignore_patterns=[
-            ".git/", "node_modules/", "__pycache__/", ".venv/", "venv/",
-            "*.min.js", ".next/", "coverage/", "dist/", "build/", ".mypy_cache/",
-        ],
+        ignore_patterns=[".git/","node_modules/","__pycache__/",".venv/","venv/",
+                        "*.min.js",".next/","coverage/","dist/","build/",".mypy_cache/"],
     )
     scan_result = scanner.scan()
+    cache.set("scan-result", {"files": len(scan_result.files), "lines": scan_result.stats.get("total_lines", 0)})
     print(f"  Scanned {len(scan_result.files)} files, {scan_result.stats['total_lines']} lines")
 
     # Run analyzers
     print("  Running analyzers...")
     dead_code = DeadCodeAnalyzer().analyze(scan_result)
-    print(f"    Dead code: {len(dead_code)}")
-
     duplication = DuplicationAnalyzer().analyze(scan_result)
-    print(f"    Duplication: {len(duplication)}")
-
     complexity = ComplexityAnalyzer().analyze(scan_result)
-    print(f"    Complexity: {len(complexity)}")
-
     secrets = SecretsAnalyzer().analyze(scan_result)
-    print(f"    Secrets: {len(secrets)}")
-
     boundaries = BoundaryAnalyzer().analyze(scan_result)
-    print(f"    Boundaries: {len(boundaries)}")
-
     feature_flags = FeatureFlagAnalyzer().analyze(scan_result)
-    print(f"    Feature flags: {len(feature_flags)}")
 
-    # Health (pass analyzer results)
-    health = calculate_health(
-        scan_result,
-        dead_code=dead_code,
-        duplication=duplication,
-        complexity=complexity,
-        secrets=secrets,
-        boundaries=boundaries,
-        feature_flags=feature_flags,
-    )
+    health = calculate_health(scan_result, dead_code=dead_code, duplication=duplication,
+                              complexity=complexity, secrets=secrets, boundaries=boundaries,
+                              feature_flags=feature_flags)
 
-    # Compile report
+    # Build compact findings
+    def to_fn(items, sev, typ):
+        return [{"f": f"{i.file}:{i.line}" if hasattr(i,'line') else i.file,
+                 "s": sev, "t": typ,
+                 "d": (i.description[:80] if hasattr(i,'description') else str(i))}
+                for i in items]
+
+    findings = []
+    findings.extend(to_fn(dead_code, "err", "dead"))
+    findings.extend(to_fn(duplication, "warn", "dup"))
+    findings.extend(to_fn([c for c in complexity if c.complexity > 15], "err", "cmp"))
+    findings.extend(to_fn([c for c in complexity if 10 < c.complexity <= 15], "warn", "cmp"))
+    findings.extend(to_fn(secrets, "crit" if any(hasattr(s,'severity') and s.severity=='critical' for s in secrets) else "err", "sec"))
+    findings.extend(to_fn(boundaries, "err", "bnd"))
+    findings.extend(to_fn(feature_flags, "warn", "flg"))
+
+    # Compact report
     report = {
-        "project": project_path,
-        "date": datetime.datetime.now().isoformat(),
-        "auditor": "Porthos",
-        "files_analyzed": len(scan_result.files),
-        "total_lines": scan_result.stats["total_lines"],
-        "health_score": health.score,
-        "health_grade": health.grade,
-        "findings": {"critical": [], "error": [], "warning": [], "info": [], "total": 0},
-        "dead_code": [dc.model_dump() for dc in dead_code],
-        "duplication": [d.model_dump() for d in duplication],
-        "complexity": [c.model_dump() for c in complexity],
-        "secrets": [s.model_dump() for s in secrets],
-        "boundaries": [b.model_dump() for b in boundaries],
-        "feature_flags": [ff.model_dump() for ff in feature_flags],
-        "recommendations": [],
+        "h": {"s": health.score, "g": health.grade},
+        "st": {"f": len(scan_result.files), "l": scan_result.stats.get("total_lines", 0)},
+        "fn": findings,
+        "by": {"dead": len(dead_code), "dup": len(duplication), "cmp": len(complexity),
+               "sec": len(secrets), "bnd": len(boundaries), "flg": len(feature_flags)},
+        "rc": [],
     }
 
-    # Categorize findings
-    all_findings = []
-    all_findings.extend([{**dc.model_dump(), "severity": "error", "type": "dead_code"} for dc in dead_code])
-    all_findings.extend([{**d.model_dump(), "severity": "warning", "type": "duplication"} for d in duplication])
-    all_findings.extend([{**c.model_dump(), "severity": "warning" if c.complexity > 10 else "info", "type": "complexity"} for c in complexity])
-    all_findings.extend([{**s.model_dump(), "severity": s.severity, "type": "secret"} for s in secrets])
-    all_findings.extend([{**b.model_dump(), "severity": "error", "type": "boundary"} for b in boundaries])
-    all_findings.extend([{**ff.model_dump(), "severity": "info", "type": "feature_flag"} for ff in feature_flags])
-
-    seen = set()
-    for f in all_findings:
-        sev = f.get("severity", "info")
-        key = f.get("file", "") + f.get("description", "")
-        if key in seen:
-            continue
-        seen.add(key)
-
-        if sev in ("critical",):
-            report["findings"]["critical"].append(f)
-        elif sev in ("error",):
-            report["findings"]["error"].append(f)
-        elif sev == "warning":
-            report["findings"]["warning"].append(f)
-        else:
-            report["findings"]["info"].append(f)
-        report["findings"]["total"] += 1
-
-    # Recommendations
+    # Recommendations (prioritized)
     if secrets:
-        report["recommendations"].append({"priority": "CRITIQUE", "description": f"Corriger {len(secrets)} expositions de secrets"})
+        report["rc"].append({"p": "P0", "d": f"Corriger {len(secrets)} expositions de secrets"})
     if dead_code:
-        report["recommendations"].append({"priority": "HAUTE", "description": f"Supprimer {len(dead_code)} symboles morts"})
+        report["rc"].append({"p": "P1", "d": f"Supprimer {len(dead_code)} symboles morts"})
     if duplication:
-        report["recommendations"].append({"priority": "HAUTE", "description": f"Réduire {len(duplication)} duplications"})
+        report["rc"].append({"p": "P1", "d": f"Réduire {len(duplication)} duplications"})
     if boundaries:
-        report["recommendations"].append({"priority": "MOYEN", "description": f"Réparer {len(boundaries)} violations architecture"})
-    high_complexity = [c for c in complexity if c.complexity > 15]
-    if high_complexity:
-        report["recommendations"].append({"priority": "MOYEN", "description": f"Refactoriser {len(high_complexity)} fonctions trop complexes (CC>15)"})
+        report["rc"].append({"p": "P1", "d": f"Réparer {len(boundaries)} violations architecture"})
+    high_cmp = [c for c in complexity if c.complexity > 15]
+    if high_cmp:
+        report["rc"].append({"p": "P2", "d": f"Refactoriser {len(high_cmp)} fonctions complexes"})
     stale_ff = [ff for ff in feature_flags if ff.stale]
     if stale_ff:
-        report["recommendations"].append({"priority": "BAS", "description": f"Nettoyer {len(stale_ff)} feature flags stale"})
+        report["rc"].append({"p": "P2", "d": f"Nettoyer {len(stale_ff)} feature flags stale"})
 
-    # Save
-    output_base = output_dir / "audit-report"
-    with open(str(output_base) + ".json", "w") as f:
-        json.dump(report, f, indent=2, default=str)
+    # Save & cache
+    out = output_dir / "audit-report.json"
+    out.write_text(json.dumps(report, indent=2, default=str))
+    cache.set_audit_report(report)
 
+    # Summary
+    crit = sum(1 for f in findings if f["s"] == "crit")
+    err = sum(1 for f in findings if f["s"] == "err")
+    warn = sum(1 for f in findings if f["s"] == "warn")
     print(f"\n📊 Health: {health.score}/100 ({health.grade})")
-    print(f"📊 Findings: {report['findings']['total']}")
-    print(f"   Error: {len(report['findings']['error'])}")
-    print(f"   Warning: {len(report['findings']['warning'])}")
-    print(f"   Info: {len(report['findings']['info'])}")
-    print(f"\n✅ Report saved to {output_base}.json")
+    print(f"📊 Findings: {len(findings)} (🔴{crit} 🟠{err} 🟡{warn} ℹ️{len(findings)-crit-err-warn})")
+    print(f"\n✅ Report saved to {out}")
 
 
 if __name__ == "__main__":

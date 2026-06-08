@@ -21,7 +21,7 @@ class FeatureFlagAnalyzer:
         (r'DEPRECATED_\w+', "deprecated"),
     ]
 
-# DEAD CODE (Porthos):     def analyze(self, scan: ScanResult) -> list:
+    def analyze(self, scan: ScanResult) -> list:
         findings = []
         flag_locations: dict[str, list[str]] = {}
 

@@ -8,7 +8,7 @@ from skills.fallow_like.config import FallowConfig
 from skills.fallow_like.cli import run_analysis
 
 
-# DEAD CODE (Porthos): async def handle_request(request: dict) -> dict:
+async def handle_request(request: dict) -> dict:
     method = request.get("method", "")
     params = request.get("params", {})
     req_id = request.get("id")

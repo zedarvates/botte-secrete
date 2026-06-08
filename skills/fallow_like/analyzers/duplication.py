@@ -11,7 +11,7 @@ class DuplicationAnalyzer:
         self.min_lines = min_lines
         self.min_tokens = min_tokens
 
-# DEAD CODE (Porthos):     def analyze(self, scan: ScanResult) -> list:
+    def analyze(self, scan: ScanResult) -> list:
         findings = []
         file_lines: dict[str, list[str]] = {}
         for file_ast in scan.files:

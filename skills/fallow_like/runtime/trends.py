@@ -8,7 +8,7 @@ import json
 import sqlite3
 
 
-# DEAD CODE (Porthos): class TrendPoint(BaseModel):
+class TrendPoint(BaseModel):
     timestamp: str
     score: int
     findings_count: int

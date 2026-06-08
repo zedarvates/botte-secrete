@@ -48,3 +48,4 @@ reports/
 # Large data files
 *.sqlite
 *.db
+.botte-cache/

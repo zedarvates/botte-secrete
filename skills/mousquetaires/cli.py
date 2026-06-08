@@ -23,7 +23,7 @@ app = typer.Typer(
 SCRIPTS_DIR = Path(__file__).parent / "scripts"
 
 
-# DEAD CODE (Porthos): def run_script(script_name: str, args: list[str], timeout: int = 120) -> subprocess.CompletedProcess:
+def run_script(script_name: str, args: list[str], timeout: int = 120) -> subprocess.CompletedProcess:
     """Run a Python script from the scripts directory."""
     script_path = SCRIPTS_DIR / script_name
     if not script_path.exists():

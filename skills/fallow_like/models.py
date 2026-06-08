@@ -14,7 +14,7 @@ class Severity(str, Enum):
     CRITICAL = "critical"
 
 
-# DEAD CODE (Porthos): class Grade(str, Enum):
+class Grade(str, Enum):
     A = "A"
     B = "B"
     C = "C"
