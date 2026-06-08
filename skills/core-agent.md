@@ -75,6 +75,43 @@ Réponds avec les numéros ou "auto"
 9. **Ne pas répéter le rapport précédent** — Référencer, pas copier
 10. **Commits atomiques** — Un fix = un commit, message court
 
+## 💾 Project Cache (`.botte-cache/`)
+
+**Premier agent scanne → sauvegarde. Agents suivants lisent le cache.**
+
+```python
+from skills.cache import ProjectCache
+cache = ProjectCache(project_root)
+scan = cache.get_or_scan(scanner_fn)  # Scan si pas de cache, load sinon
+audit = cache.get_audit_report()      # Lire l'audit précédent
+cache.set_audit_report(report)        # Sauvegarder pour les suivants
+```
+
+Cache invalide après 24h ou si le code a changé (git hash).
+
+## 🎯 Token Budget (hard limits)
+
+Chaque agent a un budget max. Si dépassé → tronquer, pas continuer.
+
+| Agent | Budget max (tokens) | Si dépassé |
+|-------|---------------------|------------|
+| Porthos | 2000 | Tronquer findings >10 |
+| d'Artagnan | 1500 | Reporter fixes non appliqués |
+| Aramis | 2500 | Prioriser P0 uniquement |
+| Athos | 1000 | Synthèse seule, liens rapports |
+| Rochefort | 1500 | Top 5 faux négatifs |
+| Milady | 1200 | Top 5 régressions |
+| Cte Wardes | 1200 | Top 5 sur-optimisations |
+| Le Cardinal | 800 | Verdict + top 3 actions |
+
+## ✂️ Output Truncation Rules
+
+Si la sortie dépasse la limite, appliquer dans cet ordre :
+1. **Grouper par fichier** — `core.py:42,88,120` au lieu de 3 entrées séparées
+2. **Top N** — Garder les N plus sévères, suffixer `+{reste} more`
+3. **Supprimer les champs vides** — JSON sans `[]` ni `""` inutiles
+4. **Abréger les descriptions** — Max 80 chars par description
+
 ## ✅ Vérification Rules
 
 1. **Avant d'écrire du code** — Load writing-plans → plan → delegate
