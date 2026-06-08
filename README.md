@@ -1,126 +1,164 @@
-# 🧦 Botte Secrète — Token Efficiency Toolkit
+# 🧦 Botte Secrète — Multi-Agent Token Optimization Platform
 
-> *"La meilleure optimisation est la soustraction."* — Karpathy
+> *"Tous pour un, un pour tous."* — Les Trois Mousquetaires
 
-A unified toolkit for reducing AI token consumption, improving code quality,
-and running intelligent agents efficiently on local hardware.
+A multi-agent pipeline for code audit, automated fixes, token optimization,
+and adversarial red teaming — all built to run efficiently on local hardware.
 
-## Why "Botte Secrète"?
+## 🎯 What It Does
 
-In French, "botte secrète" means "secret weapon" — the hidden technique that
-gives you an edge. This repo is exactly that: a collection of proven patterns,
-rules, and tools that dramatically reduce token usage while improving output
-quality.
+1. **Audit** — Static analysis (dead code, duplication, complexity, secrets, boundaries)
+2. **Fix** — Automated corrections with verification
+3. **Optimize** — Per-project skill filtering, token reduction
+4. **Red Team** — Adversarial agents that challenge the Blue Team
 
-## What's Inside
+## ⚔️ Architecture
 
-| Module | Purpose | Token Impact |
-|--------|---------|-------------|
-| `code-rules` | Coding standards: stdlib-first, flat architecture, data-oriented | -30% context |
-| `karpathy-guidelines` | 4 principles to reduce LLM errors in coding | -40% rework |
-| `fallow` | Static analysis: dead code, duplication, cycles | -20% codebase bloat |
-| `simplify-code` | Parallel 3-agent code review & cleanup | -25% post-edit tokens |
-| `understand-anything` | Codebase knowledge graph for navigation | -50% exploration tokens |
-| `dynamic-workflows` | 6 workflow patterns (classify, fan-out, adversarial, etc.) | -35% agent turns |
-| `hermes-second-brain` | Karpathy-pattern second brain with Qdrant | -60% repeated context |
-| `rtk` | Terminal command rewriting & compaction | -40% terminal output tokens |
-| `hailo-vision` | Edge AI vision (OCR, classification, detection) | -100% cloud vision API |
-| `comfyui` | Local image generation | -100% cloud generation API |
+```
+                    👑 Athos (Orchestrator)
+                    ┌─────────┼─────────┐
+                    │         │         │
+              🥊 Porthos   📿 Aramis   ⚔️ d'Artagnan
+              (Audit) ∥   (Optimize)   (Fix)
+                    └─────────┼─────────┘
+                              │
+                    👑 Le Cardinal (Red Team)
+                    ┌─────────┼─────────┐
+                    │         │         │
+              🗡️ Rochefort  🔪 Milady  🕯️ Cte Wardes
+           (Counter-Audit) (Counter-Fix)(Counter-Optimize)
+```
 
-## Hardware Acceleration
+Blue Team: **Porthos ∥ Aramis → d'Artagnan → Athos** (parallel audit+optimize)
+Red Team: **Rochefort ∥ Milady ∥ Cte Wardes → Le Cardinal** (parallel counter-attacks)
 
-### Hailo-8 (EUREKAI 192.168.1.47)
-- **YOLOv8m** — object detection at 30+ FPS
-- **ResNet-18** — image classification
-- **PaddleOCR v5** — text extraction (detection + recognition)
-- **SSD MobileNet v1** — lightweight detection
-- **NanoDet RepVGG** — nano detection
-- Zero cloud API costs, runs on 15W TDP
+## 📦 Modules
 
-### ComfyUI (EUREKAI 192.168.1.47:8188)
-- Local Stable Diffusion pipeline
-- API-driven workflow execution
-- Zero cloud generation costs
+| Module | Purpose | Impact |
+|--------|---------|--------|
+| `core-agent.md` | Shared rules: botte, anti-patterns, clarification, budgets | -57% pre-prompts |
+| `mousquetaires/` | Blue Team — 4 agents (audit, fix, optimize, orchestrate) | Automated pipeline |
+| `cardinal/` | Red Team — 4 adversarial agents (counter-audit, counter-fix, counter-optimize) | Quality gate |
+| `clarification/` | Proactive questions — max 5, silence=auto | -80% wasted work |
+| `cache/` | `.botte-cache/` — avoid re-scanning between agents | -50% re-scan tokens |
+| `loader/` | Pre-prompt loader for `delegate_task` | Correct agent context |
+| `fallow_like/` | 8 static analyzers (dead code, dup, complexity, secrets, boundaries, etc.) | Code quality |
+| `skill_project_optimizer/` | Per-project skill filtering, token profiling | -73% skill tokens |
+| `botte` | Terminal wrapper — compresses command output | -60-99% terminal tokens |
+| `code-rules/` | Coding standards: stdlib-first, flat architecture | -30% context |
+| `simplify-code/` | Parallel 3-agent code review | -25% post-edit tokens |
+| `understand-anything/` | Codebase knowledge graph | -50% exploration |
 
-### Bonsai Image (local WebGPU)
-- Ternary 4B image model
-- Runs on AMD Radeon 780M via WebGPU
-- Offline-ready after first download
-
-## Quick Start
+## 🚀 Quick Start
 
 ```bash
-# Clone
 git clone https://github.com/zedarvates/botte-secrete.git
 cd botte-secrete
 
-# Install shared dependencies
-pip install -r requirements.txt  # (mostly stdlib, minimal deps)
+# Full Blue Team pipeline
+python3 -m skills.mousquetaires.cli run ~/your-project --output ./reports
 
-# Run a code audit
-./scripts/audit.sh ~/your-project
+# Blue + Red Team (adversarial)
+python3 -m skills.mousquetaires.cli run ~/your-project --output ./blue
+python3 -m skills.cardinal.cli run ~/your-project --blue-reports ./blue --output ./red
+python3 -m skills.cardinal.cli confront --blue ./blue --red ./red
 
-# Generate a knowledge graph
-python3 scripts/knowledge_graph.py ~/your-project
+# Token optimization only
+python3 -m skills.skill_project_optimizer.cli optimize ~/your-project
 
-# Run Karpathy review on a diff
-python3 skills/karpathy-guidelines/scripts/karpathy-review.py --diff changes.patch
+# Code audit only
+python3 skills/mousquetaires/scripts/porthos_audit.py ~/your-project ./audit-output
 
-# Check Hailo-8 status
-python3 scripts/hailo_status.py
+# View token savings
+botte gain
 ```
 
-## Architecture
-
-```
-botte-secrete/
-├── docs/                    # Documentation (English)
-├── scripts/                 # Shared scripts & entry points
-├── skills/                  # Individual skill modules
-│   ├── code-rules/          # Coding standards & rules
-│   ├── karpathy-guidelines/ # LLM anti-patterns
-│   ├── fallow/              # Static analysis (JS/TS)
-│   ├── simplify-code/       # Parallel review
-│   ├── understand-anything/ # Knowledge graph
-│   ├── dynamic-workflows/   # 6 workflow patterns
-│   ├── hermes-second-brain/ # Second brain (Qdrant)
-│   ├── hailo-vision/        # Hailo-8 vision pipeline
-│   ├── comfyui/             # ComfyUI integration
-│   └── rtk/                 # Terminal token saver
-├── configs/                 # Shared configurations
-└── workflows/               # Reusable workflow definitions
-```
-
-## Token Savings Breakdown
+## 💰 Token Savings
 
 | Technique | Savings | How |
 |-----------|---------|-----|
-| stdlib-first coding | 30% | No framework boilerplate in context |
-| Karpathy P1 (think first) | 40% | Less rework from misunderstood requirements |
-| Fallow dead code removal | 20% | Smaller codebase = less context |
-| Knowledge graph navigation | 50% | Targeted file reading vs full scan |
-| Second brain (Qdrant) | 60% | No repeated context injection |
-| RTK terminal compaction | 40% | Shorter terminal outputs |
-| Hailo-8 local vision | 100% | Zero cloud API tokens for OCR/detection |
-| ComfyUI local generation | 100% | Zero cloud API tokens for images |
-| **Combined potential** | **~70-80%** | **Cumulative effect across pipeline** |
+| Shared Core Prompt | 57% | DRY: core loaded once, 8 deltas vs 8 full copies |
+| JSON Output Formats | 75-80% | Compact schemas vs verbose markdown |
+| Project Cache | 50% | `.botte-cache/` avoids re-scanning |
+| Per-Project Skill Filtering | 73% | `.skills-profile` excludes irrelevant skills |
+| botte Terminal Wrapper | 60-99% | Compressed command output |
+| Token Budget Enforcer | Qual. | Hard limits per agent (800-2500 tok) |
+| **Combined** | **~65%** | **Pipeline-wide reduction** |
 
-## Roadmap
+## 🎯 Token Budgets
 
-- [x] Initial structure
-- [ ] Consolidate all skills into unified repo
-- [ ] RTK terminal compactor v2
-- [ ] Hailo-8 vision pipeline scripts
-- [ ] ComfyUI workflow templates
-- [ ] Knowledge graph auto-update hooks
-- [ ] CI/CD integration (pre-commit hooks)
-- [ ] Dashboard for token savings metrics
-- [ ] Multi-language support (FR/EN/JP)
+| Agent | Budget | Strategy if exceeded |
+|-------|--------|---------------------|
+| Porthos | 2000 tok | Truncate findings >10 |
+| d'Artagnan | 1500 tok | Report skipped fixes |
+| Aramis | 2500 tok | P0 actions only |
+| Athos | 1000 tok | Synthesis + links |
+| Rochefort | 1500 tok | Top 5 false negatives |
+| Milady | 1200 tok | Top 5 regressions |
+| Cte Wardes | 1200 tok | Top 5 over-optimizations |
+| Le Cardinal | 800 tok | Verdict + top 3 actions |
 
-## License
+## 🛠️ botte — Token-Optimized Terminal
+
+```bash
+botte cargo build       # -80%
+botte cargo test        # -90%
+botte git status        # -59%
+botte git diff          # -80%
+botte pnpm install      # -90%
+botte docker ps         # -85%
+botte gain              # View savings
+botte discover          # Find missed optimization opportunities
+```
+
+## 📂 Project Structure
+
+```
+botte-secrete/
+├── skills/
+│   ├── core-agent.md              # Shared rules (loaded once for all agents)
+│   ├── cache/                     # .botte-cache/ system
+│   ├── clarification/             # Proactive question engine
+│   ├── loader/                    # Pre-prompt loader for delegate_task
+│   ├── fallow_like/               # 8 static analyzers
+│   ├── skill_project_optimizer/   # Per-project token optimizer
+│   ├── mousquetaires/             # Blue Team (4 agents)
+│   │   ├── prompts/               # Agent pre-prompts (deltas)
+│   │   ├── scripts/               # Agent execution scripts
+│   │   ├── templates/             # Report templates
+│   │   └── cli.py                 # CLI (typer + rich)
+│   └── cardinal/                  # Red Team (4 agents)
+│       ├── prompts/               # Adversarial pre-prompts
+│       └── scripts/               # Confrontation scripts
+├── docs/
+│   ├── plans/                     # Architecture design docs
+│   └── schemas/                   # JSON report schemas
+├── scripts/
+│   └── botte                      # Token-optimized terminal wrapper
+└── README.md
+```
+
+## 🔬 Hardware Acceleration
+
+- **Hailo-8** (EUREKAI 192.168.1.47) — YOLOv8, ResNet-18, PaddleOCR
+- **ComfyUI** (EUREKAI :8188) — Local Stable Diffusion
+- **Bonsai Image** — WebGPU ternary model
+- Zero cloud API costs for vision/generation
+
+## 🗺️ Roadmap
+
+- [x] P0: Shared core + stripped prompts + JSON schemas (-57% prompts)
+- [x] P1: Project cache + parallel pipeline + token budgets (-50% re-scans)
+- [x] P2: Output truncation + smart pre-fetching
+- [x] P3: Pre-prompt loader + consolidated README + agent diff language
+- [ ] P4: Real end-to-end test suite
+- [ ] P5: CI/CD integration (pre-commit hooks)
+- [ ] P6: Dashboard for token savings metrics
+
+## 📜 License
 
 MIT — Use freely, improve constantly.
 
-## Author
+## 👤 Author
 
 Sylvain Galliez ([@zedarvates](https://github.com/zedarvates))
