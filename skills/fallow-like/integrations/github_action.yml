@@ -1,0 +1,68 @@
+# .github/workflows/fallow-like.yml
+name: Fallow-Like Analysis
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main]
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          pip install tree-sitter tree-sitter-python tree-sitter-javascript \
+            tree-sitter-typescript tree-sitter-rust tree-sitter-go \
+            tree-sitter-java tree-sitter-c tree-sitter-cpp \
+            networkx typer rich pydantic pydantic-settings
+
+      - name: Run analysis
+        run: |
+          python -m skills.fallow_like.cli analyze . \
+            --format json \
+            --output fallow-report.json \
+            --history .fallow-history.db
+
+      - name: Run SARIF output
+        run: |
+          python -m skills.fallow-like.cli analyze . \
+            --format sarif \
+            --output fallow-report.sarif
+
+      - name: Upload SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: fallow-report.sarif
+
+      - name: Comment PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const report = JSON.parse(fs.readFileSync('fallow-report.json', 'utf8'));
+            const body = `## 🔬 Fallow-Like Analysis\n\n| Metric | Value |\n|--------|-------|\n| Health | ${report.health.score}/100 (${report.health.grade}) |\n| Files | ${report.stats.total_files} |\n| Findings | ${report.findings.length} |\n| Secrets | ${report.secrets.length} |\n| Dead Code | ${report.dead_code.length} |\n`;
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body,
+            });
+
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: fallow-report
+          path: fallow-report.json
