@@ -25,7 +25,7 @@ class SkillInfo:
     model: str = ""
 
     @property
-    def token_cost(self) -> int:
+# DEAD CODE (Porthos):     def token_cost(self) -> int:
         """Estimated token cost when loaded (chars / 4 is rough estimate)."""
         return self.estimated_tokens
 

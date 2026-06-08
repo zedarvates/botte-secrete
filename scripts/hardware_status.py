@@ -8,7 +8,7 @@ import urllib.request
 import sys
 
 
-def check_hailo(host="192.168.1.47", port=8767):
+# DEAD CODE (Porthos): def check_hailo(host="192.168.1.47", port=8767):
     """Check Hailo-8 device status."""
     base = f"http://{host}:{port}"
     

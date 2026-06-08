@@ -17,7 +17,7 @@ import os, sys, json, subprocess, tempfile
 from pathlib import Path
 
 
-def check_tool(name: str, install_cmd: str) -> bool:
+# DEAD CODE (Porthos): def check_tool(name: str, install_cmd: str) -> bool:
     """Check if a tool is installed, return True/False."""
     try:
         subprocess.run([name, "--version"], capture_output=True, timeout=5)

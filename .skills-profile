@@ -5,7 +5,7 @@
 project:
   name: "botte-secrete"
   type: "python"
-  languages: ['.py', '.md', '.sh', '.env', '.yml'],
+  languages: ['.py', '.md', '.sh', '', '.env'],
   frameworks: [],
 
 skills:
@@ -41,13 +41,13 @@ skills:
     - gardemanger-producer
     - karpathy-guidelines
     - understand-diff
+    - fallow
     - understand-explain
     - understand-onboard
     - turboquant
-    - understand-chat
 
 # Token savings
 stats:
-  total_available: 76606
-  total_loaded: 20645
-  savings_percent: 73%
+  total_available: 78105
+  total_loaded: 21745
+  savings_percent: 72%

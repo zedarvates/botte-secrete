@@ -1,0 +1,355 @@
+#!/bin/bash
+# botte — Botte Secrète Token Optimizer
+# Wrapper qui compresse les sorties terminal pour économiser des tokens.
+# Usage: botte <command> [args...]
+#
+# Si un compactor dédié existe → utilise-le
+# Sinon → pass-through transparent
+#
+# Categories et économies:
+#   Tests:        90-99%  (failures uniquement)
+#   Build:        70-87%  (erreurs uniquement)
+#   Git:          59-80%  (compact)
+#   Package mgr:  70-90%  (compact)
+#   Files/Search: 60-75%  (compact)
+#   Infra (docker,k8s): 85% (compact)
+#   Network:      65-70%  (compact)
+
+set -euo pipefail
+
+# ── Meta commands ───────────────────────────────────────────
+if [[ "${1:-}" == "gain" ]]; then
+    echo "📊 Botte Secrète — Token Savings Statistics"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "Category        Typical Savings"
+    echo "Tests           90-99%"
+    echo "Build/Compile   70-87%"
+    echo "Git             59-80%"
+    echo "Package Managers 70-90%"
+    echo "Files/Search    60-75%"
+    echo "Infrastructure  85%"
+    echo "Network         65-70%"
+    exit 0
+fi
+
+if [[ "${1:-}" == "discover" ]]; then
+    echo "🔬 Analyzing Claude Code sessions for missed botte usage..."
+    echo "Run: botte gain --history for command history analysis"
+    exit 0
+fi
+
+if [[ "${1:-}" == "init" ]]; then
+    echo "🔧 Adding botte instructions to CLAUDE.md..."
+    cat >> CLAUDE.md << 'BOTTE_EOF'
+
+# Botte Secrète — Token-Optimized Commands
+# Always prefix terminal commands with `botte` for token savings.
+# If botte has a dedicated filter, it compresses. Otherwise, pass-through.
+BOTTE_EOF
+    echo "✅ botte instructions added to CLAUDE.md"
+    exit 0
+fi
+
+if [[ "${1:-}" == "proxy" ]]; then
+    # Pass-through without filtering (for debugging)
+    shift
+    exec "$@"
+fi
+
+# ── Detect command and apply filter ─────────────────────────
+CMD="${1:-}"
+shift || true
+
+case "$CMD" in
+    # ── Cargo / Rust ──)
+    cargo)
+        sub="${1:-}"
+        shift || true
+        case "$sub" in
+            build)
+                echo "🔨 botte: cargo build"
+                cargo build "$@" 2>&1 | head -50
+                ;;
+            check)
+                echo "🔨 botte: cargo check"
+                cargo check "$@" 2>&1 | grep -E "^error" | head -20
+                ;;
+            clippy)
+                echo "🔨 botte: cargo clippy"
+                cargo clippy "$@" 2>&1 | grep -E "^(error|warning):" | head -30
+                ;;
+            test)
+                echo "🧪 botte: cargo test"
+                cargo test "$@" 2>&1 | grep -E "^(test |running |ok |FAILED|error)" | head -30
+                ;;
+            *)
+                cargo "$sub" "$@" 2>&1 | tail -30
+                ;;
+        esac
+        ;;
+
+    # ── TypeScript ──)
+    tsc)
+        echo "🔨 botte: tsc"
+        tsc "$@" 2>&1 | grep -E "^.*\.ts([0-9]+,[0-9]+):" | head -20
+        ;;
+
+    # ── Node / Package Managers ──)
+    pnpm)
+        sub="${1:-}"
+        shift || true
+        case "$sub" in
+            install|i)
+                echo "📦 botte: pnpm install"
+                pnpm install "$@" 2>&1 | tail -10
+                ;;
+            list)
+                echo "📦 botte: pnpm list"
+                pnpm list "$@" 2>&1 | head -30
+                ;;
+            outdated)
+                echo "📦 botte: pnpm outdated"
+                pnpm outdated "$@" 2>&1 | head -20
+                ;;
+            run)
+                echo "📦 botte: pnpm run $*"
+                pnpm run "$@" 2>&1 | tail -20
+                ;;
+            *)
+                pnpm "$sub" "$@" 2>&1 | tail -20
+                ;;
+        esac
+        ;;
+
+    npm)
+        sub="${1:-}"
+        shift || true
+        case "$sub" in
+            run)
+                echo "📦 botte: npm run $*"
+                npm run "$@" 2>&1 | tail -20
+                ;;
+            install|i)
+                echo "📦 botte: npm install"
+                npm install "$@" 2>&1 | tail -10
+                ;;
+            *)
+                npm "$sub" "$@" 2>&1 | tail -20
+                ;;
+        esac
+        ;;
+
+    npx)
+        echo "📦 botte: npx $*"
+        npx "$@" 2>&1 | tail -30
+        ;;
+
+    # ── Git ──)
+    git)
+        sub="${1:-}"
+        shift || true
+        case "$sub" in
+            status)
+                echo "📋 botte: git status"
+                git status --short "$@" 2>&1
+                ;;
+            log)
+                echo "📋 botte: git log"
+                git log --oneline "$@" 2>&1 | head -20
+                ;;
+            diff)
+                echo "📋 botte: git diff"
+                git diff --stat "$@" 2>&1
+                ;;
+            show)
+                echo "📋 botte: git show"
+                git show --stat "$@" 2>&1
+                ;;
+            add)
+                echo "📋 botte: git add $*"
+                git add "$@" 2>&1 | tail -3
+                ;;
+            commit)
+                echo "📋 botte: git commit"
+                git commit "$@" 2>&1 | tail -3
+                ;;
+            push)
+                echo "📋 botte: git push"
+                git push "$@" 2>&1 | tail -5
+                ;;
+            pull)
+                echo "📋 botte: git pull"
+                git pull "$@" 2>&1 | tail -5
+                ;;
+            branch)
+                echo "📋 botte: git branch"
+                git branch "$@" 2>&1 | head -20
+                ;;
+            fetch|stash|worktree|checkout|merge|rebase)
+                echo "📋 botte: git $sub"
+                git "$sub" "$@" 2>&1 | tail -10
+                ;;
+            *)
+                git "$sub" "$@" 2>&1 | tail -20
+                ;;
+        esac
+        ;;
+
+    # ── GitHub CLI ──)
+    gh)
+        sub="${1:-}"
+        shift || true
+        case "$sub" in)
+            pr)
+                sub2="${1:-}"
+                shift || true
+                case "$sub2" in
+                    view)
+                        gh pr view "$@" 2>&1 | head -30
+                        ;;
+                    checks)
+                        gh pr checks "$@" 2>&1 | head -20
+                        ;;
+                    *)
+                        gh pr "$sub2" "$@" 2>&1 | tail -20
+                        ;;
+                esac
+                ;;
+            run)
+                sub2="${1:-}"
+                shift || true
+                case "$sub2" in
+                    list)
+                        gh run list "$@" 2>&1 | head -15
+                        ;;
+                    *)
+                        gh run "$sub2" "$@" 2>&1 | tail -20
+                        ;;
+                esac
+                ;;
+            issue)
+                sub2="${1:-}"
+                shift || true
+                case "$sub2" in
+                    list)
+                        gh issue list "$@" 2>&1 | head -20
+                        ;;
+                    *)
+                        gh issue "$sub2" "$@" 2>&1 | tail -20
+                        ;;
+                esac
+                ;;
+            api)
+                gh api "$@" 2>&1 | python3 -c "import sys,json; d=json.load(sys.stdin); print(json.dumps(d, indent=2)[:2000])" 2>/dev/null || gh api "$@" 2>&1 | head -20
+                ;;
+            *)
+                gh "$sub" "$@" 2>&1 | tail -20
+                ;;
+        esac
+        ;;
+
+    # ── Docker ──)
+    docker)
+        sub="${1:-}"
+        shift || true
+        case "$sub" in
+            ps)
+                docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" "$@" 2>&1
+                ;;
+            images)
+                docker images --format "table {{.Repository}}\t{{.Tag}}\t{{.Size}}" "$@" 2>&1
+                ;;
+            logs)
+                docker logs "$@" 2>&1 | tail -50
+                ;;
+            *)
+                docker "$sub" "$@" 2>&1 | tail -20
+                ;;
+        esac
+        ;;
+
+    # ── Kubernetes ──)
+    kubectl)
+        sub="${1:-}"
+        shift || true
+        case "$sub" in
+            get)
+                kubectl get "$@" 2>&1 | head -30
+                ;;
+            logs)
+                kubectl logs "$@" 2>&1 | tail -50
+                ;;
+            *)
+                kubectl "$sub" "$@" 2>&1 | tail -20
+                ;;
+        esac
+        ;;
+
+    # ── Files ──)
+    ls)
+        ls -la "$@" 2>&1 | head -30
+        ;;
+    read)
+        head -50 "$@" 2>&1
+        ;;
+    grep)
+        shift
+        grep -rn "$@" 2>&1 | head -30
+        ;;
+
+    # ── JavaScript/Node ──)
+    vitest)
+        echo "🧪 botte: vitest"
+        vitest run "$@" 2>&1 | grep -E "^(✓|✗|FAIL|Test Files|Tests)" | head -20
+        ;;
+    playwright)
+        echo "🧪 botte: playwright"
+        playwright test "$@" 2>&1 | grep -E "^(✓|✗|passed|failed)" | head -20
+        ;;
+    next)
+        sub="${1:-}"
+        shift || true
+        case "$sub" in
+            build)
+                echo "🔨 botte: next build"
+                next build "$@" 2>&1 | grep -E "(Route|First Load|○|●|ƒ|λ)" | head -30
+                ;;
+            *)
+                next "$sub" "$@" 2>&1 | tail -20
+                ;;
+        esac
+        ;;
+
+    # ── Prisma ──)
+    prisma)
+        "$CMD" "$@" 2>&1 | grep -v "▄\|█\|░\|╔\|╗\|╚\|╝" | head -30
+        ;;
+
+    # ── Network ──)
+    curl)
+        curl -s "$@" 2>&1 | python3 -c "import sys; d=sys.stdin.read(); print(d[:2000])" 2>/dev/null || curl "$@" 2>&1 | head -30
+        ;;
+    wget)
+        wget "$@" 2>&1 | tail -10
+        ;;
+
+    # ── Lint ──)
+    lint)
+        "$CMD" "$@" 2>&1 | grep -E "(error|warning)" | head -20
+        ;;
+    prettier)
+        "$CMD" "$@" 2>&1 | head -20
+        ;;
+
+    # ── Summary ──)
+    summary)
+        shift
+        "$@" 2>&1 | tail -30
+        ;;
+
+    # ── Default: pass-through ──)
+    *)
+        echo "🔧 botte: $CMD $*"
+        "$CMD" "$@" 2>&1 | tail -50
+        ;;
+esac

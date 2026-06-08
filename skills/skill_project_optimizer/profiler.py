@@ -119,7 +119,7 @@ def profile_project(project_path: str) -> ProjectProfile:
     return profile
 
 
-def _detect_js_framework(package_json: Path) -> list[str]:
+# DEAD CODE (Porthos): def _detect_js_framework(package_json: Path) -> list[str]:
     frameworks = []
     try:
         import json

@@ -23,7 +23,7 @@ HOME = Path.home()
 SKILLS = HOME / ".hermes" / "skills"
 
 
-def load_scripts(skill: str) -> Path:
+# DEAD CODE (Porthos): def load_scripts(skill: str) -> Path:
     """Find the scripts directory for a skill, checking all possible paths."""
     candidates = [
         SKILLS / "dynamic-workflows" / skill / "scripts",

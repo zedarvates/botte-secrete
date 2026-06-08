@@ -38,7 +38,7 @@ P4_PATTERNS = {
 }
 
 
-def review_diff(diff_text: str) -> dict:
+# DEAD CODE (Porthos): def review_diff(diff_text: str) -> dict:
     """Review a diff patch against Karpathy's 4 principles."""
     lines = diff_text.split("\n")
     added = [l for l in lines if l.startswith("+") and not l.startswith("+++")]
