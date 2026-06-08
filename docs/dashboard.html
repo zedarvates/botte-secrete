@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Botte Secrète — Pipeline Dashboard</title>
+<style>
+:root{--bg:#0f1117;--panel:#1a1d27;--border:#2a2d3a;--text:#c9d1d9;--muted:#8b949e;
+--green:#3fb950;--yellow:#d2991d;--red:#f85149;--blue:#58a6ff;--purple:#bc8cff;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font:14px/1.5 'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text)}
+header{background:var(--panel);border-bottom:1px solid var(--border);padding:16px 24px;
+  display:flex;justify-content:space-between;align-items:center}
+header h1{font-size:20px;font-weight:600}
+header .status{font-size:12px;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;padding:24px}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:20px}
+.card h2{font-size:14px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:12px}
+.score{font-size:48px;font-weight:700}
+.score.green{color:var(--green)}.score.yellow{color:var(--yellow)}.score.red{color:var(--red)}
+.metric{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)}
+.metric:last-child{border-bottom:none}
+.metric .label{color:var(--muted)}
+.metric .value{font-weight:600}
+.bar{height:8px;background:var(--border);border-radius:4px;margin:8px 0;overflow:hidden}
+.bar-fill{height:100%;border-radius:4px;transition:width .3s}
+.bar-fill.green{background:var(--green)}.bar-fill.yellow{background:var(--yellow)}.bar-fill.red{background:var(--red)}
+.ticket{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:12px;margin:8px 0}
+.ticket .id{font-size:11px;color:var(--muted);font-family:monospace}
+.ticket .title{font-weight:600;margin:4px 0}
+.ticket .meta{font-size:12px;color:var(--muted)}
+.ticket .agent{display:inline-block;padding:2px 8px;border-radius:3px;font-size:11px;margin-right:4px}
+.agent.porthos{background:rgba(63,185,80,.15);color:var(--green)}
+.agent.dartagnan{background:rgba(88,166,255,.15);color:var(--blue)}
+.agent.aramis{background:rgba(188,140,255,.15);color:var(--purple)}
+.agent.cardinal{background:rgba(248,81,73,.15);color:var(--red)}
+.btn{display:inline-block;padding:8px 16px;border:none;border-radius:6px;font:inherit;cursor:pointer;
+  background:var(--blue);color:#fff;font-weight:600;text-decoration:none}
+.btn:hover{opacity:.9}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text)}
+.export{display:flex;gap:8px;margin-top:12px}
+.tabs{display:flex;gap:0;margin-bottom:16px}
+.tab{padding:8px 16px;border:1px solid var(--border);background:var(--bg);color:var(--muted);
+  cursor:pointer;font:inherit;font-size:13px}
+.tab:first-child{border-radius:6px 0 0 6px}
+.tab:last-child{border-radius:0 6px 6px 0}
+.tab.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+section{padding:0 24px 24px}
+.pipeline-steps{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.step{padding:6px 12px;border-radius:20px;font-size:12px;font-weight:600;border:1px solid var(--border)}
+.step.done{background:rgba(63,185,80,.15);color:var(--green);border-color:var(--green)}
+.step.active{background:rgba(88,166,255,.15);color:var(--blue);border-color:var(--blue);animation:pulse 2s infinite}
+.step.pending{background:transparent;color:var(--muted)}
+.arrow{color:var(--muted);font-size:16px}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+.empty{text-align:center;padding:40px;color:var(--muted)}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>🧦 Botte Secrète — Dashboard</h1>
+    <span class="status" id="lastUpdate">Chargement...</span>
+  </div>
+  <div style="display:flex;gap:8px">
+    <input type="file" id="loadAudit" accept=".json" style="display:none" onchange="loadReport('audit')">
+    <button class="btn" onclick="document.getElementById('loadAudit').click()">📂 Charger rapport</button>
+    <button class="btn btn-outline" onclick="exportTickets()">📋 Exporter tickets</button>
+  </div>
+</header>
+
+<!-- Pipeline Status -->
+<section id="pipelineSection" style="padding-top:24px">
+  <div class="pipeline-steps">
+    <span class="step done">🥊 Porthos</span><span class="arrow">→</span>
+    <span class="step done">📿 Aramis</span><span class="arrow">→</span>
+    <span class="step active">⚔️ d'Artagnan</span><span class="arrow">→</span>
+    <span class="step pending">👑 Athos</span><span class="arrow" style="margin:0 16px">∥</span>
+    <span class="step pending">🗡️ Rochefort</span><span class="arrow">→</span>
+    <span class="step pending">🔪 Milady</span><span class="arrow">→</span>
+    <span class="step pending">🕯️ Wardes</span>
+  </div>
+</section>
+
+<!-- Summary Grid -->
+<div class="grid" id="summary">
+  <div class="card">
+    <h2>🏥 Health Score</h2>
+    <div class="score yellow" id="healthScore">--</div>
+    <div class="bar"><div class="bar-fill yellow" id="healthBar" style="width:0%"></div></div>
+    <div class="metric"><span class="label">Files scanned</span><span class="value" id="filesScanned">--</span></div>
+    <div class="metric"><span class="label">Lines analyzed</span><span class="value" id="linesAnalyzed">--</span></div>
+  </div>
+  <div class="card">
+    <h2>🔍 Findings</h2>
+    <div class="metric"><span class="label">🔴 Critical</span><span class="value" id="countCrit" style="color:var(--red)">0</span></div>
+    <div class="metric"><span class="label">🟠 Errors</span><span class="value" id="countErr" style="color:var(--yellow)">0</span></div>
+    <div class="metric"><span class="label">🟡 Warnings</span><span class="value" id="countWarn">0</span></div>
+    <div class="metric"><span class="label">ℹ️ Info</span><span class="value" id="countInfo">0</span></div>
+  </div>
+  <div class="card">
+    <h2>💰 Token Savings</h2>
+    <div class="score green" id="tokenSaved">--%</div>
+    <div class="metric"><span class="label">Before</span><span class="value" id="tokenBefore">--</span></div>
+    <div class="metric"><span class="label">After</span><span class="value" id="tokenAfter">--</span></div>
+  </div>
+  <div class="card">
+    <h2>📋 Tickets</h2>
+    <div class="score" style="font-size:48px;color:var(--blue)" id="ticketCount">0</div>
+    <div class="metric"><span class="label">P0 (urgent)</span><span class="value" id="ticketP0" style="color:var(--red)">0</span></div>
+    <div class="metric"><span class="label">P1 (important)</span><span class="value" id="ticketP1" style="color:var(--yellow)">0</span></div>
+    <div class="metric"><span class="label">P2 (nice-to-have)</span><span class="value" id="ticketP2">0</span></div>
+  </div>
+</div>
+
+<!-- Findings Detail -->
+<section>
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('all')">Tous</button>
+    <button class="tab" onclick="switchTab('critical')">🔴 Critiques</button>
+    <button class="tab" onclick="switchTab('error')">🟠 Erreurs</button>
+    <button class="tab" onclick="switchTab('warning')">🟡 Warnings</button>
+  </div>
+  <div id="ticketsContainer">
+    <div class="empty">📂 Charge un rapport d'audit (audit-report.json) pour voir les tickets</div>
+  </div>
+</section>
+
+<script>
+// ── State ──
+let state = {
+  audit: null,
+  fix: null,
+  optimize: null,
+  counter_audit: null,
+  counter_fix: null,
+  counter_optim: null,
+  tickets: [],
+  activeTab: 'all',
+};
+
+// ── Load Report ──
+function loadReport(type) {
+  const input = document.getElementById('loadAudit');
+  input.onchange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        if (data.h || data.health) {
+          // Audit report
+          state.audit = normalizeAudit(data);
+          generateTickets(state.audit);
+        } else if (data.tk || data.tokens) {
+          // Optimization plan
+          state.optimize = normalizeOptimize(data);
+        } else if (data.ok !== undefined || data.fx) {
+          // Fix report
+          state.fix = normalizeFix(data);
+        } else if (data.fn || data.false_negatives) {
+          // Counter-audit
+          state.counter_audit = data;
+        }
+        render();
+        document.getElementById('lastUpdate').textContent = `Dernier chargement: ${new Date().toLocaleString()} — ${file.name}`;
+      } catch (err) {
+        alert('Fichier JSON invalide: ' + err.message);
+      }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+function normalizeAudit(data) {
+  // Handle both old format and new compact format
+  if (data.h) {
+    return {
+      health: data.h.s || data.h.score || 0,
+      grade: data.h.g || data.h.grade || 'C',
+      stats: data.st || { f: 0, l: 0 },
+      findings: data.fn || data.findings || [],
+      by_type: data.by || {},
+      recommendations: data.rc || data.recs || data.recommendations || [],
+    };
+  }
+  return data;
+}
+
+function normalizeOptimize(data) {
+  if (data.tk) {
+    return {
+      tokens: {
+        before: data.tk.b || data.tokens?.before || 0,
+        after: data.tk.a || data.tokens?.after || 0,
+        saved_pct: data.tk.pct || data.tokens?.saved_pct || 0,
+      },
+      skills: data.sk || data.skills || {},
+      actions: data.ac || data.actions || [],
+    };
+  }
+  return data;
+}
+
+function normalizeFix(data) {
+  if (data.ok !== undefined) {
+    return {
+      fixed: data.ok || 0,
+      skipped: data.sk || 0,
+      files_changed: data.fc || 0,
+      fixes: data.fx || data.fixes || [],
+      unfixed: data.uf || data.unfixed || [],
+    };
+  }
+  return data;
+}
+
+// ── Generate Tickets ──
+function generateTickets(audit) {
+  if (!audit || !audit.findings) return;
+  state.tickets = audit.findings.map((f, i) => {
+    const sev = f.s || f.severity || 'err';
+    const sevMap = { crit: 'P0', err: 'P1', warn: 'P2', info: 'P2' };
+    const priority = sevMap[sev] || 'P2';
+    const agentMap = {
+      dead: '⚔️ d\'Artagnan',
+      dup: '⚔️ d\'Artagnan',
+      cmp: '📿 Aramis',
+      sec: '🥊 Porthos',
+      bnd: '📿 Aramis',
+      flg: '⚔️ d\'Artagnan',
+    };
+    const type = f.t || f.type || 'unknown';
+    return {
+      id: `BS-${String(i + 1).padStart(4, '0')}`,
+      file: f.f || f.file || 'unknown',
+      type: type,
+      severity: sev,
+      priority: priority,
+      title: f.d || f.description || 'No description',
+      agent: agentMap[type] || '🥊 Porthos',
+      status: 'open',
+      created: new Date().toISOString(),
+    };
+  });
+
+  // Add recommendations as meta-tickets
+  if (audit.recommendations) {
+    audit.recommendations.forEach((r, i) => {
+      state.tickets.push({
+        id: `BS-R${String(i + 1).padStart(4, '0')}`,
+        file: 'meta',
+        type: 'recommendation',
+        severity: r.p === 'P0' ? 'crit' : r.p === 'P1' ? 'err' : 'warn',
+        priority: r.p || 'P2',
+        title: r.d || r.description || 'Recommendation',
+        agent: '👑 Athos',
+        status: 'open',
+        created: new Date().toISOString(),
+      });
+    });
+  }
+}
+
+// ── Render ──
+function render() {
+  const a = state.audit;
+
+  // Health
+  document.getElementById('healthScore').textContent = a ? a.health : '--';
+  document.getElementById('healthScore').className = 'score ' + (
+    a && a.health >= 80 ? 'green' : a && a.health >= 50 ? 'yellow' : 'red'
+  );
+  const bar = document.getElementById('healthBar');
+  bar.style.width = (a ? a.health : 0) + '%';
+  bar.className = 'bar-fill ' + (a && a.health >= 80 ? 'green' : a && a.health >= 50 ? 'yellow' : 'red');
+
+  document.getElementById('filesScanned').textContent = a ? (a.stats?.f || a.stats?.files || 0) : '--';
+  document.getElementById('linesAnalyzed').textContent = a ? (a.stats?.l || a.stats?.lines || 0) : '--';
+
+  // Findings
+  let crit = 0, err = 0, warn = 0, info = 0;
+  if (a && a.findings) {
+    a.findings.forEach(f => {
+      const s = f.s || f.severity || 'err';
+      if (s === 'crit') crit++;
+      else if (s === 'err') err++;
+      else if (s === 'warn') warn++;
+      else info++;
+    });
+  }
+  document.getElementById('countCrit').textContent = crit;
+  document.getElementById('countErr').textContent = err;
+  document.getElementById('countWarn').textContent = warn;
+  document.getElementById('countInfo').textContent = info;
+
+  // Token savings
+  const o = state.optimize;
+  if (o) {
+    document.getElementById('tokenSaved').textContent = (o.tokens?.saved_pct || o.tokens?.saved || 0) + '%';
+    document.getElementById('tokenBefore').textContent = (o.tokens?.before || 0).toLocaleString();
+    document.getElementById('tokenAfter').textContent = (o.tokens?.after || 0).toLocaleString();
+  }
+
+  // Tickets
+  const tickets = state.tickets;
+  document.getElementById('ticketCount').textContent = tickets.length;
+  document.getElementById('ticketP0').textContent = tickets.filter(t => t.priority === 'P0').length;
+  document.getElementById('ticketP1').textContent = tickets.filter(t => t.priority === 'P1').length;
+  document.getElementById('ticketP2').textContent = tickets.filter(t => t.priority === 'P2').length;
+
+  // Render tickets
+  const container = document.getElementById('ticketsContainer');
+  if (tickets.length === 0) {
+    container.innerHTML = '<div class="empty">📂 Charge un rapport d\'audit pour voir les tickets</div>';
+    return;
+  }
+
+  let filtered = tickets;
+  if (state.activeTab === 'critical') filtered = tickets.filter(t => t.severity === 'crit');
+  else if (state.activeTab === 'error') filtered = tickets.filter(t => t.severity === 'err');
+  else if (state.activeTab === 'warning') filtered = tickets.filter(t => t.severity === 'warn');
+
+  if (filtered.length === 0) {
+    container.innerHTML = '<div class="empty">✅ Aucun ticket dans cette catégorie</div>';
+    return;
+  }
+
+  container.innerHTML = filtered.map(t => `
+    <div class="ticket">
+      <span class="id">${t.id}</span>
+      <span class="agent ${t.agent.includes('Porthos') ? 'porthos' : t.agent.includes('Artagnan') ? 'dartagnan' : t.agent.includes('Aramis') ? 'aramis' : 'cardinal'}">${t.agent}</span>
+      <span style="color:${t.priority==='P0'?'var(--red)':t.priority==='P1'?'var(--yellow)':'var(--muted)'};font-size:11px">${t.priority}</span>
+      <div class="title">${escapeHtml(t.title)}</div>
+      <div class="meta">📁 ${t.file} · ${t.type} · ${new Date(t.created).toLocaleDateString()}</div>
+    </div>
+  `).join('');
+}
+
+function switchTab(tab) {
+  state.activeTab = tab;
+  document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+  event.target.classList.add('active');
+  render();
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]);
+}
+
+// ── Export ──
+function exportTickets() {
+  if (state.tickets.length === 0) {
+    alert('Aucun ticket à exporter. Charge un rapport d\'audit d\'abord.');
+    return;
+  }
+
+  // Export as GitHub-issues JSON
+  const ghIssues = state.tickets.map(t => ({
+    title: `[${t.priority}] ${t.id}: ${t.title}`,
+    body: [
+      `**ID:** ${t.id}`,
+      `**Agent:** ${t.agent}`,
+      `**Fichier:** \`${t.file}\``,
+      `**Type:** ${t.type}`,
+      `**Priorité:** ${t.priority}`,
+      `**Sévérité:** ${t.severity}`,
+      `**Statut:** ${t.status}`,
+      '',
+      '---',
+      '*Généré par Botte Secrète Dashboard*',
+    ].join('\n'),
+    labels: ['botte-secrete', t.priority.toLowerCase(), t.type],
+    assignees: [],
+  }));
+
+  // Download
+  const blob = new Blob([JSON.stringify(ghIssues, null, 2)], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `botte-tickets-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+
+  // Also copy first 3 as markdown
+  const md = state.tickets.slice(0, 10).map(t =>
+    `- [ ] **${t.id}** (${t.priority}) — ${t.title} — \`${t.file}\` → ${t.agent}`
+  ).join('\n');
+  navigator.clipboard.writeText(md).then(() => {
+    console.log('10 tickets copiés en markdown dans le presse-papier');
+  });
+}
+
+// Demo data
+const DEMO_AUDIT = {
+  "h": {"s": 59, "g": "C"},
+  "st": {"f": 40, "l": 3841},
+  "fn": [
+    {"f": "core.py:42", "s": "err", "t": "dead", "d": "calc_tax() - 0 refs"},
+    {"f": "cli.py:26", "s": "err", "t": "dead", "d": "dead_handler() never called"},
+    {"f": "auth.py:30", "s": "crit", "t": "sec", "d": "API_KEY exposed in log"},
+    {"f": "utils.py:88,120,155", "s": "warn", "t": "dup", "d": "parse_input() duplicated 3x"},
+    {"f": "api.py:142", "s": "err", "t": "cmp", "d": "handle_request() CC=18 (max 15)"},
+    {"f": "models.py:17", "s": "warn", "t": "flg", "d": "FEATURE_V2 flag stale (>90d)"},
+    {"f": "events.py:55", "s": "info", "t": "bnd", "d": "Import from forbidden layer"}
+  ],
+  "by": {"dead": 88, "dup": 5, "cmp": 2, "sec": 1, "bnd": 1, "flg": 1},
+  "rc": [
+    {"p": "P0", "d": "Fixer l'exposition de secret dans auth.py:30"},
+    {"p": "P1", "d": "Nettoyer 88 dead code findings"},
+    {"p": "P1", "d": "Dédupliquer parse_input() dans utils.py"},
+    {"p": "P2", "d": "Refactoriser handle_request() complexité 18"}
+  ]
+};
+
+const DEMO_OPTIMIZE = {
+  "tk": {"b": 78000, "a": 21000, "pct": 73},
+  "sk": {"ld": 8, "ex": 23},
+  "ac": [
+    {"p": "P0", "d": ".skills-profile: exclure 23 skills non pertinents", "i": "-73%"},
+  ]
+};
+
+// Load demo data on start
+state.audit = normalizeAudit(DEMO_AUDIT);
+state.optimize = normalizeOptimize(DEMO_OPTIMIZE);
+generateTickets(state.audit);
+render();
+document.getElementById('lastUpdate').textContent = '📊 Données de démo — Charge un rapport réel';
+</script>
+</body>
+</html>

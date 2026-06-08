@@ -1,0 +1,141 @@
+#!/usr/bin/env python3
+"""Unified Pipeline Script — Run Blue Team, Red Team, or both.
+
+Usage:
+    botte pipeline <project>              # Blue Team only (audit + fix + optimize)
+    botte pipeline <project> --red        # Blue + Red Team (adversarial)
+    botte pipeline <project> --audit-only # Audit only (Porthos)
+    botte pipeline <project> --optimize   # Optimize only (Aramis)
+    botte pipeline <project> --dashboard  # Open dashboard after pipeline
+
+Examples:
+    botte pipeline ~/projects/turboquant
+    botte pipeline ~/projects/turboquant --red --dashboard
+"""
+
+import sys
+import json
+import subprocess
+import webbrowser
+from pathlib import Path
+from datetime import datetime
+
+REPO_ROOT = Path(__file__).parent.parent
+SCRIPTS = REPO_ROOT / "skills" / "mousquetaires" / "scripts"
+DASHBOARD = REPO_ROOT / "docs" / "dashboard.html"
+
+
+def run_phase(name: str, cmd: list[str], timeout: int = 120) -> dict | None:
+    """Run a pipeline phase and return parsed JSON result."""
+    print(f"\n{'='*60}")
+    print(f"  {name}")
+    print(f"{'='*60}")
+    result = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, cwd=REPO_ROOT,
+                           env={**__import__('os').environ, "PYTHONPATH": str(REPO_ROOT)})
+    if result.stdout:
+        print(result.stdout[-500:])
+    if result.stderr:
+        print(result.stderr[-200:], file=sys.stderr)
+    # Try to find and load the JSON output
+    return None  # Subprocess writes to files, not stdout
+
+
+def find_json(dir_path: Path, pattern: str) -> Path | None:
+    """Find a JSON file matching pattern."""
+    matches = list(dir_path.glob(pattern))
+    return matches[0] if matches else None
+
+
+def main():
+    if len(sys.argv) < 2:
+        print(__doc__)
+        sys.exit(1)
+
+    project = Path(sys.argv[1]).resolve()
+    if not project.exists():
+        print(f"❌ Project not found: {project}")
+        sys.exit(1)
+
+    args = sys.argv[2:]
+    do_red = "--red" in args
+    do_dashboard = "--dashboard" in args
+    audit_only = "--audit-only" in args
+    optimize_only = "--optimize" in args
+
+    output_base = project / ".botte-cache"
+    output_base.mkdir(exist_ok=True)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+    print(f"🧦 Botte Secrète Pipeline")
+    print(f"   Project: {project}")
+    print(f"   Started: {datetime.now().isoformat()}")
+    print(f"   Mode: {'audit-only' if audit_only else 'optimize-only' if optimize_only else 'full' + (' + red team' if do_red else '')}")
+
+    # ── Blue Team ──
+    if not optimize_only:
+        print("\n🔵 BLUE TEAM — Mousquetaires d'Artagnan")
+        # Phase 1: Porthos (audit)
+        run_phase("🥊 Porthos — Audit", [
+            sys.executable, str(SCRIPTS / "porthos_audit.py"),
+            str(project), str(output_base / "audit")
+        ], timeout=120)
+
+    if not audit_only and not optimize_only:
+        # Phase 2: d'Artagnan (fix) — depends on Porthos
+        audit_json = find_json(output_base / "audit", "audit-report.json")
+        if audit_json:
+            run_phase("⚔️ d'Artagnan — Fix", [
+                sys.executable, str(SCRIPTS / "dartagnan_fix.py"),
+                str(project), str(audit_json), str(output_base / "fix")
+            ], timeout=300)
+
+    if not audit_only:
+        # Phase 3: Aramis (optimize) — independent
+        run_phase("📿 Aramis — Optimize", [
+            sys.executable, str(SCRIPTS / "aramis_optimize.py"),
+            str(project), str(output_base / "optimize")
+        ], timeout=120)
+
+    # ── Red Team ──
+    if do_red:
+        print("\n🔴 RED TEAM — Mousquetaires du Cardinal")
+        # Phase 4: Rochefort, Milady, Comte de Wardes (parallel in real usage)
+        audit_json = find_json(output_base / "audit", "audit-report.json")
+        fix_json = find_json(output_base / "fix", "fix-report.json")
+        optimize_json = find_json(output_base / "optimize", "optimization-plan.json")
+
+        if audit_json:
+            run_phase("🗡️ Rochefort — Counter-Audit", [
+                sys.executable, str(REPO_ROOT / "skills" / "cardinal" / "scripts" / "cardinal_confront.py"),
+                str(audit_json.parent), str(output_base / "red")
+            ], timeout=120)
+        # Additional counter-agents would go here
+
+    # ── Results ──
+    print(f"\n{'='*60}")
+    print(f"✅ Pipeline complete!")
+    print(f"   Reports: {output_base}/")
+
+    # List generated files
+    for f in sorted(output_base.rglob("*.json")):
+        size = f.stat().st_size
+        print(f"   📄 {f.relative_to(output_base)} ({size:,} bytes)")
+
+    # ── Dashboard ──
+    if do_dashboard and DASHBOARD.exists():
+        audit_file = find_json(output_base, "**/audit-report.json")
+        if audit_file:
+            print(f"\n📊 Opening dashboard: {DASHBOARD}")
+            print(f"   Load this file: {audit_file}")
+            webbrowser.open(f"file://{DASHBOARD}")
+
+    # ── Summary ──
+    print(f"\n💡 Next steps:")
+    print(f"   Open dashboard:  open {DASHBOARD}")
+    print(f"   View audit:      cat {output_base}/audit/audit-report.json | python3 -m json.tool")
+    if not do_red:
+        print(f"   Run red team:    botte pipeline {project} --red")
+
+
+if __name__ == "__main__":
+    main()
