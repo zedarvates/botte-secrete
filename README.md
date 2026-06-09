@@ -2,7 +2,8 @@
 
 [![CI](https://github.com/zedarvates/botte-secrete/actions/workflows/ci.yml/badge.svg)](https://github.com/zedarvates/botte-secrete/actions)
 [![Tests](https://img.shields.io/badge/tests-22%2F22-brightgreen)](https://github.com/zedarvates/botte-secrete)
-[![Token Savings](https://img.shields.io/badge/token%20savings-80%25-blue)](https://github.com/zedarvates/botte-secrete)
+[![Token Savings](https://img.shields.io/badge/token%20savings-85%25-blue)](https://github.com/zedarvates/botte-secrete)
+[![Self-Audit](https://img.shields.io/badge/self--audit-59%2F100%20(C)-orange)](https://github.com/zedarvates/botte-secrete)
 
 > *"Tous pour un, un pour tous."* — Les Trois Mousquetaires
 
