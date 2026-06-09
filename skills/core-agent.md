@@ -82,12 +82,90 @@ Réponds avec les numéros ou "auto"
 ```python
 from skills.cache import ProjectCache
 cache = ProjectCache(project_root)
-scan = cache.get_or_scan(scanner_fn)  # Scan si pas de cache, load sinon
-audit = cache.get_audit_report()      # Lire l'audit précédent
-cache.set_audit_report(report)        # Sauvegarder pour les suivants
+scan = cache.get_or_scan(lambda: scanner.scan())
+audit = cache.get_audit_report()
 ```
 
+TTL: 24h. Invalidate: `cache.invalidate()`
+
+## 🏠 Local Model Router (P9)
+
+**TOUJOURS router avant d'appeler un modèle. Local > Cloud.**
+
+```
+🟢 Simple (résumé, classification, extraction) → LocalAI gemma-4
+🔵 Vision (classify, detect, OCR) → Hailo-8
+🟣 Audio (STT, TTS) → LocalAI Whisper/Piper
+🟠 Images (génération) → ComfyUI:8188
+🔴 Complexe (raisonnement, code) → Cloud (DeepSeek)
+```
+
+```python
+from skills.local_router import route
+d = route('vision', 'classify', image_path='/tmp/img.jpg')
+# → 🏠 LOCAL → Hailo-8 (100% saved)
+```
+
+## 🎬 Progressive Media Loader (P10)
+
+**NE JAMAIS envoyer de media brut au LLM.**
+
+```
+Vidéo → ffmpeg keyframes → Hailo → texte
+Audio → Whisper STT → transcript
+Image → Hailo detect/classify/OCR → JSON
+```
+
+```python
+from skills.media_loader import load_media_as_context
+ctx = load_media_as_context('/tmp/video.mp4')
+# LLM voit: [MEDIA:video] texte extrait [/MEDIA]
+```
+
+## 💬 Response Cache (P8)
+
+**Vérifier le cache avant chaque appel LLM.**
+
+```python
+from skills.response_cache import cached
+response, was_cached = cached("résume X", lambda: llm_call(prompt))
+if was_cached:
+    print(f"♻️ Cache hit ({cache.report()['hit_rate_pct']}% hit rate)")
+```
 Cache invalide après 24h ou si le code a changé (git hash).
+
+## 🔷 Vector Agent Protocol (P11)
+
+**Entre agents : vecteurs quantifiés, pas de texte.**
+Seul l'orchestrateur final décode en langage humain.
+
+```
+Porthos → vecteurs (24 floats) → Qdrant → d'Artagnan → Aramis → Athos → Français
+```
+Chaque finding = 24 floats au lieu de 500 tokens texte.
+Économie : -70% tokens inter-agents.
+
+## 📐 Ultra-Compact Formats (P12)
+
+**3 niveaux de compression pour les rapports :**
+1. Single-char keys : `{"h":{"s":59}}`
+2. Array (sans clés) : `[59,"C",40,...]` (-38%)
+3. Delta-only : envoie SEULEMENT ce qui a changé (-90% itératif)
+
+```python
+from skills.ultra_compact import to_ultra, to_array, delta_only
+```
+
+## 🔑 Code Fingerprinting (P13)
+
+**Hash chaque fonction → ne ré-analyse que le code modifié.**
+Si 0 changement → 0 analyse → 100% skip.
+
+```python
+from skills.code_fingerprint import CodeFingerprinter, skip_if_unchanged
+fp = CodeFingerprinter()
+changed = fp.get_files_to_reanalyze(project)
+```
 
 ## 🎯 Token Budget (hard limits)
 

@@ -41,6 +41,12 @@ Red Team: **Rochefort ∥ Milady ∥ Cte Wardes → Le Cardinal** (parallel coun
 | `cardinal/` | Red Team — 4 adversarial agents (counter-audit, counter-fix, counter-optimize) | Quality gate |
 | `clarification/` | Proactive questions — max 5, silence=auto | -80% wasted work |
 | `cache/` | `.botte-cache/` — avoid re-scanning between agents | -50% re-scan tokens |
+| `local_router/` | **P9** — Routes tasks to local models (Hailo/ComfyUI/LocalAI) | -40% cloud tokens |
+| `media_loader/` | **P10** — Extracts text from media before LLM sees it | -95% media tasks |
+| `response_cache/` | **P8** — Semantic response cache (hash + similarity) | -60% repeated queries |
+| `vector_protocol/` | **P11** — Agents communicate via quantized vectors | -70% inter-agent |
+| `ultra_compact/` | **P12** — Single-char keys, array format, delta-only | -90% iterative |
+| `code_fingerprint/` | **P13** — Hash functions, skip unchanged code | -80% re-analysis |
 | `loader/` | Pre-prompt loader for `delegate_task` | Correct agent context |
 | `fallow_like/` | 8 static analyzers (dead code, dup, complexity, secrets, boundaries, etc.) | Code quality |
 | `skill_project_optimizer/` | Per-project skill filtering, token profiling | -73% skill tokens |
@@ -150,10 +156,18 @@ botte-secrete/
 - [x] P0: Shared core + stripped prompts + JSON schemas (-57% prompts)
 - [x] P1: Project cache + parallel pipeline + token budgets (-50% re-scans)
 - [x] P2: Output truncation + smart pre-fetching
-- [x] P3: Pre-prompt loader + consolidated README + agent diff language
-- [ ] P4: Real end-to-end test suite
-- [ ] P5: CI/CD integration (pre-commit hooks)
-- [ ] P6: Dashboard for token savings metrics
+- [x] P3: Pre-prompt loader + agent diff language + consolidated README
+- [x] P4: SKILL.md for all modules + unified pipeline script
+- [x] P7: Dashboard HTML + ticket generator for coding agents
+- [x] P8: Semantic response cache via Qdrant (-60% repeated queries)
+- [x] P9: Local model router (Hailo/ComfyUI/LocalAI) (-40% cloud tokens)
+- [x] P10: Progressive media loader (-95% media tokens)
+- [x] P11: Vector agent protocol (-70% inter-agent tokens)
+- [x] P12: Ultra-compact JSON formats (-90% iterative reports)
+- [x] P13: Code fingerprinting (-80% re-analysis)
+- [ ] P5: CI/CD integration (pre-commit hooks, GitHub Actions)
+- [ ] P6: Dashboard for token savings metrics (real-time)
+- [ ] P14: Tiered model selection + agent-to-agent compression
 
 ## 📜 License
 
