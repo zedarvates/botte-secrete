@@ -1,0 +1,56 @@
+name: 🧦 Botte Secrète CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 6 * * *'  # Daily at 6am
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run E2E tests
+        run: |
+          cd skills && python3 test_e2e.py
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+
+      - name: Pre-commit fast check
+        run: |
+          python3 scripts/pre-commit-check.py --fast
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+
+  audit-self:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Self-audit (Porthos on botte-secrete)
+        run: |
+          mkdir -p /tmp/audit
+          python3 skills/mousquetaires/scripts/porthos_audit.py . /tmp/audit
+          cat /tmp/audit/audit-report.json | python3 -c "import sys,json; d=json.load(sys.stdin); print(f'Health: {d[\"h\"][\"s\"]}/100 ({d[\"h\"][\"g\"]}) — {len(d[\"fn\"])} findings')"
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+
+      - name: Generate tickets
+        run: |
+          python3 skills/generate_tickets.py /tmp/audit/audit-report.json --markdown | head -20
+        env:
+          PYTHONPATH: ${{ github.workspace }}

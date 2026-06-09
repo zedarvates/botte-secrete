@@ -430,6 +430,203 @@ state.optimize = normalizeOptimize(DEMO_OPTIMIZE);
 generateTickets(state.audit);
 render();
 document.getElementById('lastUpdate').textContent = '📊 Données de démo — Charge un rapport réel';
+
+// ══════════════════════════════════════════════
+// P6: Real-Time Dashboard Features
+// ══════════════════════════════════════════════
+
+// ── History Store ──
+let history = [];
+const MAX_HISTORY = 50;
+
+function snapshot() {
+  const h = state.audit ? state.audit.health : (state.audit?.h?.s || 0);
+  const t = state.optimize ? (state.optimize.tokens?.saved_pct || state.optimize.tk?.pct || 0) : 0;
+  return {
+    time: new Date().toISOString(),
+    health: h,
+    tokenSavings: t,
+    findings: state.tickets.length,
+    pipeline: getPipelineStatus(),
+  };
+}
+
+function getPipelineStatus() {
+  const phases = [];
+  if (state.audit) phases.push('audit');
+  if (state.fix) phases.push('fix');
+  if (state.optimize) phases.push('optimize');
+  if (state.counter_audit) phases.push('red');
+  return phases;
+}
+
+// ── Auto-Watch Directory ──
+let watchInterval = null;
+let watchDir = null;
+
+function startWatching(dirPath) {
+  watchDir = dirPath;
+  if (watchInterval) clearInterval(watchInterval);
+
+  document.getElementById('lastUpdate').textContent =
+    `🔄 Watching ${dirPath}... (every 5s)`;
+
+  watchInterval = setInterval(() => {
+    // Try to load latest reports
+    const auditFile = `${dirPath}/audit-report.json`;
+    fetch(auditFile)
+      .then(r => r.json())
+      .then(data => {
+        state.audit = normalizeAudit(data);
+        generateTickets(state.audit);
+        history.push(snapshot());
+        if (history.length > MAX_HISTORY) history.shift();
+        render();
+        document.getElementById('lastUpdate').textContent =
+          `🔄 Auto-refresh — ${new Date().toLocaleTimeString()}`;
+      })
+      .catch(() => {}); // File may not exist yet — silent
+
+    // Optimize plan
+    const optFile = `${dirPath}/optimization-plan.json`;
+    fetch(optFile)
+      .then(r => r.json())
+      .then(data => {
+        state.optimize = normalizeOptimize(data);
+        render();
+      })
+      .catch(() => {});
+
+    // Fix report
+    const fixFile = `${dirPath}/fix-report.json`;
+    fetch(fixFile)
+      .then(r => r.json())
+      .then(data => {
+        state.fix = normalizeFix(data);
+        render();
+      })
+      .catch(() => {});
+  }, 5000);
+}
+
+function stopWatching() {
+  if (watchInterval) clearInterval(watchInterval);
+  watchInterval = null;
+  document.getElementById('lastUpdate').textContent =
+    '⏸️ Watch stopped';
+}
+
+// Add watch button to header
+const watchBtn = document.createElement('button');
+watchBtn.className = 'btn btn-outline';
+watchBtn.textContent = '🔄 Auto-watch';
+watchBtn.style.marginLeft = '8px';
+watchBtn.onclick = () => {
+  if (watchInterval) {
+    stopWatching();
+    watchBtn.textContent = '🔄 Auto-watch';
+  } else {
+    const dir = prompt('Chemin du dossier de rapports (.botte-cache/) :',
+                       '.botte-cache/');
+    if (dir) {
+      startWatching(dir);
+      watchBtn.textContent = '⏸️ Stop watch';
+    }
+  }
+};
+document.querySelector('header div:last-child').appendChild(watchBtn);
+
+// ── Token Savings Chart (Canvas) ──
+const chartCard = document.createElement('div');
+chartCard.className = 'card';
+chartCard.style.gridColumn = 'span 2';
+chartCard.innerHTML = '<h2>📈 Token Savings History</h2><canvas id="savingsChart" width="800" height="200"></canvas>';
+document.getElementById('summary').appendChild(chartCard);
+
+function drawChart() {
+  const canvas = document.getElementById('savingsChart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height;
+  ctx.clearRect(0, 0, w, h);
+
+  if (history.length < 2) {
+    ctx.fillStyle = '#8b949e';
+    ctx.font = '14px system-ui';
+    ctx.textAlign = 'center';
+    ctx.fillText('Pas assez de données — active Auto-watch', w/2, h/2);
+    return;
+  }
+
+  // Grid
+  ctx.strokeStyle = '#2a2d3a';
+  ctx.lineWidth = 1;
+  for (let i = 0; i < 5; i++) {
+    const y = (h - 30) * i / 4 + 10;
+    ctx.beginPath();
+    ctx.moveTo(40, y);
+    ctx.lineTo(w - 20, y);
+    ctx.stroke();
+    ctx.fillStyle = '#8b949e';
+    ctx.font = '10px system-ui';
+    ctx.textAlign = 'right';
+    ctx.fillText((100 - i*25) + '%', 35, y + 4);
+  }
+
+  // Health line (green)
+  ctx.strokeStyle = '#3fb950';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  for (let i = 0; i < history.length; i++) {
+    const x = 40 + (w - 60) * i / (history.length - 1);
+    const y = 10 + (h - 30) * (1 - history[i].health / 100);
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  // Savings line (blue)
+  ctx.strokeStyle = '#58a6ff';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath();
+  for (let i = 0; i < history.length; i++) {
+    const x = 40 + (w - 60) * i / (history.length - 1);
+    const y = 10 + (h - 30) * (1 - history[i].tokenSavings / 100);
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Legend
+  ctx.font = '11px system-ui';
+  ctx.fillStyle = '#3fb950';
+  ctx.textAlign = 'left';
+  ctx.fillText('— Health', 50, 15);
+  ctx.fillStyle = '#58a6ff';
+  ctx.fillText('— Token Savings', 150, 15);
+}
+
+// Override render to also draw chart
+const originalRender = render;
+render = function() {
+  originalRender();
+  drawChart();
+};
+
+// ── Pipeline Live Status (WebSocket-ready) ──
+const pipelineStatus = document.getElementById('pipelineSection');
+if (pipelineStatus) {
+  const liveDot = document.createElement('span');
+  liveDot.style.cssText = 'display:inline-block;width:8px;height:8px;border-radius:50%;background:#3fb950;margin-right:8px;animation:pulse 2s infinite';
+  liveDot.title = 'Live polling';
+  pipelineStatus.querySelector('.pipeline-steps').prepend(liveDot);
+}
+
+// Initial snapshot
+history.push(snapshot());
+
 </script>
 </body>
 </html>

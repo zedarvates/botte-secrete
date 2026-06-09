@@ -1,0 +1,19 @@
+# .pre-commit-config.yaml
+repos:
+  - repo: local
+    hooks:
+      - id: botte-secrete-check
+        name: 🧦 Botte Secrète Pre-commit
+        entry: python3 scripts/pre-commit-check.py
+        language: system
+        pass_filenames: false
+        always_run: true
+        verbose: true
+
+      - id: botte-secrete-fast
+        name: 🧦 Botte Secrète Fast Check
+        entry: python3 scripts/pre-commit-check.py --fast
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-commit]

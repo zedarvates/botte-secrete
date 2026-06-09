@@ -1,5 +1,9 @@
 # 🧦 Botte Secrète — Multi-Agent Token Optimization Platform
 
+[![CI](https://github.com/zedarvates/botte-secrete/actions/workflows/ci.yml/badge.svg)](https://github.com/zedarvates/botte-secrete/actions)
+[![Tests](https://img.shields.io/badge/tests-22%2F22-brightgreen)](https://github.com/zedarvates/botte-secrete)
+[![Token Savings](https://img.shields.io/badge/token%20savings-80%25-blue)](https://github.com/zedarvates/botte-secrete)
+
 > *"Tous pour un, un pour tous."* — Les Trois Mousquetaires
 
 A multi-agent pipeline for code audit, automated fixes, token optimization,
@@ -165,9 +169,9 @@ botte-secrete/
 - [x] P11: Vector agent protocol (-70% inter-agent tokens)
 - [x] P12: Ultra-compact JSON formats (-90% iterative reports)
 - [x] P13: Code fingerprinting (-80% re-analysis)
-- [ ] P5: CI/CD integration (pre-commit hooks, GitHub Actions)
-- [ ] P6: Dashboard for token savings metrics (real-time)
-- [ ] P14: Tiered model selection + agent-to-agent compression
+- [x] P5: CI/CD integration (pre-commit hooks, GitHub Actions)
+- [x] P6: Real-time dashboard (auto-watch, savings chart, live status)
+- [ ] P14: Tiered model selection + agent-to-agent compression (consolidated in P9+P11)
 
 ## 📜 License
 
