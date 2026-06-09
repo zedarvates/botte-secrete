@@ -51,6 +51,7 @@ Red Team: **Rochefort ∥ Milady ∥ Cte Wardes → Le Cardinal** (parallel coun
 | `vector_protocol/` | **P11** — Agents communicate via quantized vectors | -70% inter-agent |
 | `ultra_compact/` | **P12** — Single-char keys, array format, delta-only | -90% iterative |
 | `code_fingerprint/` | **P13** — Hash functions, skip unchanged code | -80% re-analysis |
+| `tiered_router/` | **P14** — 5-level model selection + agent compression | -95% vs all-PREMIUM |
 | `loader/` | Pre-prompt loader for `delegate_task` | Correct agent context |
 | `fallow_like/` | 8 static analyzers (dead code, dup, complexity, secrets, boundaries, etc.) | Code quality |
 | `skill_project_optimizer/` | Per-project skill filtering, token profiling | -73% skill tokens |
@@ -171,7 +172,7 @@ botte-secrete/
 - [x] P13: Code fingerprinting (-80% re-analysis)
 - [x] P5: CI/CD integration (pre-commit hooks, GitHub Actions)
 - [x] P6: Real-time dashboard (auto-watch, savings chart, live status)
-- [ ] P14: Tiered model selection + agent-to-agent compression (consolidated in P9+P11)
+- [x] P14: Tiered model selection + agent-to-agent compression
 
 ## 📜 License
 
