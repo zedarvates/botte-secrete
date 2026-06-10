@@ -31,7 +31,7 @@ def analyze_vulture(path: str) -> list[dict]:
     findings = []
     try:
         r = subprocess.run(["vulture", path, "--min-confidence", "80"],
-                          capture_output=True, text=True, timeout=60)
+                          capture_output=True, text=True, timeout=60, check=False)
         for line in r.stdout.split("\n"):
             if "unused" in line.lower() or "dead" in line.lower():
                 findings.append({"tool": "vulture", "message": line.strip()})
@@ -45,7 +45,7 @@ def analyze_radon(path: str) -> dict:
     result = {"average_complexity": 0, "worst": [], "total_functions": 0, "c_grades": {}}
     try:
         r = subprocess.run(["radon", "cc", path, "-a", "-s", "-j"],
-                          capture_output=True, text=True, timeout=60)
+                          capture_output=True, text=True, timeout=60, check=False)
         data = json.loads(r.stdout) if r.stdout else {}
         complexities = []
         for filepath, functions in data.items():
@@ -67,7 +67,7 @@ def analyze_ruff(path: str) -> list[dict]:
     findings = []
     try:
         r = subprocess.run(["ruff", "check", path, "--quiet", "--output-format", "json"],
-                          capture_output=True, text=True, timeout=60)
+                          capture_output=True, text=True, timeout=60, check=False)
         data = json.loads(r.stdout) if r.stdout else []
         for item in data[:50]:
             findings.append({
@@ -87,7 +87,7 @@ def analyze_pylint_duplication(path: str) -> list[dict]:
     findings = []
     try:
         r = subprocess.run(["pylint", path, "--disable=all", "--enable=duplicate-code"],
-                          capture_output=True, text=True, timeout=120)
+                          capture_output=True, text=True, timeout=120, check=False)
         for line in r.stdout.split("\n"):
             if "duplicate" in line.lower() or "similar" in line.lower():
                 findings.append({"tool": "pylint", "message": line.strip()})

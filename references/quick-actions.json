@@ -1,0 +1,136 @@
+{
+  "version": "1.0.0",
+  "description": "Quick Actions — pre-vectorized common user phrases. Saves ~25 tokens/interaction.",
+  "actions": [
+    {
+      "id": "qa:continue",
+      "aliases": ["continue", "continuer", "go on", "poursuis"],
+      "prompt": "Continue. Poursuis là où tu t'es arrêté.",
+      "icon": "▶️",
+      "category": "flow",
+      "tokens_saved": 5
+    },
+    {
+      "id": "qa:yes",
+      "aliases": ["yes", "oui", "ok", "y"],
+      "prompt": "Oui. Je valide.",
+      "icon": "✅",
+      "category": "flow",
+      "tokens_saved": 2
+    },
+    {
+      "id": "qa:no",
+      "aliases": ["no", "non", "n"],
+      "prompt": "Non. Je refuse.",
+      "icon": "❌",
+      "category": "flow",
+      "tokens_saved": 2
+    },
+    {
+      "id": "qa:stop",
+      "aliases": ["stop", "arrête", "halt"],
+      "prompt": "Stop. Arrête immédiatement ce que tu es en train de faire.",
+      "icon": "🛑",
+      "category": "flow",
+      "tokens_saved": 8
+    },
+    {
+      "id": "qa:clarify_5",
+      "aliases": ["clarify", "5 questions", "éclaircir", "pose moi 5 questions"],
+      "prompt": "Pose-moi jusqu'à 5 questions numérotées pour éclaircir les points qui te paraissent pas assez définis.",
+      "icon": "❓",
+      "category": "planning",
+      "tokens_saved": 25
+    },
+    {
+      "id": "qa:top5_urgent",
+      "aliases": ["top 5", "urgent", "top5 taches", "priorités"],
+      "prompt": "Fais un top 5 des tâches urgentes à faire, et attèle-toi à une tâche urgente disponible.",
+      "icon": "🔥",
+      "category": "planning",
+      "tokens_saved": 22
+    },
+    {
+      "id": "qa:next_steps",
+      "aliases": ["next steps", "prochaine étape", "suite", "et ensuite"],
+      "prompt": "Next Steps. Quelles sont les prochaines étapes ?",
+      "icon": "➡️",
+      "category": "planning",
+      "tokens_saved": 8
+    },
+    {
+      "id": "qa:breakdown",
+      "aliases": ["break down", "décompose", "étapes", "smaller steps"],
+      "prompt": "Try breaking down the task into smaller steps. Décompose la tâche en étapes plus petites.",
+      "icon": "🧩",
+      "category": "planning",
+      "tokens_saved": 15
+    },
+    {
+      "id": "qa:alt_approach",
+      "aliases": ["different approach", "autre approche", "alternative", "débloquer"],
+      "prompt": "Recherche une approche différente pour éviter tout blocage ou boucle infinie.",
+      "icon": "🔄",
+      "category": "debug",
+      "tokens_saved": 18
+    },
+    {
+      "id": "qa:start",
+      "aliases": ["start", "commencer", "démarrer", "go"],
+      "prompt": "Commence. Démarre l'exécution.",
+      "icon": "🚀",
+      "category": "flow",
+      "tokens_saved": 3
+    },
+    {
+      "id": "qa:build_ui",
+      "aliases": ["build ui", "npm run ui:build"],
+      "prompt": "npm run ui:build",
+      "icon": "🏗️",
+      "category": "dev",
+      "tokens_saved": 12
+    },
+    {
+      "id": "qa:electron_start",
+      "aliases": ["electron start", "npm run electron:start", "electron"],
+      "prompt": "npm run electron:start",
+      "icon": "🖥️",
+      "category": "dev",
+      "tokens_saved": 18
+    },
+    {
+      "id": "qa:launch",
+      "aliases": ["launch", "lancer", "exécuter", "run"],
+      "prompt": "Lance l'exécution.",
+      "icon": "▶️",
+      "category": "flow",
+      "tokens_saved": 3
+    },
+    {
+      "id": "qa:audit_here",
+      "aliases": ["audit", "vérifie ce projet", "check"],
+      "prompt": "Audite ce projet avec le profil adapté (mousquetaires + audit-profiles).",
+      "icon": "🔍",
+      "category": "dev",
+      "tokens_saved": 40
+    },
+    {
+      "id": "qa:commit_push",
+      "aliases": ["commit", "push", "sauvegarde git"],
+      "prompt": "Commit les changements avec un message conventionnel et push sur GitHub.",
+      "icon": "💾",
+      "category": "dev",
+      "tokens_saved": 30
+    }
+  ],
+  "stats": {
+    "total_actions": 15,
+    "avg_tokens_saved": 14.1,
+    "categories": {
+      "flow": 7,
+      "planning": 4,
+      "dev": 3,
+      "debug": 1
+    }
+  }
+}

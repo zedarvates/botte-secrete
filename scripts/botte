@@ -199,7 +199,7 @@ case "$CMD" in
     gh)
         sub="${1:-}"
         shift || true
-        case "$sub" in)
+        case "$sub" in
             pr)
                 sub2="${1:-}"
                 shift || true
