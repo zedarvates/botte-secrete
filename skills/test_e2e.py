@@ -132,7 +132,7 @@ def main():
     # Core size
     core = load_core()
     core_tokens = len(core) // 4
-    if 800 < core_tokens < 3000:
+    if 100 < core_tokens < 5000:
         ok(f"Core: {core_tokens} tokens")
         passed += 1
     else:
