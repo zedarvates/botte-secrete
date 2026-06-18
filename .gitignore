@@ -49,3 +49,9 @@ reports/
 *.sqlite
 *.db
 .botte-cache/
+
+# Machine-specific generated LLM registry (regenerate with: llm_backends scan)
+configs/llm-endpoints.json
+
+# Local MCP wiring (per-machine absolute paths)
+.mcp.json

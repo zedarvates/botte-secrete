@@ -225,6 +225,8 @@ def main():
         "skills/diff_language",
         "skills/fallow_like",
         "skills/skill_project_optimizer",
+        "skills/llm_backends",
+        "skills/llm_mcp",
     ]
     for d in required_dirs:
         p = Path(project) / d

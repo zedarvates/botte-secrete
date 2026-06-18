@@ -142,6 +142,34 @@ class LocalRouter:
         }
 
 
+def resolve_live_backend():
+    """Return a concrete, reachable local chat backend from the discovery
+    registry, or None. Bridges the abstract routing decisions above to the
+    actual servers found by `skills.llm_backends` (LM Studio, Ollama, …).
+
+    Falls back gracefully if the registry is empty or llm_backends is absent.
+    """
+    try:
+        from skills.llm_backends import registry
+    except ImportError:
+        return None
+    best = registry.best_chat_backend()
+    if not best:
+        return None
+    return {
+        "host": best.host,
+        "port": best.port,
+        "label": best.label,
+        "base_url": best.base_url,
+        "model": registry.preferred_model(best),
+    }
+
+
+def local_chat_available() -> bool:
+    """True if at least one OpenAI-compatible local backend is reachable."""
+    return resolve_live_backend() is not None
+
+
 # Singleton
 _router = LocalRouter()
 def route(task_type: str, content: str = "", **kwargs) -> RouteDecision:
