@@ -1,0 +1,10 @@
+{
+  "_comment": "Copy to .mcp.json at the repo root (or merge into your Claude Code settings). Set cwd to this repo's absolute path. Requires Python 3.10+ on PATH.",
+  "mcpServers": {
+    "botte-llm": {
+      "command": "python",
+      "args": ["-m", "skills.llm_mcp.server"],
+      "cwd": "/absolute/path/to/botte-secrete"
+    }
+  }
+}

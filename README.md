@@ -46,6 +46,8 @@ Red Team: **Rochefort ∥ Milady ∥ Cte Wardes → Le Cardinal** (parallel coun
 | `cardinal/` | Red Team — 4 adversarial agents (counter-audit, counter-fix, counter-optimize) | Quality gate |
 | `clarification/` | Proactive questions — max 5, silence=auto | -80% wasted work |
 | `cache/` | `.botte-cache/` — avoid re-scanning between agents | -50% re-scan tokens |
+| `llm_backends/` | **P15** — Discover/audit/call local LLM servers (LM Studio, Ollama, …) | Offload → 0 cloud tokens |
+| `llm_mcp/` | **P15** — MCP server exposing local-LLM tools to agents | Auto local routing |
 | `local_router/` | **P9** — Routes tasks to local models (Hailo/ComfyUI/LocalAI) | -40% cloud tokens |
 | `media_loader/` | **P10** — Extracts text from media before LLM sees it | -95% media tasks |
 | `response_cache/` | **P8** — Semantic response cache (hash + similarity) | -60% repeated queries |
@@ -150,6 +152,35 @@ botte-secrete/
 └── README.md
 ```
 
+## 🏠 Local LLM Backends (P15)
+
+Detect and use local model servers so cheap tasks never hit the cloud. Works
+with **LM Studio, Ollama, LocalAI, vLLM, llama.cpp, Jan, KoboldCpp** — anything
+speaking the OpenAI `/v1` schema.
+
+```bash
+# Discover what's reachable (localhost, a host, or sweep the /24)
+python -m skills.llm_backends.cli scan
+python -m skills.llm_backends.cli scan --subnet
+python -m skills.llm_backends.cli scan 192.168.1.47
+
+# Audit: do you use local models? what can this machine run? next steps?
+python -m skills.llm_backends.cli audit --fresh
+
+# Run a prompt locally — 0 cloud tokens
+python -m skills.llm_backends.cli chat "classify: bug or feature?" --max-tokens 128
+```
+
+The audit profiles your hardware (RAM/VRAM/GPU) and, if you have **no** local
+model yet, gives step-by-step setup tuned to what your machine can actually run.
+
+### Wire it into Claude Code (MCP)
+
+Copy `configs/mcp.example.json` to `.mcp.json`, set `cwd` to this repo, and the
+agent gains five tools: `discover_backends`, `list_models`, `audit_local_usage`,
+`route_task`, `local_chat`. Tell it *"classify these locally"* and it offloads
+to your GPU. See [`skills/llm_mcp/SKILL.md`](skills/llm_mcp/SKILL.md).
+
 ## 🔬 Hardware Acceleration
 
 - **Hailo-8** (EUREKAI 192.168.1.47) — YOLOv8, ResNet-18, PaddleOCR
@@ -174,6 +205,7 @@ botte-secrete/
 - [x] P5: CI/CD integration (pre-commit hooks, GitHub Actions)
 - [x] P6: Real-time dashboard (auto-watch, savings chart, live status)
 - [x] P14: Tiered model selection + agent-to-agent compression
+- [x] P15: Local LLM backends (LM Studio/Ollama discovery, audit, MCP server)
 
 ## 📜 License
 
