@@ -232,6 +232,7 @@ def main():
         "skills/bootstrap",
         "skills/infra_advisor",
         "skills/prompt_improver",
+        "skills/metrics",
     ]
     for d in required_dirs:
         p = Path(project) / d

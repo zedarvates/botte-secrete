@@ -45,14 +45,25 @@ def main():
     cache.set("scan-result", {"files": len(scan_result.files), "lines": scan_result.stats.get("total_lines", 0)})
     print(f"  Scanned {len(scan_result.files)} files, {scan_result.stats['total_lines']} lines")
 
-    # Run analyzers
-    print("  Running analyzers...")
+    # Run analyzers. complexity + duplication are O(n²)/graph-heavy and don't
+    # scale to large multi-component repos, so skip them past a size threshold
+    # (the fast, high-value analyzers — secrets, dead code — always run; use
+    # `auto_audit` for stdlib duplication on big projects).
+    n_files = len(scan_result.files)
+    n_lines = scan_result.stats.get("total_lines", 0)
+    heavy = n_files > 200 or n_lines > 30000
+    skipped = []
+    print(f"  Running analyzers{' (large repo: skipping complexity+duplication)' if heavy else ''}...")
     dead_code = DeadCodeAnalyzer().analyze(scan_result)
-    duplication = DuplicationAnalyzer().analyze(scan_result)
-    complexity = ComplexityAnalyzer().analyze(scan_result)
     secrets = SecretsAnalyzer().analyze(scan_result)
     boundaries = BoundaryAnalyzer().analyze(scan_result)
     feature_flags = FeatureFlagAnalyzer().analyze(scan_result)
+    if heavy:
+        duplication, complexity = [], []
+        skipped = ["duplication", "complexity"]
+    else:
+        duplication = DuplicationAnalyzer().analyze(scan_result)
+        complexity = ComplexityAnalyzer().analyze(scan_result)
 
     health = calculate_health(scan_result, dead_code=dead_code, duplication=duplication,
                               complexity=complexity, secrets=secrets, boundaries=boundaries,
@@ -81,8 +92,13 @@ def main():
         "fn": findings,
         "by": {"dead": len(dead_code), "dup": len(duplication), "cmp": len(complexity),
                "sec": len(secrets), "bnd": len(boundaries), "flg": len(feature_flags)},
+        "skipped": skipped,
         "rc": [],
     }
+    if skipped:
+        report["rc"].append({"p": "info",
+                             "d": f"Skipped {', '.join(skipped)} (large repo) — "
+                                  "run `infra_advisor auto` for stdlib duplication"})
 
     # Recommendations (prioritized)
     if secrets:

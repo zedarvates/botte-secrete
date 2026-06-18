@@ -199,6 +199,19 @@ TOOLS = [
             "required": ["prompt"],
         },
     },
+    {
+        "name": "metrics",
+        "description": "Cost-focused project metrics: LOC by language/component, "
+                       "duplicate-fn groups, directive health, always-on context cost "
+                       "(CLAUDE.md tokens × turns), local-routing posture, and the "
+                       "audit's own (≈0 token) cost.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "project": {"type": "string", "description": "Project dir (default: cwd)."},
+            },
+        },
+    },
 ]
 
 
@@ -313,6 +326,12 @@ def _tool_improve_prompt(args: dict) -> str:
                       ensure_ascii=False, indent=2)
 
 
+def _tool_metrics(args: dict) -> str:
+    from skills.metrics import collect
+    return json.dumps(collect(args.get("project", ".")).to_dict(),
+                      ensure_ascii=False, indent=2)
+
+
 DISPATCH = {
     "discover_backends": _tool_discover_backends,
     "list_models": _tool_list_models,
@@ -325,6 +344,7 @@ DISPATCH = {
     "infra_tips": _tool_infra_tips,
     "auto_audit": _tool_auto_audit,
     "improve_prompt": _tool_improve_prompt,
+    "metrics": _tool_metrics,
 }
 
 
