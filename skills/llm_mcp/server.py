@@ -109,6 +109,38 @@ TOOLS = [
             "required": ["prompt"],
         },
     },
+    {
+        "name": "auto_route",
+        "description": "Auto-decide whether a task should run on a LOCAL model or a "
+                       "CLOUD model (DeepSeek, GLM, Nemotron, Grok, Gemma, …) based on "
+                       "an automatic effort estimate, then optionally execute it. "
+                       "Cloud models need an API key (OPENROUTER_API_KEY or native).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "prompt": {"type": "string"},
+                "task_type": {"type": "string", "description": "Optional hint, e.g. code_review."},
+                "execute": {"type": "boolean", "description": "Run it (true) or just decide (false)."},
+                "max_tokens": {"type": "integer", "default": 512},
+            },
+            "required": ["prompt"],
+        },
+    },
+    {
+        "name": "fusion",
+        "description": "Run a multi-model fusion strategy. cascade: cheap/local first, "
+                       "escalate if low-confidence. draft_refine: local drafts, a stronger "
+                       "cloud model refines. vote: ask several models, return consensus.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "strategy": {"type": "string", "enum": ["cascade", "draft_refine", "vote"]},
+                "prompt": {"type": "string"},
+                "max_tokens": {"type": "integer", "default": 256},
+            },
+            "required": ["strategy", "prompt"],
+        },
+    },
 ]
 
 
@@ -174,12 +206,34 @@ def _tool_local_chat(args: dict) -> str:
             f"{res.text}")
 
 
+def _tool_auto_route(args: dict) -> str:
+    from skills.auto_router import auto_route, auto_run
+    if args.get("execute"):
+        return json.dumps(auto_run(args["prompt"], task_type=args.get("task_type", ""),
+                                   max_tokens=int(args.get("max_tokens", 512))),
+                          ensure_ascii=False, indent=2)
+    return json.dumps(auto_route(args["prompt"], args.get("task_type", "")),
+                      ensure_ascii=False, indent=2)
+
+
+def _tool_fusion(args: dict) -> str:
+    from skills.auto_router import fusion
+    fn = {"cascade": fusion.cascade, "draft_refine": fusion.draft_refine,
+          "vote": fusion.vote}.get(args.get("strategy", ""))
+    if not fn:
+        return "ERROR: strategy must be cascade | draft_refine | vote"
+    return json.dumps(fn(args["prompt"], max_tokens=int(args.get("max_tokens", 256))),
+                      ensure_ascii=False, indent=2)
+
+
 DISPATCH = {
     "discover_backends": _tool_discover_backends,
     "list_models": _tool_list_models,
     "audit_local_usage": _tool_audit_local_usage,
     "route_task": _tool_route_task,
     "local_chat": _tool_local_chat,
+    "auto_route": _tool_auto_route,
+    "fusion": _tool_fusion,
 }
 
 

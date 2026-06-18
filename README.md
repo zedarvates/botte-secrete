@@ -55,6 +55,7 @@ Red Team: **Rochefort ∥ Milady ∥ Cte Wardes → Le Cardinal** (parallel coun
 | `ultra_compact/` | **P12** — Single-char keys, array format, delta-only | -90% iterative |
 | `code_fingerprint/` | **P13** — Hash functions, skip unchanged code | -80% re-analysis |
 | `tiered_router/` | **P14** — 5-level model selection + agent compression | -95% vs all-PREMIUM |
+| `auto_router/` | **P17** — Auto local↔cloud routing (DeepSeek/GLM/Nemotron/Grok/Gemma) + fusion | Effort-based, budget-aware |
 | `loader/` | Pre-prompt loader for `delegate_task` | Correct agent context |
 | `fallow_like/` | 8 static analyzers (dead code, dup, complexity, secrets, boundaries, etc.) | Code quality |
 | `skill_project_optimizer/` | Per-project skill filtering, token profiling | -73% skill tokens |
@@ -181,6 +182,35 @@ agent gains five tools: `discover_backends`, `list_models`, `audit_local_usage`,
 `route_task`, `local_chat`. Tell it *"classify these locally"* and it offloads
 to your GPU. See [`skills/llm_mcp/SKILL.md`](skills/llm_mcp/SKILL.md).
 
+## 🧭 Auto Router + Fusion (P17)
+
+Decides **local vs cloud automatically** from an effort estimate, across local
+backends *and* cloud providers (DeepSeek, Zhipu GLM, NVIDIA Nemotron, xAI Grok,
+Google Gemma — all OpenAI-compatible).
+
+```bash
+python -m skills.auto_router.cli route "classify: bug or feature?"      # → LOCAL
+python -m skills.auto_router.cli route "design a distributed cache, prove correctness"  # → cloud tier
+python -m skills.auto_router.cli providers                              # catalog + availability
+python -m skills.auto_router.cli run "summarize this in 2 lines"        # decide + execute
+```
+
+Trivial tasks stay local (0 cloud tokens); hard ones pick the cheapest capable
+cloud model — budget-aware, and falling back to local when no cloud key is set.
+Cloud access via `OPENROUTER_API_KEY` (all models) or native keys
+(`DEEPSEEK_API_KEY`, `XAI_API_KEY`, `ZHIPUAI_API_KEY`, `NVIDIA_API_KEY`).
+
+**Fusion** makes models collaborate:
+
+```bash
+python -m skills.auto_router.cli fusion cascade "is 17 prime?"           # cheap→escalate if unsure
+python -m skills.auto_router.cli fusion draft   "explain the CAP theorem" # local drafts, cloud refines
+python -m skills.auto_router.cli fusion vote    "capital of France, one word?"  # consensus
+```
+
+Also exposed as MCP tools (`auto_route`, `fusion`). See
+[`skills/auto_router/SKILL.md`](skills/auto_router/SKILL.md).
+
 ## 🔬 Hardware Acceleration
 
 - **Hailo-8** (EUREKAI 192.168.1.47) — YOLOv8, ResNet-18, PaddleOCR
@@ -206,6 +236,7 @@ to your GPU. See [`skills/llm_mcp/SKILL.md`](skills/llm_mcp/SKILL.md).
 - [x] P6: Real-time dashboard (auto-watch, savings chart, live status)
 - [x] P14: Tiered model selection + agent-to-agent compression
 - [x] P15: Local LLM backends (LM Studio/Ollama discovery, audit, MCP server)
+- [x] P17: Auto local↔cloud router (effort-based) + multi-provider catalog + fusion (cascade/draft-refine/vote)
 
 ## 📜 License
 
