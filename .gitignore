@@ -55,3 +55,6 @@ configs/llm-endpoints.json
 
 # Local MCP wiring (per-machine absolute paths)
 .mcp.json
+
+# Per-project deployer output (machine-specific paths + config)
+.botte/

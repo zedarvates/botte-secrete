@@ -229,6 +229,7 @@ def main():
         "skills/llm_mcp",
         "skills/auto_router",
         "skills/skill_finder",
+        "skills/bootstrap",
     ]
     for d in required_dirs:
         p = Path(project) / d
