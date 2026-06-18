@@ -73,10 +73,27 @@ class ScanResult:
     stats: dict = field(default_factory=dict)
 
 
+# Directories never worth scanning — vendored deps, build output, VCS, caches,
+# git worktrees and archive copies. Skipped by default so the scanner works
+# out-of-the-box on large, multi-component projects without hanging.
+DEFAULT_IGNORE_DIRS = {
+    ".git", ".hg", ".svn", "__pycache__", ".venv", "venv", "env",
+    "node_modules", "bower_components", "vendor", "third_party",
+    "dist", "build", "out", "target", "bin", "obj",
+    ".kilo", ".kilocode", "worktrees", "Archives", ".archive",
+    ".botte", ".botte-cache", ".pytest_cache", ".ruff_cache", ".mypy_cache",
+    ".cache", ".gradle", ".next", ".nuxt", ".turbo", "coverage", ".godot",
+}
+
+DEFAULT_MAX_FILES = 4000  # safety cap so a pathological tree can't hang the scan
+
+
 class ProjectScanner:
-    def __init__(self, root: str, ignore_patterns: list[str] | None = None):
+    def __init__(self, root: str, ignore_patterns: list[str] | None = None,
+                 max_files: int = DEFAULT_MAX_FILES):
         self.root = Path(root).resolve()
         self.ignore = ignore_patterns or []
+        self.max_files = max_files
         self._parsers: dict[str, Parser] = {}
 
     def _get_parser(self, lang: str, lang_func) -> Parser:
@@ -86,58 +103,79 @@ class ProjectScanner:
         return self._parsers[lang]
 
     def _should_ignore(self, path: Path) -> bool:
-        rel = str(path.relative_to(self.root))
-        for pattern in self.ignore:
-            if pattern in rel:
-                return True
-        return False
+        try:
+            parts = path.relative_to(self.root).parts
+        except ValueError:
+            return True
+        # Skip anything inside a default-ignored directory (no descent cost: we
+        # still iterate but reject fast on the path parts).
+        if any(part in DEFAULT_IGNORE_DIRS for part in parts):
+            return True
+        rel = "/".join(parts)
+        return any(pattern in rel for pattern in self.ignore)
 
     def scan(self) -> ScanResult:
         result = ScanResult()
         lang_counts: dict[str, int] = {}
         total_lines = 0
+        capped = False
 
-        for fpath in self.root.rglob("*"):
-            if not fpath.is_file():
-                continue
-            if self._should_ignore(fpath):
-                continue
+        import os
+        for dirpath, dirnames, filenames in os.walk(self.root):
+            # Prune ignored directories in place so we never descend into
+            # node_modules/.venv/etc. (huge perf win on real projects).
+            dirnames[:] = [d for d in dirnames if d not in DEFAULT_IGNORE_DIRS]
+            if capped:
+                break
+            for fname in filenames:
+                if len(result.files) >= self.max_files:
+                    capped = True
+                    break
+                fpath = Path(dirpath) / fname
+                if self._should_ignore(fpath):
+                    continue
 
-            ext = fpath.suffix
-            if ext not in LANG_MAP:
-                continue
+                ext = fpath.suffix
+                if ext not in LANG_MAP:
+                    continue
 
-            lang, lang_func = LANG_MAP[ext]
+                lang, lang_func = LANG_MAP[ext]
 
-            try:
-                source = fpath.read_bytes()
-                parser = self._get_parser(lang, lang_func)
-                tree = parser.parse(source)
+                try:
+                    source = fpath.read_bytes()
+                    parser = self._get_parser(lang, lang_func)
+                    tree = parser.parse(source)
 
-                rel_path = str(fpath.relative_to(self.root))
-                file_ast = FileAST(
-                    path=rel_path,
-                    language=lang,
-                    source=source,
-                    tree=tree,
-                )
+                    rel_path = str(fpath.relative_to(self.root))
+                    file_ast = FileAST(
+                        path=rel_path,
+                        language=lang,
+                        source=source,
+                        tree=tree,
+                    )
 
-                self._extract_symbols(file_ast, tree.root_node)
-                self._extract_imports(file_ast, tree.root_node)
-                self._extract_exports(file_ast, tree.root_node)
+                    self._extract_symbols(file_ast, tree.root_node)
+                    self._extract_imports(file_ast, tree.root_node)
+                    self._extract_exports(file_ast, tree.root_node)
 
-                result.files.append(file_ast)
-                lang_counts[lang] = lang_counts.get(lang, 0) + 1
-                total_lines += source.count(b"\n") + 1
+                    result.files.append(file_ast)
+                    lang_counts[lang] = lang_counts.get(lang, 0) + 1
+                    total_lines += source.count(b"\n") + 1
 
-            except Exception as e:
-                result.errors.append(f"{fpath}: {e}")
+                except Exception as e:
+                    result.errors.append(f"{fpath}: {e}")
 
         result.stats = {
             "total_files": len(result.files),
             "total_lines": total_lines,
             "languages": lang_counts,
+            "capped": capped,
+            "max_files": self.max_files,
         }
+        if capped:
+            result.errors.append(
+                f"scan capped at {self.max_files} files — pass a higher max_files "
+                "or add ignore_patterns to scan the rest.")
         return result
 
     def _extract_symbols(self, file_ast: FileAST, node: Node, depth: int = 0):
