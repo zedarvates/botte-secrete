@@ -45,7 +45,7 @@ class ResponseCache:
         """Load cache from disk."""
         if self.cache_file.exists():
             try:
-                data = json.loads(self.cache_file.read_text())
+                data = json.loads(self.cache_file.read_text(encoding="utf-8"))
                 for h, entry in data.items():
                     self._entries[h] = CachedResponse(**entry)
             except (json.JSONDecodeError, TypeError):
@@ -54,7 +54,7 @@ class ResponseCache:
     def _save(self):
         """Persist cache to disk."""
         data = {h: entry.__dict__ for h, entry in self._entries.items()}
-        self.cache_file.write_text(json.dumps(data, indent=2))
+        self.cache_file.write_text(json.dumps(data, indent=2), encoding="utf-8")
 
     def _hash(self, query: str) -> str:
         """Deterministic hash of a query."""

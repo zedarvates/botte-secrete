@@ -23,6 +23,7 @@ from pathlib import Path
 # Setup path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from skills.console_utf8 import force_utf8
 from skills.cache import ProjectCache
 from skills.loader import list_agents, agent_info, load_agent, load_agents_batch, load_core
 from skills.clarification import portos_clarify, dartagnan_clarify, aramis_clarify
@@ -48,6 +49,7 @@ def fail(msg):
 
 
 def main():
+    force_utf8()
     project = sys.argv[2] if len(sys.argv) > 2 and sys.argv[1] == "--project" else str(Path(__file__).parent.parent)
     passed = 0
     failed = 0

@@ -107,7 +107,7 @@ class Ticket:
 
 def load_findings(path: str) -> list[dict]:
     """Load findings from an audit report JSON."""
-    data = json.loads(Path(path).read_text())
+    data = json.loads(Path(path).read_text(encoding="utf-8"))
     # Support both old and compact format
     if "fn" in data:
         return data["fn"]

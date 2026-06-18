@@ -17,7 +17,7 @@ def auto_fix_dead_code(filepath: str, line: int, description: str) -> dict | Non
     if not p.exists():
         return {"action": "SKIPPED", "file": filepath, "line": line, "error": "file not found"}
     
-    lines = p.read_text().split("\n")
+    lines = p.read_text(encoding="utf-8").split("\n")
     if line < 1 or line > len(lines):
         return {"action": "SKIPPED", "file": filepath, "line": line, "error": "line out of range"}
     
@@ -29,7 +29,7 @@ def auto_fix_dead_code(filepath: str, line: int, description: str) -> dict | Non
     # Comment the dead code
     indent = len(original) - len(original.lstrip())
     lines[line - 1] = " " * indent + "# DEAD CODE: " + original.lstrip()
-    p.write_text("\n".join(lines) + "\n")
+    p.write_text("\n".join(lines) + "\n", encoding="utf-8")
     
     # Verify it still parses
     result = subprocess.run([sys.executable, "-m", "py_compile", str(p)],
@@ -37,7 +37,7 @@ def auto_fix_dead_code(filepath: str, line: int, description: str) -> dict | Non
     if result.returncode != 0:
         # Rollback
         lines[line - 1] = original
-        p.write_text("\n".join(lines) + "\n")
+        p.write_text("\n".join(lines) + "\n", encoding="utf-8")
         return {"action": "SKIPPED", "file": filepath, "line": line, "error": "parse error after fix"}
     
     return {"action": "FIXED", "file": filepath, "line": line, "fix": f"CMT::{description[:60]}"}
@@ -54,7 +54,7 @@ def main():
     output_dir.mkdir(parents=True, exist_ok=True)
 
     # Load audit
-    audit = json.loads(audit_json.read_text()) if audit_json.exists() else {}
+    audit = json.loads(audit_json.read_text(encoding="utf-8")) if audit_json.exists() else {}
     findings = audit.get("fn", audit.get("findings", []))
     
     print(f"⚔️ d'Artagnan — Fixing {len(findings)} findings...")
@@ -109,7 +109,7 @@ def main():
                 "d": e.get("error","")[:80]} for e in log if e["action"] == "SKIPPED"],
     }
     out = output_dir / "fix-report.json"
-    out.write_text(json.dumps(report, indent=2))
+    out.write_text(json.dumps(report, indent=2), encoding="utf-8")
 
     # Also cache it
     cache.set("fix-result", report)
@@ -119,4 +119,10 @@ def main():
 
 
 if __name__ == "__main__":
+    import sys as _sys  # ensure UTF-8 console on Windows (cp1252 crashes on emoji)
+    for _s in (_sys.stdout, _sys.stderr):
+        try:
+            _s.reconfigure(encoding="utf-8", errors="replace")
+        except (ValueError, OSError, AttributeError):
+            pass
     main()

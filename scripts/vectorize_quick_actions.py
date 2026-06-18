@@ -16,7 +16,7 @@ COLLECTION = "quick_actions"
 
 
 def load_manifest() -> list[dict]:
-    with open(MANIFEST) as f:
+    with open(MANIFEST, encoding="utf-8") as f:
         return json.load(f)["actions"]
 
 
@@ -169,6 +169,12 @@ def show_manifest():
 
 
 if __name__ == "__main__":
+    import sys as _sys  # ensure UTF-8 console on Windows (cp1252 crashes on emoji)
+    for _s in (_sys.stdout, _sys.stderr):
+        try:
+            _s.reconfigure(encoding="utf-8", errors="replace")
+        except (ValueError, OSError, AttributeError):
+            pass
     parser = argparse.ArgumentParser(description="Quick Actions matcher")
     parser.add_argument("--qdrant", default="http://192.168.1.47:6333")
     parser.add_argument("--index", action="store_true")

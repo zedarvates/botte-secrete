@@ -17,7 +17,7 @@ class RuntimeData(BaseModel):
 class RuntimeIngestion:
     @staticmethod
     def from_json(path: Path) -> RuntimeData:
-        data = json.loads(path.read_text())
+        data = json.loads(path.read_text(encoding="utf-8"))
         return RuntimeData(**data)
 
     @staticmethod

@@ -19,14 +19,14 @@ def main():
     print("=" * 60)
 
     # Load blue reports
-    blue_audit = json.loads((blue_dir / "audit" / "audit-report.json").read_text()) if (blue_dir / "audit" / "audit-report.json").exists() else {}
-    blue_fix = json.loads((blue_dir / "fix-report.json").read_text()) if (blue_dir / "fix-report.json").exists() else {}
-    blue_opt = json.loads((blue_dir / "optimize" / "optimization-plan.json").read_text()) if (blue_dir / "optimize" / "optimization-plan.json").exists() else {}
+    blue_audit = json.loads((blue_dir / "audit" / "audit-report.json").read_text(encoding="utf-8")) if (blue_dir / "audit" / "audit-report.json").exists() else {}
+    blue_fix = json.loads((blue_dir / "fix-report.json").read_text(encoding="utf-8")) if (blue_dir / "fix-report.json").exists() else {}
+    blue_opt = json.loads((blue_dir / "optimize" / "optimization-plan.json").read_text(encoding="utf-8")) if (blue_dir / "optimize" / "optimization-plan.json").exists() else {}
 
     # Load red reports
-    red_audit = json.loads((red_dir / "counter-audit.json").read_text()) if (red_dir / "counter-audit.json").exists() else {}
-    red_fix = json.loads((red_dir / "counter-fix.json").read_text()) if (red_dir / "counter-fix.json").exists() else {}
-    red_opt = json.loads((red_dir / "counter-optim.json").read_text()) if (red_dir / "counter-optim.json").exists() else {}
+    red_audit = json.loads((red_dir / "counter-audit.json").read_text(encoding="utf-8")) if (red_dir / "counter-audit.json").exists() else {}
+    red_fix = json.loads((red_dir / "counter-fix.json").read_text(encoding="utf-8")) if (red_dir / "counter-fix.json").exists() else {}
+    red_opt = json.loads((red_dir / "counter-optim.json").read_text(encoding="utf-8")) if (red_dir / "counter-optim.json").exists() else {}
 
     # Calculate blue team trust score
     blue_score = 100
@@ -112,7 +112,7 @@ def main():
     }
 
     output_path = red_dir / "confrontation.json"
-    with open(output_path, "w") as f:
+    with open(output_path, "w", encoding="utf-8") as f:
         json.dump(confrontation, f, indent=2, default=str)
 
     print(f"\n✅ Confrontation report: {output_path}")
@@ -120,4 +120,10 @@ def main():
 
 
 if __name__ == "__main__":
+    import sys as _sys  # ensure UTF-8 console on Windows (cp1252 crashes on emoji)
+    for _s in (_sys.stdout, _sys.stderr):
+        try:
+            _s.reconfigure(encoding="utf-8", errors="replace")
+        except (ValueError, OSError, AttributeError):
+            pass
     main()

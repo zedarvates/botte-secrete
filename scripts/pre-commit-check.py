@@ -64,7 +64,7 @@ def check_no_secrets():
 
     for filepath in staged:
         try:
-            content = Path(filepath).read_text()
+            content = Path(filepath).read_text(encoding="utf-8")
             for pattern, label in patterns:
                 matches = re.finditer(pattern, content)
                 for m in matches:
@@ -105,7 +105,7 @@ def check_python_syntax():
 
     for filepath in staged:
         try:
-            source = Path(filepath).read_text()
+            source = Path(filepath).read_text(encoding="utf-8")
             compile(source, filepath, "exec")
         except SyntaxError as e:
             fail(f"{filepath}:{e.lineno} — {e.msg}")
@@ -172,4 +172,10 @@ def main():
 
 
 if __name__ == "__main__":
+    import sys as _sys  # ensure UTF-8 console on Windows (cp1252 crashes on emoji)
+    for _s in (_sys.stdout, _sys.stderr):
+        try:
+            _s.reconfigure(encoding="utf-8", errors="replace")
+        except (ValueError, OSError, AttributeError):
+            pass
     sys.exit(main())

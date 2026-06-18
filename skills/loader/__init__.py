@@ -50,7 +50,7 @@ AGENT_DISPLAY = {
 def load_core() -> str:
     """Charge core-agent.md."""
     if CORE_PROMPT.exists():
-        return CORE_PROMPT.read_text()
+        return CORE_PROMPT.read_text(encoding="utf-8")
     return ""
 
 
@@ -70,7 +70,7 @@ def load_delta(agent_name: str) -> str:
     path = AGENTS.get(agent_name)
     if not path or not path.exists():
         raise ValueError(f"Agent '{agent_name}' not found. Available: {list(AGENTS.keys())}")
-    return path.read_text()
+    return path.read_text(encoding="utf-8")
 
 
 def load_agent(
@@ -153,7 +153,7 @@ def agent_info(agent_name: str) -> dict:
     path = AGENTS.get(agent_name)
     if not path or not path.exists():
         return {"error": f"Agent '{agent_name}' not found"}
-    content = path.read_text()
+    content = path.read_text(encoding="utf-8")
     return {
         "name": agent_name,
         "display": AGENT_DISPLAY.get(agent_name, agent_name),

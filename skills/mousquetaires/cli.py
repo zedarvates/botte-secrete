@@ -70,7 +70,7 @@ def audit(
 
     report_path = output / "audit-report.json"
     if report_path.exists():
-        report = json.loads(report_path.read_text())
+        report = json.loads(report_path.read_text(encoding="utf-8"))
         _display_audit_summary(report)
 
     console.print(f"\n[green]✅ Audit complete — Report: {output}/audit-report.json[/green]")
@@ -122,7 +122,7 @@ def fix(
         console.print("[red]❌ No audit report found. Run 'audit' first.[/red]")
         raise typer.Exit(1)
 
-    report = json.loads(audit_report.read_text())
+    report = json.loads(audit_report.read_text(encoding="utf-8"))
     findings = (
         report.get("findings", {}).get("error", []) +
         report.get("findings", {}).get("warning", [])
@@ -170,7 +170,7 @@ def optimize(
 
     plan_path = output / "optimization-plan.json"
     if plan_path.exists():
-        plan = json.loads(plan_path.read_text())
+        plan = json.loads(plan_path.read_text(encoding="utf-8"))
         stats = plan.get("stats", {})
 
         table = Table(title="📿 Optimization Results")
@@ -268,7 +268,7 @@ def run(
     console.print("\n[bold red]═══ Phase 4: 👑 Athos (Synthesis) ═══[/bold red]")
 
     consolidated_path = output / "consolidated-report.json"
-    with open(consolidated_path, "w") as f:
+    with open(consolidated_path, "w", encoding="utf-8") as f:
         json.dump(report, f, indent=2, default=str)
 
     console.print(f"\n[bold green]✅ Pipeline complete![/bold green]")
@@ -301,4 +301,10 @@ def main():
 
 
 if __name__ == "__main__":
+    import sys as _sys  # ensure UTF-8 console on Windows (cp1252 crashes on emoji)
+    for _s in (_sys.stdout, _sys.stderr):
+        try:
+            _s.reconfigure(encoding="utf-8", errors="replace")
+        except (ValueError, OSError, AttributeError):
+            pass
     main()
