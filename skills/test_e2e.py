@@ -231,6 +231,7 @@ def main():
         "skills/skill_finder",
         "skills/bootstrap",
         "skills/infra_advisor",
+        "skills/prompt_improver",
     ]
     for d in required_dirs:
         p = Path(project) / d
