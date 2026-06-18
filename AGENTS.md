@@ -15,10 +15,10 @@ built to lean on local hardware and cheap models wherever possible.
 - Language: **Python 3.10+**, standard library only (no runtime dependencies for
   the core modules). On Windows use `python` (not `python3`, which may be a stub).
 - Run a module: `python -m skills.<module>.cli ...`
-- Tests:
+- Tests (94 passing):
   - Full pipeline: `python skills/test_e2e.py`
-  - Module tests: `python -m skills.llm_backends.test_llm_backends`,
-    `python -m skills.directives_audit.test_directives_audit`
+  - Module tests: `python -m skills.<module>.test_<module>` for `llm_backends`,
+    `directives_audit`, `auto_router`, `skill_finder`, `bootstrap`, `infra_advisor`.
 - Pre-commit checks: `python scripts/pre-commit-check.py --fast`
 
 ## Conventions (non-negotiable)

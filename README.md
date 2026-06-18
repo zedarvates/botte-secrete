@@ -1,7 +1,7 @@
 # 🧦 Botte Secrète — Multi-Agent Token Optimization Platform
 
 [![CI](https://github.com/zedarvates/botte-secrete/actions/workflows/ci.yml/badge.svg)](https://github.com/zedarvates/botte-secrete/actions)
-[![Tests](https://img.shields.io/badge/tests-22%2F22-brightgreen)](https://github.com/zedarvates/botte-secrete)
+[![Tests](https://img.shields.io/badge/tests-94%2F94-brightgreen)](https://github.com/zedarvates/botte-secrete)
 [![Token Savings](https://img.shields.io/badge/token%20savings-85%25-blue)](https://github.com/zedarvates/botte-secrete)
 [![Self-Audit](https://img.shields.io/badge/self--audit-59%2F100%20(C)-orange)](https://github.com/zedarvates/botte-secrete)
 
@@ -10,12 +10,32 @@
 A multi-agent pipeline for code audit, automated fixes, token optimization,
 and adversarial red teaming — all built to run efficiently on local hardware.
 
+**The goal: make your projects cheaper to work on.** Deploy it into any repo and
+its agent routes cheap work to local models (LM Studio / Ollama) for **0 cloud
+tokens**, escalates only the hard parts to the cloud, picks tools locally, and
+tells you what hardware/infra changes would cut cost further.
+
 ## 🎯 What It Does
 
 1. **Audit** — Static analysis (dead code, duplication, complexity, secrets, boundaries)
 2. **Fix** — Automated corrections with verification
 3. **Optimize** — Per-project skill filtering, token reduction
 4. **Red Team** — Adversarial agents that challenge the Blue Team
+5. **Route local↔cloud** — Auto effort estimate sends cheap tasks to local LLMs,
+   hard ones to the cloud (DeepSeek/GLM/Nemotron/Grok/Gemma); fusion makes them collaborate
+6. **Deploy** — One command wires the whole stack into any project via MCP
+
+## ⚡ Deploy into your project
+
+```bash
+python -m skills.bootstrap.cli /path/to/your-project   # wire MCP tools, audit directives, write .botte config
+python -m skills.infra_advisor.cli auto .              # one-pass cost audit (directives + infra + duplication)
+python -m skills.llm_backends.cli audit --fresh        # what local models can this machine run?
+```
+
+After deploy, restart your agent in the project — it gains the `botte-llm` MCP
+tools: `auto_route`, `local_chat`, `fusion`, `find_skills`, `infra_tips`,
+`auto_audit`, `audit_local_usage`, and more.
 
 ## ⚔️ Architecture
 
