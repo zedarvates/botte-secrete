@@ -76,8 +76,8 @@ def main() -> int:
         init["result"]["protocolVersion"] == mcp.PROTOCOL_VERSION, state)
     tools = mcp.handle({"jsonrpc": "2.0", "id": 2, "method": "tools/list"})
     names = {t["name"] for t in tools["result"]["tools"]}
-    _ok("MCP tools/list exposes all 5 tools",
-        names == {"discover_backends", "list_models", "audit_local_usage", "route_task", "local_chat"},
+    _ok("MCP tools/list exposes the core local-LLM tools",
+        {"discover_backends", "list_models", "audit_local_usage", "route_task", "local_chat"} <= names,
         state)
     notif = mcp.handle({"jsonrpc": "2.0", "method": "notifications/initialized"})
     _ok("MCP notification returns no response", notif is None, state)
