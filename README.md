@@ -37,6 +37,43 @@ After deploy, restart your agent in the project — it gains the `botte-llm` MCP
 tools: `auto_route`, `local_chat`, `fusion`, `find_skills`, `infra_tips`,
 `auto_audit`, `audit_local_usage`, and more.
 
+## 📋 Copy-paste prompts
+
+**No setup knowledge needed** — paste this into your favourite LLM's project chat
+(Claude, ChatGPT, Cursor, …). It will install and wire everything for you:
+
+```text
+Set up "Botte Secrète" to cut my AI token/cost on THIS project. Work step by
+step, run the commands, and stop to ask me only if something fails.
+
+1. Get the toolkit (skip if the folder already exists):
+   git clone https://github.com/zedarvates/botte-secrete
+2. From inside the botte-secrete folder, deploy it into MY project:
+   python -m skills.bootstrap.cli "<ABSOLUTE PATH TO MY PROJECT>"
+   (this only ADDS to my .mcp.json — it never deletes my existing setup)
+3. Tell me what local models I can run:
+   python -m skills.llm_backends.cli audit --fresh
+4. Show me my cost report (per component + tokens/session):
+   python -m skills.metrics.cli "<ABSOLUTE PATH TO MY PROJECT>"
+5. Restart yourself in my project so you pick up the new MCP tools, then from
+   now on route cheap work — classification, extraction, summaries, and choosing
+   which skills/tools to use — to my LOCAL model (tools: local_chat, auto_route,
+   find_skills). Keep the expensive cloud model only for hard reasoning, and
+   prefer `rtk <command>` for terminal commands.
+
+Finish by telling me the headline: how many tokens per session this saves.
+```
+
+**Run the tests** — paste into a terminal at the repo root (one command, works on
+Windows/macOS/Linux):
+
+```text
+python scripts/run_tests.py
+```
+
+(or ask your agent: *"Run the Botte Secrète test suite and report any failures:
+`python scripts/run_tests.py`"*)
+
 ## ⚔️ Architecture
 
 ```
