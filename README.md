@@ -58,6 +58,7 @@ Red Team: **Rochefort ∥ Milady ∥ Cte Wardes → Le Cardinal** (parallel coun
 | `loader/` | Pre-prompt loader for `delegate_task` | Correct agent context |
 | `fallow_like/` | 8 static analyzers (dead code, dup, complexity, secrets, boundaries, etc.) | Code quality |
 | `skill_project_optimizer/` | Per-project skill filtering, token profiling | -73% skill tokens |
+| `skill_finder/` | **P18** — Find relevant skills/tools for a task locally (0 cloud tokens) | -100% selection cost |
 | `botte` | Terminal wrapper — compresses command output | -60-99% terminal tokens |
 | `code-rules/` | Coding standards: stdlib-first, flat architecture | -30% context |
 | `simplify-code/` | Parallel 3-agent code review | -25% post-edit tokens |
@@ -206,6 +207,7 @@ to your GPU. See [`skills/llm_mcp/SKILL.md`](skills/llm_mcp/SKILL.md).
 - [x] P6: Real-time dashboard (auto-watch, savings chart, live status)
 - [x] P14: Tiered model selection + agent-to-agent compression
 - [x] P15: Local LLM backends (LM Studio/Ollama discovery, audit, MCP server)
+- [x] P18: Local skill/tool finder — zero-token retrieval for skill selection
 
 ## 📜 License
 

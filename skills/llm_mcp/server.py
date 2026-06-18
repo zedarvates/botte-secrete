@@ -109,6 +109,24 @@ TOOLS = [
             "required": ["prompt"],
         },
     },
+    {
+        "name": "find_skills",
+        "description": "Find the skills/tools relevant to a task by searching SKILL.md "
+                       "files locally — 0 cloud tokens (lexical match; optional local-LLM "
+                       "rerank). Use this to pick tools instead of spending a cloud model "
+                       "on skill search.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "query": {"type": "string"},
+                "roots": {"type": "array", "items": {"type": "string"},
+                          "description": "Skill dirs to search (default: repo skills/)."},
+                "top_k": {"type": "integer", "default": 5},
+                "use_local": {"type": "boolean", "description": "Local-LLM rerank (0 cloud tokens)."},
+            },
+            "required": ["query"],
+        },
+    },
 ]
 
 
@@ -174,12 +192,23 @@ def _tool_local_chat(args: dict) -> str:
             f"{res.text}")
 
 
+def _tool_find_skills(args: dict) -> str:
+    from skills.skill_finder import find
+    roots = [__import__("pathlib").Path(r).expanduser() for r in args.get("roots", [])] or None
+    return json.dumps(
+        find(args["query"], roots=roots, top_k=int(args.get("top_k", 5)),
+             use_local=bool(args.get("use_local", False))),
+        ensure_ascii=False, indent=2,
+    )
+
+
 DISPATCH = {
     "discover_backends": _tool_discover_backends,
     "list_models": _tool_list_models,
     "audit_local_usage": _tool_audit_local_usage,
     "route_task": _tool_route_task,
     "local_chat": _tool_local_chat,
+    "find_skills": _tool_find_skills,
 }
 
 
