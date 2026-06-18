@@ -94,6 +94,21 @@ def main() -> int:
         _ok("config JSON not scanned for broken refs",
             not any("not found" in f["message"] for f in findings), state)
 
+    # D. Ref extraction: keep '.'-prefixed in-repo paths, drop ~/ext/bare-ext.
+    with tempfile.TemporaryDirectory() as d:
+        root = Path(d)
+        (root / ".claude" / "skills").mkdir(parents=True)
+        (root / ".claude" / "skills" / "SKILL.md").write_text("x", encoding="utf-8")
+        (root / "CLAUDE.md").write_text(
+            "Server at `.claude/skills/SKILL.md`. Global at `~/.claude/CLAUDE.md`. "
+            "Maps use the `.mapodc` extension. Missing: `src/gone.zig`.",
+            encoding="utf-8")
+        msgs = " ".join(f.message for f in validate(root) if "not found" in f.message)
+        _ok("existing .claude path NOT flagged", ".claude/skills/SKILL.md" not in msgs, state)
+        _ok("home (~) path NOT flagged", "CLAUDE.md" not in msgs.replace("src/gone", ""), state)
+        _ok("bare extension .mapodc NOT flagged", "mapodc" not in msgs, state)
+        _ok("genuinely missing src/gone.zig IS flagged", "src/gone.zig" in msgs, state)
+
     passed, failed = state
     print(f"\nRESULT: {passed} passed, {failed} failed")
     return 0 if failed == 0 else 1
