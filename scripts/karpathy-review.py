@@ -38,7 +38,7 @@ P4_PATTERNS = {
 }
 
 
-# DEAD CODE (Porthos): def review_diff(diff_text: str) -> dict:
+def review_diff(diff_text: str) -> dict:
     """Review a diff patch against Karpathy's 4 principles."""
     lines = diff_text.split("\n")
     added = [l for l in lines if l.startswith("+") and not l.startswith("+++")]
@@ -134,9 +134,9 @@ if __name__ == "__main__":
 
     diff_text = ""
     if args.diff:
-        diff_text = Path(args.diff).read_text()
+        diff_text = Path(args.diff).read_text(encoding="utf-8")
     elif args.file:
-        diff_text = Path(args.file).read_text()
+        diff_text = Path(args.file).read_text(encoding="utf-8")
         # Fake diff for single file review
         lines = diff_text.split("\n")
         diff_text = "\n".join(f"+{l}" for l in lines)

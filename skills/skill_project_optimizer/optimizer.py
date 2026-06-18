@@ -210,5 +210,5 @@ def generate_skills_profile(
     ])
 
     content = "\n".join(lines)
-    output_path.write_text(content)
+    output_path.write_text(content, encoding="utf-8")
     return output_path

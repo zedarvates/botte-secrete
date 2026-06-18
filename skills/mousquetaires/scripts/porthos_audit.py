@@ -102,7 +102,7 @@ def main():
 
     # Save & cache
     out = output_dir / "audit-report.json"
-    out.write_text(json.dumps(report, indent=2, default=str))
+    out.write_text(json.dumps(report, indent=2, default=str), encoding="utf-8")
     cache.set_audit_report(report)
 
     # Summary
@@ -115,4 +115,10 @@ def main():
 
 
 if __name__ == "__main__":
+    import sys as _sys  # ensure UTF-8 console on Windows (cp1252 crashes on emoji)
+    for _s in (_sys.stdout, _sys.stderr):
+        try:
+            _s.reconfigure(encoding="utf-8", errors="replace")
+        except (ValueError, OSError, AttributeError):
+            pass
     main()

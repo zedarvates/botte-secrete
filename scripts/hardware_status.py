@@ -8,7 +8,7 @@ import urllib.request
 import sys
 
 
-# DEAD CODE (Porthos): def check_hailo(host="192.168.1.47", port=8767):
+def check_hailo(host="192.168.1.47", port=8767):
     """Check Hailo-8 device status."""
     base = f"http://{host}:{port}"
     
@@ -74,6 +74,12 @@ def check_bonsai(port=8788):
 
 
 if __name__ == "__main__":
+    import sys as _sys  # ensure UTF-8 console on Windows (cp1252 crashes on emoji)
+    for _s in (_sys.stdout, _sys.stderr):
+        try:
+            _s.reconfigure(encoding="utf-8", errors="replace")
+        except (ValueError, OSError, AttributeError):
+            pass
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--hailo-host", default="192.168.1.47")

@@ -108,7 +108,7 @@ def profile_project(project_path: str) -> ProjectProfile:
     git_config = root / ".git" / "config"
     if git_config.exists():
         try:
-            content = git_config.read_text(errors="replace")
+            content = git_config.read_text(encoding="utf-8", errors="replace")
             profile.has_github_remote = "github.com" in content
         except Exception:
             pass
@@ -123,7 +123,7 @@ def _detect_js_framework(package_json: Path) -> list[str]:
     frameworks = []
     try:
         import json
-        data = json.loads(package_json.read_text(errors="replace"))
+        data = json.loads(package_json.read_text(encoding="utf-8", errors="replace"))
         deps = {**data.get("dependencies", {}), **data.get("devDependencies", {})}
 
         fw_map = {
@@ -145,7 +145,7 @@ def _detect_js_framework(package_json: Path) -> list[str]:
 def _detect_python_framework(pyproject: Path) -> list[str]:
     frameworks = []
     try:
-        content = pyproject.read_text(errors="replace")
+        content = pyproject.read_text(encoding="utf-8", errors="replace")
         fw_patterns = {
             r"django": "django", r"flask": "flask", r"fastapi": "fastapi",
             r"pydantic": "pydantic", r"sqlalchemy": "sqlalchemy",

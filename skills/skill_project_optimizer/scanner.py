@@ -68,7 +68,7 @@ def scan_skills(skills_dir: str = "~/.hermes/skills") -> SkillScanResult:
                 continue
 
             try:
-                content = skill_md.read_text(errors="replace")
+                content = skill_md.read_text(encoding="utf-8", errors="replace")
                 chars = len(content)
                 lines = len(content.splitlines())
 

@@ -57,7 +57,7 @@ class ProjectCache:
         if not p.exists():
             return False
         try:
-            data = json.loads(p.read_text())
+            data = json.loads(p.read_text(encoding="utf-8"))
             age = datetime.datetime.now() - datetime.datetime.fromisoformat(data.get("cached_at", "2000-01-01T00:00:00"))
             if age.total_seconds() > self.MAX_CACHE_AGE_HOURS * 3600:
                 p.unlink(missing_ok=True)
@@ -74,14 +74,14 @@ class ProjectCache:
         """Charge depuis le cache. Retourne None si pas de cache ou périmé."""
         if not self.is_fresh(name):
             return None
-        return json.loads(self._path(name).read_text())
+        return json.loads(self._path(name).read_text(encoding="utf-8"))
 
     def set(self, name: str, data: dict):
         """Sauvegarde dans le cache avec métadonnées."""
         data["cached_at"] = datetime.datetime.now().isoformat()
         data["version"] = self.VERSION
         data["project_root"] = str(self.root)
-        self._path(name).write_text(json.dumps(data, indent=2, default=str))
+        self._path(name).write_text(json.dumps(data, indent=2, default=str), encoding="utf-8")
 
     def get_or_scan(self, scanner_fn) -> dict:
         """Récupère du cache ou scanne si nécessaire.
@@ -129,7 +129,7 @@ class ProjectCache:
         # Fallback: lire le fichier .skills-profile
         sp_path = self.root / ".skills-profile"
         if sp_path.exists():
-            data = json.loads(sp_path.read_text())
+            data = json.loads(sp_path.read_text(encoding="utf-8"))
             self.set("skills-profile", data)
             return data
         return None

@@ -24,7 +24,7 @@ def estimate_tokens(project_path: Path) -> dict:
             if f.suffix in ('.min.js','.pyc','.pyo','.so','.dll','.exe'):
                 continue
             try:
-                lines = len(f.read_text(errors='ignore').split('\n'))
+                lines = len(f.read_text(encoding="utf-8", errors='ignore').split('\n'))
                 total_lines += lines
                 total_files += 1
                 ext = f.suffix or 'noext'
@@ -88,7 +88,7 @@ def main():
     }
 
     out = output_dir / "optimization-plan.json"
-    out.write_text(json.dumps(report, indent=2))
+    out.write_text(json.dumps(report, indent=2), encoding="utf-8")
     cache.set("optimize-result", report)
 
     print(f"\n📿 Token analysis:")
@@ -101,4 +101,10 @@ def main():
 
 
 if __name__ == "__main__":
+    import sys as _sys  # ensure UTF-8 console on Windows (cp1252 crashes on emoji)
+    for _s in (_sys.stdout, _sys.stderr):
+        try:
+            _s.reconfigure(encoding="utf-8", errors="replace")
+        except (ValueError, OSError, AttributeError):
+            pass
     main()

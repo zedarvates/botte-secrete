@@ -167,7 +167,7 @@ def analyze(
         out = _format_text(result)
 
     if output:
-        output.write_text(out)
+        output.write_text(out, encoding="utf-8")
         console.print(f"[green]✅ Report written to {output}[/green]")
     else:
         print(out)
@@ -242,4 +242,10 @@ def main():
 
 
 if __name__ == "__main__":
+    import sys as _sys  # ensure UTF-8 console on Windows (cp1252 crashes on emoji)
+    for _s in (_sys.stdout, _sys.stderr):
+        try:
+            _s.reconfigure(encoding="utf-8", errors="replace")
+        except (ValueError, OSError, AttributeError):
+            pass
     main()

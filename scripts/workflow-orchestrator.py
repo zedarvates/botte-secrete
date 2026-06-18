@@ -23,7 +23,7 @@ HOME = Path.home()
 SKILLS = HOME / ".hermes" / "skills"
 
 
-# DEAD CODE (Porthos): def load_scripts(skill: str) -> Path:
+def load_scripts(skill: str) -> Path:
     """Find the scripts directory for a skill, checking all possible paths."""
     candidates = [
         SKILLS / "dynamic-workflows" / skill / "scripts",
@@ -142,7 +142,7 @@ def generate_report(project: str, results: dict, output: str):
         lines.append("")
 
     report_path.parent.mkdir(parents=True, exist_ok=True)
-    report_path.write_text("\n".join(lines))
+    report_path.write_text("\n".join(lines), encoding="utf-8")
     print(f"\n📄 Rapport sauvegardé: {report_path}")
     return str(report_path)
 
@@ -191,4 +191,10 @@ def main():
 
 
 if __name__ == "__main__":
+    import sys as _sys  # ensure UTF-8 console on Windows (cp1252 crashes on emoji)
+    for _s in (_sys.stdout, _sys.stderr):
+        try:
+            _s.reconfigure(encoding="utf-8", errors="replace")
+        except (ValueError, OSError, AttributeError):
+            pass
     main()

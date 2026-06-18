@@ -46,7 +46,7 @@ class CodeFingerprinter:
     def _extract_functions(self, file_path: Path) -> list[CodeFingerprint]:
         """Extract all functions and classes from a Python file."""
         try:
-            source = file_path.read_text()
+            source = file_path.read_text(encoding="utf-8")
             tree = ast.parse(source)
         except (SyntaxError, UnicodeDecodeError):
             return []
@@ -159,7 +159,7 @@ class CodeFingerprinter:
         """Load cached fingerprints from disk."""
         if self.cache_file.exists():
             try:
-                data = json.loads(self.cache_file.read_text())
+                data = json.loads(self.cache_file.read_text(encoding="utf-8"))
                 for key, entry in data.items():
                     self.fingerprints[key] = CodeFingerprint(**entry)
             except (json.JSONDecodeError, TypeError):
@@ -169,7 +169,7 @@ class CodeFingerprinter:
         """Persist fingerprints to disk."""
         data = {k: fp.__dict__ for k, fp in self.fingerprints.items()}
         self.cache_file.parent.mkdir(exist_ok=True)
-        self.cache_file.write_text(json.dumps(data, indent=2))
+        self.cache_file.write_text(json.dumps(data, indent=2), encoding="utf-8")
 
     def report(self) -> dict:
         return {
