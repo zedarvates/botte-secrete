@@ -228,6 +228,7 @@ def main():
         "skills/llm_backends",
         "skills/llm_mcp",
         "skills/auto_router",
+        "skills/skill_finder",
     ]
     for d in required_dirs:
         p = Path(project) / d
