@@ -159,6 +159,31 @@ TOOLS = [
             "required": ["query"],
         },
     },
+    {
+        "name": "infra_tips",
+        "description": "Audit the local cluster's hardware/software/MCP setup and return "
+                       "prioritized tips to cut token cost (GPU, Hailo NPU for vision, "
+                       "Linux inference node, local Qdrant, …) plus an ASCII cluster diagram.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "scan_subnet": {"type": "boolean", "description": "Sweep the local /24 first."},
+            },
+        },
+    },
+    {
+        "name": "auto_audit",
+        "description": "One-pass cost audit on a project: agent directives health, infra "
+                       "tips + ASCII diagram, duplicate-function scan, and local skill "
+                       "catalog size, with pointers to deeper passes.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "project": {"type": "string", "description": "Project dir (default: cwd)."},
+                "scan_subnet": {"type": "boolean"},
+            },
+        },
+    },
 ]
 
 
@@ -254,6 +279,19 @@ def _tool_find_skills(args: dict) -> str:
     )
 
 
+def _tool_infra_tips(args: dict) -> str:
+    from skills.infra_advisor import advise
+    return json.dumps(advise(scan_subnet=bool(args.get("scan_subnet", False)), fresh=True),
+                      ensure_ascii=False, indent=2)
+
+
+def _tool_auto_audit(args: dict) -> str:
+    from skills.infra_advisor import auto_audit
+    return json.dumps(auto_audit(args.get("project", "."),
+                                 scan_subnet=bool(args.get("scan_subnet", False))),
+                      ensure_ascii=False, indent=2)
+
+
 DISPATCH = {
     "discover_backends": _tool_discover_backends,
     "list_models": _tool_list_models,
@@ -263,6 +301,8 @@ DISPATCH = {
     "auto_route": _tool_auto_route,
     "fusion": _tool_fusion,
     "find_skills": _tool_find_skills,
+    "infra_tips": _tool_infra_tips,
+    "auto_audit": _tool_auto_audit,
 }
 
 

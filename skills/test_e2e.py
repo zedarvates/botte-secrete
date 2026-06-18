@@ -230,6 +230,7 @@ def main():
         "skills/auto_router",
         "skills/skill_finder",
         "skills/bootstrap",
+        "skills/infra_advisor",
     ]
     for d in required_dirs:
         p = Path(project) / d

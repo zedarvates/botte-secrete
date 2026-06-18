@@ -62,6 +62,7 @@ Red Team: **Rochefort ∥ Milady ∥ Cte Wardes → Le Cardinal** (parallel coun
 | `directives_audit/` | **P16** — Audit agent-guidance files (CLAUDE.md/AGENTS.md/specs, md+html) | Avoid blind agent runs |
 | `skill_finder/` | **P18** — Find relevant skills/tools for a task locally (0 cloud tokens) | -100% selection cost |
 | `bootstrap/` | **P19** — Deploy the whole stack into a project (one command) | Makes it real |
+| `infra_advisor/` | **P20** — Hardware/software/MCP cluster tips + auto audit (ASCII diagram) | Cut cost beyond code |
 | `botte` | Terminal wrapper — compresses command output | -60-99% terminal tokens |
 | `code-rules/` | Coding standards: stdlib-first, flat architecture | -30% context |
 | `simplify-code/` | Parallel 3-agent code review | -25% post-edit tokens |
@@ -243,6 +244,7 @@ Also exposed as MCP tools (`auto_route`, `fusion`). See
 - [x] P17: Auto local↔cloud router (effort-based) + multi-provider catalog + fusion (cascade/draft-refine/vote)
 - [x] P18: Local skill/tool finder — zero-token retrieval for skill selection
 - [x] P19: Project deployer — `botte setup <project>` wires MCP + directives audit + config
+- [x] P20: Infra advisor — cluster hardware/software/MCP tips + auto audit (ASCII cluster diagram)
 
 ## 📜 License
 
