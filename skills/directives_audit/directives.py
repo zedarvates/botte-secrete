@@ -181,13 +181,16 @@ def _extract_refs(text: str) -> set[str]:
     refs: set[str] = set()
     for m in _REF_RE.finditer(text):
         token = (m.group(1) or m.group(2) or "").strip()
-        # Keep things that look like in-repo paths, drop URLs / commands / globs.
-        if not token or " " in token or token.startswith(("http", "#", "$", "-")):
+        # Drop URLs, commands, flags, home (~) and absolute/external paths.
+        if not token or " " in token or token.startswith(("http", "#", "$", "-", "~", "/")):
             continue
         if "://" in token or token.endswith("/"):
             continue
-        if "/" in token or token.startswith("."):
-            refs.add(token.lstrip("./"))
+        # Only treat tokens with a path separator as in-repo references; a bare
+        # `name.ext` or extension like `.mapodc` is prose, not a path.
+        if "/" not in token:
+            continue
+        refs.add(token.lstrip("/"))  # keep a leading "." (e.g. .claude/…) intact
     return refs
 
 

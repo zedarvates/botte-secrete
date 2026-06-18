@@ -24,7 +24,9 @@ from typing import Optional
 from skills.infra_advisor.advisor import advise
 
 _SKIP_DIRS = {".git", "__pycache__", ".venv", "venv", "node_modules", ".botte",
-              "dist", "build", ".botte-cache"}
+              "dist", "build", ".botte-cache",
+              # duplicate working copies that inflate the dup count, not real dupes
+              ".kilo", ".kilocode", "worktrees", "Archives", ".archive"}
 
 
 def _norm(src: str) -> str:
