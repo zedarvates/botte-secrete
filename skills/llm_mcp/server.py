@@ -184,6 +184,21 @@ TOOLS = [
             },
         },
     },
+    {
+        "name": "improve_prompt",
+        "description": "Rewrite a rough prompt into a professional, structured prompt "
+                       "(role/context/task/instructions/constraints/output_format/success "
+                       "criteria) using a LOCAL model — 0 cloud tokens. Set as_json for a "
+                       "strict JSON prompt object.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "prompt": {"type": "string"},
+                "as_json": {"type": "boolean", "description": "Return a JSON prompt object."},
+            },
+            "required": ["prompt"],
+        },
+    },
 ]
 
 
@@ -292,6 +307,12 @@ def _tool_auto_audit(args: dict) -> str:
                       ensure_ascii=False, indent=2)
 
 
+def _tool_improve_prompt(args: dict) -> str:
+    from skills.prompt_improver import improve
+    return json.dumps(improve(args["prompt"], as_json=bool(args.get("as_json", False))),
+                      ensure_ascii=False, indent=2)
+
+
 DISPATCH = {
     "discover_backends": _tool_discover_backends,
     "list_models": _tool_list_models,
@@ -303,6 +324,7 @@ DISPATCH = {
     "find_skills": _tool_find_skills,
     "infra_tips": _tool_infra_tips,
     "auto_audit": _tool_auto_audit,
+    "improve_prompt": _tool_improve_prompt,
 }
 
 

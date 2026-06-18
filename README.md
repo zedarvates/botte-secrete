@@ -1,7 +1,7 @@
 # 🧦 Botte Secrète — Multi-Agent Token Optimization Platform
 
 [![CI](https://github.com/zedarvates/botte-secrete/actions/workflows/ci.yml/badge.svg)](https://github.com/zedarvates/botte-secrete/actions)
-[![Tests](https://img.shields.io/badge/tests-94%2F94-brightgreen)](https://github.com/zedarvates/botte-secrete)
+[![Tests](https://img.shields.io/badge/tests-106%2F106-brightgreen)](https://github.com/zedarvates/botte-secrete)
 [![Token Savings](https://img.shields.io/badge/token%20savings-85%25-blue)](https://github.com/zedarvates/botte-secrete)
 [![Self-Audit](https://img.shields.io/badge/self--audit-59%2F100%20(C)-orange)](https://github.com/zedarvates/botte-secrete)
 
@@ -83,6 +83,7 @@ Red Team: **Rochefort ∥ Milady ∥ Cte Wardes → Le Cardinal** (parallel coun
 | `skill_finder/` | **P18** — Find relevant skills/tools for a task locally (0 cloud tokens) | -100% selection cost |
 | `bootstrap/` | **P19** — Deploy the whole stack into a project (one command) | Makes it real |
 | `infra_advisor/` | **P20** — Hardware/software/MCP cluster tips + auto audit (ASCII diagram) | Cut cost beyond code |
+| `prompt_improver/` | **P21** — Rewrite rough prompts into pro structured/JSON prompts locally | 0-token prompt eng. |
 | `botte` | Terminal wrapper — compresses command output | -60-99% terminal tokens |
 | `code-rules/` | Coding standards: stdlib-first, flat architecture | -30% context |
 | `simplify-code/` | Parallel 3-agent code review | -25% post-edit tokens |
@@ -265,6 +266,7 @@ Also exposed as MCP tools (`auto_route`, `fusion`). See
 - [x] P18: Local skill/tool finder — zero-token retrieval for skill selection
 - [x] P19: Project deployer — `botte setup <project>` wires MCP + directives audit + config
 - [x] P20: Infra advisor — cluster hardware/software/MCP tips + auto audit (ASCII cluster diagram)
+- [x] P21: Prompt improver — local-LLM rewrite to professional structured / JSON prompts (0 cloud tokens)
 
 ## 📜 License
 
