@@ -55,6 +55,36 @@ def wire_mcp(project: Path) -> dict:
             "other_servers": [k for k in servers if k != MCP_SERVER_NAME]}
 
 
+def _hook_entry() -> dict:
+    return {"type": "command",
+            "command": f'"{sys.executable or "python"}" -m skills.preflight.hook',
+            "cwd": str(BOTTE_ROOT)}
+
+
+def wire_hook(project: Path) -> dict:
+    """Add the preflight UserPromptSubmit hook to .claude/settings.json (non-destructive).
+
+    Makes the prefer-local policy + skill suggestions automatic on every prompt,
+    instead of relying on the model remembering. Idempotent.
+    """
+    settings_path = project / ".claude" / "settings.json"
+    doc: dict = {}
+    if settings_path.exists():
+        try:
+            doc = json.loads(settings_path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            doc = {}
+    hooks = doc.setdefault("hooks", {})
+    ups = hooks.setdefault("UserPromptSubmit", [])
+    marker = "skills.preflight.hook"
+    already = any(marker in json.dumps(group) for group in ups)
+    if not already:
+        ups.append({"hooks": [_hook_entry()]})
+        settings_path.parent.mkdir(parents=True, exist_ok=True)
+        settings_path.write_text(json.dumps(doc, indent=2, ensure_ascii=False), encoding="utf-8")
+    return {"path": str(settings_path), "action": "present" if already else "added"}
+
+
 # ── starter AGENTS.md ─────────────────────────────────────────────────────────
 
 _STARTER_AGENTS = """# AGENTS.md
@@ -153,6 +183,13 @@ def setup(project: str | Path, *, create_agents_md: bool = False,
     directives = ensure_agents_md(project, create_agents_md)
     config = write_config(project)
 
+    # Enforcement layer: commit the shared policy, wire the preflight hook so the
+    # prefer-local rules apply automatically, and point AGENTS.md at the policy.
+    from skills.preflight import policy as _policy
+    policy_written = _policy.write_default(project)
+    pointer_added = _policy.ensure_agents_pointer(project)
+    hook = wire_hook(project)
+
     # Quick skill-catalog sizing (what the local finder will search for free).
     try:
         from skills.skill_finder import load_catalog
@@ -168,6 +205,9 @@ def setup(project: str | Path, *, create_agents_md: bool = False,
         "mcp": mcp,
         "directives": directives,
         "config": config["path"],
+        "policy": {"written": str(policy_written) if policy_written else "exists",
+                   "agents_pointer_added": pointer_added},
+        "hook": hook,
         "skill_catalog_size": catalog_size,
         "next_steps": _next_steps(chat, directives),
     }

@@ -28,6 +28,8 @@ SUITES = [
     ("infra_advisor", [sys.executable, "-m", "skills.infra_advisor.test_infra_advisor"]),
     ("prompt_improver", [sys.executable, "-m", "skills.prompt_improver.test_prompt_improver"]),
     ("metrics", [sys.executable, "-m", "skills.metrics.test_metrics"]),
+    ("preflight", [sys.executable, "-m", "skills.preflight.test_preflight"]),
+    ("checkup", [sys.executable, "-m", "skills.checkup.test_checkup"]),
     ("fallow_scanner", [sys.executable, "-m", "skills.fallow_like.test_scanner"]),
 ]
 
