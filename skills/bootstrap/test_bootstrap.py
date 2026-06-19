@@ -38,6 +38,11 @@ def main() -> int:
         _ok(".botte/config.json written", (proj / ".botte" / "config.json").exists(), state)
         _ok("setup-report.json written", (proj / ".botte" / "setup-report.json").exists(), state)
         _ok("report knows skill catalog size", rep["skill_catalog_size"] > 0, state)
+        # enforcement layer: policy committed + preflight hook wired
+        _ok("policy .botte/policy.md written", (proj / ".botte" / "policy.md").exists(), state)
+        settings = json.loads((proj / ".claude" / "settings.json").read_text(encoding="utf-8"))
+        _ok("preflight hook wired in settings.json",
+            "skills.preflight.hook" in json.dumps(settings), state)
 
     # 2. Non-destructive merge: keep an existing MCP server.
     with tempfile.TemporaryDirectory() as d:
