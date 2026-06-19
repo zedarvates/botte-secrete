@@ -37,11 +37,20 @@ assert_visible · assert_absent`.
 
 ## Running it
 
-Needs **SikuliX** (image-matching GUI automation, Java-based — Java is already a
-dependency). Install from https://github.com/RaiMan/SikuliX1, then either put
-`runsikulix` on PATH or set `SIKULIX_JAR=/path/to/sikulixide.jar`. `run` always
-generates the `.sikuli` bundle; it executes it only when SikuliX is found, else
-it tells you how to get it.
+Uses **OculiX** (the maintained SikuliX fork: OpenCV matching + embedded
+Tesseract OCR, Java) — or any SikuliX. The generated `-r <bundle>` scripts are
+drop-in compatible with both.
+
+Install OculiX (Java 11+ required): download the platform "ide" jar from
+https://github.com/oculix-org/Oculix/releases and place it at
+`~/.oculix/oculixide.jar` (auto-detected), or set `OCULIX_JAR=/path/to/jar`.
+`runsikulix`/`oculix` on PATH also work. `run` always generates the `.sikuli`
+bundle; it executes it via `java -jar <jar> -r <bundle> -c` when a runner is
+found, else it reports how to install one.
+
+Verified: a generated bundle runs end-to-end on OculiX 3.0.4
+(`oculixide-3.0.4-windows.jar`) — Jython executes the steps and returns the exit
+code (0 = pass).
 
 ## Why local / economical
 

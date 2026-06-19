@@ -102,11 +102,26 @@ def to_sikulix_script(spec: dict) -> str:
 
 
 def find_sikulix() -> Optional[str]:
-    """Locate a SikuliX runner (env SIKULIX_JAR, or runsikulix on PATH)."""
-    jar = os.environ.get("SIKULIX_JAR")
-    if jar and Path(jar).exists():
-        return jar
-    for exe in ("runsikulix", "sikulix"):
+    """Locate a visual-automation runner: OculiX (preferred) or SikuliX.
+
+    Order: OCULIX_JAR / SIKULIX_JAR env → known install jars (~/.oculix,
+    ~/.sikulix) → runsikulix/oculix on PATH. OculiX is a drop-in SikuliX fork,
+    so the generated `-r <bundle>` scripts run on either.
+    """
+    for env in ("OCULIX_JAR", "SIKULIX_JAR"):
+        jar = os.environ.get(env)
+        if jar and Path(jar).exists():
+            return jar
+    home = Path.home()
+    for cand in (home / ".oculix" / "oculixide.jar",
+                 home / ".oculix" / "oculix.jar"):
+        if cand.exists():
+            return str(cand)
+    for d in (home / ".sikulix", home / ".oculix"):
+        if d.exists():
+            for jar in sorted(d.glob("*ide*.jar")) or sorted(d.glob("*.jar")):
+                return str(jar)
+    for exe in ("oculix", "runsikulix", "sikulix"):
         if shutil.which(exe):
             return exe
     return None
@@ -131,8 +146,11 @@ def run(spec_path: str | Path, out_dir: str | Path = ".") -> dict:
                 "reason": "SikuliX not found — set SIKULIX_JAR or install runsikulix "
                           "(https://github.com/RaiMan/SikuliX1). Java is required.",
                 "steps": len(spec["steps"])}
-    cmd = ([runner, "-r", str(bundle)] if runner.endswith(("runsikulix", "sikulix"))
-           else ["java", "-jar", runner, "-r", str(bundle)])
+    if runner.endswith(".jar"):
+        cmd = ["java", "--enable-native-access=ALL-UNNAMED", "-jar", runner,
+               "-r", str(bundle), "-c"]
+    else:
+        cmd = [runner, "-r", str(bundle)]
     try:
         proc = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
         return {"ran": True, "script": str(bundle), "exit": proc.returncode,

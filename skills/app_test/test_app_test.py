@@ -59,10 +59,17 @@ def main() -> int:
         _ok("writes a .sikuli bundle with a .py",
             bundle.suffix == ".sikuli" and (bundle / "login_flow.py").exists(), state)
 
-        # run() always generates; reports gracefully if SikuliX absent
-        r = run(sp, out_dir=d)
-        _ok("run() generates the script and reports SikuliX status",
-            "script" in r and ("ran" in r), state)
+        # run() always generates; reports gracefully when no runner is found
+        # (force the no-runner path so the unit test never launches a GUI).
+        import skills.app_test.generator as gen
+        _orig = gen.find_sikulix
+        gen.find_sikulix = lambda: None
+        try:
+            r = run(sp, out_dir=d)
+        finally:
+            gen.find_sikulix = _orig
+        _ok("run() generates the script + reports runner-absent gracefully",
+            r.get("ran") is False and Path(r["script"]).exists(), state)
 
     # invalid specs rejected
     for bad in ({"steps": [{"do": "frobnicate"}]},

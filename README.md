@@ -126,7 +126,7 @@ Red Team: **Rochefort ∥ Milady ∥ Cte Wardes → Le Cardinal** (parallel coun
 | `prompt_improver/` | **P21** — Rewrite rough prompts into pro structured/JSON prompts locally | 0-token prompt eng. |
 | `ingest/` | **P24** — Local web scraping + source ingestion into Qdrant (foundation) | 0-token extraction |
 | `docgen/` | **P24** — Docs: local draft → cloud refine + local session review | Verbose docs, local |
-| `app_test/` | **P25** — Local-first GUI testing via image matching (SikuliX) | 0 cloud vision |
+| `app_test/` | **P25** — Local-first GUI testing via image matching (OculiX/SikuliX) | 0 cloud vision |
 | `botte` | Terminal wrapper — compresses command output | -60-99% terminal tokens |
 | `code-rules/` | Coding standards: stdlib-first, flat architecture | -30% context |
 | `simplify-code/` | Parallel 3-agent code review | -25% post-edit tokens |
