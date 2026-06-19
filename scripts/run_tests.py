@@ -30,6 +30,9 @@ SUITES = [
     ("metrics", [sys.executable, "-m", "skills.metrics.test_metrics"]),
     ("preflight", [sys.executable, "-m", "skills.preflight.test_preflight"]),
     ("checkup", [sys.executable, "-m", "skills.checkup.test_checkup"]),
+    ("ingest", [sys.executable, "-m", "skills.ingest.test_ingest"]),
+    ("docgen", [sys.executable, "-m", "skills.docgen.test_docgen"]),
+    ("app_test", [sys.executable, "-m", "skills.app_test.test_app_test"]),
     ("fallow_scanner", [sys.executable, "-m", "skills.fallow_like.test_scanner"]),
 ]
 
