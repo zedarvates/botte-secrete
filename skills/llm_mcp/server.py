@@ -212,6 +212,61 @@ TOOLS = [
             },
         },
     },
+    {
+        "name": "scrape",
+        "description": "Fetch a URL and extract clean title/text locally (stdlib, 0 cloud "
+                       "tokens); set structure to have a LOCAL model summarise + pull entities.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "url": {"type": "string"},
+                "structure": {"type": "boolean", "description": "Local-model summary + entities."},
+            },
+            "required": ["url"],
+        },
+    },
+    {
+        "name": "ingest_source",
+        "description": "Scrape a URL (or take a file/text), reflect locally, and store it "
+                       "in a Qdrant collection (the second-brain foundation) for later recall.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "source": {"type": "string"},
+                "collection": {"type": "string", "default": "botte_ingest"},
+                "qdrant": {"type": "string", "default": "192.168.1.47:6333"},
+                "is_file": {"type": "boolean", "description": "source is a file/text, not a URL."},
+            },
+            "required": ["source"],
+        },
+    },
+    {
+        "name": "draft_doc",
+        "description": "Draft documentation with a LOCAL model (0 cloud tokens), then refine "
+                       "with the cloud only if a key is set. kind: readme|module|changelog|guide|adr.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "topic": {"type": "string"},
+                "kind": {"type": "string"},
+                "context": {"type": "string"},
+            },
+            "required": ["topic"],
+        },
+    },
+    {
+        "name": "session_review",
+        "description": "Summarise locally what a work session did (done/decisions/learnings/"
+                       "next) from a transcript file or raw text. 0 cloud tokens.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "source": {"type": "string"},
+                "is_file": {"type": "boolean", "default": True},
+            },
+            "required": ["source"],
+        },
+    },
 ]
 
 
@@ -332,6 +387,33 @@ def _tool_metrics(args: dict) -> str:
                       ensure_ascii=False, indent=2)
 
 
+def _tool_scrape(args: dict) -> str:
+    from skills.ingest import scrape
+    return json.dumps(scrape(args["url"], structure=bool(args.get("structure", False))).to_dict(),
+                      ensure_ascii=False, indent=2)
+
+
+def _tool_ingest_source(args: dict) -> str:
+    from skills.ingest import ingest
+    return json.dumps(ingest(args["source"], collection=args.get("collection", "botte_ingest"),
+                             qdrant=args.get("qdrant", "192.168.1.47:6333"),
+                             is_url=not bool(args.get("is_file", False))),
+                      ensure_ascii=False, indent=2)
+
+
+def _tool_draft_doc(args: dict) -> str:
+    from skills.docgen import draft_doc
+    return json.dumps(draft_doc(args["topic"], kind=args.get("kind", "guide"),
+                                context=args.get("context", "")),
+                      ensure_ascii=False, indent=2)
+
+
+def _tool_session_review(args: dict) -> str:
+    from skills.docgen import session_review
+    return json.dumps(session_review(args["source"], is_file=bool(args.get("is_file", True))),
+                      ensure_ascii=False, indent=2)
+
+
 DISPATCH = {
     "discover_backends": _tool_discover_backends,
     "list_models": _tool_list_models,
@@ -345,6 +427,10 @@ DISPATCH = {
     "auto_audit": _tool_auto_audit,
     "improve_prompt": _tool_improve_prompt,
     "metrics": _tool_metrics,
+    "scrape": _tool_scrape,
+    "ingest_source": _tool_ingest_source,
+    "draft_doc": _tool_draft_doc,
+    "session_review": _tool_session_review,
 }
 
 

@@ -235,6 +235,9 @@ def main():
         "skills/metrics",
         "skills/preflight",
         "skills/checkup",
+        "skills/ingest",
+        "skills/docgen",
+        "skills/app_test",
     ]
     for d in required_dirs:
         p = Path(project) / d
