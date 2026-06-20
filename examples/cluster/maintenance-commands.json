@@ -1,0 +1,21 @@
+{
+  "_comment": "Operator-approved maintenance whitelist for the botte machine-agent. The remote caller can only trigger these BY NAME and must pass confirm=true — there is no arbitrary shell. Edit per machine to YOUR actual commands, then: python -m skills.cluster.agent serve --commands examples/cluster/maintenance-commands.json --token $BOTTE_AGENT_TOKEN",
+  "commands": {
+    "ollama_ps": {
+      "cmd": ["ollama", "ps"],
+      "desc": "list running Ollama models (safe, read-ish)"
+    },
+    "restart_ollama": {
+      "cmd": ["powershell", "-NoProfile", "-Command", "Stop-Process -Name ollama -Force; Start-Process ollama -ArgumentList 'serve'"],
+      "desc": "restart the local Ollama server (reversible)"
+    },
+    "pull_coder_model": {
+      "cmd": ["ollama", "pull", "qwen2.5-coder:7b"],
+      "desc": "pull/update the local coder model (network + disk)"
+    },
+    "clear_pip_cache": {
+      "cmd": ["python", "-m", "pip", "cache", "purge"],
+      "desc": "clear the pip download cache"
+    }
+  }
+}
