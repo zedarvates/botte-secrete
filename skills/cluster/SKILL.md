@@ -50,5 +50,24 @@ python -m skills.cluster.agent serve --host 0.0.0.0 --token "$BOTTE_AGENT_TOKEN"
 python -m skills.cluster.cli delegate <host> machine_status --url http://<host>:8799/task
 ```
 
+
+### Privileged maintenance (operator-approved, confirm-gated)
+
+To let the cluster trigger real maintenance (restart a model server, pull/update
+a model, clear a cache), the **operator** pre-approves a named whitelist on each
+machine — the remote caller can only trigger commands **by name** and must pass
+`confirm: true`. There is no arbitrary shell from the network.
+
+```bash
+# operator, on the machine (example: examples/cluster/maintenance-commands.json)
+python -m skills.cluster.agent serve --host 0.0.0.0 --token "$BOTTE_AGENT_TOKEN"        --commands examples/cluster/maintenance-commands.json
+# caller: list what's permitted, then run with confirmation
+#   {"task":"list_commands"}
+#   {"task":{"action":"run","args":{"name":"restart_ollama","confirm":true}}}
+```
+
+Defaults are safe: with no `--commands` file, **no** maintenance is possible —
+only the read-only actions. Maintenance on a non-loopback bind requires a token.
+
 Exposed via [[llm_mcp]] as `cluster_status`. Related: [[llm_backends]]
 (discovery), [[infra_advisor]] (per-machine tips), [[auto_router]].

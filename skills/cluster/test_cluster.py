@@ -74,6 +74,31 @@ def main() -> int:
     _ok("agent rejects non-whitelisted action (no shell)",
         bad["ok"] is False and "not allowed" in bad["error"], state)
 
+    # ── operator-approved maintenance whitelist (confirm-gated) ──
+    _saved = agent._COMMANDS
+    agent._COMMANDS = {"safe_echo": {"cmd": [sys.executable, "-c", "print('done')"],
+                                     "desc": "test cmd"}}
+    try:
+        # run without confirm → refused, shows what it would run
+        r1 = agent.handle_task({"task": {"action": "run", "args": {"name": "safe_echo"}}})
+        _ok("maintenance run without confirm is refused",
+            r1["ok"] is False and "confirmation required" in r1["error"], state)
+        # run a name not in the whitelist → refused (no arbitrary command)
+        r2 = agent.handle_task({"task": {"action": "run",
+                                         "args": {"name": "rm_rf", "confirm": True}}})
+        _ok("maintenance run of an unlisted name is refused",
+            r2["ok"] is False and "not permitted" in r2["error"], state)
+        # approved name + confirm → actually runs the operator's command
+        r3 = agent.handle_task({"task": {"action": "run",
+                                         "args": {"name": "safe_echo", "confirm": True}}})
+        _ok("approved maintenance command runs with confirm",
+            r3["ok"] is True and "done" in r3["output"], state)
+        _ok("list_commands exposes the whitelist (read-only)",
+            agent.handle_task({"task": "list_commands"})["result"].get("safe_echo") == "test cmd",
+            state)
+    finally:
+        agent._COMMANDS = _saved
+
     # live HTTP roundtrip: start the receiver, delegate to it, assert response
     import threading
     from http.server import ThreadingHTTPServer
