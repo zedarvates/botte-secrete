@@ -1,7 +1,7 @@
 ---
 name: conductor
 layer: DECIDE
-description: Route a high-level goal to an ordered, local-first plan of capabilities — the generalised router. Reads the capability registry/curator, composes steps ordered by the system's layers (SENSE→DECIDE→ACT→REMEMBER→GOVERN→DEPLOY), annotates each local vs cloud with a concrete command, and estimates the goal's effort. Use when the user states a goal and you need to decide which botte capabilities to use in what order, or asks "how should I approach X with this toolkit".
+description: Route a high-level goal to an ordered, local-first plan of capabilities — the generalised router — and optionally EXECUTE the plan's read-only steps. Reads the capability registry/curator, composes steps ordered by the system's layers (SENSE→DECIDE→ACT→REMEMBER→GOVERN→DEPLOY), annotates each local vs cloud with a concrete command, and estimates the goal's effort. The executor runs the safe analysis steps unattended and confirm-gates anything that mutates state or escalates to the cloud. Use when the user states a goal and you need to decide which botte capabilities to use in what order (or run them), or asks "how should I approach X with this toolkit".
 ---
 
 # conductor — goal → ordered plan of capabilities
@@ -13,6 +13,11 @@ you (or the agent) execute it; the Conductor never runs anything itself.
 ```bash
 python -m skills.conductor.cli "test my desktop app and report crashes"
 python -m skills.conductor.cli "reduce token cost and deploy on my project" --json
+
+# Execute the plan (read-only steps run; mutating/cloud steps are gated):
+python -m skills.conductor.cli "audit my project and report metrics" --execute
+python -m skills.conductor.cli "..." --execute --dry-run      # preview, runs nothing
+python -m skills.conductor.cli "..." --execute --confirm      # also run gated steps
 ```
 
 ## How it plans
@@ -27,7 +32,22 @@ python -m skills.conductor.cli "reduce token cost and deploy on my project" --js
    step's reasoning will escalate to the cloud.
 
 Output: an ordered list of steps, **0 cloud tokens** to produce. It composes the
-26-module collection into a coherent plan per goal — the conductor of the system.
+module collection into a coherent plan per goal — the conductor of the system.
 
-Exposed via [[llm_mcp]] as `conduct`. Built on [[capabilities]], [[auto_router]];
-the natural next layer is a control loop (measure savings → adapt the routing).
+## Executing the plan
+
+The plan can be *run*, not just read. The executor classifies every step:
+
+- **safe** — read-only analysis (`directives_audit`, `metrics`, `infra_advisor`,
+  `checkup`, `cluster`, `llm_backends`) → runs unattended, 0 cloud tokens.
+- **gated** — mutates state, generates artifacts, or escalates to the cloud →
+  runs only with `--confirm` / `confirm=true`.
+- **needs_args** — the command still has an unfilled `<placeholder>` → never runs.
+
+`--dry-run` classifies everything and runs nothing (a preview). A failing step
+yields a non-zero exit so CI can react. The runner is injectable, so the
+behaviour is fully unit-tested without spawning subprocesses.
+
+Exposed via [[llm_mcp]] as `conduct` (plan) and `execute_plan` (plan + run safe
+steps). Built on [[capabilities]], [[auto_router]]; pairs with the [[control_loop]]
+(measure savings → adapt the routing).
