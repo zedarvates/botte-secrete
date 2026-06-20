@@ -286,6 +286,14 @@ TOOLS = [
         },
     },
     {
+        "name": "conduct",
+        "description": "Route a high-level goal to an ordered, local-first plan of "
+                       "botte-secrète capabilities (which tools, in what order, what stays "
+                       "local). The generalised router. 0 cloud tokens.",
+        "inputSchema": {"type": "object", "properties": {"goal": {"type": "string"}},
+                        "required": ["goal"]},
+    },
+    {
         "name": "cluster_status",
         "description": "Show the homelab cluster: every reachable machine + its backends, "
                        "and the recommended target (LRU spread to idle boxes / fastest).",
@@ -438,6 +446,11 @@ def _tool_session_review(args: dict) -> str:
                       ensure_ascii=False, indent=2)
 
 
+def _tool_conduct(args: dict) -> str:
+    from skills.conductor import plan
+    return json.dumps(plan(args["goal"]), ensure_ascii=False, indent=2)
+
+
 def _tool_cluster_status(args: dict) -> str:
     from skills.cluster import status
     return json.dumps(status(scan_subnet=bool(args.get("scan_subnet", False))),
@@ -455,6 +468,7 @@ def _tool_curate(args: dict) -> str:
 
 
 DISPATCH = {
+    "conduct": _tool_conduct,
     "cluster_status": _tool_cluster_status,
     "system_map": _tool_system_map,
     "curate": _tool_curate,

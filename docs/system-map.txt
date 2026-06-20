@@ -3,7 +3,7 @@ botte-secrète  (the system)
 ├─ SENSE — understand project / cluster / task
 │     directives_audit, fallow_like, infra_advisor, llm_backends, metrics, skill_finder
 ├─ DECIDE — route the work, cheapest capable
-│     auto_router↑, preflight, tiered_router↑
+│     auto_router↑, cluster, conductor, preflight, tiered_router↑
 ├─ ACT — do the work, local-first
 │     app_test, cardinal↑, docgen↑, ingest, llm_mcp, mousquetaires↑, prompt_improver
 ├─ REMEMBER — capitalise (compounding)
