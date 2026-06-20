@@ -114,6 +114,16 @@ class AutoRouter:
         else:
             text, usage = _cloud_chat(d, prompt, system, max_tokens)
             self.budget.spend(d.tier, usage // 2 or 1, usage // 2 or 1)
+        # feed the control loop (best-effort; never affects routing)
+        try:
+            from skills.control_loop.control_loop import record
+            record(task=task_type or prompt, effort_score=d.effort.score,
+                   tier=d.tier.name, mode=d.mode,
+                   tokens_saved=(usage if d.mode == "local" else 0),
+                   escalated="fallback" in d.reason or d.mode == "cloud",
+                   success=bool(text))
+        except Exception:
+            pass
         return {"decision": d.to_dict(), "text": text, "tokens": usage}
 
 

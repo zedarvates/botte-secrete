@@ -96,13 +96,31 @@ def estimate(prompt: str, task_type: str = "", expected_output: str = "") -> Eff
     return EffortEstimate(score=score, tier=_tier_for(score), reasons=reasons)
 
 
+# Default score→tier boundaries [free, local, cheap, standard]. The control loop
+# (skills.control_loop) tunes these from measured outcomes; read live each call.
+DEFAULT_THRESHOLDS = [0.08, 0.30, 0.55, 0.80]
+_THRESHOLDS_PATH = __import__("pathlib").Path.home() / ".botte" / "routing-thresholds.json"
+
+
+def load_thresholds() -> list:
+    try:
+        import json
+        t = json.loads(_THRESHOLDS_PATH.read_text(encoding="utf-8")).get("thresholds")
+        if isinstance(t, list) and len(t) == 4:
+            return [float(x) for x in t]
+    except (OSError, ValueError, TypeError):
+        pass
+    return list(DEFAULT_THRESHOLDS)
+
+
 def _tier_for(score: float) -> Tier:
-    if score < 0.08:
+    free, local, cheap, standard = load_thresholds()
+    if score < free:
         return Tier.FREE
-    if score < 0.30:
+    if score < local:
         return Tier.LOCAL
-    if score < 0.55:
+    if score < cheap:
         return Tier.CHEAP
-    if score < 0.80:
+    if score < standard:
         return Tier.STANDARD
     return Tier.PREMIUM

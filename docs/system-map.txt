@@ -9,7 +9,7 @@ botte-secrète  (the system)
 ├─ REMEMBER — capitalise (compounding)
 │     cache, code_fingerprint, diff_language, loader, ultra_compact, vector_protocol
 ├─ GOVERN — consistency & cost control
-│     capabilities, checkup, clarification, skill_project_optimizer
+│     capabilities, checkup, clarification, control_loop, skill_project_optimizer
 └─ DEPLOY — wire into projects & measure
       bootstrap
 

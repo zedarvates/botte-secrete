@@ -286,6 +286,13 @@ TOOLS = [
         },
     },
     {
+        "name": "routing_stats",
+        "description": "Routing control loop — measured outcomes (local %, token savings, "
+                       "escalation/success rates) and a proposed threshold adjustment so the "
+                       "router keeps more work local over time.",
+        "inputSchema": {"type": "object", "properties": {}},
+    },
+    {
         "name": "conduct",
         "description": "Route a high-level goal to an ordered, local-first plan of "
                        "botte-secrète capabilities (which tools, in what order, what stays "
@@ -446,6 +453,12 @@ def _tool_session_review(args: dict) -> str:
                       ensure_ascii=False, indent=2)
 
 
+def _tool_routing_stats(_args: dict) -> str:
+    from skills.control_loop.control_loop import analyze, adapt
+    st = analyze()
+    return json.dumps({"stats": st, "adapt": adapt(st)}, ensure_ascii=False, indent=2)
+
+
 def _tool_conduct(args: dict) -> str:
     from skills.conductor import plan
     return json.dumps(plan(args["goal"]), ensure_ascii=False, indent=2)
@@ -468,6 +481,7 @@ def _tool_curate(args: dict) -> str:
 
 
 DISPATCH = {
+    "routing_stats": _tool_routing_stats,
     "conduct": _tool_conduct,
     "cluster_status": _tool_cluster_status,
     "system_map": _tool_system_map,

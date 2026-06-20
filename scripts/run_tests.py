@@ -36,6 +36,7 @@ SUITES = [
     ("capabilities", [sys.executable, "-m", "skills.capabilities.test_capabilities"]),
     ("cluster", [sys.executable, "-m", "skills.cluster.test_cluster"]),
     ("conductor", [sys.executable, "-m", "skills.conductor.test_conductor"]),
+    ("control_loop", [sys.executable, "-m", "skills.control_loop.test_control_loop"]),
     ("fallow_scanner", [sys.executable, "-m", "skills.fallow_like.test_scanner"]),
 ]
 

@@ -241,6 +241,7 @@ def main():
         "skills/capabilities",
         "skills/cluster",
         "skills/conductor",
+        "skills/control_loop",
     ]
     for d in required_dirs:
         p = Path(project) / d
