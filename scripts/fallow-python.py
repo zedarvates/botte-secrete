@@ -17,15 +17,6 @@ import os, sys, json, subprocess, tempfile
 from pathlib import Path
 
 
-def check_tool(name: str, install_cmd: str) -> bool:
-    """Check if a tool is installed, return True/False."""
-    try:
-        subprocess.run([name, "--version"], capture_output=True, timeout=5)
-        return True
-    except (FileNotFoundError, subprocess.TimeoutExpired):
-        return False
-
-
 def analyze_vulture(path: str) -> list[dict]:
     """Dead code detection with vulture."""
     findings = []

@@ -24,15 +24,6 @@ class SkillInfo:
     has_frontmatter: bool = False
     model: str = ""
 
-    @property
-    def token_cost(self) -> int:
-        """Estimated token cost when loaded (chars / 4 is rough estimate)."""
-        return self.estimated_tokens
-
-    @property
-    def qualified_name(self) -> str:
-        return f"{self.category}/{self.name}"
-
 
 @dataclass
 class SkillScanResult:
