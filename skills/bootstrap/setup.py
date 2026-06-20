@@ -17,6 +17,7 @@ Idempotent: re-running updates rather than duplicates. Pure stdlib.
 from __future__ import annotations
 
 import json
+import os
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -53,6 +54,41 @@ def wire_mcp(project: Path) -> dict:
     mcp_path.write_text(json.dumps(doc, indent=2, ensure_ascii=False), encoding="utf-8")
     return {"path": str(mcp_path), "action": "updated" if existed else "added",
             "other_servers": [k for k in servers if k != MCP_SERVER_NAME]}
+
+
+def _oculix_mcp_jar() -> Optional[Path]:
+    """Locate the OculiX visual-control MCP server jar, if installed."""
+    env = os.environ.get("OCULIX_MCP_JAR")
+    if env and Path(env).exists():
+        return Path(env)
+    cand = Path.home() / ".oculix" / "oculix-mcp-server.jar"
+    return cand if cand.exists() else None
+
+
+def wire_oculix_mcp(project: Path) -> dict:
+    """Register the OculiX visual-control MCP server in .mcp.json, if its jar exists.
+
+    Gives the agent screen-vision/click tools (find_image, click_image, …) with an
+    Ed25519-signed audit journal — local, 0 cloud vision. Non-destructive.
+    """
+    jar = _oculix_mcp_jar()
+    if not jar:
+        return {"action": "skipped", "reason": "OculiX MCP jar not found "
+                "(~/.oculix/oculix-mcp-server.jar or $OCULIX_MCP_JAR)"}
+    mcp_path = project / ".mcp.json"
+    doc: dict = {}
+    if mcp_path.exists():
+        try:
+            doc = json.loads(mcp_path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            doc = {}
+    servers = doc.setdefault("mcpServers", {})
+    existed = "oculix" in servers
+    servers["oculix"] = {"command": "java",
+                         "args": ["--enable-native-access=ALL-UNNAMED",
+                                  "-jar", str(jar), "run"]}
+    mcp_path.write_text(json.dumps(doc, indent=2, ensure_ascii=False), encoding="utf-8")
+    return {"action": "updated" if existed else "added", "jar": str(jar)}
 
 
 def _hook_entry() -> dict:
@@ -189,6 +225,7 @@ def setup(project: str | Path, *, create_agents_md: bool = False,
     policy_written = _policy.write_default(project)
     pointer_added = _policy.ensure_agents_pointer(project)
     hook = wire_hook(project)
+    oculix_mcp = wire_oculix_mcp(project)
 
     # Quick skill-catalog sizing (what the local finder will search for free).
     try:
@@ -208,6 +245,7 @@ def setup(project: str | Path, *, create_agents_md: bool = False,
         "policy": {"written": str(policy_written) if policy_written else "exists",
                    "agents_pointer_added": pointer_added},
         "hook": hook,
+        "oculix_mcp": oculix_mcp,
         "skill_catalog_size": catalog_size,
         "next_steps": _next_steps(chat, directives),
     }

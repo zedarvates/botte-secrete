@@ -43,6 +43,8 @@ def main() -> int:
         settings = json.loads((proj / ".claude" / "settings.json").read_text(encoding="utf-8"))
         _ok("preflight hook wired in settings.json",
             "skills.preflight.hook" in json.dumps(settings), state)
+        _ok("oculix MCP wiring reported (added or skipped)",
+            rep.get("oculix_mcp", {}).get("action") in ("added", "skipped"), state)
 
     # 2. Non-destructive merge: keep an existing MCP server.
     with tempfile.TemporaryDirectory() as d:

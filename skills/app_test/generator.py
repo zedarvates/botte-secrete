@@ -58,8 +58,12 @@ def _img(image_dir: str, name: str) -> str:
     return p.replace('"', '\\"')
 
 
-def to_sikulix_script(spec: dict) -> str:
-    """Render a SikuliX (Jython) script from the spec. Deterministic."""
+def to_sikulix_script(spec: dict, artifacts_dir: Optional[str] = None) -> str:
+    """Render a SikuliX/OculiX (Jython) script from the spec. Deterministic.
+
+    If `artifacts_dir` is given, a screenshot is saved after each step (a
+    ffmpeg-free "filmstrip" for post-mortem), guarded so it never breaks the run.
+    """
     image_dir = spec.get("image_dir", "")
     sim = float(spec.get("similarity", 0.8))
     lines = [
@@ -69,6 +73,16 @@ def to_sikulix_script(spec: dict) -> str:
         f"Settings.MinSimilarity = {sim}",
         "errors = 0",
     ]
+    if artifacts_dir:
+        ad = artifacts_dir.replace("\\", "/").replace('"', '\\"')
+        lines += [
+            "import shutil as _sh",
+            "def _shot(i):",
+            "    try:",
+            f'        _sh.copy(str(capture()), "{ad}/step_%02d.png" % i)',
+            "    except Exception:",
+            "        pass",
+        ]
     for i, s in enumerate(spec["steps"]):
         do = s["do"]
         img = _img(image_dir, s["image"]) if s.get("image") else ""
@@ -96,6 +110,8 @@ def to_sikulix_script(spec: dict) -> str:
         elif do == "assert_absent":
             lines.append(f'if exists("{img}", {to}):\n    print("STEP {i} FAIL: still visible {img}"); errors += 1\n'
                          f'else:\n    print("STEP {i} OK: absent {img}")')
+        if artifacts_dir:
+            lines.append(f"_shot({i})")
     lines.append('print("RESULT: %d errors" % errors)')
     lines.append("sys.exit(1 if errors else 0)")
     return "\n".join(lines)
@@ -128,23 +144,33 @@ def find_sikulix() -> Optional[str]:
 
 
 def write_script(spec: dict, out_dir: str | Path) -> Path:
-    """Write a .sikuli bundle (dir + script.py) and return the bundle path."""
+    """Write a .sikuli bundle (dir + script.py + artifacts/) and return the bundle."""
     name = spec.get("name", "test")
     bundle = Path(out_dir) / f"{name}.sikuli"
     bundle.mkdir(parents=True, exist_ok=True)
-    (bundle / f"{name}.py").write_text(to_sikulix_script(spec), encoding="utf-8")
+    artdir = bundle / "artifacts"
+    artdir.mkdir(exist_ok=True)
+    (bundle / f"{name}.py").write_text(
+        to_sikulix_script(spec, artifacts_dir=str(artdir)), encoding="utf-8")
     return bundle
 
 
-def run(spec_path: str | Path, out_dir: str | Path = ".") -> dict:
-    """Generate + (if SikuliX is present) run the test. Always generates the script."""
+def run(spec_path: str | Path, out_dir: str | Path = ".", *, report: bool = True) -> dict:
+    """Generate + (if a runner is present) run the test, capturing dev artifacts.
+
+    Always generates the bundle. When a runner is found, runs it, then collects
+    step results, failure/step screenshots and any logs declared in the spec
+    (`"logs": [paths]`), and writes a self-contained HTML post-mortem report.
+    """
     spec = load_spec(spec_path)
     bundle = write_script(spec, out_dir)
+    name = spec.get("name", "test")
     runner = find_sikulix()
     if not runner:
         return {"ran": False, "script": str(bundle),
-                "reason": "SikuliX not found — set SIKULIX_JAR or install runsikulix "
-                          "(https://github.com/RaiMan/SikuliX1). Java is required.",
+                "reason": "No runner — install OculiX (github.com/oculix-org/Oculix"
+                          "/releases → ~/.oculix/oculixide.jar) or set OCULIX_JAR. "
+                          "Java required.",
                 "steps": len(spec["steps"])}
     if runner.endswith(".jar"):
         cmd = ["java", "--enable-native-access=ALL-UNNAMED", "-jar", runner,
@@ -152,9 +178,20 @@ def run(spec_path: str | Path, out_dir: str | Path = ".") -> dict:
     else:
         cmd = [runner, "-r", str(bundle)]
     try:
-        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
-        return {"ran": True, "script": str(bundle), "exit": proc.returncode,
-                "passed": proc.returncode == 0,
-                "output": (proc.stdout or "")[-2000:]}
+        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
     except (OSError, subprocess.SubprocessError) as e:
         return {"ran": False, "script": str(bundle), "reason": str(e)}
+
+    out = (proc.stdout or "") + (proc.stderr or "")
+    result = {"ran": True, "script": str(bundle), "runner": runner,
+              "exit": proc.returncode, "passed": proc.returncode == 0,
+              "output": out[-3000:]}
+    if report:
+        from skills.app_test.artifacts import html_report, collect_logs, parse_steps
+        logs = collect_logs(spec.get("logs", []))
+        rpt = html_report(name, output=out, steps=parse_steps(out), logs=logs,
+                          artifacts_dir=bundle / "artifacts",
+                          out_path=Path(out_dir) / f"{name}-report.html")
+        result["report"] = str(rpt)
+        result["logs_collected"] = list(logs.keys())
+    return result
