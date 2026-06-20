@@ -75,8 +75,27 @@ _FIX_PROFILE = {
 }
 
 
-def estimate_fix(kind: str, *, count: int = 1, complexity: float = 1.0) -> CostEstimate:
-    """Estimate the cost to apply `count` fixes of a given kind."""
+# Correction strategies — how to pick the model tier for a fix.
+STRATEGIES = ("recommended", "cheapest", "fastest", "best")
+
+
+def _apply_strategy(tier: Tier, strategy: str) -> Tier:
+    if strategy == "cheapest":   # lowest cost → local/free
+        return min(tier, Tier.LOCAL)
+    if strategy == "fastest":    # lowest wall-time among LLM tiers (highest throughput)
+        return Tier.CHEAP
+    if strategy == "best":       # highest quality → at least cloud-standard
+        return max(tier, Tier.STANDARD)
+    return tier                  # recommended → the per-kind default
+
+
+def estimate_fix(kind: str, *, count: int = 1, complexity: float = 1.0,
+                 strategy: str = "recommended") -> CostEstimate:
+    """Estimate the cost to apply `count` fixes of a kind under a strategy.
+
+    strategy: recommended (balanced) · cheapest (local/free) · fastest (lowest
+    wall-time) · best (cloud-standard+ for quality).
+    """
     task, tier, chars = _FIX_PROFILE.get(kind, ("refactor_suggest", Tier.CHEAP, 800))
-    est = estimate(task, chars * max(count, 1), complexity=complexity, tier=tier)
-    return est
+    tier = _apply_strategy(tier, strategy)
+    return estimate(task, chars * max(count, 1), complexity=complexity, tier=tier)
