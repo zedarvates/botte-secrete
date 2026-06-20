@@ -1,10 +1,10 @@
 # 🧦 Botte Secrète — Multi-Agent Token Optimization Platform
 
 [![CI](https://github.com/zedarvates/botte-secrete/actions/workflows/ci.yml/badge.svg)](https://github.com/zedarvates/botte-secrete/actions)
-[![Tests](https://img.shields.io/badge/tests-225%2F225-brightgreen)](https://github.com/zedarvates/botte-secrete)
-[![Release](https://img.shields.io/badge/release-v1.0.0-blue)](https://github.com/zedarvates/botte-secrete/releases)
+[![Tests](https://img.shields.io/badge/tests-230%2F230-brightgreen)](https://github.com/zedarvates/botte-secrete)
+[![Release](https://img.shields.io/badge/release-v1.1.0-blue)](https://github.com/zedarvates/botte-secrete/releases)
 [![Token Savings](https://img.shields.io/badge/token%20savings-85%25-blue)](https://github.com/zedarvates/botte-secrete)
-[![Self-Audit](https://img.shields.io/badge/self--audit-74%2F100%20(B)-yellowgreen)](https://github.com/zedarvates/botte-secrete)
+[![Self-Audit](https://img.shields.io/badge/self--audit-75%2F100%20(B)-yellowgreen)](https://github.com/zedarvates/botte-secrete)
 
 > *"Tous pour un, un pour tous."* — Les Trois Mousquetaires
 
@@ -328,7 +328,7 @@ Also exposed as MCP tools (`auto_route`, `fusion`). See
 
 ## 📝 Changelog
 
-See [CHANGELOG.md](CHANGELOG.md). Current: **v1.0.0**.
+See [CHANGELOG.md](CHANGELOG.md). Current: **v1.1.0**.
 
 ## 📜 License
 

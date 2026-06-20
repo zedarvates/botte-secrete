@@ -39,6 +39,7 @@ SUITES = [
     ("control_loop", [sys.executable, "-m", "skills.control_loop.test_control_loop"]),
     ("report", [sys.executable, "-m", "skills.report.test_report"]),
     ("fallow_scanner", [sys.executable, "-m", "skills.fallow_like.test_scanner"]),
+    ("dead_code", [sys.executable, "-m", "skills.fallow_like.test_dead_code"]),
 ]
 
 _RESULT_RE = re.compile(r"(\d+)\s+passed,\s+(\d+)\s+failed")

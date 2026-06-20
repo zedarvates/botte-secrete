@@ -2,6 +2,23 @@
 
 All notable changes to Botte Secrète. This project follows [SemVer](https://semver.org).
 
+## v1.1.0 — 2026-06-20
+
+Quality + capability iteration.
+
+### Fixed
+- **`dead_code` false positives** — the analyzer now builds a global identifier-
+  occurrence index across all source (strings included), so symbols used via MCP
+  dispatch tables, `__all__` re-exports, `getattr`/string dispatch and framework
+  override callbacks (`do_POST`, `handle_data`, `activate`, …) are no longer
+  flagged. On this repo: **267 → 11** findings; self-audit health 59 → **75 (B)**.
+
+### Added
+- **Expanded machine-agent** (`cluster.agent`): read-only `gpu` (nvidia-smi) and
+  `processes` (LLM-related) diagnostics; richer operator maintenance-command
+  example (ollama list, restart ComfyUI, repo fast-forward, cache purge).
+- Tests: `fallow_like.test_dead_code` (5), agent maintenance coverage. Suite: **230**.
+
 ## v1.0.0 — 2026-06-20
 
 First stable release. A local-first, self-improving system that makes any project
