@@ -13,39 +13,38 @@ def calculate_health(
     boundaries: list = None,
     feature_flags: list = None,
 ) -> HealthScore:
-    """Calculate health score from scan result + analyzer outputs."""
+    """Confidence-weighted health score from scan result + analyzer outputs.
+
+    Each finding contributes by its own ``confidence`` (default 1.0) rather than a
+    flat count, so a pile of low-confidence/heuristic findings can't tank a clean
+    codebase. Hard signals (secrets, boundary violations, complexity) keep their
+    weight; heuristic categories (dead code, duplication) are weighted down — dead
+    code over-reports on dynamically-imported code (MCP dispatch, `-m`, plugin
+    loaders), so it is review-grade, not a hard penalty.
+    """
+    def _eff(items) -> float:
+        return sum(min(float(getattr(i, "confidence", 1.0) or 1.0), 1.0)
+                   for i in (items or []))
+
+    # category: (per-effective-finding deduction, cap)
+    weights = {
+        "secrets":       (15, 40),
+        "boundaries":    (10, 30),
+        "complexity":    (4, 25),
+        "duplication":   (3, 15),
+        "dead_code":     (1, 10),   # heuristic, false-positive prone → low weight
+        "feature_flags": (1, 8),
+    }
+    items = {
+        "secrets": secrets, "boundaries": boundaries, "complexity": complexity,
+        "duplication": duplication, "dead_code": dead_code, "feature_flags": feature_flags,
+    }
     deductions = 0
     breakdown: dict[str, int] = {}
-
-    secrets = secrets or []
-    d = min(len(secrets) * 15, 40)
-    deductions += d
-    breakdown["secrets"] = d
-
-    boundaries = boundaries or []
-    d = min(len(boundaries) * 10, 30)
-    deductions += d
-    breakdown["boundaries"] = d
-
-    complexity = complexity or []
-    d = min(len(complexity) * 5, 25)
-    deductions += d
-    breakdown["complexity"] = d
-
-    dead_code = dead_code or []
-    d = min(len(dead_code) * 3, 20)
-    deductions += d
-    breakdown["dead_code"] = d
-
-    duplication = duplication or []
-    d = min(len(duplication) * 5, 20)
-    deductions += d
-    breakdown["duplication"] = d
-
-    feature_flags = feature_flags or []
-    d = min(len(feature_flags) * 1, 10)
-    deductions += d
-    breakdown["feature_flags"] = d
+    for cat, (per, cap) in weights.items():
+        d = int(min(round(_eff(items[cat]) * per), cap))
+        deductions += d
+        breakdown[cat] = d
 
     score = max(0, 100 - deductions)
     if score >= 90:

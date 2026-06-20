@@ -20,17 +20,9 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from skills.console_utf8 import force_utf8
 from pathlib import Path
 
-
-def _utf8():
-    for s in (sys.stdout, sys.stderr):
-        rc = getattr(s, "reconfigure", None)
-        if rc:
-            try:
-                rc(encoding="utf-8", errors="replace")
-            except (ValueError, OSError):
-                pass
 
 
 def run(project: Path) -> dict:
@@ -74,7 +66,7 @@ def run(project: Path) -> dict:
 
 
 def main(argv=None) -> int:
-    _utf8()
+    force_utf8()
     p = argparse.ArgumentParser(prog="checkup", description=__doc__)
     p.add_argument("project", nargs="?", default=".")
     p.add_argument("--json", action="store_true")
