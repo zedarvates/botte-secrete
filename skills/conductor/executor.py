@@ -42,9 +42,19 @@ NEEDS_ARGS = "needs_args"
 Runner = Callable[[str, str, int], "tuple[int, str]"]
 
 
+def _runnable(command: str) -> bool:
+    """A command is runnable only if it's a concrete invocation, not a pointer.
+
+    The conductor falls back to ``see skills/<name>/SKILL.md`` for capabilities
+    with no concrete command — those can't be launched.
+    """
+    return bool(command.strip()) and not command.strip().lower().startswith("see ")
+
+
 def classify(step: dict) -> str:
     """Decide whether a plan step may run unattended."""
-    if _PLACEHOLDER.search(step.get("command", "")):
+    command = step.get("command", "")
+    if _PLACEHOLDER.search(command) or not _runnable(command):
         return NEEDS_ARGS
     if not step.get("local", True):
         return GATED  # escalates to the cloud — never silent
@@ -121,7 +131,10 @@ def execute(plan_dict: dict, *, confirm: bool = False, dry_run: bool = False,
             if dry_run:
                 status, note = "skipped", f"dry-run: classified {cls}"
             elif cls == NEEDS_ARGS:
-                status, note = "skipped", "command needs arguments (fill the <placeholder>)"
+                note = ("command needs arguments (fill the <placeholder>)"
+                        if _PLACEHOLDER.search(cmd)
+                        else "no concrete command (see the capability's SKILL.md)")
+                status = "skipped"
             elif cls == GATED:
                 status, note = "blocked", "gated — re-run with confirm=true to execute"
             else:  # pragma: no cover - defensive
