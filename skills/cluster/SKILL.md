@@ -35,5 +35,20 @@ configured → safe no-op that tells you how to wire one.
 > Security: elevated-rights machine maintenance stays in *your* agent on each
 > machine; botte only routes and hands off.
 
+
+## Reference machine-agent (deploy on each box)
+
+Until your agent (Hermes) exposes an endpoint, run the bundled receiver — it
+accepts delegated tasks **safely**: a whitelist of *named* read-only actions
+(`ping`, `machine_status`, `disk`, `local_backends`), **never arbitrary shell**,
+loopback by default, token-gated for any non-loopback bind. Privileged
+maintenance handlers are deliberately absent until you scope the policy.
+
+```bash
+python -m skills.cluster.agent serve --host 0.0.0.0 --token "$BOTTE_AGENT_TOKEN"
+# then from the cluster:
+python -m skills.cluster.cli delegate <host> machine_status --url http://<host>:8799/task
+```
+
 Exposed via [[llm_mcp]] as `cluster_status`. Related: [[llm_backends]]
 (discovery), [[infra_advisor]] (per-machine tips), [[auto_router]].

@@ -64,6 +64,31 @@ def main() -> int:
     finally:
         cluster._chat_backends = _orig
 
+    # ── reference agent: whitelist + live roundtrip ──
+    from skills.cluster import agent
+    _ok("agent runs whitelisted read-only action (ping)",
+        agent.handle_task({"task": "ping"})["ok"] is True, state)
+    _ok("agent machine_status returns data",
+        agent.handle_task({"task": "machine_status"}).get("result", {}).get("hostname"), state)
+    bad = agent.handle_task({"task": "rm -rf /"})
+    _ok("agent rejects non-whitelisted action (no shell)",
+        bad["ok"] is False and "not allowed" in bad["error"], state)
+
+    # live HTTP roundtrip: start the receiver, delegate to it, assert response
+    import threading
+    from http.server import ThreadingHTTPServer
+    srv = ThreadingHTTPServer(("127.0.0.1", 0), agent._make_handler(""))
+    port = srv.server_address[1]
+    t = threading.Thread(target=srv.serve_forever, daemon=True); t.start()
+    try:
+        r = cluster.delegate("127.0.0.1", "ping",
+                             agent_url=f"http://127.0.0.1:{port}/task")
+        import json as _json
+        _ok("delegate → agent live roundtrip works",
+            r["delegated"] is True and _json.loads(r["response"])["ok"] is True, state)
+    finally:
+        srv.shutdown(); srv.server_close()
+
     passed, failed = state
     print(f"\nRESULT: {passed} passed, {failed} failed")
     return 0 if failed == 0 else 1
