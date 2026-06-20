@@ -6,6 +6,8 @@
     search("topic")                                  # recall from the foundation
 """
 
-from skills.ingest.ingest import scrape, ingest, search, fetch, extract, Scraped
+from skills.ingest.ingest import (scrape, ingest, search, fetch, extract,
+                                  resolve_embed, Scraped)
 
-__all__ = ["scrape", "ingest", "search", "fetch", "extract", "Scraped"]
+__all__ = ["scrape", "ingest", "search", "fetch", "extract",
+           "resolve_embed", "Scraped"]

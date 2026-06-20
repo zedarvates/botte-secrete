@@ -228,7 +228,10 @@ TOOLS = [
     {
         "name": "ingest_source",
         "description": "Scrape a URL (or take a file/text), reflect locally, and store it "
-                       "in a Qdrant collection (the second-brain foundation) for later recall.",
+                       "in a Qdrant collection (the second-brain foundation) for later recall. "
+                       "Embeddings auto-resolve a local /v1/embeddings endpoint from the registry "
+                       "(real semantic vectors) and fall back to a deterministic hash vector "
+                       "otherwise. 0 cloud tokens.",
         "inputSchema": {
             "type": "object",
             "properties": {
@@ -236,6 +239,8 @@ TOOLS = [
                 "collection": {"type": "string", "default": "botte_ingest"},
                 "qdrant": {"type": "string", "default": "192.168.1.47:6333"},
                 "is_file": {"type": "boolean", "description": "source is a file/text, not a URL."},
+                "embed_url": {"type": "string", "description": "override the /v1/embeddings endpoint."},
+                "embed_model": {"type": "string", "description": "override the embedding model name."},
             },
             "required": ["source"],
         },
@@ -482,6 +487,8 @@ def _tool_ingest_source(args: dict) -> str:
     from skills.ingest import ingest
     return json.dumps(ingest(args["source"], collection=args.get("collection", "botte_ingest"),
                              qdrant=args.get("qdrant", "192.168.1.47:6333"),
+                             embed_url=args.get("embed_url"),
+                             embed_model=args.get("embed_model"),
                              is_url=not bool(args.get("is_file", False))),
                       ensure_ascii=False, indent=2)
 

@@ -29,10 +29,14 @@ def main(argv=None) -> int:
     s.add_argument("source"); s.add_argument("--collection", default="botte_ingest")
     s.add_argument("--qdrant", default="192.168.1.47:6333")
     s.add_argument("--file", action="store_true", help="source is a file/text, not a URL")
+    s.add_argument("--embed-url", default=None, help="override the /v1/embeddings endpoint")
+    s.add_argument("--embed-model", default=None, help="override the embedding model name")
 
     s = sub.add_parser("search", help="recall from a Qdrant collection")
     s.add_argument("query"); s.add_argument("--collection", default="botte_ingest")
     s.add_argument("--qdrant", default="192.168.1.47:6333")
+    s.add_argument("--embed-url", default=None, help="override the /v1/embeddings endpoint")
+    s.add_argument("--embed-model", default=None, help="override the embedding model name")
 
     args = p.parse_args(argv)
 
@@ -49,11 +53,13 @@ def main(argv=None) -> int:
 
     if args.cmd == "ingest":
         r = ingest(args.source, collection=args.collection, qdrant=args.qdrant,
+                   embed_url=args.embed_url, embed_model=args.embed_model,
                    is_url=not args.file)
         print(json.dumps(r, ensure_ascii=False, indent=2))
         return 0 if r.get("stored") else 1
 
-    r = search(args.query, collection=args.collection, qdrant=args.qdrant)
+    r = search(args.query, collection=args.collection, qdrant=args.qdrant,
+               embed_url=args.embed_url, embed_model=args.embed_model)
     print(json.dumps(r, ensure_ascii=False, indent=2))
     return 0
 

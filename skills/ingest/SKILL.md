@@ -21,9 +21,16 @@ python -m skills.ingest.cli search  "topic"  --collection foundation
   (`192.168.1.47:6333` by default). Builds the "foundation"/historical store.
 - **search** — recall from a collection.
 
-Embeddings: deterministic hash n-gram (256-dim) by default, so it works with **no
-embedding model**; point at a local `/v1/embeddings` endpoint for real semantic
-recall. Degrades gracefully when Qdrant is down (scrape still works).
+Embeddings: **auto-resolve a local `/v1/embeddings` endpoint** from the backend
+registry (any reachable backend exposing an embedding model → real semantic
+vectors), falling back to a deterministic hash n-gram (256-dim) when none is
+available — so it always works, **0 cloud tokens** either way. Override with
+`--embed-url`/`--embed-model`. The result reports `embed: endpoint|hash`. Degrades
+gracefully when Qdrant is down (scrape still works).
+
+```bash
+python -m skills.ingest.cli ingest https://example.com --embed-url http://127.0.0.1:1234/v1/embeddings
+```
 
 Exposed via [[llm_mcp]] as `scrape` and `ingest_source`. Related:
 [[hermes-second-brain]] (the foundation concept), `media_loader`, [[auto_router]].
