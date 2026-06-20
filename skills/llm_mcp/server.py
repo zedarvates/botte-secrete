@@ -334,6 +334,19 @@ TOOLS = [
                         "required": ["goal"]},
     },
     {
+        "name": "execute_plan",
+        "description": "Plan a goal AND run its read-only analysis steps (the conductor "
+                       "executor). Mutating/generative/cloud steps are gated (run only with "
+                       "confirm=true); steps with an unfilled <placeholder> are skipped. Use "
+                       "dry_run=true to preview what would run. Read-only steps cost 0 cloud "
+                       "tokens; returns per-step status + output.",
+        "inputSchema": {"type": "object", "properties": {
+            "goal": {"type": "string"},
+            "confirm": {"type": "boolean"},
+            "dry_run": {"type": "boolean"}},
+            "required": ["goal"]},
+    },
+    {
         "name": "cluster_status",
         "description": "Show the homelab cluster: every reachable machine + its backends, "
                        "and the recommended target (LRU spread to idle boxes / fastest).",
@@ -527,6 +540,13 @@ def _tool_conduct(args: dict) -> str:
     return json.dumps(plan(args["goal"]), ensure_ascii=False, indent=2)
 
 
+def _tool_execute_plan(args: dict) -> str:
+    from skills.conductor import run_goal
+    r = run_goal(args["goal"], confirm=bool(args.get("confirm", False)),
+                 dry_run=bool(args.get("dry_run", False)))
+    return json.dumps(r, ensure_ascii=False, indent=2)
+
+
 def _tool_cluster_status(args: dict) -> str:
     from skills.cluster import status
     return json.dumps(status(scan_subnet=bool(args.get("scan_subnet", False))),
@@ -551,6 +571,7 @@ DISPATCH = {
     "list_reports": _tool_list_reports,
     "routing_stats": _tool_routing_stats,
     "conduct": _tool_conduct,
+    "execute_plan": _tool_execute_plan,
     "cluster_status": _tool_cluster_status,
     "system_map": _tool_system_map,
     "curate": _tool_curate,

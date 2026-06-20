@@ -5,5 +5,7 @@
 """
 
 from skills.conductor.conductor import plan, Step, CAP_COMMAND
+from skills.conductor.executor import execute, run_goal, classify, SAFE_CAPS
 
-__all__ = ["plan", "Step", "CAP_COMMAND"]
+__all__ = ["plan", "Step", "CAP_COMMAND",
+           "execute", "run_goal", "classify", "SAFE_CAPS"]

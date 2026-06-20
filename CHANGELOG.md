@@ -2,6 +2,19 @@
 
 All notable changes to Botte Secrète. This project follows [SemVer](https://semver.org).
 
+## Unreleased
+
+### Added
+- **Conductor executor** — the conductor can now *run* a plan, not just produce it.
+  Read-only analysis steps run unattended; mutating/cloud steps are confirm-gated;
+  steps with an unfilled `<placeholder>` are skipped. New `--execute`/`--confirm`/
+  `--dry-run` CLI flags and an `execute_plan` MCP tool. 0 cloud tokens for the safe
+  steps; injectable runner keeps it fully unit-tested.
+
+### Removed
+- 4 genuinely-unused symbols flagged by our own dead-code analyzer (`check_tool`,
+  `CodeFingerprint.is_same`, `SkillInfo.token_cost`/`qualified_name`).
+
 ## v1.2.0 — 2026-06-20
 
 Cost-visibility iteration — every correction now comes with a price tag.

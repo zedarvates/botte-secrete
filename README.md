@@ -1,7 +1,7 @@
 # 🧦 Botte Secrète — Multi-Agent Token Optimization Platform
 
 [![CI](https://github.com/zedarvates/botte-secrete/actions/workflows/ci.yml/badge.svg)](https://github.com/zedarvates/botte-secrete/actions)
-[![Tests](https://img.shields.io/badge/tests-251%2F251-brightgreen)](https://github.com/zedarvates/botte-secrete)
+[![Tests](https://img.shields.io/badge/tests-266%2F266-brightgreen)](https://github.com/zedarvates/botte-secrete)
 [![Release](https://img.shields.io/badge/release-v1.2.0-blue)](https://github.com/zedarvates/botte-secrete/releases)
 [![Token Savings](https://img.shields.io/badge/token%20savings-85%25-blue)](https://github.com/zedarvates/botte-secrete)
 [![Self-Audit](https://img.shields.io/badge/self--audit-75%2F100%20(B)-yellowgreen)](https://github.com/zedarvates/botte-secrete)
@@ -122,7 +122,7 @@ Red Team: **Rochefort ∥ Milady ∥ Cte Wardes → Le Cardinal** (parallel coun
 | `bootstrap/` | **P19** — Deploy the whole stack into a project (one command) | Makes it real |
 | `capabilities/` | **P26** — Self-model: capability registry + curator + ASCII system tree | Collection → system |
 | `cluster/` | **P27** — Homelab as one schedulable resource — spread work to idle machines | Recover idle capacity |
-| `conductor/` | **P28** — Route a goal → ordered local-first plan of capabilities | Generalised router |
+| `conductor/` | **P28/P32** — Route a goal → ordered local-first plan, and execute its safe steps | Generalised router + executor |
 | `control_loop/` | **P29** — Measure routing outcomes → adapt thresholds (self-improving) | The router that learns |
 | `report/` | **P30** — Save any audit as a timestamped .md/.html, browsable any time | Consultable audits |
 | `cost_estimator/` | **P31** — Estimate tokens·model·money·time for a task or a fix | Know cost upfront |
@@ -329,6 +329,7 @@ Also exposed as MCP tools (`auto_route`, `fusion`). See
 - [x] P29: Control loop — measure routing outcomes and adapt the effort→tier thresholds (self-improving)
 - [x] P30: Report persistence — save audits as timestamped .md/.html (name+date+time), browsable via `report list`
 - [x] P31: Cost estimation (tokens·model·money·time) + fix plan with per-correction cost + metric trends
+- [x] P32: Conductor executor — run a plan's read-only steps unattended; confirm-gate mutating/cloud steps
 
 ## 📝 Changelog
 
