@@ -286,6 +286,33 @@ TOOLS = [
         },
     },
     {
+        "name": "dashboard",
+        "description": "Generate one timestamped HTML dashboard of the cost picture: routing "
+                       "savings, metric trends, metrics, and the cost of outstanding fixes.",
+        "inputSchema": {"type": "object", "properties": {"project": {"type": "string"}}},
+    },
+    {
+        "name": "estimate_cost",
+        "description": "Estimate a task's cost: tokens, model/tier, money ($) and wall-time. "
+                       "Use before running work to know what it costs (local = free).",
+        "inputSchema": {"type": "object", "properties": {
+            "task_type": {"type": "string"}, "input_chars": {"type": "integer"},
+            "complexity": {"type": "number"}}, "required": ["task_type", "input_chars"]},
+    },
+    {
+        "name": "fix_plan",
+        "description": "List a project's correctable issues (dead code, duplication, stale "
+                       "directive refs) with a tokens·model·money·time cost per fix and a total. "
+                       "Plan-only — never edits code.",
+        "inputSchema": {"type": "object", "properties": {"project": {"type": "string"}}},
+    },
+    {
+        "name": "trends_show",
+        "description": "Show a project's audit metrics over time + the change since the "
+                       "previous run (directive score, duplication, LOC, always-on cost).",
+        "inputSchema": {"type": "object", "properties": {"project": {"type": "string"}}},
+    },
+    {
         "name": "list_reports",
         "description": "List saved audit reports (timestamped .md/.html under "
                        ".botte/reports/) — consultable at any time.",
@@ -459,6 +486,29 @@ def _tool_session_review(args: dict) -> str:
                       ensure_ascii=False, indent=2)
 
 
+def _tool_dashboard(args: dict) -> str:
+    from skills.dashboard import generate
+    return json.dumps({"saved": generate(args.get("project", "."), fmt="html")},
+                      ensure_ascii=False, indent=2)
+
+
+def _tool_estimate_cost(args: dict) -> str:
+    from skills.cost_estimator import estimate
+    e = estimate(args["task_type"], int(args["input_chars"]),
+                 complexity=float(args.get("complexity", 1.0)))
+    return json.dumps({**e.to_dict(), "human": e.human()}, ensure_ascii=False, indent=2)
+
+
+def _tool_fix_plan(args: dict) -> str:
+    from skills.fix import find_fixes
+    return json.dumps(find_fixes(args.get("project", ".")), ensure_ascii=False, indent=2)
+
+
+def _tool_trends_show(args: dict) -> str:
+    from skills.trends import show
+    return json.dumps(show(args.get("project", ".")), ensure_ascii=False, indent=2)
+
+
 def _tool_list_reports(args: dict) -> str:
     from skills.report import list_reports
     import pathlib
@@ -494,6 +544,10 @@ def _tool_curate(args: dict) -> str:
 
 
 DISPATCH = {
+    "dashboard": _tool_dashboard,
+    "estimate_cost": _tool_estimate_cost,
+    "fix_plan": _tool_fix_plan,
+    "trends_show": _tool_trends_show,
     "list_reports": _tool_list_reports,
     "routing_stats": _tool_routing_stats,
     "conduct": _tool_conduct,

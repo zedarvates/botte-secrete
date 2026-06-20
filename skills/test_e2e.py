@@ -243,6 +243,10 @@ def main():
         "skills/conductor",
         "skills/control_loop",
         "skills/report",
+        "skills/cost_estimator",
+        "skills/fix",
+        "skills/trends",
+        "skills/dashboard",
     ]
     for d in required_dirs:
         p = Path(project) / d

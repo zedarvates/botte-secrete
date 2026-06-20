@@ -1,8 +1,8 @@
 # 🧦 Botte Secrète — Multi-Agent Token Optimization Platform
 
 [![CI](https://github.com/zedarvates/botte-secrete/actions/workflows/ci.yml/badge.svg)](https://github.com/zedarvates/botte-secrete/actions)
-[![Tests](https://img.shields.io/badge/tests-230%2F230-brightgreen)](https://github.com/zedarvates/botte-secrete)
-[![Release](https://img.shields.io/badge/release-v1.1.0-blue)](https://github.com/zedarvates/botte-secrete/releases)
+[![Tests](https://img.shields.io/badge/tests-248%2F248-brightgreen)](https://github.com/zedarvates/botte-secrete)
+[![Release](https://img.shields.io/badge/release-v1.2.0-blue)](https://github.com/zedarvates/botte-secrete/releases)
 [![Token Savings](https://img.shields.io/badge/token%20savings-85%25-blue)](https://github.com/zedarvates/botte-secrete)
 [![Self-Audit](https://img.shields.io/badge/self--audit-75%2F100%20(B)-yellowgreen)](https://github.com/zedarvates/botte-secrete)
 
@@ -125,6 +125,9 @@ Red Team: **Rochefort ∥ Milady ∥ Cte Wardes → Le Cardinal** (parallel coun
 | `conductor/` | **P28** — Route a goal → ordered local-first plan of capabilities | Generalised router |
 | `control_loop/` | **P29** — Measure routing outcomes → adapt thresholds (self-improving) | The router that learns |
 | `report/` | **P30** — Save any audit as a timestamped .md/.html, browsable any time | Consultable audits |
+| `cost_estimator/` | **P31** — Estimate tokens·model·money·time for a task or a fix | Know cost upfront |
+| `fix/` | **P31** — List correctable issues, each with a cost estimate (plan-only) | Cost of corrections |
+| `trends/` | **P31** — Track audit metrics over time + delta | See progress |
 | `metrics/` | **P22** — Cost-focused metrics per component (LOC, always-on cost, savings) | Quantify the win |
 | `preflight/` | **P23** — Committed policy + per-turn hook (prefer-local, auto) | Enforce, not opt-in |
 | `checkup/` | **P23** — Canonical one-command project checkup + drift detection | No hand-written prompt |
@@ -325,10 +328,11 @@ Also exposed as MCP tools (`auto_route`, `fusion`). See
 - [x] P28: Conductor — route a goal to an ordered local-first plan of capabilities (the generalised router)
 - [x] P29: Control loop — measure routing outcomes and adapt the effort→tier thresholds (self-improving)
 - [x] P30: Report persistence — save audits as timestamped .md/.html (name+date+time), browsable via `report list`
+- [x] P31: Cost estimation (tokens·model·money·time) + fix plan with per-correction cost + metric trends
 
 ## 📝 Changelog
 
-See [CHANGELOG.md](CHANGELOG.md). Current: **v1.1.0**.
+See [CHANGELOG.md](CHANGELOG.md). Current: **v1.2.0**.
 
 ## 📜 License
 
