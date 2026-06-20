@@ -22,6 +22,8 @@ def main(argv=None) -> int:
 
     s = sub.add_parser("status", help="cluster overview + recommended target")
     s.add_argument("--subnet", action="store_true"); s.add_argument("--json", action="store_true")
+    s.add_argument("--save", nargs="?", const="both", choices=["md", "html", "both"],
+                   help="save a timestamped report under ./.botte/reports/")
 
     s = sub.add_parser("pick", help="choose a backend across machines")
     s.add_argument("--strategy", choices=["lru", "latency"], default="lru")
@@ -33,6 +35,11 @@ def main(argv=None) -> int:
 
     if args.cmd == "status":
         r = status(scan_subnet=args.subnet)
+        if getattr(args, "save", None):
+            from pathlib import Path as _P
+            from skills.report import save
+            save("cluster", r, fmt=args.save, out_dir=_P(".botte") / "reports",
+                 title="Cluster status")
         if args.json:
             print(json.dumps(r, ensure_ascii=False, indent=2)); return 0
         print(f"🖥️  Cluster — {r['machine_count']} machine(s), "

@@ -2,6 +2,7 @@
 
 [![CI](https://github.com/zedarvates/botte-secrete/actions/workflows/ci.yml/badge.svg)](https://github.com/zedarvates/botte-secrete/actions)
 [![Tests](https://img.shields.io/badge/tests-225%2F225-brightgreen)](https://github.com/zedarvates/botte-secrete)
+[![Release](https://img.shields.io/badge/release-v1.0.0-blue)](https://github.com/zedarvates/botte-secrete/releases)
 [![Token Savings](https://img.shields.io/badge/token%20savings-85%25-blue)](https://github.com/zedarvates/botte-secrete)
 [![Self-Audit](https://img.shields.io/badge/self--audit-74%2F100%20(B)-yellowgreen)](https://github.com/zedarvates/botte-secrete)
 
@@ -324,6 +325,10 @@ Also exposed as MCP tools (`auto_route`, `fusion`). See
 - [x] P28: Conductor — route a goal to an ordered local-first plan of capabilities (the generalised router)
 - [x] P29: Control loop — measure routing outcomes and adapt the effort→tier thresholds (self-improving)
 - [x] P30: Report persistence — save audits as timestamped .md/.html (name+date+time), browsable via `report list`
+
+## 📝 Changelog
+
+See [CHANGELOG.md](CHANGELOG.md). Current: **v1.0.0**.
 
 ## 📜 License
 
