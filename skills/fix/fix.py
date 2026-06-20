@@ -60,8 +60,22 @@ def _directive_fixes(project: Path) -> list[dict]:
     return out
 
 
-def find_fixes(project: str | Path) -> dict:
-    """Enumerate correctable issues with per-fix and total cost estimates."""
+def _totals(by_kind: dict, strategy: str) -> dict:
+    tok = usd = s = 0.0
+    for kind, n in by_kind.items():
+        d = estimate_fix(kind, count=n, strategy=strategy).to_dict()
+        tok += d["tokens_in"] + d["tokens_out"]; usd += d["usd"]; s += d["seconds"]
+    return {"strategy": strategy, "tokens": int(tok), "usd": round(usd, 4),
+            "seconds": round(s, 1)}
+
+
+def find_fixes(project: str | Path, *, strategy: str = "recommended") -> dict:
+    """Enumerate correctable issues with per-fix cost + a strategy comparison.
+
+    strategy picks the model tier: recommended · cheapest · fastest · best — so a
+    user or orchestrator can choose the methodology for the corrections.
+    """
+    from skills.cost_estimator.cost_estimator import STRATEGIES
     project = Path(project).resolve()
     fixes = _code_fixes(project) + _directive_fixes(project)
 
@@ -69,25 +83,30 @@ def find_fixes(project: str | Path) -> dict:
     for f in fixes:
         by_kind[f["kind"]] = by_kind.get(f["kind"], 0) + 1
 
-    # cost per fix (representative) + totals per kind
     cost_by_kind = {}
-    tot_tok = tot_usd = tot_s = 0.0
     for kind, n in by_kind.items():
-        est = estimate_fix(kind, count=n)
-        d = est.to_dict()
-        cost_by_kind[kind] = {"count": n, **d, "human_each": estimate_fix(kind).human()}
-        tot_tok += d["tokens_in"] + d["tokens_out"]
-        tot_usd += d["usd"]
-        tot_s += d["seconds"]
+        est = estimate_fix(kind, count=n, strategy=strategy)
+        cost_by_kind[kind] = {"count": n, **est.to_dict(),
+                              "human_each": estimate_fix(kind, strategy=strategy).human()}
+
+    # comparison so the caller can pick a methodology
+    comparison = {s: _totals(by_kind, s) for s in STRATEGIES}
+    rec = comparison["recommended"]
 
     return {
         "project": str(project),
         "mode": "plan (dry-run — no files changed)",
         "total_fixes": len(fixes),
         "by_kind": by_kind,
+        "strategy": strategy,
         "cost_by_kind": cost_by_kind,
-        "totals": {"tokens": int(tot_tok), "usd": round(tot_usd, 4),
-                   "seconds": round(tot_s, 1),
-                   "note": "estimate to apply ALL with the suggested model tiers"},
+        "totals": {"tokens": comparison[strategy]["tokens"],
+                   "usd": comparison[strategy]["usd"],
+                   "seconds": comparison[strategy]["seconds"],
+                   "note": f"to apply ALL under the '{strategy}' strategy"},
+        "strategy_comparison": comparison,
+        "advice": ("cheapest = local/free (slower); fastest = lowest wall-time; "
+                   "best = cloud quality; recommended = balanced "
+                   f"({rec['tokens']} tok · ${rec['usd']} · ~{rec['seconds']:.0f}s)"),
         "fixes": fixes[:50],
     }

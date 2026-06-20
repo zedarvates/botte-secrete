@@ -39,6 +39,14 @@ def main() -> int:
     sf = estimate_fix("secret")
     _ok("secret fix routed to a careful (premium) tier", sf.tier == "PREMIUM", state)
 
+    # correction strategies (methodology choice)
+    cheap = estimate_fix("duplication", count=10, strategy="cheapest")
+    best = estimate_fix("duplication", count=10, strategy="best")
+    _ok("cheapest strategy is local + free", cheap.local and cheap.usd == 0, state)
+    _ok("best strategy costs more than cheapest", best.usd > cheap.usd, state)
+    _ok("fastest strategy has lower wall-time than cheapest",
+        estimate_fix("duplication", count=10, strategy="fastest").seconds < cheap.seconds, state)
+
     # fix plan on a synthetic project
     with tempfile.TemporaryDirectory() as d:
         proj = Path(d)
