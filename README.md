@@ -1,7 +1,7 @@
 # 🧦 Botte Secrète — Multi-Agent Token Optimization Platform
 
 [![CI](https://github.com/zedarvates/botte-secrete/actions/workflows/ci.yml/badge.svg)](https://github.com/zedarvates/botte-secrete/actions)
-[![Tests](https://img.shields.io/badge/tests-171%2F171-brightgreen)](https://github.com/zedarvates/botte-secrete)
+[![Tests](https://img.shields.io/badge/tests-175%2F175-brightgreen)](https://github.com/zedarvates/botte-secrete)
 [![Token Savings](https://img.shields.io/badge/token%20savings-85%25-blue)](https://github.com/zedarvates/botte-secrete)
 [![Self-Audit](https://img.shields.io/badge/self--audit-59%2F100%20(C)-orange)](https://github.com/zedarvates/botte-secrete)
 
@@ -126,7 +126,7 @@ Red Team: **Rochefort ∥ Milady ∥ Cte Wardes → Le Cardinal** (parallel coun
 | `prompt_improver/` | **P21** — Rewrite rough prompts into pro structured/JSON prompts locally | 0-token prompt eng. |
 | `ingest/` | **P24** — Local web scraping + source ingestion into Qdrant (foundation) | 0-token extraction |
 | `docgen/` | **P24** — Docs: local draft → cloud refine + local session review | Verbose docs, local |
-| `app_test/` | **P25** — Local-first GUI testing via image matching (OculiX/SikuliX) | 0 cloud vision |
+| `app_test/` | **P25** — Local-first GUI testing (OculiX image-match) + HTML post-mortem (logs/screenshots) | 0 cloud vision |
 | `botte` | Terminal wrapper — compresses command output | -60-99% terminal tokens |
 | `code-rules/` | Coding standards: stdlib-first, flat architecture | -30% context |
 | `simplify-code/` | Parallel 3-agent code review | -25% post-edit tokens |
@@ -313,7 +313,7 @@ Also exposed as MCP tools (`auto_route`, `fusion`). See
 - [x] P22: Project metrics (per-component LOC, always-on cost, savings) + fallow scanner that scales to large repos
 - [x] P23: Enforcement layer — committed policy + preflight hook (auto prefer-local) + canonical /checkup
 - [x] P24: Local web scraping + Qdrant ingestion (foundation) + docs draft→refine + session review
-- [x] P25: Local-first GUI app testing via image matching (SikuliX) — 0 cloud vision
+- [x] P25: Local-first GUI app testing (OculiX) + HTML post-mortem report; OculiX visual-control MCP server wired by the deployer
 
 ## 📜 License
 

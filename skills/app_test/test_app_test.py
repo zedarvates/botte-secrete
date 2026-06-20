@@ -71,6 +71,24 @@ def main() -> int:
         _ok("run() generates the script + reports runner-absent gracefully",
             r.get("ran") is False and Path(r["script"]).exists(), state)
 
+    # artifacts: step parsing, log tailing, HTML report
+    from skills.app_test import artifacts as art
+    out = ("[log] TYPE x\nSTEP 0 OK: visible a.png\nSTEP 1 FAIL: click b.png\n"
+           "RESULT: 1 errors\n")
+    steps = art.parse_steps(out)
+    _ok("parse_steps reads OK/FAIL markers",
+        len(steps) == 2 and steps[1]["status"] == "FAIL", state)
+    with tempfile.TemporaryDirectory() as d:
+        lg = Path(d) / "crash.log"; lg.write_text("line1\nboom\n", encoding="utf-8")
+        logs = art.collect_logs([str(lg), str(Path(d) / "missing.log")])
+        _ok("collect_logs tails existing + marks missing",
+            "boom" in logs[str(lg)] and "not found" in logs[str(Path(d) / "missing.log")], state)
+        rpt = art.html_report("demo", output=out, steps=steps, logs=logs,
+                              out_path=Path(d) / "r.html")
+        htmltxt = rpt.read_text(encoding="utf-8")
+        _ok("html_report writes a verdict + steps + logs",
+            "FAIL (1)" in htmltxt and "click b.png" in htmltxt and "boom" in htmltxt, state)
+
     # invalid specs rejected
     for bad in ({"steps": [{"do": "frobnicate"}]},
                 {"steps": [{"do": "click"}]},          # missing image

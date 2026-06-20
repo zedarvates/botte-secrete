@@ -1,0 +1,15 @@
+{
+  "_comment": "Example app_test spec. Put your button screenshots (PNG) in image_dir; the bot finds and clicks them. Run: python -m skills.app_test.cli run examples/app_test/login_flow.json --out build. Declared logs are tailed into the HTML post-mortem report.",
+  "name": "login_flow",
+  "image_dir": "examples/app_test/images",
+  "similarity": 0.8,
+  "logs": [],
+  "steps": [
+    {"do": "wait",           "image": "login_button.png", "timeout": 10},
+    {"do": "click",          "image": "login_button.png"},
+    {"do": "type",           "text": "user@example.com"},
+    {"do": "click",          "image": "submit.png"},
+    {"do": "assert_visible", "image": "welcome.png", "timeout": 8},
+    {"do": "assert_absent",  "image": "error_banner.png"}
+  ]
+}
