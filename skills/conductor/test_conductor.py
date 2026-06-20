@@ -41,6 +41,8 @@ def _executor_tests(state):
                        local=False)) == GATED, state)
     _ok("unknown/mutating cap → GATED",
         classify(_step("bootstrap", "python -m skills.bootstrap.cli proj")) == GATED, state)
+    _ok("'see SKILL.md' pointer (no concrete command) → NEEDS_ARGS",
+        classify(_step("report", "see skills/report/SKILL.md")) == NEEDS_ARGS, state)
 
     # a plan with one safe, one gated (mutating, local), one needs-args step
     fake_plan = {"goal": "g", "steps": [
