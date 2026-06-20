@@ -29,7 +29,7 @@ def estimate_tokens(project_path: Path) -> dict:
                 total_files += 1
                 ext = f.suffix or 'noext'
                 by_lang[ext] = by_lang.get(ext, 0) + lines
-            except:
+            except Exception:
                 pass
     
     # Rough token estimate: ~1 token per 4 chars, average 40 chars/line

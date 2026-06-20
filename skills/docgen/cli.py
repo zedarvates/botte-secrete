@@ -9,22 +9,14 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from skills.console_utf8 import force_utf8
 
 from skills.docgen import draft_doc, session_review
 
 
-def _utf8():
-    for s in (sys.stdout, sys.stderr):
-        rc = getattr(s, "reconfigure", None)
-        if rc:
-            try:
-                rc(encoding="utf-8", errors="replace")
-            except (ValueError, OSError):
-                pass
-
 
 def main(argv=None) -> int:
-    _utf8()
+    force_utf8()
     p = argparse.ArgumentParser(prog="docgen", description=__doc__)
     sub = p.add_subparsers(dest="cmd", required=True)
 

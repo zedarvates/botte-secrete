@@ -10,22 +10,14 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from skills.console_utf8 import force_utf8
 
 from skills.prompt_improver.improver import improve
 
 
-def _utf8():
-    for s in (sys.stdout, sys.stderr):
-        rc = getattr(s, "reconfigure", None)
-        if rc:
-            try:
-                rc(encoding="utf-8", errors="replace")
-            except (ValueError, OSError):
-                pass
-
 
 def main(argv=None) -> int:
-    _utf8()
+    force_utf8()
     p = argparse.ArgumentParser(prog="p-amelioration", description=__doc__)
     p.add_argument("prompt", help="the rough prompt to improve")
     p.add_argument("--json", action="store_true", help="emit a JSON prompt object")
