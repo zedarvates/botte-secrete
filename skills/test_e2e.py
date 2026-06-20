@@ -240,6 +240,7 @@ def main():
         "skills/app_test",
         "skills/capabilities",
         "skills/cluster",
+        "skills/conductor",
     ]
     for d in required_dirs:
         p = Path(project) / d
