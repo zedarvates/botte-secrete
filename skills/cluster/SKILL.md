@@ -1,0 +1,39 @@
+---
+name: cluster
+layer: DECIDE
+description: Treat the homelab/micro-cluster as one schedulable resource — discover every reachable machine and spread cheap work across them (least-recently-used first) so idle boxes get the next task, recovering wasted local capacity instead of paying the cloud. Use to see cluster status, route a task to the idlest machine, or hand a task to a trusted agent on another machine. Also use when the user mentions homelab, cluster, idle machines, load balancing, or distributing work across machines.
+---
+
+# cluster — the homelab as one schedulable resource
+
+Idle local capacity is recovered cost. Instead of always hitting the same backend
+(or the cloud), spread work across every reachable machine.
+
+```bash
+python -m skills.cluster.cli status --subnet      # all machines + recommended target
+python -m skills.cluster.cli pick --strategy lru  # spread to the idlest machine
+python -m skills.cluster.cli pick --strategy latency
+python -m skills.cluster.cli delegate 192.168.1.38 "restart the model server"
+```
+
+## How it routes
+
+- **status** groups discovered backends (LM Studio, Ollama, LocalAI, ComfyUI,
+  Qdrant…) by host → the cluster view, with latency and the recommended target.
+- **pick `lru`** chooses the *least-recently-used* capable chat backend, so the
+  next task lands on an under-used box — work spreads across the cluster.
+- **pick `latency`** chooses the most responsive backend.
+
+## Delegation (hand-off only)
+
+`delegate(host, task)` POSTs `{"task": …}` to a machine's agent endpoint
+(`BOTTE_AGENT_<host>` env or `--url`). It **never runs privileged maintenance
+itself** — wire a trusted agent (e.g. Hermes, which has the rights to do simple
+machine maintenance) on each box to receive and execute tasks. No endpoint
+configured → safe no-op that tells you how to wire one.
+
+> Security: elevated-rights machine maintenance stays in *your* agent on each
+> machine; botte only routes and hands off.
+
+Exposed via [[llm_mcp]] as `cluster_status`. Related: [[llm_backends]]
+(discovery), [[infra_advisor]] (per-machine tips), [[auto_router]].

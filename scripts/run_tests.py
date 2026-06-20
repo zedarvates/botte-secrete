@@ -34,6 +34,7 @@ SUITES = [
     ("docgen", [sys.executable, "-m", "skills.docgen.test_docgen"]),
     ("app_test", [sys.executable, "-m", "skills.app_test.test_app_test"]),
     ("capabilities", [sys.executable, "-m", "skills.capabilities.test_capabilities"]),
+    ("cluster", [sys.executable, "-m", "skills.cluster.test_cluster"]),
     ("fallow_scanner", [sys.executable, "-m", "skills.fallow_like.test_scanner"]),
 ]
 
