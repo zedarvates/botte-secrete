@@ -239,6 +239,7 @@ def main():
         "skills/docgen",
         "skills/app_test",
         "skills/capabilities",
+        "skills/cluster",
     ]
     for d in required_dirs:
         p = Path(project) / d

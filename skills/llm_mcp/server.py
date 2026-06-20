@@ -285,6 +285,12 @@ TOOLS = [
             "required": ["goal"],
         },
     },
+    {
+        "name": "cluster_status",
+        "description": "Show the homelab cluster: every reachable machine + its backends, "
+                       "and the recommended target (LRU spread to idle boxes / fastest).",
+        "inputSchema": {"type": "object", "properties": {"scan_subnet": {"type": "boolean"}}},
+    },
 ]
 
 
@@ -432,6 +438,12 @@ def _tool_session_review(args: dict) -> str:
                       ensure_ascii=False, indent=2)
 
 
+def _tool_cluster_status(args: dict) -> str:
+    from skills.cluster import status
+    return json.dumps(status(scan_subnet=bool(args.get("scan_subnet", False))),
+                      ensure_ascii=False, indent=2)
+
+
 def _tool_system_map(_args: dict) -> str:
     from skills.capabilities import ascii_map
     return ascii_map()
@@ -443,6 +455,7 @@ def _tool_curate(args: dict) -> str:
 
 
 DISPATCH = {
+    "cluster_status": _tool_cluster_status,
     "system_map": _tool_system_map,
     "curate": _tool_curate,
     "discover_backends": _tool_discover_backends,
