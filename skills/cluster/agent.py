@@ -71,11 +71,51 @@ def _ping(_args: dict) -> dict:
     return {"ok": True, "host": platform.node()}
 
 
+def _gpu(_args: dict) -> dict:
+    """Read-only GPU status via nvidia-smi (empty list if none)."""
+    import subprocess
+    if not shutil.which("nvidia-smi"):
+        return {"gpus": []}
+    try:
+        out = subprocess.run(
+            ["nvidia-smi", "--query-gpu=name,memory.used,memory.total,utilization.gpu",
+             "--format=csv,noheader,nounits"],
+            capture_output=True, text=True, timeout=10).stdout.strip()
+        gpus = []
+        for line in out.splitlines():
+            p = [x.strip() for x in line.split(",")]
+            if len(p) >= 4:
+                gpus.append({"name": p[0], "mem_used_mb": p[1],
+                             "mem_total_mb": p[2], "util_pct": p[3]})
+        return {"gpus": gpus}
+    except (OSError, subprocess.SubprocessError) as e:
+        return {"error": str(e)}
+
+
+def _processes(_args: dict) -> dict:
+    """Read-only: which LLM-related processes are running (name match only)."""
+    import subprocess
+    names = ("ollama", "lm studio", "lmstudio", "comfyui", "localai", "python", "java")
+    try:
+        if platform.system() == "Windows":
+            out = subprocess.run(["tasklist", "/fo", "csv", "/nh"],
+                                 capture_output=True, text=True, timeout=10).stdout
+        else:
+            out = subprocess.run(["ps", "-eo", "comm"],
+                                 capture_output=True, text=True, timeout=10).stdout
+        hits = sorted({n for n in names for line in out.lower().splitlines() if n in line})
+        return {"llm_related_running": hits}
+    except (OSError, subprocess.SubprocessError) as e:
+        return {"error": str(e)}
+
+
 # Read-only only. Privileged maintenance comes from operator-defined named
 # commands (see _COMMANDS), never arbitrary shell.
 ACTIONS: dict[str, Callable[[dict], dict]] = {
     "ping": _ping,
     "machine_status": _machine_status,
+    "gpu": _gpu,
+    "processes": _processes,
     "disk": _disk,
     "local_backends": _local_backends,
 }

@@ -23,6 +23,9 @@ ALIVE_NAMES = {
     "cli", "app", "command", "callback",
     # Testing
     "test_", "fixture", "conftest",
+    # Framework override callbacks (called by the framework, not by name)
+    "do_", "handle_", "visit_", "on_", "activate", "deactivate",
+    "log_message", "emit", "format", "flush", "close",
 }
 
 
@@ -75,11 +78,28 @@ class DeadCodeAnalyzer:
                     return True
         return False
 
+    def _name_occurrences(self, scan: ScanResult) -> dict:
+        """Count every identifier occurrence across all source (strings included).
+
+        Catches dynamic usage a static import graph misses: MCP dispatch tables
+        ({"find_skills": _tool_find_skills}), `__all__` re-exports, getattr and
+        other string-keyed dispatch. A symbol referenced beyond its own
+        definition is alive.
+        """
+        import re
+        token = re.compile(rb"[A-Za-z_][A-Za-z0-9_]*")
+        occ: dict[str, int] = defaultdict(int)
+        for file_ast in scan.files:
+            for m in token.finditer(file_ast.source or b""):
+                occ[m.group().decode("ascii", "ignore")] += 1
+        return occ
+
     def analyze(self, scan: ScanResult) -> list:
         findings = []
         definitions: dict[str, list[tuple[str, Symbol]]] = defaultdict(list)
         usages: dict[str, int] = defaultdict(int)
         file_imports = self._get_file_imports(scan)
+        occ = self._name_occurrences(scan)
 
         for file_ast in scan.files:
             filename = file_ast.path.split("/")[-1]
@@ -109,6 +129,12 @@ class DeadCodeAnalyzer:
 
             # Skip known-alive names
             if self._is_alive_name(name):
+                continue
+
+            # Referenced anywhere beyond its own definition(s) → alive. Each
+            # definition contributes one occurrence of the name; more than that
+            # means it's used somewhere (call, dispatch table, __all__, …).
+            if occ.get(name, 0) > len(locations):
                 continue
 
             for fpath, sym in locations:

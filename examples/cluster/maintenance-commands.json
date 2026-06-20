@@ -16,6 +16,22 @@
     "clear_pip_cache": {
       "cmd": ["python", "-m", "pip", "cache", "purge"],
       "desc": "clear the pip download cache"
+    },
+    "ollama_list": {
+      "cmd": ["ollama", "list"],
+      "desc": "list installed Ollama models"
+    },
+    "restart_comfyui": {
+      "cmd": ["powershell", "-NoProfile", "-Command", "Get-Process python* | Where-Object {$_.Path -like '*ComfyUI*'} | Stop-Process -Force"],
+      "desc": "stop ComfyUI (restart it from its own launcher)"
+    },
+    "update_repo": {
+      "cmd": ["git", "-C", "C:/Users/redga/botte-secrete", "pull", "--ff-only"],
+      "desc": "fast-forward the botte-secrete checkout (reversible)"
+    },
+    "purge_botte_cache": {
+      "cmd": ["powershell", "-NoProfile", "-Command", "Remove-Item -Recurse -Force .botte-cache -ErrorAction SilentlyContinue"],
+      "desc": "clear the local .botte-cache"
     }
   }
 }
