@@ -13,7 +13,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from skills.checkup.cli import run
+from skills.checkup.cli import run, format_pr_comment, PR_COMMENT_MARKER
 
 
 def _ok(msg, cond, state):
@@ -46,6 +46,23 @@ def main() -> int:
         _ok("policy drift clears once committed",
             r2["policy_committed"] and not any("No .botte/policy" in x for x in r2["drift"]),
             state)
+
+        # PR comment formatting (for the GitHub Action)
+        md = format_pr_comment(r)  # r has drift (no policy / no MCP)
+        _ok("PR comment carries the stable marker", PR_COMMENT_MARKER in md, state)
+        _ok("PR comment shows a drift verdict when there is drift",
+            "drift item" in md and "### Drift to fix" in md, state)
+        _ok("PR comment lists each drift item",
+            all(x in md for x in r["drift"]), state)
+
+        md_clean = format_pr_comment({"drift": [], "headline": "All good",
+                                      "loc_total": 10, "policy_committed": True,
+                                      "cost": {"analysis_llm_tokens": 0,
+                                               "always_on_tokens_per_session": 0}},
+                                     repo="zedarvates/botte-secrete", sha="abc1234def")
+        _ok("PR comment shows the no-drift verdict", "No drift" in md_clean, state)
+        _ok("PR comment links the commit when repo+sha given",
+            "abc1234" in md_clean and "/commit/abc1234def" in md_clean, state)
 
     passed, failed = state
     print(f"\nRESULT: {passed} passed, {failed} failed")

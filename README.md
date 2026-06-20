@@ -1,7 +1,7 @@
 # 🧦 Botte Secrète — Multi-Agent Token Optimization Platform
 
 [![CI](https://github.com/zedarvates/botte-secrete/actions/workflows/ci.yml/badge.svg)](https://github.com/zedarvates/botte-secrete/actions)
-[![Tests](https://img.shields.io/badge/tests-272%2F272-brightgreen)](https://github.com/zedarvates/botte-secrete)
+[![Tests](https://img.shields.io/badge/tests-277%2F277-brightgreen)](https://github.com/zedarvates/botte-secrete)
 [![Release](https://img.shields.io/badge/release-v1.2.0-blue)](https://github.com/zedarvates/botte-secrete/releases)
 [![Token Savings](https://img.shields.io/badge/token%20savings-85%25-blue)](https://github.com/zedarvates/botte-secrete)
 [![Self-Audit](https://img.shields.io/badge/self--audit-75%2F100%20(B)-yellowgreen)](https://github.com/zedarvates/botte-secrete)
@@ -331,6 +331,7 @@ Also exposed as MCP tools (`auto_route`, `fusion`). See
 - [x] P31: Cost estimation (tokens·model·money·time) + fix plan with per-correction cost + metric trends
 - [x] P32: Conductor executor — run a plan's read-only steps unattended; confirm-gate mutating/cloud steps
 - [x] P33: Real local embeddings for ingest — auto-resolve a local /v1/embeddings endpoint (hash fallback)
+- [x] P34: GitHub Action — local-first /checkup verdict posted (and updated) as a PR comment, 0 cloud tokens
 
 ## 📝 Changelog
 

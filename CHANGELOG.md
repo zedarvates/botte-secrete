@@ -5,6 +5,11 @@ All notable changes to Botte Secrète. This project follows [SemVer](https://sem
 ## Unreleased
 
 ### Added
+- **GitHub Action — checkup on PR** — `🧦 Botte Checkup (PR)` workflow runs the
+  canonical `/checkup` on every pull request and posts (or updates in place) a single
+  verdict comment via `gh`. New `checkup --pr-comment` flag + `format_pr_comment()`
+  (pure, carries a stable marker). 0 cloud tokens, no extra deps; reusable by any
+  project that deployed botte-secrète.
 - **Real local embeddings for ingest** — `ingest`/`search` now auto-resolve a local
   `/v1/embeddings` endpoint from the backend registry (any reachable backend exposing
   an embedding model → real semantic vectors), falling back to the deterministic hash

@@ -65,16 +65,72 @@ def run(project: Path) -> dict:
     return out
 
 
+# Stable marker so a CI bot can find & update its own comment instead of spamming.
+PR_COMMENT_MARKER = "<!-- botte-checkup -->"
+
+
+def format_pr_comment(result: dict, *, repo: str | None = None,
+                      sha: str | None = None) -> str:
+    """Render a checkup result as a Markdown PR comment. Pure — no I/O.
+
+    Verdict-first: a clear pass/drift line, the headline + key numbers, and the
+    actionable drift list. Carries a stable marker so the workflow can edit its
+    previous comment in place.
+    """
+    drift = result.get("drift", []) or []
+    cost = result.get("cost", {}) or {}
+    verdict = "✅ **No drift** — project is in good shape." if not drift else (
+        f"⚠️ **{len(drift)} drift item{'s' if len(drift) != 1 else ''} to fix**")
+
+    lines = [PR_COMMENT_MARKER, "## 🧦 Botte Secrète — checkup", "", verdict, ""]
+    headline = result.get("headline")
+    if headline:
+        lines.append(f"> {headline}")
+        lines.append("")
+
+    loc = result.get("loc_total")
+    policy_ok = result.get("policy_committed")
+    facts = []
+    if loc is not None:
+        facts.append(f"**{loc:,}** LOC")
+    facts.append(f"policy {'✓ committed' if policy_ok else '✗ not committed'}")
+    if "analysis_llm_tokens" in cost:
+        facts.append(f"analysis cost **{cost['analysis_llm_tokens']} LLM tokens**")
+    if "always_on_tokens_per_session" in cost:
+        facts.append(f"always-on **{cost['always_on_tokens_per_session']:,} tok/session**")
+    lines.append(" · ".join(facts))
+    lines.append("")
+
+    if drift:
+        lines.append("### Drift to fix")
+        for x in drift:
+            lines.append(f"- {x}")
+        lines.append("")
+
+    footer = "_local-first checkup · 0 cloud tokens_"
+    if repo and sha:
+        footer += f" · [`{sha[:7]}`](https://github.com/{repo}/commit/{sha})"
+    lines.append(footer)
+    return "\n".join(lines)
+
+
 def main(argv=None) -> int:
     force_utf8()
     p = argparse.ArgumentParser(prog="checkup", description=__doc__)
     p.add_argument("project", nargs="?", default=".")
     p.add_argument("--json", action="store_true")
+    p.add_argument("--pr-comment", action="store_true",
+                   help="print a Markdown PR comment (for the GitHub Action)")
     p.add_argument("--save", nargs="?", const="both", choices=["md", "html", "both"],
                    help="save a timestamped report under <project>/.botte/reports/")
     args = p.parse_args(argv)
 
     r = run(Path(args.project))
+    if args.pr_comment:
+        import os
+        print(format_pr_comment(r, repo=os.environ.get("GITHUB_REPOSITORY"),
+                                sha=os.environ.get("GITHUB_SHA")))
+        return 0
     if args.save:
         from skills.report import save
         paths = save("checkup", r, fmt=args.save,

@@ -12,6 +12,7 @@ local / 0 cloud tokens.
 ```bash
 python -m skills.checkup.cli            # current dir
 python -m skills.checkup.cli <project> --json
+python -m skills.checkup.cli . --pr-comment   # Markdown verdict for a PR comment
 ```
 
 ## Sequence (cheap → deeper)
@@ -31,6 +32,14 @@ A component update or another dev/agent introduces **drift** — stale directive
 unwired MCP, an oversized CLAUDE.md, a missing policy. `/checkup` catches all of
 it in one pass, with a fixed optimal procedure, instead of an ad-hoc prompt that
 may be sub-optimal and may not prioritise local models.
+
+## On pull requests
+
+`--pr-comment` prints a verdict-first Markdown comment (carrying a stable marker
+so a bot can edit it in place). The `🧦 Botte Checkup (PR)` GitHub Action
+(`.github/workflows/botte-pr-checkup.yml`) runs this on every PR and posts/updates
+a single comment via `gh` — 0 cloud tokens, no extra dependencies. Any project
+that deployed botte-secrète can reuse the same workflow.
 
 Related: [[preflight]] (enforces prefer-local every turn), [[infra_advisor]],
 [[metrics]], [[directives_audit]], [[bootstrap]].

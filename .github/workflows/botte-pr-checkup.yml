@@ -1,0 +1,39 @@
+name: 🧦 Botte Checkup (PR)
+
+# Local-first project checkup on every PR: runs the canonical /checkup and posts
+# (or updates) a single verdict comment. 0 cloud tokens — pure stdlib analysis.
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  checkup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run botte checkup → Markdown comment
+        run: python -m skills.checkup.cli . --pr-comment > /tmp/botte-checkup.md
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+
+      - name: Post / update PR comment
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          # Edit our previous comment in place if there is one; else create it.
+          gh pr comment "$PR" --body-file /tmp/botte-checkup.md --edit-last \
+            || gh pr comment "$PR" --body-file /tmp/botte-checkup.md
