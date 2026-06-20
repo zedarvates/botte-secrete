@@ -33,6 +33,7 @@ SUITES = [
     ("ingest", [sys.executable, "-m", "skills.ingest.test_ingest"]),
     ("docgen", [sys.executable, "-m", "skills.docgen.test_docgen"]),
     ("app_test", [sys.executable, "-m", "skills.app_test.test_app_test"]),
+    ("capabilities", [sys.executable, "-m", "skills.capabilities.test_capabilities"]),
     ("fallow_scanner", [sys.executable, "-m", "skills.fallow_like.test_scanner"]),
 ]
 

@@ -267,6 +267,24 @@ TOOLS = [
             "required": ["source"],
         },
     },
+    {
+        "name": "system_map",
+        "description": "Show botte-secrète's own capability tree (the system as layers: "
+                       "SENSE/DECIDE/ACT/REMEMBER/GOVERN/DEPLOY). Use to see what the "
+                       "toolkit can do as a system.",
+        "inputSchema": {"type": "object", "properties": {}},
+    },
+    {
+        "name": "curate",
+        "description": "Pick the botte-secrète capabilities most relevant to a goal "
+                       "(local lexical match, 0 tokens) — the curator that hands you the "
+                       "right tools for the task.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {"goal": {"type": "string"}},
+            "required": ["goal"],
+        },
+    },
 ]
 
 
@@ -414,7 +432,19 @@ def _tool_session_review(args: dict) -> str:
                       ensure_ascii=False, indent=2)
 
 
+def _tool_system_map(_args: dict) -> str:
+    from skills.capabilities import ascii_map
+    return ascii_map()
+
+
+def _tool_curate(args: dict) -> str:
+    from skills.capabilities import curate
+    return json.dumps(curate(args["goal"]), ensure_ascii=False, indent=2)
+
+
 DISPATCH = {
+    "system_map": _tool_system_map,
+    "curate": _tool_curate,
     "discover_backends": _tool_discover_backends,
     "list_models": _tool_list_models,
     "audit_local_usage": _tool_audit_local_usage,

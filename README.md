@@ -1,7 +1,7 @@
 # 🧦 Botte Secrète — Multi-Agent Token Optimization Platform
 
 [![CI](https://github.com/zedarvates/botte-secrete/actions/workflows/ci.yml/badge.svg)](https://github.com/zedarvates/botte-secrete/actions)
-[![Tests](https://img.shields.io/badge/tests-175%2F175-brightgreen)](https://github.com/zedarvates/botte-secrete)
+[![Tests](https://img.shields.io/badge/tests-185%2F185-brightgreen)](https://github.com/zedarvates/botte-secrete)
 [![Token Savings](https://img.shields.io/badge/token%20savings-85%25-blue)](https://github.com/zedarvates/botte-secrete)
 [![Self-Audit](https://img.shields.io/badge/self--audit-74%2F100%20(B)-yellowgreen)](https://github.com/zedarvates/botte-secrete)
 
@@ -119,6 +119,7 @@ Red Team: **Rochefort ∥ Milady ∥ Cte Wardes → Le Cardinal** (parallel coun
 | `directives_audit/` | **P16** — Audit agent-guidance files (CLAUDE.md/AGENTS.md/specs, md+html) | Avoid blind agent runs |
 | `skill_finder/` | **P18** — Find relevant skills/tools for a task locally (0 cloud tokens) | -100% selection cost |
 | `bootstrap/` | **P19** — Deploy the whole stack into a project (one command) | Makes it real |
+| `capabilities/` | **P26** — Self-model: capability registry + curator + ASCII system tree | Collection → system |
 | `metrics/` | **P22** — Cost-focused metrics per component (LOC, always-on cost, savings) | Quantify the win |
 | `preflight/` | **P23** — Committed policy + per-turn hook (prefer-local, auto) | Enforce, not opt-in |
 | `checkup/` | **P23** — Canonical one-command project checkup + drift detection | No hand-written prompt |
@@ -314,6 +315,7 @@ Also exposed as MCP tools (`auto_route`, `fusion`). See
 - [x] P23: Enforcement layer — committed policy + preflight hook (auto prefer-local) + canonical /checkup
 - [x] P24: Local web scraping + Qdrant ingestion (foundation) + docs draft→refine + session review
 - [x] P25: Local-first GUI app testing (OculiX) + HTML post-mortem report; OculiX visual-control MCP server wired by the deployer
+- [x] P26: Capability registry + curator + layered system map (the toolkit's self-model)
 
 ## 📜 License
 
