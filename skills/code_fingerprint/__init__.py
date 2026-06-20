@@ -25,9 +25,6 @@ class CodeFingerprint:
     code_hash: str
     type: str  # "function", "class", "module"
 
-    def is_same(self, other: "CodeFingerprint") -> bool:
-        return self.code_hash == other.code_hash
-
 
 class CodeFingerprinter:
     """Extract and compare code fingerprints across runs."""
