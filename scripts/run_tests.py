@@ -38,6 +38,9 @@ SUITES = [
     ("conductor", [sys.executable, "-m", "skills.conductor.test_conductor"]),
     ("control_loop", [sys.executable, "-m", "skills.control_loop.test_control_loop"]),
     ("report", [sys.executable, "-m", "skills.report.test_report"]),
+    ("cost_estimator", [sys.executable, "-m", "skills.cost_estimator.test_cost_estimator"]),
+    ("trends", [sys.executable, "-m", "skills.trends.test_trends"]),
+    ("dashboard", [sys.executable, "-m", "skills.dashboard.test_dashboard"]),
     ("fallow_scanner", [sys.executable, "-m", "skills.fallow_like.test_scanner"]),
     ("dead_code", [sys.executable, "-m", "skills.fallow_like.test_dead_code"]),
 ]

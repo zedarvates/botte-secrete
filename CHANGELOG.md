@@ -2,6 +2,25 @@
 
 All notable changes to Botte Secrète. This project follows [SemVer](https://semver.org).
 
+## v1.2.0 — 2026-06-20
+
+Cost-visibility iteration — every correction now comes with a price tag.
+
+### Added
+- **`cost_estimator`** — estimate any task or fix as **tokens · model · money ($) ·
+  time**, reusing the tiered cost model (local = free, cloud = billed/faster).
+- **`fix`** — list a project's correctable issues (confirmed dead code, duplication,
+  stale directive refs), each with its cost to apply and a grand total. Plan-only
+  (never edits code).
+- **`trends`** — snapshot audit metrics over time and show the delta since the
+  previous run (directive score, duplication, LOC, always-on cost, fixes).
+- **`dashboard`** — one timestamped HTML view assembling routing savings, trends,
+  metrics and the cost of outstanding fixes.
+- MCP: `estimate_cost`, `fix_plan`, `trends_show`, `dashboard` (26 tools total).
+
+### Tests
+- +cost_estimator (8), trends (4), dashboard (2). Suite: **248/248**.
+
 ## v1.1.0 — 2026-06-20
 
 Quality + capability iteration.
