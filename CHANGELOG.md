@@ -2,7 +2,10 @@
 
 All notable changes to Botte Secrète. This project follows [SemVer](https://semver.org).
 
-## Unreleased
+## v1.3.0 — 2026-06-20
+
+Autonomy iteration — the conductor now *runs* safe plans, ingest gains real local
+semantic recall, and every PR gets a local-first checkup. 0 cloud tokens throughout.
 
 ### Added
 - **GitHub Action — checkup on PR** — `🧦 Botte Checkup (PR)` workflow runs the
