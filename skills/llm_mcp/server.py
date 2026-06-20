@@ -286,6 +286,12 @@ TOOLS = [
         },
     },
     {
+        "name": "list_reports",
+        "description": "List saved audit reports (timestamped .md/.html under "
+                       ".botte/reports/) — consultable at any time.",
+        "inputSchema": {"type": "object", "properties": {"dir": {"type": "string"}}},
+    },
+    {
         "name": "routing_stats",
         "description": "Routing control loop — measured outcomes (local %, token savings, "
                        "escalation/success rates) and a proposed threshold adjustment so the "
@@ -453,6 +459,13 @@ def _tool_session_review(args: dict) -> str:
                       ensure_ascii=False, indent=2)
 
 
+def _tool_list_reports(args: dict) -> str:
+    from skills.report import list_reports
+    import pathlib
+    d = args.get("dir") or ".botte/reports"
+    return json.dumps(list_reports(pathlib.Path(d)), ensure_ascii=False, indent=2)
+
+
 def _tool_routing_stats(_args: dict) -> str:
     from skills.control_loop.control_loop import analyze, adapt
     st = analyze()
@@ -481,6 +494,7 @@ def _tool_curate(args: dict) -> str:
 
 
 DISPATCH = {
+    "list_reports": _tool_list_reports,
     "routing_stats": _tool_routing_stats,
     "conduct": _tool_conduct,
     "cluster_status": _tool_cluster_status,

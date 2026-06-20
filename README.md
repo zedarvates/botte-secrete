@@ -1,7 +1,7 @@
 # 🧦 Botte Secrète — Multi-Agent Token Optimization Platform
 
 [![CI](https://github.com/zedarvates/botte-secrete/actions/workflows/ci.yml/badge.svg)](https://github.com/zedarvates/botte-secrete/actions)
-[![Tests](https://img.shields.io/badge/tests-216%2F216-brightgreen)](https://github.com/zedarvates/botte-secrete)
+[![Tests](https://img.shields.io/badge/tests-225%2F225-brightgreen)](https://github.com/zedarvates/botte-secrete)
 [![Token Savings](https://img.shields.io/badge/token%20savings-85%25-blue)](https://github.com/zedarvates/botte-secrete)
 [![Self-Audit](https://img.shields.io/badge/self--audit-74%2F100%20(B)-yellowgreen)](https://github.com/zedarvates/botte-secrete)
 
@@ -123,6 +123,7 @@ Red Team: **Rochefort ∥ Milady ∥ Cte Wardes → Le Cardinal** (parallel coun
 | `cluster/` | **P27** — Homelab as one schedulable resource — spread work to idle machines | Recover idle capacity |
 | `conductor/` | **P28** — Route a goal → ordered local-first plan of capabilities | Generalised router |
 | `control_loop/` | **P29** — Measure routing outcomes → adapt thresholds (self-improving) | The router that learns |
+| `report/` | **P30** — Save any audit as a timestamped .md/.html, browsable any time | Consultable audits |
 | `metrics/` | **P22** — Cost-focused metrics per component (LOC, always-on cost, savings) | Quantify the win |
 | `preflight/` | **P23** — Committed policy + per-turn hook (prefer-local, auto) | Enforce, not opt-in |
 | `checkup/` | **P23** — Canonical one-command project checkup + drift detection | No hand-written prompt |
@@ -322,6 +323,7 @@ Also exposed as MCP tools (`auto_route`, `fusion`). See
 - [x] P27: Cluster scheduler — discover machines, spread work to idle boxes (LRU), agent delegation hand-off
 - [x] P28: Conductor — route a goal to an ordered local-first plan of capabilities (the generalised router)
 - [x] P29: Control loop — measure routing outcomes and adapt the effort→tier thresholds (self-improving)
+- [x] P30: Report persistence — save audits as timestamped .md/.html (name+date+time), browsable via `report list`
 
 ## 📜 License
 

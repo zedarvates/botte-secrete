@@ -70,9 +70,17 @@ def main(argv=None) -> int:
     p = argparse.ArgumentParser(prog="checkup", description=__doc__)
     p.add_argument("project", nargs="?", default=".")
     p.add_argument("--json", action="store_true")
+    p.add_argument("--save", nargs="?", const="both", choices=["md", "html", "both"],
+                   help="save a timestamped report under <project>/.botte/reports/")
     args = p.parse_args(argv)
 
     r = run(Path(args.project))
+    if args.save:
+        from skills.report import save
+        paths = save("checkup", r, fmt=args.save,
+                     out_dir=Path(r["project"]) / ".botte" / "reports",
+                     title=f"Checkup — {r['project']}")
+        r["saved_report"] = paths
     if args.json:
         print(json.dumps(r, ensure_ascii=False, indent=2))
         return 0
@@ -89,6 +97,8 @@ def main(argv=None) -> int:
     else:
         print("\n   ✅ No drift.")
     print(f"\n   🔬 {r['deep_audit_hint']}")
+    if r.get("saved_report"):
+        print("\n   💾 Saved: " + " · ".join(r["saved_report"]))
     return 0
 
 
