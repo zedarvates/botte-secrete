@@ -7,9 +7,11 @@ Two flows, both keeping the expensive cloud model out of the loop:
   ingest(...)   scrape (or take a file/text), reflect locally, and upsert into a
                 Qdrant collection (the second-brain "foundation") for later recall.
 
-Embeddings use a deterministic hash n-gram vector by default (no model needed, so
-it always works); point `embed_url` at a local /v1/embeddings endpoint for real
-semantic recall. Pure stdlib otherwise.
+Embeddings auto-resolve a local /v1/embeddings endpoint from the backend registry
+(any reachable backend exposing an embedding model) for real semantic recall, and
+fall back to a deterministic hash n-gram vector when none is available — so it
+always works, 0 cloud tokens either way. Override with `embed_url`/`embed_model`.
+Pure stdlib otherwise.
 """
 
 from __future__ import annotations
@@ -147,19 +149,48 @@ def _hash_embed(text: str, dim: int = _EMBED_DIM) -> list[float]:
     return [v / norm for v in vec]
 
 
-def _embed(text: str, embed_url: Optional[str]) -> tuple[list[float], int]:
+def resolve_embed(embed_url: Optional[str] = None,
+                  embed_model: Optional[str] = None,
+                  backends=None) -> tuple[Optional[str], Optional[str]]:
+    """Find a local /v1/embeddings endpoint + model from the registry.
+
+    Explicit args win. Otherwise pick the first reachable backend that exposes an
+    embedding-capable model. Returns (None, None) when none is available, so the
+    caller falls back to the deterministic hash embedding — never a wrong-space
+    chat model. 0 cloud tokens either way.
+    """
+    if embed_url:
+        return embed_url.rstrip("/"), embed_model or "local"
+    if backends is None:
+        try:
+            from skills.llm_backends import registry
+            backends = registry.load()
+        except Exception:
+            return None, None
+    for b in backends:
+        for m in getattr(b, "models", []):
+            if "embed" in m.lower():
+                return b.base_url.rstrip("/") + "/v1/embeddings", embed_model or m
+    return None, None
+
+
+def _embed(text: str, embed_url: Optional[str],
+           embed_model: Optional[str] = None) -> tuple[list[float], int, str]:
+    """Embed text. Returns (vector, dim, source) where source is 'endpoint'|'hash'."""
     if embed_url:
         try:
-            body = json.dumps({"input": text[:4000], "model": "local"}).encode()
+            body = json.dumps({"input": text[:4000],
+                               "model": embed_model or "local"}).encode()
             req = urllib.request.Request(embed_url, data=body, method="POST",
                                          headers={"Content-Type": "application/json"})
             with urllib.request.urlopen(req, timeout=30) as r:
                 v = json.loads(r.read())["data"][0]["embedding"]
-            return v, len(v)
-        except (urllib.error.URLError, OSError, KeyError, ValueError):
+            if v:  # a real, non-empty vector
+                return v, len(v), "endpoint"
+        except (urllib.error.URLError, OSError, KeyError, ValueError, IndexError):
             pass
     v = _hash_embed(text)
-    return v, len(v)
+    return v, len(v), "hash"
 
 
 # ── Qdrant (HTTP, stdlib) ────────────────────────────────────────────────────
@@ -178,8 +209,10 @@ def _qdrant(method: str, base: str, path: str, body: Optional[dict] = None,
 
 def ingest(source: str, *, collection: str = "botte_ingest",
            qdrant: str = "192.168.1.47:6333", embed_url: Optional[str] = None,
+           embed_model: Optional[str] = None,
            is_url: bool = True, reflect: bool = True) -> dict:
     """Ingest a URL (or file path / raw text) into Qdrant for later recall."""
+    embed_url, embed_model = resolve_embed(embed_url, embed_model)
     if is_url and re.match(r"^https?://", source):
         sc = scrape(source, structure=reflect)
         title, text, origin = sc.title, sc.text, source
@@ -196,7 +229,7 @@ def ingest(source: str, *, collection: str = "botte_ingest",
         return {"stored": False, "reason": f"Qdrant unreachable at {qdrant}",
                 "title": title, "chars": len(text), "structured": structured}
 
-    vector, dim = _embed(text, embed_url)
+    vector, dim, embed_src = _embed(text, embed_url, embed_model)
     # Ensure collection exists with the right vector size.
     _qdrant("PUT", base, f"/collections/{collection}",
             {"vectors": {"size": dim, "distance": "Cosine"}})
@@ -205,16 +238,20 @@ def ingest(source: str, *, collection: str = "botte_ingest",
                   {"points": [{"id": pid, "vector": vector,
                                "payload": {"origin": origin, "title": title,
                                            "text": text[:8000], "structured": structured,
+                                           "embed": embed_src,
                                            "ts": time.strftime("%Y-%m-%dT%H:%M:%S")}}]})
     return {"stored": res is not None, "collection": collection, "id": pid,
-            "title": title, "chars": len(text), "dim": dim, "structured": structured}
+            "title": title, "chars": len(text), "dim": dim, "embed": embed_src,
+            "embed_model": embed_model if embed_src == "endpoint" else None,
+            "structured": structured}
 
 
 def search(query: str, *, collection: str = "botte_ingest",
            qdrant: str = "192.168.1.47:6333", embed_url: Optional[str] = None,
-           limit: int = 5) -> dict:
+           embed_model: Optional[str] = None, limit: int = 5) -> dict:
     base = f"http://{qdrant}"
-    vector, _ = _embed(query, embed_url)
+    embed_url, embed_model = resolve_embed(embed_url, embed_model)
+    vector, _, _ = _embed(query, embed_url, embed_model)
     res = _qdrant("POST", base, f"/collections/{collection}/points/search",
                   {"vector": vector, "limit": limit, "with_payload": True})
     if res is None:

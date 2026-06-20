@@ -1,7 +1,7 @@
 # 🧦 Botte Secrète — Multi-Agent Token Optimization Platform
 
 [![CI](https://github.com/zedarvates/botte-secrete/actions/workflows/ci.yml/badge.svg)](https://github.com/zedarvates/botte-secrete/actions)
-[![Tests](https://img.shields.io/badge/tests-266%2F266-brightgreen)](https://github.com/zedarvates/botte-secrete)
+[![Tests](https://img.shields.io/badge/tests-272%2F272-brightgreen)](https://github.com/zedarvates/botte-secrete)
 [![Release](https://img.shields.io/badge/release-v1.2.0-blue)](https://github.com/zedarvates/botte-secrete/releases)
 [![Token Savings](https://img.shields.io/badge/token%20savings-85%25-blue)](https://github.com/zedarvates/botte-secrete)
 [![Self-Audit](https://img.shields.io/badge/self--audit-75%2F100%20(B)-yellowgreen)](https://github.com/zedarvates/botte-secrete)
@@ -133,7 +133,7 @@ Red Team: **Rochefort ∥ Milady ∥ Cte Wardes → Le Cardinal** (parallel coun
 | `checkup/` | **P23** — Canonical one-command project checkup + drift detection | No hand-written prompt |
 | `infra_advisor/` | **P20** — Hardware/software/MCP cluster tips + auto audit (ASCII diagram) | Cut cost beyond code |
 | `prompt_improver/` | **P21** — Rewrite rough prompts into pro structured/JSON prompts locally | 0-token prompt eng. |
-| `ingest/` | **P24** — Local web scraping + source ingestion into Qdrant (foundation) | 0-token extraction |
+| `ingest/` | **P24/P33** — Local web scraping + Qdrant ingestion with real local embeddings (auto-resolved, hash fallback) | 0-token extraction |
 | `docgen/` | **P24** — Docs: local draft → cloud refine + local session review | Verbose docs, local |
 | `app_test/` | **P25** — Local-first GUI testing (OculiX image-match) + HTML post-mortem (logs/screenshots) | 0 cloud vision |
 | `botte` | Terminal wrapper — compresses command output | -60-99% terminal tokens |
@@ -330,6 +330,7 @@ Also exposed as MCP tools (`auto_route`, `fusion`). See
 - [x] P30: Report persistence — save audits as timestamped .md/.html (name+date+time), browsable via `report list`
 - [x] P31: Cost estimation (tokens·model·money·time) + fix plan with per-correction cost + metric trends
 - [x] P32: Conductor executor — run a plan's read-only steps unattended; confirm-gate mutating/cloud steps
+- [x] P33: Real local embeddings for ingest — auto-resolve a local /v1/embeddings endpoint (hash fallback)
 
 ## 📝 Changelog
 

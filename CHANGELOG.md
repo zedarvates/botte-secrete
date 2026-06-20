@@ -5,6 +5,12 @@ All notable changes to Botte Secrète. This project follows [SemVer](https://sem
 ## Unreleased
 
 ### Added
+- **Real local embeddings for ingest** — `ingest`/`search` now auto-resolve a local
+  `/v1/embeddings` endpoint from the backend registry (any reachable backend exposing
+  an embedding model → real semantic vectors), falling back to the deterministic hash
+  vector when none is available. New `resolve_embed()`, `--embed-url`/`--embed-model`
+  flags, `embed_url`/`embed_model` on the `ingest_source` MCP tool; the result reports
+  `embed: endpoint|hash`. 0 cloud tokens either way.
 - **Conductor executor** — the conductor can now *run* a plan, not just produce it.
   Read-only analysis steps run unattended; mutating/cloud steps are confirm-gated;
   steps with an unfilled `<placeholder>` are skipped. New `--execute`/`--confirm`/

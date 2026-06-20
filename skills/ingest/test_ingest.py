@@ -12,8 +12,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from skills.ingest import extract, scrape, ingest, search
-from skills.ingest.ingest import _hash_embed, _qdrant
+from types import SimpleNamespace
+
+from skills.ingest import extract, scrape, ingest, search, resolve_embed
+from skills.ingest.ingest import _hash_embed, _embed, _qdrant
 
 
 def _ok(msg, cond, state):
@@ -51,6 +53,27 @@ def main() -> int:
     _ok("hash embed deterministic", v1 == v2, state)
     _ok("hash embed dim 256", len(v1) == 256, state)
     _ok("hash embed unit-norm", abs(sum(x * x for x in v1) - 1.0) < 1e-6, state)
+
+    # resolve_embed: explicit url wins; registry pick needs an embedding model
+    url, model = resolve_embed("http://h:1234/v1/embeddings/", "nomic")
+    _ok("resolve_embed: explicit url wins (trimmed)",
+        url == "http://h:1234/v1/embeddings" and model == "nomic", state)
+    no_embed = [SimpleNamespace(base_url="http://a:1234", models=["qwen-instruct"])]
+    _ok("resolve_embed: no embed model → (None, None)",
+        resolve_embed(backends=no_embed) == (None, None), state)
+    with_embed = [SimpleNamespace(base_url="http://a:1234", models=["qwen-instruct"]),
+                  SimpleNamespace(base_url="http://b:1234/", models=["text-embedding-nomic"])]
+    url, model = resolve_embed(backends=with_embed)
+    _ok("resolve_embed: picks backend exposing an embedding model",
+        url == "http://b:1234/v1/embeddings" and model == "text-embedding-nomic", state)
+
+    # _embed: no endpoint → hash; unreachable endpoint → falls back to hash
+    v, dim, src = _embed("hello world", None)
+    _ok("_embed without endpoint → hash source, dim 256",
+        src == "hash" and dim == 256, state)
+    v, dim, src = _embed("hello world", "http://127.0.0.1:9/v1/embeddings")
+    _ok("_embed unreachable endpoint → hash fallback",
+        src == "hash" and dim == 256, state)
 
     # live (guarded)
     if _net_ok():
