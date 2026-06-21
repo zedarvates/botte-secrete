@@ -94,6 +94,14 @@ class SecretFinding(Finding):
     entropy: float = 0.0
 
 
+class TaintFinding(Finding):
+    cwe: str = ""
+    source: str = ""
+    sink: str = ""
+    function: str = ""
+    verdict: str = ""  # neuro layer (optional): exploitable | sanitized | unknown
+
+
 class HealthScore(BaseModel):
     score: int = Field(ge=0, le=100, default=100)
     grade: str = "C"
@@ -124,5 +132,6 @@ class AnalysisResult(BaseModel):
     hot_paths: list = Field(default_factory=list)
     blast_radius: list = Field(default_factory=list)
     secrets: list = Field(default_factory=list)
+    taint: list = Field(default_factory=list)
     trends: dict = Field(default_factory=dict)
     duration_seconds: float = 0.0

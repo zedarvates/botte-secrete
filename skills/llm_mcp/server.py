@@ -352,6 +352,19 @@ TOOLS = [
             "required": ["goal"]},
     },
     {
+        "name": "security_scan",
+        "description": "Taint / data-flow security scan of a project (neuro-symbolic, "
+                       "local-first). Traces attacker-controlled sources (argv, env, request, "
+                       "input) into dangerous sinks (subprocess/eval/exec, SQL, pickle/yaml, "
+                       "urlopen) and flags insecure-by-default calls, each CWE-tagged. Symbolic "
+                       "pass is 0 tokens; set judge=true to confirm candidates with a LOCAL "
+                       "model (0 cloud tokens). Python data-flow today.",
+        "inputSchema": {"type": "object", "properties": {
+            "project": {"type": "string", "default": "."},
+            "judge": {"type": "boolean"}},
+        },
+    },
+    {
         "name": "cluster_status",
         "description": "Show the homelab cluster: every reachable machine + its backends, "
                        "and the recommended target (LRU spread to idle boxes / fastest).",
@@ -554,6 +567,22 @@ def _tool_execute_plan(args: dict) -> str:
     return json.dumps(r, ensure_ascii=False, indent=2)
 
 
+def _tool_security_scan(args: dict) -> str:
+    from skills.fallow_like.config import FallowConfig
+    from skills.fallow_like.cli import run_analysis
+    cfg = FallowConfig(
+        project_root=args.get("project", "."), taint_judge=bool(args.get("judge", False)),
+        enable_dead_code=False, enable_duplication=False, enable_complexity=False,
+        enable_boundaries=False, enable_feature_flags=False, enable_secrets=False,
+        enable_hot_paths=False, enable_blast_radius=False,
+    )
+    result = run_analysis(cfg)
+    findings = [f.model_dump() if hasattr(f, "model_dump") else dict(f)
+                for f in result.taint]
+    return json.dumps({"count": len(findings), "findings": findings},
+                      ensure_ascii=False, indent=2, default=str)
+
+
 def _tool_cluster_status(args: dict) -> str:
     from skills.cluster import status
     return json.dumps(status(scan_subnet=bool(args.get("scan_subnet", False))),
@@ -579,6 +608,7 @@ DISPATCH = {
     "routing_stats": _tool_routing_stats,
     "conduct": _tool_conduct,
     "execute_plan": _tool_execute_plan,
+    "security_scan": _tool_security_scan,
     "cluster_status": _tool_cluster_status,
     "system_map": _tool_system_map,
     "curate": _tool_curate,

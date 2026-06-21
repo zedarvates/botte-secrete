@@ -28,6 +28,7 @@ def format(result: AnalysisResult) -> str:
         f"| Boundary violations | {len(result.boundaries)} |",
         f"| Feature flags | {len(result.feature_flags)} |",
         f"| Secrets | {len(result.secrets)} |",
+        f"| Taint (data-flow) | {len(result.taint)} |",
         f"| Hot paths | {len(result.hot_paths)} |",
         f"| Blast radius | {len(result.blast_radius)} |",
         "",
@@ -35,6 +36,7 @@ def format(result: AnalysisResult) -> str:
 
     sections = [
         ("🔴 Secrets", result.secrets),
+        ("🛡️ Taint (data-flow security)", result.taint),
         ("❌ Boundary Violations", result.boundaries),
         ("❌ Complexity", result.complexity),
         ("⚠️ Dead Code", result.dead_code),

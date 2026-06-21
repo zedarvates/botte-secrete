@@ -2,6 +2,18 @@
 
 All notable changes to Botte Secrète. This project follows [SemVer](https://semver.org).
 
+## Unreleased
+
+### Added
+- **Taint / data-flow security analyzer** (`fallow_like/analyzers/taint.py`) —
+  neuro-symbolic, local-first, inspired by RepoAudit/DeepAudit. The symbolic pass
+  (Python `ast`, 0 tokens) traces attacker-controlled sources (argv, env, request,
+  input) into dangerous sinks (subprocess/eval/exec, SQL, pickle/yaml, urlopen) and
+  flags insecure-by-default calls, each CWE-tagged (78/89/94/502/918). An optional
+  neuro pass (`--judge`) asks a LOCAL model to confirm candidates (0 cloud tokens).
+  New `taint` CLI subcommand + `security_scan` MCP tool; wired into health scoring
+  as a hard signal and into the SARIF/markdown outputs.
+
 ## v1.3.0 — 2026-06-20
 
 Autonomy iteration — the conductor now *runs* safe plans, ingest gains real local
