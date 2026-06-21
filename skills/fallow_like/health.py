@@ -12,6 +12,7 @@ def calculate_health(
     secrets: list = None,
     boundaries: list = None,
     feature_flags: list = None,
+    taint: list = None,
 ) -> HealthScore:
     """Confidence-weighted health score from scan result + analyzer outputs.
 
@@ -29,6 +30,7 @@ def calculate_health(
     # category: (per-effective-finding deduction, cap)
     weights = {
         "secrets":       (15, 40),
+        "taint":         (12, 40),   # data-flow security — a hard signal
         "boundaries":    (10, 30),
         "complexity":    (4, 25),
         "duplication":   (3, 15),
@@ -36,8 +38,9 @@ def calculate_health(
         "feature_flags": (1, 8),
     }
     items = {
-        "secrets": secrets, "boundaries": boundaries, "complexity": complexity,
-        "duplication": duplication, "dead_code": dead_code, "feature_flags": feature_flags,
+        "secrets": secrets, "taint": taint, "boundaries": boundaries,
+        "complexity": complexity, "duplication": duplication,
+        "dead_code": dead_code, "feature_flags": feature_flags,
     }
     deductions = 0
     breakdown: dict[str, int] = {}

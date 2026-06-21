@@ -23,7 +23,7 @@ def format(result: AnalysisResult) -> str:
         list(result.dead_code) + list(result.duplication) +
         list(result.complexity) + list(result.boundaries) +
         list(result.feature_flags) + list(result.hot_paths) +
-        list(result.blast_radius) + list(result.secrets)
+        list(result.blast_radius) + list(result.secrets) + list(result.taint)
     )
 
     for f in all_findings:

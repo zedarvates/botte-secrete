@@ -17,6 +17,8 @@ class FallowConfig(BaseSettings):
     enable_hot_paths: bool = False
     enable_blast_radius: bool = True
     enable_secrets: bool = True
+    enable_taint: bool = True
+    taint_judge: bool = False  # neuro layer: ask a LOCAL model to confirm candidates
     complexity_threshold: int = 10
     duplication_min_lines: int = 6
     duplication_min_tokens: int = 50

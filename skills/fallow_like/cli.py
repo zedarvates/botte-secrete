@@ -20,6 +20,7 @@ from skills.fallow_like.analyzers.complexity import ComplexityAnalyzer
 from skills.fallow_like.analyzers.boundaries import BoundaryAnalyzer
 from skills.fallow_like.analyzers.feature_flags import FeatureFlagAnalyzer
 from skills.fallow_like.analyzers.secrets import SecretsAnalyzer
+from skills.fallow_like.analyzers.taint import TaintAnalyzer
 from skills.fallow_like.analyzers.hot_paths import HotPathAnalyzer
 from skills.fallow_like.analyzers.blast_radius import BlastRadiusAnalyzer
 from skills.fallow_like.outputs.json_formatter import format as format_json
@@ -50,7 +51,7 @@ def run_analysis(config: FallowConfig) -> AnalysisResult:
 
     all_findings = []
     dc = []; dup = []; comp = []; bounds = []; flags = []
-    hot = []; blast = []; secs = []
+    hot = []; blast = []; secs = []; taint = []
 
     if config.enable_dead_code:
         dc = DeadCodeAnalyzer(config.dead_code_min_confidence).analyze(scan)
@@ -76,6 +77,10 @@ def run_analysis(config: FallowConfig) -> AnalysisResult:
         secs = SecretsAnalyzer().analyze(scan)
         all_findings.extend(secs)
 
+    if config.enable_taint:
+        taint = TaintAnalyzer(judge=config.taint_judge).analyze(scan)
+        all_findings.extend(taint)
+
     if config.enable_hot_paths and runtime:
         hot = HotPathAnalyzer(config.hot_path_min_calls).analyze(dep_graph, runtime)
         all_findings.extend(hot)
@@ -94,7 +99,7 @@ def run_analysis(config: FallowConfig) -> AnalysisResult:
         findings=all_findings,
         dead_code=dc, duplication=dup, complexity=comp,
         boundaries=bounds, feature_flags=flags,
-        hot_paths=hot, blast_radius=blast, secrets=secs,
+        hot_paths=hot, blast_radius=blast, secrets=secs, taint=taint,
         duration_seconds=time.time() - start,
     )
 
@@ -125,6 +130,7 @@ def _format_text(result: AnalysisResult) -> str:
 
     sections = [
         ("🔴 Secrets", result.secrets),
+        ("🛡️ Taint (data-flow security)", result.taint),
         ("❌ Boundaries", result.boundaries),
         ("❌ Complexity", result.complexity),
         ("⚠️ Dead Code", result.dead_code),
@@ -200,6 +206,26 @@ def dead_code(path: Path = typer.Argument(".", help="Project path")):
     console.print(f"\n[bold]Dead Code: {len(result.dead_code)} findings[/bold]")
     for f in result.dead_code:
         console.print(f"  [yellow]• {f.file}:{f.line}[/yellow] — {f.message}")
+
+
+@app.command()
+def taint(
+    path: Path = typer.Argument(".", help="Project path"),
+    judge: bool = typer.Option(False, "--judge", help="confirm candidates with a LOCAL model"),
+):
+    """Taint / data-flow security scan only (source→sink, CWE-tagged)."""
+    config = FallowConfig(
+        project_root=path, taint_judge=judge,
+        enable_dead_code=False, enable_duplication=False, enable_complexity=False,
+        enable_boundaries=False, enable_feature_flags=False, enable_secrets=False,
+        enable_hot_paths=False, enable_blast_radius=False,
+    )
+    result = run_analysis(config)
+    console.print(f"\n[bold]Taint: {len(result.taint)} candidate(s)[/bold]")
+    for f in result.taint:
+        v = f" · verdict: {f.verdict}" if f.verdict else ""
+        console.print(f"  [yellow]• {f.file}:{f.line}[/yellow] [{f.cwe}] {f.message} "
+                      f"(conf {f.confidence}{v})")
 
 
 @app.command()

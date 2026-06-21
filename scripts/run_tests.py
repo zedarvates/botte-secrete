@@ -43,6 +43,7 @@ SUITES = [
     ("dashboard", [sys.executable, "-m", "skills.dashboard.test_dashboard"]),
     ("fallow_scanner", [sys.executable, "-m", "skills.fallow_like.test_scanner"]),
     ("dead_code", [sys.executable, "-m", "skills.fallow_like.test_dead_code"]),
+    ("taint", [sys.executable, "-m", "skills.fallow_like.test_taint"]),
 ]
 
 _RESULT_RE = re.compile(r"(\d+)\s+passed,\s+(\d+)\s+failed")

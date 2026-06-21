@@ -1,7 +1,7 @@
 # 🧦 Botte Secrète — Multi-Agent Token Optimization Platform
 
 [![CI](https://github.com/zedarvates/botte-secrete/actions/workflows/ci.yml/badge.svg)](https://github.com/zedarvates/botte-secrete/actions)
-[![Tests](https://img.shields.io/badge/tests-277%2F277-brightgreen)](https://github.com/zedarvates/botte-secrete)
+[![Tests](https://img.shields.io/badge/tests-290%2F290-brightgreen)](https://github.com/zedarvates/botte-secrete)
 [![Release](https://img.shields.io/badge/release-v1.3.0-blue)](https://github.com/zedarvates/botte-secrete/releases)
 [![Token Savings](https://img.shields.io/badge/token%20savings-85%25-blue)](https://github.com/zedarvates/botte-secrete)
 [![Self-Audit](https://img.shields.io/badge/self--audit-75%2F100%20(B)-yellowgreen)](https://github.com/zedarvates/botte-secrete)
@@ -115,7 +115,7 @@ Red Team: **Rochefort ∥ Milady ∥ Cte Wardes → Le Cardinal** (parallel coun
 | `tiered_router/` | **P14** — 5-level model selection + agent compression | -95% vs all-PREMIUM |
 | `auto_router/` | **P17** — Auto local↔cloud routing (DeepSeek/GLM/Nemotron/Grok/Gemma) + fusion | Effort-based, budget-aware |
 | `loader/` | Pre-prompt loader for `delegate_task` | Correct agent context |
-| `fallow_like/` | 8 static analyzers (dead code, dup, complexity, secrets, boundaries, etc.) | Code quality |
+| `fallow_like/` | **P35** — 9 static analyzers (dead code, dup, complexity, secrets, **taint/data-flow security**, boundaries, etc.) | Code quality + security |
 | `skill_project_optimizer/` | Per-project skill filtering, token profiling | -73% skill tokens |
 | `directives_audit/` | **P16** — Audit agent-guidance files (CLAUDE.md/AGENTS.md/specs, md+html) | Avoid blind agent runs |
 | `skill_finder/` | **P18** — Find relevant skills/tools for a task locally (0 cloud tokens) | -100% selection cost |
@@ -212,7 +212,7 @@ botte-secrete/
 │   ├── cache/                     # .botte-cache/ system
 │   ├── clarification/             # Proactive question engine
 │   ├── loader/                    # Pre-prompt loader for delegate_task
-│   ├── fallow_like/               # 8 static analyzers
+│   ├── fallow_like/               # 9 static analyzers (incl. taint/data-flow security)
 │   ├── skill_project_optimizer/   # Per-project token optimizer
 │   ├── mousquetaires/             # Blue Team (4 agents)
 │   │   ├── prompts/               # Agent pre-prompts (deltas)
@@ -332,6 +332,7 @@ Also exposed as MCP tools (`auto_route`, `fusion`). See
 - [x] P32: Conductor executor — run a plan's read-only steps unattended; confirm-gate mutating/cloud steps
 - [x] P33: Real local embeddings for ingest — auto-resolve a local /v1/embeddings endpoint (hash fallback)
 - [x] P34: GitHub Action — local-first /checkup verdict posted (and updated) as a PR comment, 0 cloud tokens
+- [x] P35: Taint / data-flow security analyzer (neuro-symbolic, local-first) — source→sink + CWE tags, `security_scan` MCP tool
 
 ## 📝 Changelog
 
