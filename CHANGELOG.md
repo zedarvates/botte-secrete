@@ -5,6 +5,14 @@ All notable changes to Botte Secrète. This project follows [SemVer](https://sem
 ## Unreleased
 
 ### Added
+- **Docs steward** (`skills/docs_steward/`) — scoped documentation map for
+  multi-component projects (server + client + tools + …). Detects components
+  (manifest / known name / code; monorepo containers expand to children),
+  classifies every doc as global vs component-scoped, and frames token cost so a
+  coder bounded to one component loads only its docs + linked globals — not every
+  other component's. `.md` = LLM-facing (load), `.html` = human reference (linked).
+  `index --write` drops a per-component `DOCS.md` (confirm-gated). New `map`/`index`
+  CLI + `docs_map` MCP tool. 0 cloud tokens.
 - **Taint / data-flow security analyzer** (`fallow_like/analyzers/taint.py`) —
   neuro-symbolic, local-first, inspired by RepoAudit/DeepAudit. The symbolic pass
   (Python `ast`, 0 tokens) traces attacker-controlled sources (argv, env, request,

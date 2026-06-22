@@ -365,6 +365,16 @@ TOOLS = [
         },
     },
     {
+        "name": "docs_map",
+        "description": "Scoped documentation map for a multi-component project (server/client/"
+                       "tools/…). Detects components, classifies docs as global vs "
+                       "component-scoped, and frames token cost so a coder bounded to one "
+                       "component loads only its docs + linked globals — not every other "
+                       "component's. 0 cloud tokens.",
+        "inputSchema": {"type": "object", "properties": {
+            "project": {"type": "string", "default": "."}}},
+    },
+    {
         "name": "cluster_status",
         "description": "Show the homelab cluster: every reachable machine + its backends, "
                        "and the recommended target (LRU spread to idle boxes / fastest).",
@@ -583,6 +593,12 @@ def _tool_security_scan(args: dict) -> str:
                       ensure_ascii=False, indent=2, default=str)
 
 
+def _tool_docs_map(args: dict) -> str:
+    from skills.docs_steward import build_map
+    return json.dumps(build_map(args.get("project", ".")),
+                      ensure_ascii=False, indent=2)
+
+
 def _tool_cluster_status(args: dict) -> str:
     from skills.cluster import status
     return json.dumps(status(scan_subnet=bool(args.get("scan_subnet", False))),
@@ -609,6 +625,7 @@ DISPATCH = {
     "conduct": _tool_conduct,
     "execute_plan": _tool_execute_plan,
     "security_scan": _tool_security_scan,
+    "docs_map": _tool_docs_map,
     "cluster_status": _tool_cluster_status,
     "system_map": _tool_system_map,
     "curate": _tool_curate,
