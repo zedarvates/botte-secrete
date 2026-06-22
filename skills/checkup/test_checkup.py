@@ -31,7 +31,21 @@ def main() -> int:
         r = run(proj)
         _ok("returns the canonical sections",
             all(k in r for k in ("directives", "infra_tips", "duplication",
-                                 "cost", "by_component", "drift", "headline")), state)
+                                 "cost", "by_component", "drift", "headline",
+                                 "security")), state)
+        _ok("clean project has no security findings",
+            r["security"]["count"] == 0 and r["security"]["available"], state)
+
+        # a project with a real taint flow surfaces in security + drift + comment
+        (proj / "vuln.py").write_text(
+            "import os, sys\nos.system('echo ' + sys.argv[1])\n", encoding="utf-8")
+        rv = run(proj)
+        _ok("taint flow surfaces in checkup security",
+            rv["security"]["count"] >= 1 and "CWE-78" in rv["security"]["by_cwe"], state)
+        _ok("high-severity security adds a drift item",
+            any("security finding" in x for x in rv["drift"]), state)
+        _ok("security appears in the PR comment",
+            "🛡️ Security" in format_pr_comment(rv), state)
         _ok("analysis cost is 0 LLM tokens", r["cost"]["analysis_llm_tokens"] == 0, state)
         _ok("flags missing policy as drift",
             any("policy" in x.lower() for x in r["drift"]), state)

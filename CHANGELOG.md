@@ -5,6 +5,11 @@ All notable changes to Botte Secrète. This project follows [SemVer](https://sem
 ## Unreleased
 
 ### Added
+- **Security in `/checkup` (and CI)** — the canonical checkup now runs the
+  taint/data-flow analyzer, reports a `security` summary (count, high-severity,
+  by-CWE, top findings), promotes high-severity findings to drift, and surfaces a
+  🛡️ Security section in the PR comment — so security rides into CI through the
+  existing `botte-pr-checkup` workflow with no extra wiring. 0 cloud tokens.
 - **Taint / data-flow security analyzer** (`fallow_like/analyzers/taint.py`) —
   neuro-symbolic, local-first, inspired by RepoAudit/DeepAudit. The symbolic pass
   (Python `ast`, 0 tokens) traces attacker-controlled sources (argv, env, request,
