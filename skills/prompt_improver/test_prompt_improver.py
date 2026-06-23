@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import json
 import sys
 from pathlib import Path
@@ -20,6 +21,23 @@ from skills.llm_backends import registry
 def _ok(msg, cond, state):
     print(f"  [{'PASS' if cond else 'FAIL'}] {msg}")
     state[0 if cond else 1] += 1
+
+
+@contextlib.contextmanager
+def _stub_local_llm(answer: str):
+    """Deterministic local LLM (canned reply, backend forced reachable) so the
+    live rewrite path is tested without depending on the loaded model."""
+    import skills.llm_backends.client as _c
+    o_chat, o_init, o_best = (_c.LocalLLMClient.chat, _c.LocalLLMClient.__init__,
+                              registry.best_chat_backend)
+    _c.LocalLLMClient.__init__ = lambda self, *a, **k: None
+    _c.LocalLLMClient.chat = lambda self, *a, **k: type("_R", (), {"text": answer})()
+    registry.best_chat_backend = lambda *a, **k: object()
+    try:
+        yield
+    finally:
+        _c.LocalLLMClient.chat, _c.LocalLLMClient.__init__ = o_chat, o_init
+        registry.best_chat_backend = o_best
 
 
 def main() -> int:
@@ -59,15 +77,14 @@ def main() -> int:
     _ok("json mode emits valid json_prompt",
         json.loads(rj["json_prompt"]).get("task") == "write tests", state)
 
-    # optional live: real local rewrite produces a richer structured prompt.
-    if registry.best_chat_backend():
+    # local rewrite — deterministic via a stubbed local client (no real model).
+    with _stub_local_llm('{"role":"Performance engineer","task":"speed up Python code",'
+                         '"instructions":["profile hotspots","optimize the slow path"]}'):
         live = improve("rends mon code python plus rapide", as_json=True)
         struct = live["structured"]
-        _ok(f"live local rewrite ({live['tier']}) fills role + instructions",
+        _ok(f"local rewrite ({live['tier']}) fills role + instructions, 0 cloud",
             live["cloud_tokens"] == 0 and bool(struct.get("role"))
             and len(struct.get("instructions", [])) >= 1, state)
-    else:
-        print("  [skip] live rewrite — no local backend")
 
     passed, failed = state
     print(f"\nRESULT: {passed} passed, {failed} failed")
