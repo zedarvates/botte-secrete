@@ -2,7 +2,13 @@
 
 All notable changes to Botte Secrète. This project follows [SemVer](https://semver.org).
 
-## Unreleased
+## v1.4.0 — 2026-06-23
+
+Security + determinism iteration. A neuro-symbolic taint analyzer wired into
+`/checkup` and CI; scoped docs management for multi-component projects; and the
+OR-Tools-inspired determinism program — exact computation (knapsack, solvers,
+rule-based NLP) replacing LLM reasoning for structured decisions. 0 cloud tokens
+throughout.
 
 ### Added
 - **Context budget** (`skills/context_budget/`) — the OR-Tools principle applied to
@@ -20,17 +26,6 @@ All notable changes to Botte Secrète. This project follows [SemVer](https://sem
   parallel waves** (cycle-detecting). Exact/repeatable, 0 cloud tokens — no LLM
   "figure out the order/assignment" call. New CLI + `schedule_plan`/`assign_work`
   MCP tools.
-
-### Fixed
-- **Deterministic LLM tests** — the live-backend branches of `docgen`,
-  `auto_router` (fusion vote) and `prompt_improver` asserted on real local-model
-  output, so a slow/timing-out model (e.g. a 12B coder) made the suite flaky. They
-  now exercise the same code paths against a stubbed local client with a canned
-  reply (the shared `LocalLLMClient` is patched at the class level + a forced
-  reachable backend), so the suite is green regardless of which model is loaded —
-  while still covering the local-first, 0-cloud-token contract.
-
-### Added
 - **Deterministic NLP** (`skills/nlp_deterministic/`) — classify and extract from
   text without an LLM (the NLP half of the determinism program). `classify(text,
   intents)` scores intents by keyword recall blended with a local hash-embedding
@@ -65,6 +60,15 @@ All notable changes to Botte Secrète. This project follows [SemVer](https://sem
   neuro pass (`--judge`) asks a LOCAL model to confirm candidates (0 cloud tokens).
   New `taint` CLI subcommand + `security_scan` MCP tool; wired into health scoring
   as a hard signal and into the SARIF/markdown outputs.
+
+### Fixed
+- **Deterministic LLM tests** — the live-backend branches of `docgen`,
+  `auto_router` (fusion vote) and `prompt_improver` asserted on real local-model
+  output, so a slow/timing-out model (e.g. a 12B coder) made the suite flaky. They
+  now exercise the same code paths against a stubbed local client with a canned
+  reply (the shared `LocalLLMClient` is patched at the class level + a forced
+  reachable backend), so the suite is green regardless of which model is loaded —
+  while still covering the local-first, 0-cloud-token contract.
 
 ## v1.3.0 — 2026-06-20
 
