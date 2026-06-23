@@ -14,7 +14,9 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from skills.docs_steward import (build_map, detect_components, render_index,
-                                 write_indexes, INDEX_FILENAME, INDEX_MARKER)
+                                 write_indexes, INDEX_FILENAME, INDEX_MARKER,
+                                 scan_tasks, prune_all, report_hygiene,
+                                 archive_reports, lifecycle_report)
 
 
 def _ok(msg, cond, state):
@@ -47,6 +49,80 @@ def _fixture(root: Path) -> None:
     # an ignored / non-component dir
     (root / "scripts").mkdir()
     (root / "scripts" / "build.sh").write_text("echo hi\n", encoding="utf-8")
+
+
+def _lifecycle_tests(state):
+    print("\n== docs_steward lifecycle tests ==")
+    with tempfile.TemporaryDirectory() as d:
+        root = Path(d)
+        # a mixed task file + a fully-done plan
+        (root / "TODO.md").write_text(
+            "# TODO\n- [ ] open one\n- [x] done one\n- [x] done two\nnotes\n",
+            encoding="utf-8")
+        (root / "PLAN-old.md").write_text(
+            "# Old plan\n- [x] shipped a\n- [x] shipped b\n", encoding="utf-8")
+        # a README with an all-done checklist is NOT a plan → must be left alone
+        (root / "README.md").write_text(
+            "# Project\n- [x] roadmap item shipped\n- [x] another shipped\n", encoding="utf-8")
+        # .botte reports: 4 for 'checkup', 2 for 'audit'
+        rep = root / ".botte" / "reports"
+        rep.mkdir(parents=True)
+        for stamp in ("2026-06-01_100000", "2026-06-02_100000",
+                      "2026-06-03_100000", "2026-06-04_100000"):
+            (rep / f"checkup_{stamp}.md").write_text("x", encoding="utf-8")
+        for stamp in ("2026-06-01_110000", "2026-06-02_110000"):
+            (rep / f"audit_{stamp}.md").write_text("y", encoding="utf-8")
+
+        tasks = {t.path: t for t in scan_tasks(root)}
+        _ok("scan_tasks finds the mixed TODO with right counts",
+            tasks["TODO.md"].open_tasks == 1 and tasks["TODO.md"].done_tasks == 2, state)
+        _ok("a fully-done plan is flagged fully_done + is_plan",
+            tasks["PLAN-old.md"].fully_done and tasks["PLAN-old.md"].is_plan, state)
+        _ok("a README with a checklist is NOT treated as a plan",
+            not tasks["README.md"].is_plan, state)
+        _ok("done items carry a token-waste estimate",
+            tasks["TODO.md"].done_tokens > 0, state)
+        _ok("reports under .botte are not treated as task files",
+            all(".botte" not in p for p in tasks), state)
+
+        # prune dry-run changes nothing
+        prune_all(root, dry_run=True)
+        _ok("prune dry-run leaves files untouched",
+            "[x] done one" in (root / "TODO.md").read_text(encoding="utf-8")
+            and (root / "PLAN-old.md").exists(), state)
+
+        # prune for real: strip done from TODO, archive fully-done plan
+        prune_all(root, dry_run=False)
+        todo_after = (root / "TODO.md").read_text(encoding="utf-8")
+        _ok("prune strips done items but keeps open ones",
+            "open one" in todo_after and "done one" not in todo_after, state)
+        _ok("removed items are preserved in an archive file (not lost)",
+            (root / ".botte" / "archive" / "TODO.done.md").exists(), state)
+        _ok("a fully-done plan is moved out of the working tree",
+            not (root / "PLAN-old.md").exists()
+            and (root / ".botte" / "archive" / "PLAN-old.md").exists(), state)
+        _ok("a non-plan README is never pruned or archived",
+            (root / "README.md").exists()
+            and "roadmap item shipped" in (root / "README.md").read_text(encoding="utf-8"), state)
+
+        # report hygiene: keep 2 per name → archive 2 checkups
+        hy = report_hygiene(root, keep=2)
+        _ok("report_hygiene keeps N most recent per name",
+            len(hy["keep"]) == 4 and len(hy["archive"]) == 2, state)
+        _ok("the archived reports are the oldest checkups",
+            all(r["name"] == "checkup" for r in hy["archive"]), state)
+
+        archive_reports(root, keep=2, dry_run=True)
+        _ok("report archive dry-run moves nothing",
+            not (rep / "archive").exists(), state)
+        moved = archive_reports(root, keep=2, dry_run=False)
+        _ok("report archive moves the older files",
+            len(moved) == 2 and (rep / "archive").exists(), state)
+
+        lr = lifecycle_report(root, keep=2)
+        _ok("lifecycle_report is JSON-serialisable + has both sections",
+            isinstance(json.dumps(lr), str)
+            and "tasks" in lr and "reports" in lr, state)
 
 
 def main() -> int:
@@ -104,6 +180,8 @@ def main() -> int:
             (root / "server" / INDEX_FILENAME).exists(), state)
         _ok("only the requested component is written",
             not (root / "client" / INDEX_FILENAME).exists(), state)
+
+    _lifecycle_tests(state)
 
     passed, failed = state
     print(f"\nRESULT: {passed} passed, {failed} failed")

@@ -13,6 +13,12 @@ All notable changes to Botte Secrète. This project follows [SemVer](https://sem
   other component's. `.md` = LLM-facing (load), `.html` = human reference (linked).
   `index --write` drops a per-component `DOCS.md` (confirm-gated). New `map`/`index`
   CLI + `docs_map` MCP tool. 0 cloud tokens.
+- **Docs lifecycle** (`docs_steward/lifecycle.py`) — finished work shouldn't keep
+  costing tokens. `tasks` finds checkbox plans/TODOs and counts open vs done + the
+  token waste of done items; `prune` strips done items (preserving them in
+  `.botte/archive/`) and archives fully-done plans; `reports` keeps the N most
+  recent `.botte` reports and archives the rest. Prune/archive are confirm-gated
+  (preview by default); read-only summary via the `docs_lifecycle` MCP tool.
 - **Taint / data-flow security analyzer** (`fallow_like/analyzers/taint.py`) —
   neuro-symbolic, local-first, inspired by RepoAudit/DeepAudit. The symbolic pass
   (Python `ast`, 0 tokens) traces attacker-controlled sources (argv, env, request,

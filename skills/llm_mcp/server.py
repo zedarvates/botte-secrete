@@ -375,6 +375,16 @@ TOOLS = [
             "project": {"type": "string", "default": "."}}},
     },
     {
+        "name": "docs_lifecycle",
+        "description": "Docs lifecycle summary for a project: finished tasks still sitting in "
+                       "plan/TODO markdown (token waste an LLM keeps re-reading), fully-done "
+                       "plans to archive, and `.botte` report proliferation (keep N recent). "
+                       "Read-only; prune/archive are confirm-gated CLI actions. 0 cloud tokens.",
+        "inputSchema": {"type": "object", "properties": {
+            "project": {"type": "string", "default": "."},
+            "keep": {"type": "integer", "default": 5}}},
+    },
+    {
         "name": "cluster_status",
         "description": "Show the homelab cluster: every reachable machine + its backends, "
                        "and the recommended target (LRU spread to idle boxes / fastest).",
@@ -599,6 +609,13 @@ def _tool_docs_map(args: dict) -> str:
                       ensure_ascii=False, indent=2)
 
 
+def _tool_docs_lifecycle(args: dict) -> str:
+    from skills.docs_steward import lifecycle_report
+    return json.dumps(lifecycle_report(args.get("project", "."),
+                                       keep=int(args.get("keep", 5))),
+                      ensure_ascii=False, indent=2)
+
+
 def _tool_cluster_status(args: dict) -> str:
     from skills.cluster import status
     return json.dumps(status(scan_subnet=bool(args.get("scan_subnet", False))),
@@ -626,6 +643,7 @@ DISPATCH = {
     "execute_plan": _tool_execute_plan,
     "security_scan": _tool_security_scan,
     "docs_map": _tool_docs_map,
+    "docs_lifecycle": _tool_docs_lifecycle,
     "cluster_status": _tool_cluster_status,
     "system_map": _tool_system_map,
     "curate": _tool_curate,

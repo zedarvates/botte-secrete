@@ -9,6 +9,12 @@ from skills.docs_steward.steward import (
     build_map, detect_components, find_docs, render_index, write_indexes,
     Doc, Component, INDEX_FILENAME, INDEX_MARKER,
 )
+from skills.docs_steward.lifecycle import (
+    scan_tasks, prune_tasks, prune_all, report_hygiene, archive_reports,
+    lifecycle_report, TaskFile,
+)
 
 __all__ = ["build_map", "detect_components", "find_docs", "render_index",
-           "write_indexes", "Doc", "Component", "INDEX_FILENAME", "INDEX_MARKER"]
+           "write_indexes", "Doc", "Component", "INDEX_FILENAME", "INDEX_MARKER",
+           "scan_tasks", "prune_tasks", "prune_all", "report_hygiene",
+           "archive_reports", "lifecycle_report", "TaskFile"]

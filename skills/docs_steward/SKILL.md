@@ -15,6 +15,9 @@ loads only its own docs **+ links to the relevant global docs**.
 python -m skills.docs_steward.cli map   .                 # the scoped docs map
 python -m skills.docs_steward.cli index . --component server   # preview server/DOCS.md
 python -m skills.docs_steward.cli index . --write         # write a DOCS.md per component
+python -m skills.docs_steward.cli tasks .                 # lifecycle: finished tasks + report sprawl
+python -m skills.docs_steward.cli prune . --write         # strip done tasks (archived, not lost)
+python -m skills.docs_steward.cli reports . --keep 5 --archive   # tidy .botte reports
 ```
 
 ## How it maps
@@ -36,5 +39,19 @@ Output: a JSON map, 0 cloud tokens to produce. Exposed via [[llm_mcp]] as
 `docs_map`. Related: [[directives_audit]] (agent-guidance file health),
 [[metrics]] (per-component cost), [[checkup]].
 
-First capability of a broader docs lifecycle (next: prune finished plans/TODOs,
-archive accumulated reports, md↔html policy).
+## Docs lifecycle (finished tasks + report sprawl)
+
+Finished work shouldn't keep costing tokens. `lifecycle.py` adds two
+confirm-gated jobs (preview by default, act only on `--write`/`--archive`):
+
+- **tasks/plans** — `scan_tasks` finds checkbox markdown (`- [ ]` / `- [x]`) and
+  counts open vs done + the token waste of done items still in-file. `prune`
+  strips done items (preserving them in `.botte/archive/<name>.done.md` — nothing
+  is lost) and moves fully-done plans out of the working tree.
+- **reports** — `report_hygiene`/`reports --archive` keep the N most recent of
+  each `.botte` report and move the rest to `.botte/reports/archive/`.
+
+Read-only summary via the `docs_lifecycle` MCP tool (`lifecycle_report`); the
+prune/archive actions stay CLI-only and confirm-gated.
+
+Next in the same module: an md↔html policy and a docs-drift check in /checkup.
