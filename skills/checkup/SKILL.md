@@ -22,7 +22,9 @@ python -m skills.checkup.cli . --pr-comment   # Markdown verdict for a PR commen
 3. **metrics** — LOC per component + always-on cost + savings framing
 4. **infra** — hardware/software/MCP cluster tips (+ ASCII diagram)
 5. **duplication** — stdlib AST duplicate-function scan
-6. **drift** — MCP wired? directives stale/oversized? policy missing?
+6. **security** — taint / data-flow scan ([[fallow_like]] `TaintAnalyzer`),
+   CWE-tagged; high-severity findings become drift. 0 cloud tokens.
+7. **drift** — MCP wired? directives stale/oversized? policy missing? security?
 
 Then points at the deep code audit (secrets/dead-code) for when you want it.
 
@@ -36,10 +38,11 @@ may be sub-optimal and may not prioritise local models.
 ## On pull requests
 
 `--pr-comment` prints a verdict-first Markdown comment (carrying a stable marker
-so a bot can edit it in place). The `🧦 Botte Checkup (PR)` GitHub Action
-(`.github/workflows/botte-pr-checkup.yml`) runs this on every PR and posts/updates
-a single comment via `gh` — 0 cloud tokens, no extra dependencies. Any project
-that deployed botte-secrète can reuse the same workflow.
+so a bot can edit it in place), **including the security section** — so the
+taint/data-flow scan rides into CI for free. The `🧦 Botte Checkup (PR)` GitHub
+Action (`.github/workflows/botte-pr-checkup.yml`) runs this on every PR and
+posts/updates a single comment via `gh` — 0 cloud tokens, no extra dependencies.
+Any project that deployed botte-secrète can reuse the same workflow.
 
 Related: [[preflight]] (enforces prefer-local every turn), [[infra_advisor]],
 [[metrics]], [[directives_audit]], [[bootstrap]].
