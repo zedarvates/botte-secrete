@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import sys
 import tempfile
 from pathlib import Path
@@ -21,12 +22,27 @@ def _ok(msg, cond, state):
     state[0 if cond else 1] += 1
 
 
-def _local_backend() -> bool:
+@contextlib.contextmanager
+def _stub_local_llm(answer: str):
+    """Deterministic local LLM: canned reply + backend forced reachable.
+
+    The model's output is non-deterministic (and can time out), so the live LLM
+    path is exercised against a stub instead — the suite stays green regardless
+    of which local model is loaded. Patches the shared client class so every
+    import style (top-level or in-function) sees it.
+    """
+    import skills.llm_backends.client as _c
+    import skills.llm_backends.registry as _r
+    o_chat, o_init, o_best = (_c.LocalLLMClient.chat, _c.LocalLLMClient.__init__,
+                              _r.best_chat_backend)
+    _c.LocalLLMClient.__init__ = lambda self, *a, **k: None
+    _c.LocalLLMClient.chat = lambda self, *a, **k: type("_R", (), {"text": answer})()
+    _r.best_chat_backend = lambda *a, **k: object()
     try:
-        from skills.llm_backends import registry
-        return registry.best_chat_backend() is not None
-    except Exception:
-        return False
+        yield
+    finally:
+        _c.LocalLLMClient.chat, _c.LocalLLMClient.__init__ = o_chat, o_init
+        _r.best_chat_backend = o_best
 
 
 def main() -> int:
@@ -45,24 +61,29 @@ def main() -> int:
             "user: do X" in txt and "assistant: did X" in txt, state)
     _ok("raw text passthrough", _load_transcript("hello", is_file=False) == "hello", state)
 
-    if _local_backend():
-        # draft_doc: local draft present, 0 cloud (no key) → refined_by notes none
+    # local LLM path — deterministic via a stubbed local client
+    with _stub_local_llm('{"done":["built metrics"],"decisions":[],'
+                         '"learnings":[],"next":[]}'):
         r = draft_doc("how to add two numbers in python", kind="guide", max_tokens=300)
-        _ok("draft_doc produces a doc/draft",
+        _ok("draft_doc produces a local-first doc (0 cloud)",
             bool(r.get("doc") or r.get("draft")) and "error" not in r, state)
-        _ok("draft is local (refine only with cloud key)",
-            r.get("drafted_locally") in (True, False), state)  # structure present
+        _ok("draft is marked drafted_locally", r.get("drafted_locally") is True, state)
 
         rev = session_review(
             "user: build metrics module\nassistant: built it, 125 tests pass",
             is_file=False, max_tokens=300)
         _ok("session_review returns a review at 0 cloud tokens",
             rev.get("cloud_tokens") == 0 and "review" in rev, state)
-    else:
-        print("  [skip] no local backend — draft_doc/session_review live tests")
-        # still verify graceful error path
-        rev = session_review("x", is_file=False)
-        _ok("session_review degrades gracefully without backend", "error" in rev, state)
+
+    # graceful degradation when there is no local backend at all
+    import skills.llm_backends.registry as _reg
+    _saved = _reg.best_chat_backend
+    _reg.best_chat_backend = lambda *a, **k: None
+    try:
+        _ok("session_review degrades gracefully without backend",
+            "error" in session_review("x", is_file=False), state)
+    finally:
+        _reg.best_chat_backend = _saved
 
     passed, failed = state
     print(f"\nRESULT: {passed} passed, {failed} failed")

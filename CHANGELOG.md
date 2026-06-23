@@ -4,6 +4,15 @@ All notable changes to Botte Secrète. This project follows [SemVer](https://sem
 
 ## Unreleased
 
+### Fixed
+- **Deterministic LLM tests** — the live-backend branches of `docgen`,
+  `auto_router` (fusion vote) and `prompt_improver` asserted on real local-model
+  output, so a slow/timing-out model (e.g. a 12B coder) made the suite flaky. They
+  now exercise the same code paths against a stubbed local client with a canned
+  reply (the shared `LocalLLMClient` is patched at the class level + a forced
+  reachable backend), so the suite is green regardless of which model is loaded —
+  while still covering the local-first, 0-cloud-token contract.
+
 ### Added
 - **Taint / data-flow security analyzer** (`fallow_like/analyzers/taint.py`) —
   neuro-symbolic, local-first, inspired by RepoAudit/DeepAudit. The symbolic pass

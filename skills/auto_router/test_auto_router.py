@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import os
 import sys
 from pathlib import Path
@@ -22,6 +23,23 @@ from skills.llm_backends import registry
 def _ok(msg, cond, state):
     print(f"  [{'PASS' if cond else 'FAIL'}] {msg}")
     state[0 if cond else 1] += 1
+
+
+@contextlib.contextmanager
+def _stub_local_llm(answer: str):
+    """Deterministic local LLM (canned reply, backend forced reachable) so the
+    live vote path is tested without depending on the loaded model."""
+    import skills.llm_backends.client as _c
+    o_chat, o_init, o_best = (_c.LocalLLMClient.chat, _c.LocalLLMClient.__init__,
+                              registry.best_chat_backend)
+    _c.LocalLLMClient.__init__ = lambda self, *a, **k: None
+    _c.LocalLLMClient.chat = lambda self, *a, **k: type("_R", (), {"text": answer})()
+    registry.best_chat_backend = lambda *a, **k: object()
+    try:
+        yield
+    finally:
+        _c.LocalLLMClient.chat, _c.LocalLLMClient.__init__ = o_chat, o_init
+        registry.best_chat_backend = o_best
 
 
 def main() -> int:
@@ -86,13 +104,11 @@ def main() -> int:
     finally:
         registry.best_chat_backend = saved  # type: ignore
 
-    # 8. Live: vote over local backend (if up) returns an answer.
-    if registry.best_chat_backend():
+    # 8. Vote over a (stubbed, deterministic) local backend returns the answer.
+    with _stub_local_llm("Paris"):
         res = fusion.vote("Capital of France, one word only.", max_tokens=24)
-        _ok(f"live vote returns answer ({res.get('total',0)} ballot(s))",
-            bool(res.get("answer")), state)
-    else:
-        print("  [skip] live vote — no backend")
+        _ok(f"vote returns the local ballot answer ({res.get('total', 0)} ballot(s))",
+            res.get("answer") == "Paris", state)
 
     passed, failed = state
     print(f"\nRESULT: {passed} passed, {failed} failed")
