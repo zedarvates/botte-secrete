@@ -12,6 +12,14 @@ All notable changes to Botte Secrète. This project follows [SemVer](https://sem
   greedy. Ranks with `skill_finder`, then knapsacks; on this repo a task loads
   ~4 skills (~2k tok) instead of the whole ~36-skill catalog (~15k tok). New
   `context_budget` CLI + MCP tool; generic `knapsack(items, budget)` engine.
+- **Deterministic solvers** (`skills/solvers/`) — the OR-Tools family in stdlib,
+  completing the determinism program. `assign_balanced` spreads (name, cost) tasks
+  across workers/backends to minimize the makespan (LPT greedy); `bin_pack` packs
+  items into the fewest bins of a capacity (first-fit-decreasing); `schedule`
+  topologically orders plan steps under precedence `deps` into a sequence **+
+  parallel waves** (cycle-detecting). Exact/repeatable, 0 cloud tokens — no LLM
+  "figure out the order/assignment" call. New CLI + `schedule_plan`/`assign_work`
+  MCP tools.
 
 ### Fixed
 - **Deterministic LLM tests** — the live-backend branches of `docgen`,

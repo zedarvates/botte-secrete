@@ -244,6 +244,7 @@ def main():
         "skills/docs_steward",
         "skills/context_budget",
         "skills/nlp_deterministic",
+        "skills/solvers",
         "skills/control_loop",
         "skills/report",
         "skills/cost_estimator",
