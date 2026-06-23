@@ -4,6 +4,15 @@ All notable changes to Botte Secrète. This project follows [SemVer](https://sem
 
 ## Unreleased
 
+### Added
+- **Context budget** (`skills/context_budget/`) — the OR-Tools principle applied to
+  the always-on cost: choosing *which* skills/docs to load is an exact **0/1
+  knapsack** (maximize relevance while summed tokens ≤ budget), not an LLM
+  "what's relevant" call — deterministic stdlib DP, 0 cloud tokens, optimal not
+  greedy. Ranks with `skill_finder`, then knapsacks; on this repo a task loads
+  ~4 skills (~2k tok) instead of the whole ~36-skill catalog (~15k tok). New
+  `context_budget` CLI + MCP tool; generic `knapsack(items, budget)` engine.
+
 ### Fixed
 - **Deterministic LLM tests** — the live-backend branches of `docgen`,
   `auto_router` (fusion vote) and `prompt_improver` asserted on real local-model

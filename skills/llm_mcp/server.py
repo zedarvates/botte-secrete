@@ -375,6 +375,18 @@ TOOLS = [
             "project": {"type": "string", "default": "."}}},
     },
     {
+        "name": "context_budget",
+        "description": "Pick the optimal set of skills to load for a task under a token "
+                       "budget — an exact 0/1 knapsack (maximize relevance, stay under "
+                       "budget), not an LLM 'what's relevant' call. Cuts the always-on "
+                       "context cost; returns the chosen set + tokens saved vs the whole "
+                       "catalog. 0 cloud tokens.",
+        "inputSchema": {"type": "object", "properties": {
+            "query": {"type": "string"},
+            "budget": {"type": "integer", "default": 4000}},
+            "required": ["query"]},
+    },
+    {
         "name": "docs_lifecycle",
         "description": "Docs lifecycle summary for a project: finished tasks still sitting in "
                        "plan/TODO markdown (token waste an LLM keeps re-reading), fully-done "
@@ -609,6 +621,12 @@ def _tool_docs_map(args: dict) -> str:
                       ensure_ascii=False, indent=2)
 
 
+def _tool_context_budget(args: dict) -> str:
+    from skills.context_budget import select_skills
+    return json.dumps(select_skills(args["query"], budget=int(args.get("budget", 4000))),
+                      ensure_ascii=False, indent=2)
+
+
 def _tool_docs_lifecycle(args: dict) -> str:
     from skills.docs_steward import lifecycle_report
     return json.dumps(lifecycle_report(args.get("project", "."),
@@ -644,6 +662,7 @@ DISPATCH = {
     "security_scan": _tool_security_scan,
     "docs_map": _tool_docs_map,
     "docs_lifecycle": _tool_docs_lifecycle,
+    "context_budget": _tool_context_budget,
     "cluster_status": _tool_cluster_status,
     "system_map": _tool_system_map,
     "curate": _tool_curate,
