@@ -243,6 +243,7 @@ def main():
         "skills/conductor",
         "skills/docs_steward",
         "skills/context_budget",
+        "skills/nlp_deterministic",
         "skills/control_loop",
         "skills/report",
         "skills/cost_estimator",

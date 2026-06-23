@@ -1,7 +1,7 @@
 # 🧦 Botte Secrète — Multi-Agent Token Optimization Platform
 
 [![CI](https://github.com/zedarvates/botte-secrete/actions/workflows/ci.yml/badge.svg)](https://github.com/zedarvates/botte-secrete/actions)
-[![Tests](https://img.shields.io/badge/tests-343%2F343-brightgreen)](https://github.com/zedarvates/botte-secrete)
+[![Tests](https://img.shields.io/badge/tests-362%2F362-brightgreen)](https://github.com/zedarvates/botte-secrete)
 [![Release](https://img.shields.io/badge/release-v1.3.0-blue)](https://github.com/zedarvates/botte-secrete/releases)
 [![Token Savings](https://img.shields.io/badge/token%20savings-85%25-blue)](https://github.com/zedarvates/botte-secrete)
 [![Self-Audit](https://img.shields.io/badge/self--audit-75%2F100%20(B)-yellowgreen)](https://github.com/zedarvates/botte-secrete)
@@ -133,6 +133,7 @@ Red Team: **Rochefort ∥ Milady ∥ Cte Wardes → Le Cardinal** (parallel coun
 | `checkup/` | **P23** — Canonical one-command project checkup + drift detection | No hand-written prompt |
 | `docs_steward/` | **P36** — Scoped docs map for multi-component projects + docs lifecycle (prune finished tasks, archive reports) | Cut always-on doc tokens |
 | `context_budget/` | **P37** — Optimal skill/doc set to load under a token budget (exact 0/1 knapsack, OR-Tools-style) | Cut always-on context |
+| `nlp_deterministic/` | **P38** — Classify/extract without an LLM (rules + gazetteers + local embedding) | 0-token triage/routing |
 | `infra_advisor/` | **P20** — Hardware/software/MCP cluster tips + auto audit (ASCII diagram) | Cut cost beyond code |
 | `prompt_improver/` | **P21** — Rewrite rough prompts into pro structured/JSON prompts locally | 0-token prompt eng. |
 | `ingest/` | **P24/P33** — Local web scraping + Qdrant ingestion with real local embeddings (auto-resolved, hash fallback) | 0-token extraction |
@@ -337,6 +338,7 @@ Also exposed as MCP tools (`auto_route`, `fusion`). See
 - [x] P35: Taint / data-flow security analyzer (neuro-symbolic, local-first) — source→sink + CWE tags, `security_scan` MCP tool
 - [x] P36: Docs steward — scoped documentation map for multi-component projects + docs lifecycle (prune finished tasks, archive reports); `docs_map`/`docs_lifecycle` MCP tools
 - [x] P37: Context budget — exact 0/1 knapsack (OR-Tools-style) picks the optimal skill/doc set to load under a token budget; `context_budget` MCP tool
+- [x] P38: Deterministic NLP — classify/extract without an LLM (rules + gazetteers + local embedding); `nlp_classify`/`nlp_extract` MCP tools
 
 ## 📝 Changelog
 
