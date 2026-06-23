@@ -241,6 +241,7 @@ def main():
         "skills/capabilities",
         "skills/cluster",
         "skills/conductor",
+        "skills/docs_steward",
         "skills/control_loop",
         "skills/report",
         "skills/cost_estimator",
