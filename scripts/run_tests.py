@@ -45,6 +45,7 @@ SUITES = [
     ("dead_code", [sys.executable, "-m", "skills.fallow_like.test_dead_code"]),
     ("taint", [sys.executable, "-m", "skills.fallow_like.test_taint"]),
     ("docs_steward", [sys.executable, "-m", "skills.docs_steward.test_docs_steward"]),
+    ("solvers", [sys.executable, "-m", "skills.solvers.test_solvers"]),
 ]
 
 _RESULT_RE = re.compile(r"(\d+)\s+passed,\s+(\d+)\s+failed")

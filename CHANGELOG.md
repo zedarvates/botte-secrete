@@ -4,6 +4,16 @@ All notable changes to Botte Secrète. This project follows [SemVer](https://sem
 
 ## Unreleased
 
+### Added
+- **Deterministic solvers** (`skills/solvers/`) — the OR-Tools family in stdlib,
+  completing the determinism program. `assign_balanced` spreads (name, cost) tasks
+  across workers/backends to minimize the makespan (LPT greedy); `bin_pack` packs
+  items into the fewest bins of a capacity (first-fit-decreasing); `schedule`
+  topologically orders plan steps under precedence `deps` into a sequence **+
+  parallel waves** (cycle-detecting). Exact/repeatable, 0 cloud tokens — no LLM
+  "figure out the order/assignment" call. New CLI + `schedule_plan`/`assign_work`
+  MCP tools.
+
 ### Fixed
 - **Deterministic LLM tests** — the live-backend branches of `docgen`,
   `auto_router` (fusion vote) and `prompt_improver` asserted on real local-model

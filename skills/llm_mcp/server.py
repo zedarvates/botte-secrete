@@ -375,6 +375,26 @@ TOOLS = [
             "project": {"type": "string", "default": "."}}},
     },
     {
+        "name": "schedule_plan",
+        "description": "Order plan steps under precedence constraints into a valid sequence "
+                       "+ parallel waves (deterministic DAG topo sort, cycle-detecting). No "
+                       "LLM 'figure out the order' call — 0 cloud tokens. deps = {step:[prereqs]}.",
+        "inputSchema": {"type": "object", "properties": {
+            "steps": {"type": "array", "items": {"type": "string"}},
+            "deps": {"type": "object", "description": "{step: [prerequisite steps]}"}},
+            "required": ["steps"]},
+    },
+    {
+        "name": "assign_work",
+        "description": "Balance (name:cost) tasks across workers/backends to minimize the "
+                       "makespan (LPT greedy) — an exact-ish deterministic scheduler for "
+                       "spreading cluster work. 0 cloud tokens.",
+        "inputSchema": {"type": "object", "properties": {
+            "tasks": {"type": "array", "description": "[[name, cost], …]"},
+            "workers": {"type": "array", "items": {"type": "string"}}},
+            "required": ["tasks", "workers"]},
+    },
+    {
         "name": "docs_lifecycle",
         "description": "Docs lifecycle summary for a project: finished tasks still sitting in "
                        "plan/TODO markdown (token waste an LLM keeps re-reading), fully-done "
@@ -609,6 +629,18 @@ def _tool_docs_map(args: dict) -> str:
                       ensure_ascii=False, indent=2)
 
 
+def _tool_schedule_plan(args: dict) -> str:
+    from skills.solvers import schedule
+    return json.dumps(schedule(args["steps"], args.get("deps")),
+                      ensure_ascii=False, indent=2)
+
+
+def _tool_assign_work(args: dict) -> str:
+    from skills.solvers import assign_balanced
+    return json.dumps(assign_balanced(args["tasks"], args["workers"]),
+                      ensure_ascii=False, indent=2)
+
+
 def _tool_docs_lifecycle(args: dict) -> str:
     from skills.docs_steward import lifecycle_report
     return json.dumps(lifecycle_report(args.get("project", "."),
@@ -644,6 +676,8 @@ DISPATCH = {
     "security_scan": _tool_security_scan,
     "docs_map": _tool_docs_map,
     "docs_lifecycle": _tool_docs_lifecycle,
+    "schedule_plan": _tool_schedule_plan,
+    "assign_work": _tool_assign_work,
     "cluster_status": _tool_cluster_status,
     "system_map": _tool_system_map,
     "curate": _tool_curate,
