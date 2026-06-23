@@ -14,6 +14,13 @@ All notable changes to Botte Secrète. This project follows [SemVer](https://sem
   while still covering the local-first, 0-cloud-token contract.
 
 ### Added
+- **Deterministic NLP** (`skills/nlp_deterministic/`) — classify and extract from
+  text without an LLM (the NLP half of the determinism program). `classify(text,
+  intents)` scores intents by keyword recall blended with a local hash-embedding
+  cosine; `extract_entities(text)` regexes urls/emails/IPs/paths/env vars/flags/
+  numbers; `keywords(text)` is stopword-filtered frequency. Deterministic, instant,
+  0 cloud tokens. New CLI + `nlp_classify`/`nlp_extract` MCP tools — a 0-token
+  triage/routing layer instead of asking a model to classify/extract.
 - **Security in `/checkup` (and CI)** — the canonical checkup now runs the
   taint/data-flow analyzer, reports a `security` summary (count, high-severity,
   by-CWE, top findings), promotes high-severity findings to drift, and surfaces a

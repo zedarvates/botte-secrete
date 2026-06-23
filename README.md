@@ -1,7 +1,7 @@
 # 🧦 Botte Secrète — Multi-Agent Token Optimization Platform
 
 [![CI](https://github.com/zedarvates/botte-secrete/actions/workflows/ci.yml/badge.svg)](https://github.com/zedarvates/botte-secrete/actions)
-[![Tests](https://img.shields.io/badge/tests-329%2F329-brightgreen)](https://github.com/zedarvates/botte-secrete)
+[![Tests](https://img.shields.io/badge/tests-348%2F348-brightgreen)](https://github.com/zedarvates/botte-secrete)
 [![Release](https://img.shields.io/badge/release-v1.3.0-blue)](https://github.com/zedarvates/botte-secrete/releases)
 [![Token Savings](https://img.shields.io/badge/token%20savings-85%25-blue)](https://github.com/zedarvates/botte-secrete)
 [![Self-Audit](https://img.shields.io/badge/self--audit-75%2F100%20(B)-yellowgreen)](https://github.com/zedarvates/botte-secrete)
@@ -132,6 +132,7 @@ Red Team: **Rochefort ∥ Milady ∥ Cte Wardes → Le Cardinal** (parallel coun
 | `preflight/` | **P23** — Committed policy + per-turn hook (prefer-local, auto) | Enforce, not opt-in |
 | `checkup/` | **P23** — Canonical one-command project checkup + drift detection | No hand-written prompt |
 | `docs_steward/` | **P36** — Scoped docs map for multi-component projects + docs lifecycle (prune finished tasks, archive reports) | Cut always-on doc tokens |
+| `nlp_deterministic/` | **P38** — Classify/extract without an LLM (rules + gazetteers + local embedding) | 0-token triage/routing |
 | `infra_advisor/` | **P20** — Hardware/software/MCP cluster tips + auto audit (ASCII diagram) | Cut cost beyond code |
 | `prompt_improver/` | **P21** — Rewrite rough prompts into pro structured/JSON prompts locally | 0-token prompt eng. |
 | `ingest/` | **P24/P33** — Local web scraping + Qdrant ingestion with real local embeddings (auto-resolved, hash fallback) | 0-token extraction |
@@ -335,6 +336,7 @@ Also exposed as MCP tools (`auto_route`, `fusion`). See
 - [x] P34: GitHub Action — local-first /checkup verdict posted (and updated) as a PR comment, 0 cloud tokens
 - [x] P35: Taint / data-flow security analyzer (neuro-symbolic, local-first) — source→sink + CWE tags, `security_scan` MCP tool
 - [x] P36: Docs steward — scoped documentation map for multi-component projects + docs lifecycle (prune finished tasks, archive reports); `docs_map`/`docs_lifecycle` MCP tools
+- [x] P38: Deterministic NLP — classify/extract without an LLM (rules + gazetteers + local embedding); `nlp_classify`/`nlp_extract` MCP tools
 
 ## 📝 Changelog
 

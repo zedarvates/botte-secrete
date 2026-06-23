@@ -45,6 +45,7 @@ SUITES = [
     ("dead_code", [sys.executable, "-m", "skills.fallow_like.test_dead_code"]),
     ("taint", [sys.executable, "-m", "skills.fallow_like.test_taint"]),
     ("docs_steward", [sys.executable, "-m", "skills.docs_steward.test_docs_steward"]),
+    ("nlp_deterministic", [sys.executable, "-m", "skills.nlp_deterministic.test_nlp_deterministic"]),
 ]
 
 _RESULT_RE = re.compile(r"(\d+)\s+passed,\s+(\d+)\s+failed")

@@ -375,6 +375,26 @@ TOOLS = [
             "project": {"type": "string", "default": "."}}},
     },
     {
+        "name": "nlp_classify",
+        "description": "Deterministic intent classification — pick the best label for text "
+                       "from {label: keywords} via lexical overlap + a local embedding "
+                       "signal. No LLM call (0 cloud tokens), instant, repeatable. Use "
+                       "instead of asking a model to classify.",
+        "inputSchema": {"type": "object", "properties": {
+            "text": {"type": "string"},
+            "intents": {"type": "object",
+                        "description": "{label: [keywords...]} map of candidate intents."}},
+            "required": ["text", "intents"]},
+    },
+    {
+        "name": "nlp_extract",
+        "description": "Deterministic entity extraction — pull urls, emails, IPs, file "
+                       "paths, env vars, CLI flags and numbers out of text via regex. "
+                       "0 cloud tokens. Use instead of asking a model to extract entities.",
+        "inputSchema": {"type": "object", "properties": {"text": {"type": "string"}},
+                        "required": ["text"]},
+    },
+    {
         "name": "docs_lifecycle",
         "description": "Docs lifecycle summary for a project: finished tasks still sitting in "
                        "plan/TODO markdown (token waste an LLM keeps re-reading), fully-done "
@@ -609,6 +629,17 @@ def _tool_docs_map(args: dict) -> str:
                       ensure_ascii=False, indent=2)
 
 
+def _tool_nlp_classify(args: dict) -> str:
+    from skills.nlp_deterministic import classify
+    return json.dumps(classify(args["text"], args["intents"]),
+                      ensure_ascii=False, indent=2)
+
+
+def _tool_nlp_extract(args: dict) -> str:
+    from skills.nlp_deterministic import extract_entities
+    return json.dumps(extract_entities(args["text"]), ensure_ascii=False, indent=2)
+
+
 def _tool_docs_lifecycle(args: dict) -> str:
     from skills.docs_steward import lifecycle_report
     return json.dumps(lifecycle_report(args.get("project", "."),
@@ -644,6 +675,8 @@ DISPATCH = {
     "security_scan": _tool_security_scan,
     "docs_map": _tool_docs_map,
     "docs_lifecycle": _tool_docs_lifecycle,
+    "nlp_classify": _tool_nlp_classify,
+    "nlp_extract": _tool_nlp_extract,
     "cluster_status": _tool_cluster_status,
     "system_map": _tool_system_map,
     "curate": _tool_curate,
