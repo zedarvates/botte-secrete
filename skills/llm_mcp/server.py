@@ -427,6 +427,15 @@ TOOLS = [
             "required": ["tasks", "workers"]},
     },
     {
+        "name": "cwe_explain",
+        "description": "Explain a security weakness from the local CWE knowledge base: an "
+                       "exact entry by id (e.g. CWE-78) or the best matches for free text "
+                       "(local embedding) — name, description, mitigation. 0 cloud tokens.",
+        "inputSchema": {"type": "object", "properties": {
+            "cwe_id": {"type": "string", "description": "e.g. CWE-78 (optional)."},
+            "text": {"type": "string", "description": "free text to match if no id."}}},
+    },
+    {
         "name": "docs_lifecycle",
         "description": "Docs lifecycle summary for a project: finished tasks still sitting in "
                        "plan/TODO markdown (token waste an LLM keeps re-reading), fully-done "
@@ -649,8 +658,12 @@ def _tool_security_scan(args: dict) -> str:
         enable_hot_paths=False, enable_blast_radius=False,
     )
     result = run_analysis(cfg)
-    findings = [f.model_dump() if hasattr(f, "model_dump") else dict(f)
-                for f in result.taint]
+    try:
+        from skills.cwe_kb import enrich  # attach CWE name/description/mitigation
+        findings = enrich(result.taint)
+    except Exception:
+        findings = [f.model_dump() if hasattr(f, "model_dump") else dict(f)
+                    for f in result.taint]
     return json.dumps({"count": len(findings), "findings": findings},
                       ensure_ascii=False, indent=2, default=str)
 
@@ -690,6 +703,12 @@ def _tool_assign_work(args: dict) -> str:
                       ensure_ascii=False, indent=2)
 
 
+def _tool_cwe_explain(args: dict) -> str:
+    from skills.cwe_kb import explain
+    return json.dumps(explain(cwe_id=args.get("cwe_id", ""), text=args.get("text", "")),
+                      ensure_ascii=False, indent=2)
+
+
 def _tool_docs_lifecycle(args: dict) -> str:
     from skills.docs_steward import lifecycle_report
     return json.dumps(lifecycle_report(args.get("project", "."),
@@ -725,6 +744,7 @@ DISPATCH = {
     "security_scan": _tool_security_scan,
     "docs_map": _tool_docs_map,
     "docs_lifecycle": _tool_docs_lifecycle,
+    "cwe_explain": _tool_cwe_explain,
     "context_budget": _tool_context_budget,
     "nlp_classify": _tool_nlp_classify,
     "nlp_extract": _tool_nlp_extract,

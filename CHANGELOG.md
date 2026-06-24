@@ -2,6 +2,18 @@
 
 All notable changes to Botte Secrète. This project follows [SemVer](https://semver.org).
 
+## Unreleased
+
+### Added
+- **CWE knowledge base** (`skills/cwe_kb/`) — the DeepAudit idea, local-first: a
+  curated on-disk CWE catalog + local-embedding retrieval to enrich and de-noise
+  security findings. `lookup(id)` returns the exact entry; `match(text)` ranks
+  weaknesses by local-embedding cosine (real `/v1/embeddings` endpoint or the
+  deterministic hash fallback + `vector_protocol` cosine); `enrich(findings)`
+  attaches name/description/mitigation to each taint finding (by the analyzer's
+  CWE tag, else by matching its message). Wired into the `security_scan` MCP tool
+  (findings come back enriched) + new `cwe_explain` MCP tool and CLI. 0 cloud tokens.
+
 ## v1.4.0 — 2026-06-23
 
 Security + determinism iteration. A neuro-symbolic taint analyzer wired into
