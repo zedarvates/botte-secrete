@@ -353,3 +353,8 @@ MIT — Use freely, improve constantly.
 ## 👤 Author
 
 Sylvain Galliez ([@zedarvates](https://github.com/zedarvates))
+
+
+---
+
+[![Donate](https://img.shields.io/badge/☕%20Soutenir-BTC%20%7C%20ETH-orange)](DONATE.md)
