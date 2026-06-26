@@ -157,6 +157,37 @@ def main() -> int:
         nn_belt.local_vs_cloud_hint = o_hint
         router_mod.estimate_effort = o_est
 
+    # 12. Implicit feedback: belt decisions get labelled for the active-learning loop.
+    import json as _json
+    import tempfile
+    from pathlib import Path as _Path
+    from skills.botte_nn import active_learning as al_mod
+    from skills.auto_router.router import AutoDecision
+
+    o_data = al_mod.DATA_DIR
+    al_mod.DATA_DIR = _Path(tempfile.mkdtemp()) / "al"
+    try:
+        al_mod.record_feedback("binary_router", [0.2, 1.0, 1.0],
+                               predicted_class=0, actual_class=1)
+        logf = al_mod.DATA_DIR / "inference_logs.jsonl"
+        rows = [_json.loads(x) for x in logf.read_text().splitlines() if x.strip()]
+        _ok("record_feedback appends one labelled row (correct=False)",
+            len(rows) == 1 and rows[0]["actual_class"] == 1 and rows[0]["correct"] is False,
+            state)
+
+        d_no = AutoDecision(mode="cloud", tier=Tier.CHEAP, effort=effort.estimate("x"))
+        _ok("record_override no-ops without belt context",
+            AutoRouter().record_override(d_no, "cloud") is False, state)
+
+        d_belt = AutoDecision(mode="local", tier=Tier.LOCAL, effort=effort.estimate("x"),
+                              _belt_ctx={"features": [0.5, 1.0, 1.0], "predicted_class": 0})
+        logged = AutoRouter().record_override(d_belt, "cloud")
+        rows2 = [_json.loads(x) for x in logf.read_text().splitlines() if x.strip()]
+        _ok("record_override logs a correction (local→cloud) when belt drove it",
+            logged and len(rows2) == 2 and rows2[1]["actual_class"] == 1, state)
+    finally:
+        al_mod.DATA_DIR = o_data
+
     passed, failed = state
     print(f"\nRESULT: {passed} passed, {failed} failed")
     return 0 if failed == 0 else 1

@@ -38,6 +38,9 @@ class AutoDecision:
     reason: str = ""
     est_cost: float = 0.0
     _api_key: str = field(default="", repr=False)
+    # binary_router features + predicted class when the NN belt drove this decision,
+    # so the outcome can be logged back as implicit feedback (None = belt didn't act).
+    _belt_ctx: Optional[dict] = field(default=None, repr=False)
 
     def to_dict(self) -> dict:
         return {"mode": self.mode, "tier": self.tier.name,
@@ -75,6 +78,9 @@ class AutoRouter:
                     base_url=local.base_url, via="local",
                     reason=f"effort {eff.score:.2f}→{tier.name}; NN belt → local "
                            f"(conf {hint[1]:.2f}, 0 cloud tokens)",
+                    _belt_ctx={"features": nn_belt.featurize_binary_router(
+                                   eff.score, budget_ratio, True),
+                               "predicted_class": 0},  # 0 = local
                 )
 
         # Local handles FREE/LOCAL outright, and is the preferred fallback.
@@ -129,7 +135,13 @@ class AutoRouter:
                                             max_tokens=max_tokens)
                 text, usage = res.text, res.total_tokens
             except LocalLLMError as e:
+                # The belt routed local and local failed → strong implicit feedback
+                # that this should have been cloud. Label it for the loop.
+                self._log_feedback(d, actual_class=1)  # 1 = cloud
                 return {"decision": d.to_dict(), "error": str(e)}
+            else:
+                # Local handled it → tentative positive label for binary_router.
+                self._log_feedback(d, actual_class=0)  # 0 = local
         else:
             text, usage = _cloud_chat(d, prompt, system, max_tokens)
             self.budget.spend(d.tier, usage // 2 or 1, usage // 2 or 1)
@@ -144,6 +156,31 @@ class AutoRouter:
         except Exception:
             pass
         return {"decision": d.to_dict(), "text": text, "tokens": usage}
+
+    @staticmethod
+    def _log_feedback(d: AutoDecision, actual_class: int) -> None:
+        """Best-effort: record the belt's prediction + the real outcome for learning."""
+        ctx = d._belt_ctx
+        if not ctx:
+            return
+        try:
+            from skills.botte_nn.active_learning import record_feedback
+            record_feedback("binary_router", ctx["features"],
+                            ctx["predicted_class"], actual_class)
+        except Exception:
+            pass
+
+    def record_override(self, decision: AutoDecision, should_have_been: str) -> bool:
+        """Log explicit feedback that the belt's local/cloud choice was overridden.
+
+        `should_have_been` is 'local' or 'cloud'. Returns True iff the belt actually
+        drove the decision (else there is nothing to correct). This is the strong
+        ground-truth signal: a human/agent forcing the other route = a real label.
+        """
+        if not decision._belt_ctx:
+            return False
+        self._log_feedback(decision, 0 if should_have_been == "local" else 1)
+        return True
 
 
 def _cloud_chat(d: AutoDecision, prompt: str, system: Optional[str],
