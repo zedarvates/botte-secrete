@@ -88,7 +88,43 @@ def main() -> int:
     _ok("MCP route_task returns text content",
         routed["result"]["content"][0]["type"] == "text", state)
 
-    # 6. optional live check
+    # 6. structured output (anti-hallucination) — offline, via a stubbed _post.
+    from skills.llm_backends.client import LocalLLMClient, LocalLLMError, gbnf_for_enum
+    fake = Backend("lmstudio", "LM Studio", "127.0.0.1", 1234, "openai", True,
+                   models=["gemma"], base_url="http://127.0.0.1:1234")
+    client = LocalLLMClient(backend=fake)
+    cap = {"reply": "{}"}
+
+    def _fake_post(path, body, _c=cap):
+        _c["body"] = body
+        return {"choices": [{"message": {"content": _c["reply"]}, "finish_reason": "stop"}],
+                "model": "gemma", "usage": {}}
+    client._post = _fake_post  # type: ignore
+
+    client.chat("x", response_format={"type": "json_object"})
+    _ok("response_format forwarded to the backend body",
+        cap["body"].get("response_format") == {"type": "json_object"}, state)
+
+    cap["reply"] = '{"answer": "local", "evidence": ["a"]}'
+    obj = client.chat_json("classify", schema={"type": "object", "required": ["answer"]})
+    _ok("chat_json parses a JSON object", obj.get("answer") == "local", state)
+    _ok("chat_json sends json_schema when a schema is given",
+        cap["body"]["response_format"]["type"] == "json_schema", state)
+
+    cap["reply"] = '```json\n{"answer": "cloud"}\n```'
+    _ok("chat_json strips markdown fences", client.chat_json("q").get("answer") == "cloud", state)
+
+    cap["reply"] = "I think it is local, definitely."  # not JSON, ever
+    try:
+        client.chat_json("q", retries=1)
+        _ok("chat_json raises on persistent non-JSON", False, state)
+    except LocalLLMError:
+        _ok("chat_json raises on persistent non-JSON", True, state)
+
+    _ok("gbnf_for_enum builds a closed one-of grammar",
+        gbnf_for_enum(["local", "cloud"]) == 'root ::= "local" | "cloud"', state)
+
+    # 7. optional live check
     best = registry.best_chat_backend()
     if best:
         from skills.llm_backends.client import LocalLLMClient, LocalLLMError

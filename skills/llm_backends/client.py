@@ -72,21 +72,36 @@ class LocalLLMClient:
 
     def chat(self, prompt: str, *, system: Optional[str] = None,
              model: Optional[str] = None, temperature: float = 0.2,
-             max_tokens: int = 1024) -> ChatResult:
-        """Single-turn chat completion against the local backend."""
+             max_tokens: int = 1024, response_format: Optional[dict] = None,
+             grammar: Optional[str] = None) -> ChatResult:
+        """Single-turn chat completion against the local backend.
+
+        `response_format` / `grammar` constrain the output so a small local model
+        cannot drift into free-form hallucination:
+            response_format={"type": "json_object"}        → valid JSON (OpenAI /v1)
+            response_format={"type": "json_schema", ...}    → schema-constrained
+            grammar=<GBNF string>                            → llama.cpp grammar
+        Both are sent only when set, so plain backends are unaffected.
+        """
         model = model or registry.preferred_model(self.backend) or "local-model"
         messages = []
         if system:
             messages.append({"role": "system", "content": system})
         messages.append({"role": "user", "content": prompt})
 
-        payload = self._post("/v1/chat/completions", {
+        body = {
             "model": model,
             "messages": messages,
             "temperature": temperature,
             "max_tokens": max_tokens,
             "stream": False,
-        })
+        }
+        if response_format is not None:
+            body["response_format"] = response_format
+        if grammar is not None:
+            body["grammar"] = grammar  # llama.cpp-server extension; ignored elsewhere
+
+        payload = self._post("/v1/chat/completions", body)
 
         try:
             choice = payload["choices"][0]
@@ -110,6 +125,81 @@ class LocalLLMClient:
             reasoning=reasoning,
             truncated=choice.get("finish_reason") == "length",
         )
+
+    def chat_json(self, prompt: str, *, schema: Optional[dict] = None,
+                  system: Optional[str] = None, model: Optional[str] = None,
+                  max_tokens: int = 512, retries: int = 1) -> dict:
+        """Chat that MUST return a JSON object — parsed locally, returned as a dict.
+
+        The anti-hallucination workhorse: the model is constrained to JSON (schema-
+        constrained when `schema` is given), the reply is parsed here, and on failure
+        we retry once with a corrective nudge before raising. The caller gets data,
+        never prose — a small model cannot answer with a confident paragraph of fiction.
+        """
+        if schema is not None:
+            rf = {"type": "json_schema",
+                  "json_schema": {"name": "out", "schema": schema, "strict": True}}
+        else:
+            rf = {"type": "json_object"}
+        sys_msg = ((system or "") +
+                   "\nRespond with a single valid JSON object only. No prose, no markdown.").strip()
+        last = ""
+        for _ in range(retries + 1):
+            res = self.chat(prompt, system=sys_msg, model=model, temperature=0.0,
+                            max_tokens=max_tokens, response_format=rf)
+            last = res.text
+            obj = _extract_json(res.text)
+            if obj is not None:
+                return obj
+            prompt = (f"{prompt}\n\nYour previous reply was not valid JSON:\n"
+                      f"{res.text[:200]}\nReturn ONLY a valid JSON object.")
+        raise LocalLLMError(
+            f"local model did not return valid JSON after {retries + 1} tries: {last[:200]}")
+
+
+def _extract_json(text: str) -> Optional[dict]:
+    """Best-effort parse of a JSON object from a model reply (tolerates ``` fences
+    and surrounding prose). Returns the dict, or None if nothing valid is found."""
+    if not text:
+        return None
+    s = text.strip()
+    if s.startswith("```"):  # ```json … ``` fence
+        parts = s.split("```")
+        s = parts[1] if len(parts) >= 2 else s.strip("`")
+        if s.lstrip().lower().startswith("json"):
+            s = s.lstrip()[4:]
+        s = s.strip()
+    try:
+        obj = json.loads(s)
+        return obj if isinstance(obj, dict) else None
+    except json.JSONDecodeError:
+        pass
+    start = s.find("{")  # fall back to the first balanced {...}
+    if start == -1:
+        return None
+    depth = 0
+    for i in range(start, len(s)):
+        if s[i] == "{":
+            depth += 1
+        elif s[i] == "}":
+            depth -= 1
+            if depth == 0:
+                try:
+                    obj = json.loads(s[start:i + 1])
+                    return obj if isinstance(obj, dict) else None
+                except json.JSONDecodeError:
+                    return None
+    return None
+
+
+def gbnf_for_enum(labels: list[str]) -> str:
+    """GBNF grammar forcing the output to be exactly one of `labels` (a JSON string).
+
+    For llama.cpp's `grammar` field — a classification then cannot hallucinate a
+    label outside the closed set. e.g. ['local','cloud'] → root ::= "local" | "cloud"
+    """
+    alts = " | ".join(json.dumps(label) for label in labels)
+    return f"root ::= {alts}"
 
 
 def quick_chat(prompt: str, **kwargs) -> ChatResult:
