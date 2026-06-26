@@ -259,6 +259,26 @@ class ActiveLearning:
         }
 
 
+def record_feedback(model_name: str, features: list[float], predicted_class: int,
+                    actual_class: int, latency_ms: float = 0.0) -> None:
+    """Append one *labelled* inference (ground truth known) for the loop to learn from.
+
+    O(1) and load-free — the hot path must not read the whole history back. This is
+    how production fills `actual_class`: callers log the real outcome (e.g. a routing
+    override, or a local attempt that failed) so the micro-NN can be retrained on
+    what actually happened, not synthetic data.
+    """
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    log = InferenceLog(
+        model_name=model_name, features=[float(x) for x in features],
+        predicted_class=int(predicted_class), actual_class=int(actual_class),
+        correct=(int(predicted_class) == int(actual_class)),
+        timestamp=time.time(), latency_ms=latency_ms,
+    )
+    with open(DATA_DIR / "inference_logs.jsonl", "a") as f:
+        f.write(json.dumps(asdict(log)) + "\n")
+
+
 def main(argv=None) -> int:
     p = argparse.ArgumentParser(prog="active_learning", description=__doc__)
     sub = p.add_subparsers(dest="cmd", required=True)
