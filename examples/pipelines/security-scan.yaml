@@ -1,0 +1,19 @@
+name: security-scan
+description: "Full security scan of the codebase"
+steps:
+  - name: quick-scan
+    agent: security_scanner
+    args:
+      fail_on: critical
+    on_fail: block
+
+  - name: deep-scan
+    agent: fast_context
+    query: find API keys, secrets, tokens
+    depends_on: [quick-scan]
+
+  - name: report
+    agent: security_scanner
+    args:
+      format: markdown
+    on_fail: continue
