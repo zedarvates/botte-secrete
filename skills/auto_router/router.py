@@ -21,6 +21,7 @@ from typing import Optional
 from skills.tiered_router import Tier, TIER_INFO, Budget, estimate_tokens, estimate_cost
 from skills.auto_router.effort import estimate as estimate_effort, EffortEstimate
 from skills.auto_router import providers
+from skills.auto_router import nn_belt
 from skills.llm_backends import registry
 from skills.llm_backends.client import LocalLLMClient, LocalLLMError, ChatResult
 
@@ -57,6 +58,24 @@ class AutoRouter:
 
         local = registry.best_chat_backend()
         local_model = registry.preferred_model(local) if local else None
+
+        # ── NN belt: a learned second opinion on local-vs-cloud (0 cloud tokens,
+        # abstains when unsure). Conservative v1 — only pull a *borderline* task
+        # (LOCAL < tier ≤ CHEAP) toward local when binary_router is confident and
+        # a local backend exists. Hard tasks (STANDARD/PREMIUM) and forced tiers
+        # are never touched, so the belt can save tokens but not raise cost/risk.
+        if local and force_tier is None and Tier.LOCAL < tier <= Tier.CHEAP:
+            budget_ratio = max(0.0, 1.0 - self.budget.used_today / max(self.budget.daily, 1))
+            hint = nn_belt.local_vs_cloud_hint(eff.score, budget_ratio, has_local=True)
+            if hint and hint[0] == "local":
+                return AutoDecision(
+                    mode="local", tier=Tier.LOCAL, effort=eff,
+                    model=local_model or "local-model",
+                    label=f"{local.label} {local.host}:{local.port}",
+                    base_url=local.base_url, via="local",
+                    reason=f"effort {eff.score:.2f}→{tier.name}; NN belt → local "
+                           f"(conf {hint[1]:.2f}, 0 cloud tokens)",
+                )
 
         # Local handles FREE/LOCAL outright, and is the preferred fallback.
         if tier <= Tier.LOCAL and local:

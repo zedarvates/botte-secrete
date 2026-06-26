@@ -110,6 +110,53 @@ def main() -> int:
         _ok(f"vote returns the local ballot answer ({res.get('total', 0)} ballot(s))",
             res.get("answer") == "Paris", state)
 
+    # 9. NN belt — featurize maps & clamps to binary_router's 3 features.
+    from skills.auto_router import nn_belt
+    _ok("featurize clamps out-of-range to [0,1]",
+        nn_belt.featurize_binary_router(1.5, -0.2, True) == [1.0, 0.0, 1.0], state)
+    _ok("featurize encodes has_local as 0/1",
+        nn_belt.featurize_binary_router(0.3, 0.9, False) == [0.3, 0.9, 0.0], state)
+
+    # 10. binary_router hint: trivial + local available → 'local' (or abstain),
+    # never 'cloud', and never raises.
+    hint_easy = nn_belt.local_vs_cloud_hint(0.1, 1.0, has_local=True)
+    _ok("hint for easy+local is 'local' or abstain (never cloud)",
+        hint_easy is None or hint_easy[0] == "local", state)
+
+    # 11. Router belt-pull: effort forced to a borderline CHEAP tier + a local
+    # backend → a confident 'local' hint routes local with 0 cloud tokens, and an
+    # abstaining belt leaves the decision alone. Stubbed for determinism (the live
+    # tier depends on control-loop-tuned thresholds).
+    from skills.auto_router import router as router_mod
+
+    class _FakeBackend:
+        label, host, port = "LM Studio", "127.0.0.1", 1234
+        base_url = "http://127.0.0.1:1234/v1"
+
+    fake_eff = effort.EffortEstimate(score=0.43, tier=Tier.CHEAP, reasons=[])
+    o_best, o_pref, o_hint, o_est = (registry.best_chat_backend,
+                                     registry.preferred_model,
+                                     nn_belt.local_vs_cloud_hint,
+                                     router_mod.estimate_effort)
+    registry.best_chat_backend = lambda *a, **k: _FakeBackend()
+    registry.preferred_model = lambda *a, **k: "local-model"
+    router_mod.estimate_effort = lambda *a, **k: fake_eff
+    try:
+        nn_belt.local_vs_cloud_hint = lambda *a, **k: ("local", 0.9)
+        d = AutoRouter().decide("borderline task")
+        _ok("confident 'local' hint → mode=local via NN belt",
+            d.mode == "local" and "NN belt" in d.reason, state)
+
+        nn_belt.local_vs_cloud_hint = lambda *a, **k: None  # abstain
+        d2 = AutoRouter().decide("borderline task")
+        _ok("abstaining belt does not claim the decision",
+            "NN belt" not in d2.reason, state)
+    finally:
+        registry.best_chat_backend = o_best
+        registry.preferred_model = o_pref
+        nn_belt.local_vs_cloud_hint = o_hint
+        router_mod.estimate_effort = o_est
+
     passed, failed = state
     print(f"\nRESULT: {passed} passed, {failed} failed")
     return 0 if failed == 0 else 1
