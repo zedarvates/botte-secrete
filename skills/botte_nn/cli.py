@@ -122,7 +122,9 @@ def _find_model(name_or_path: str) -> dict | None:
 def _predict_rust(binary: str, model_json: str, input_vec: list[float]) -> list[float]:
     """Predict using Rust binary (subprocess)."""
     result = subprocess.run(
-        [binary, "--model", model_json, "--input"] + [str(x) for x in input_vec],
+        # main.rs expects: `predict <model.json> <floats...>` (positional),
+        # not --model/--input — the old flags always errored → silent Python fallback.
+        [binary, "predict", model_json] + [str(x) for x in input_vec],
         capture_output=True, text=True, timeout=10,
     )
     if result.returncode != 0:
