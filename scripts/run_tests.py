@@ -48,6 +48,7 @@ SUITES = [
     ("context_budget", [sys.executable, "-m", "skills.context_budget.test_context_budget"]),
     ("nlp_deterministic", [sys.executable, "-m", "skills.nlp_deterministic.test_nlp_deterministic"]),
     ("solvers", [sys.executable, "-m", "skills.solvers.test_solvers"]),
+    ("local_harness", [sys.executable, "-m", "skills.local_harness.test_verifier"]),
 ]
 
 _RESULT_RE = re.compile(r"(\d+)\s+passed,\s+(\d+)\s+failed")
