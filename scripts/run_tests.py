@@ -49,6 +49,8 @@ SUITES = [
     ("nlp_deterministic", [sys.executable, "-m", "skills.nlp_deterministic.test_nlp_deterministic"]),
     ("solvers", [sys.executable, "-m", "skills.solvers.test_solvers"]),
     ("cwe_kb", [sys.executable, "-m", "skills.cwe_kb.test_cwe_kb"]),
+    ("botte_nn", [sys.executable, "-m", "skills.botte_nn.test_botte_nn"]),
+    ("features", [sys.executable, "-m", "skills.botte_nn.test_features"]),
 ]
 
 _RESULT_RE = re.compile(r"(\d+)\s+passed,\s+(\d+)\s+failed")
