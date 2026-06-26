@@ -1,0 +1,104 @@
+{
+  "source": "MITRE CWE (curated subset)",
+  "note": "Concise local knowledge base — the CWEs the taint analyzer emits plus common web/Top-25 weaknesses. Offline, 0 cloud tokens.",
+  "entries": [
+    {
+      "id": "CWE-78",
+      "name": "OS Command Injection",
+      "description": "The software builds an OS command from external input without neutralising special elements, letting an attacker run arbitrary commands.",
+      "mitigation": "Avoid the shell; pass arguments as a list (no shell=True). Use allowlists; never concatenate user input into a command string.",
+      "common": ["subprocess shell=True with user input", "os.system on a built string"]
+    },
+    {
+      "id": "CWE-89",
+      "name": "SQL Injection",
+      "description": "User-controlled input is concatenated into a SQL query, letting an attacker alter the query's logic.",
+      "mitigation": "Use parameterised queries / prepared statements. Never build SQL by string formatting.",
+      "common": ["f-string / % / + into cursor.execute", "ORM raw() with interpolation"]
+    },
+    {
+      "id": "CWE-94",
+      "name": "Code Injection",
+      "description": "Untrusted input flows into a dynamic code evaluator (eval/exec/compile), allowing arbitrary code execution.",
+      "mitigation": "Never eval/exec untrusted input. Use safe parsers (ast.literal_eval, json) for data.",
+      "common": ["eval(user_input)", "exec of a built string"]
+    },
+    {
+      "id": "CWE-502",
+      "name": "Deserialization of Untrusted Data",
+      "description": "Deserialising attacker-controlled data with an unsafe loader can instantiate arbitrary objects and execute code.",
+      "mitigation": "Never unpickle/yaml.load untrusted data. Use yaml.safe_load and signed/whitelisted formats (JSON).",
+      "common": ["pickle.loads of network data", "yaml.load without SafeLoader"]
+    },
+    {
+      "id": "CWE-918",
+      "name": "Server-Side Request Forgery (SSRF)",
+      "description": "The server fetches a URL derived from user input, letting an attacker reach internal services or metadata endpoints.",
+      "mitigation": "Validate/allowlist destinations; block internal ranges and redirects; do not pass user URLs to fetchers directly.",
+      "common": ["requests.get(user_url)", "urlopen of a built URL"]
+    },
+    {
+      "id": "CWE-22",
+      "name": "Path Traversal",
+      "description": "User input is used to build a filesystem path without neutralising '..', letting an attacker read/write outside the intended directory.",
+      "mitigation": "Resolve and confirm the path stays within a base dir; reject '..'; use safe join + realpath checks.",
+      "common": ["open(base + user_filename)", "shutil on a user path"]
+    },
+    {
+      "id": "CWE-79",
+      "name": "Cross-site Scripting (XSS)",
+      "description": "Untrusted input is rendered into a web page without escaping, letting an attacker run script in a victim's browser.",
+      "mitigation": "Context-aware output encoding; use a template engine's auto-escaping; sanitise HTML.",
+      "common": ["innerHTML = user_input", "unescaped template interpolation"]
+    },
+    {
+      "id": "CWE-798",
+      "name": "Use of Hard-coded Credentials",
+      "description": "Secrets embedded in source can be extracted by anyone with access to the code or binary.",
+      "mitigation": "Move secrets to environment variables or a secrets manager; rotate any committed secret.",
+      "common": ["API_KEY = 'sk-...'", "password literals in config"]
+    },
+    {
+      "id": "CWE-327",
+      "name": "Use of a Broken or Risky Cryptographic Algorithm",
+      "description": "Weak algorithms (MD5, SHA1, DES) or misused crypto undermine confidentiality/integrity.",
+      "mitigation": "Use vetted algorithms (SHA-256+, AES-GCM) and libraries; never roll your own crypto.",
+      "common": ["hashlib.md5 for passwords", "DES/ECB mode"]
+    },
+    {
+      "id": "CWE-352",
+      "name": "Cross-Site Request Forgery (CSRF)",
+      "description": "A state-changing request can be forged from another site because it lacks an unguessable token.",
+      "mitigation": "Use anti-CSRF tokens; SameSite cookies; verify Origin/Referer for state-changing actions.",
+      "common": ["form POST without CSRF token", "GET that mutates state"]
+    },
+    {
+      "id": "CWE-611",
+      "name": "XML External Entity (XXE)",
+      "description": "An XML parser resolves external entities from untrusted XML, enabling file read or SSRF.",
+      "mitigation": "Disable external entity/DTD processing; use defused parsers.",
+      "common": ["lxml/etree parsing untrusted XML with entity resolution on"]
+    },
+    {
+      "id": "CWE-434",
+      "name": "Unrestricted Upload of File with Dangerous Type",
+      "description": "Accepting and storing executable uploads can let an attacker run code on the server.",
+      "mitigation": "Allowlist types, store outside webroot, randomise names, never execute uploads.",
+      "common": ["save uploaded .php/.jsp into a served dir"]
+    },
+    {
+      "id": "CWE-200",
+      "name": "Exposure of Sensitive Information",
+      "description": "The product discloses sensitive data (errors, tokens, PII) to an unauthorised actor.",
+      "mitigation": "Scrub errors/logs; least-privilege responses; never return secrets or stack traces to clients.",
+      "common": ["debug stack traces in prod", "secrets in logs"]
+    },
+    {
+      "id": "CWE-287",
+      "name": "Improper Authentication",
+      "description": "Authentication can be bypassed or is not enforced where required.",
+      "mitigation": "Enforce auth on every protected path; use vetted auth libraries; fail closed.",
+      "common": ["missing auth check on an endpoint", "trusting a client-supplied identity"]
+    }
+  ]
+}
