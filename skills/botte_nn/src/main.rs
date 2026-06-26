@@ -69,7 +69,7 @@ fn cmd_predict(args: &[String]) {
 fn cmd_embedded(args: &[String]) {
     if args.len() < 4 {
         eprintln!("Usage: {} embedded <model_name> <input floats...>", args[0]);
-        eprintln!("Available: effort_classifier, binary_router, anomaly_detector, token_estimator, priority_estimator");
+        eprintln!("Available: effort_classifier, binary_router, anomaly_detector, token_estimator, priority_estimator, error_classifier");
         process::exit(1);
     }
     let model_name = &args[2];
@@ -82,9 +82,10 @@ fn cmd_embedded(args: &[String]) {
         "anomaly_detector" => botte_nn::embedded::anomaly_detector::load(),
         "token_estimator" => botte_nn::embedded::token_estimator::load(),
         "priority_estimator" => botte_nn::embedded::priority_estimator::load(),
+        "error_classifier" => botte_nn::embedded::error_classifier::load(),
         _ => {
             eprintln!("Unknown embedded model: {model_name}");
-            eprintln!("Available: effort_classifier, binary_router, anomaly_detector, token_estimator, priority_estimator");
+            eprintln!("Available: effort_classifier, binary_router, anomaly_detector, token_estimator, priority_estimator, error_classifier");
             process::exit(1);
         }
     };

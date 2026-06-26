@@ -67,6 +67,13 @@ _MODEL_META = {
         "labels": ["low", "normal", "high"],
         "description": "Prioritize tasks in queue: urgency, dependencies, wait time, user tier, deadline",
     },
+    "error_classifier": {
+        "path": "error_classifier.json",
+        "input_size": 12,
+        "output_size": 6,
+        "labels": ["syntax", "runtime", "network", "permission", "timeout", "resource"],
+        "description": "Classify error type for auto-recovery: syntax, runtime, network, permission, timeout, resource",
+    },
 }
 
 
