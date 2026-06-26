@@ -28,14 +28,18 @@ from typing import Optional
 CONFIDENCE = 0.66
 
 
-def _clamp01(x: float) -> float:
-    return 0.0 if x < 0 else 1.0 if x > 1 else float(x)
-
-
 def featurize_binary_router(complexity: float, budget_ratio: float,
                             has_local: bool) -> list[float]:
-    """Map router signals to the 3-feature vector binary_router expects."""
-    return [_clamp01(complexity), _clamp01(budget_ratio), 1.0 if has_local else 0.0]
+    """Map router signals to the 3-feature vector binary_router expects.
+
+    Delegates to skills.botte_nn.features (the single, validated source of truth
+    for every model's feature schema)."""
+    from skills.botte_nn import features
+
+    return features.featurize(
+        "binary_router",
+        features.binary_router_values(complexity, budget_ratio, has_local),
+    )
 
 
 def local_vs_cloud_hint(complexity: float, budget_ratio: float,
