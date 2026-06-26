@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+# ⚡ botte-mcp — MCP gateway wrapper for Botte Secrète
+# 
+# Usage:
+#   botte-mcp                    # Start MCP server (stdio)
+#   botte-mcp --help             # Show help
+#   botte-mcp test               # Run protocol test
+#   botte-mcp list               # List all tools via MCP
+#   botte-mcp call <tool> <args> # Call a tool
+#
+# MCP clients (Claude Code, Codex, Cursor) should use:
+#   command: "botte-mcp"
+#   (no args needed)
+#
+# Install:
+#   sudo ln -s ~/projects/botte-secrete/scripts/botte-mcp /usr/local/bin/botte-mcp
+
+set -euo pipefail
+REPO="/home/redgamer/projects/botte-secrete"
+COGNIARC="/home/redgamer/projects/cogniarc"
+export PYTHONPATH="${PYTHONPATH:-}:$REPO:$COGNIARC"
+
+case "${1:-}" in
+    --help|-h)
+        head -20 "$0" | grep '^#' | sed 's/^# //'
+        ;;
+    test)
+        # Test the MCP protocol end-to-end
+        echo "🔌 Testing MCP Gateway protocol..."
+        echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}'
+        echo '{"jsonrpc":"2.0","id":2,"method":"tools/list"}'
+        echo '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"botte_nn","arguments":{"model":"effort_classifier","input":[0.1,0.2,0.8,0.0]}}}'
+        echo '{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"solvers","arguments":{"target":"."}}}'
+        echo '{"jsonrpc":"2.0","id":5,"method":"notifications/initialized"}'
+        echo '{"jsonrpc":"2.0","id":6,"method":"ping"}'
+        ;;
+    list)
+        # Show available tools by calling the MCP server
+        echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}'
+        echo '{"jsonrpc":"2.0","id":2,"method":"tools/list"}'
+        echo '{"jsonrpc":"2.0","id":3,"method":"notifications/initialized"}'
+        ;;
+    call)
+        shift 2>/dev/null || true
+        TOOL="${1:-}"
+        ARGS="${2:-{}}"
+        if [ -z "$TOOL" ]; then
+            echo "Usage: botte-mcp call <tool_name> '<json_args>'"
+            echo "Example: botte-mcp call botte_nn '{\"model\":\"effort_classifier\",\"input\":[0.1,0.2,0.8,0.0]}'"
+            exit 1
+        fi
+        echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}'
+        echo '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"'"$TOOL"'","arguments":'"$ARGS"'}}'
+        echo '{"jsonrpc":"2.0","id":3,"method":"notifications/initialized"}'
+        ;;
+    *)
+        # Default: start MCP server in stdio mode
+        cd "$REPO"
+        exec python3 -m skills.mcp_gateway.server
+        ;;
+esac
