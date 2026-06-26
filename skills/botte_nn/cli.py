@@ -22,13 +22,28 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
 
+# Windows consoles default to cp1252 and crash on the emoji/box-drawing output
+# below. Force UTF-8 once at import so every entry point (and importers like the
+# test suite) is safe. Guarded: never fail just because the helper moved.
+try:  # pragma: no cover - trivial wiring
+    from skills.console_utf8 import force_utf8
+
+    force_utf8()
+except Exception:  # noqa: BLE001
+    pass
+
 
 _MODELS_DIR = Path(__file__).resolve().parent / "models"
-_RUST_BINARY = Path(__file__).resolve().parent.parent / "botte_nn" / "target" / "release" / "botte_nn_cli"
+# The compiled Rust binary is platform-specific (`.exe` on Windows). A binary
+# built for another OS (or a stale one) must never crash us — see do_predict's
+# fallback. Build artifacts live under target/ and are git-ignored.
+_BIN_NAME = "botte_nn_cli.exe" if os.name == "nt" else "botte_nn_cli"
+_RUST_BINARY = Path(__file__).resolve().parent / "target" / "release" / _BIN_NAME
 
 # ── Model metadata ──
 _MODEL_META = {
@@ -107,7 +122,9 @@ def _find_model(name_or_path: str) -> dict | None:
 def _predict_rust(binary: str, model_json: str, input_vec: list[float]) -> list[float]:
     """Predict using Rust binary (subprocess)."""
     result = subprocess.run(
-        [binary, "--model", model_json, "--input"] + [str(x) for x in input_vec],
+        # main.rs expects: `predict <model.json> <floats...>` (positional),
+        # not --model/--input — the old flags always errored → silent Python fallback.
+        [binary, "predict", model_json] + [str(x) for x in input_vec],
         capture_output=True, text=True, timeout=10,
     )
     if result.returncode != 0:
@@ -182,7 +199,9 @@ def do_predict(args):
             output = _predict_rust(str(_RUST_BINARY), meta["path"], input_vec)
         else:
             output = _predict_python(meta["path"], input_vec)
-    except (RuntimeError, subprocess.TimeoutExpired, json.JSONDecodeError) as e:
+    except (RuntimeError, subprocess.TimeoutExpired, json.JSONDecodeError, OSError) as e:
+        # OSError covers WinError 193 ("not a valid Win32 application") when an
+        # ELF/wrong-arch binary is present — fall back to pure-Python inference.
         print(f"⚠️  Rust binary failed, using Python fallback: {e}", file=sys.stderr)
         try:
             output = _predict_python(meta["path"], input_vec)

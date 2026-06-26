@@ -9,6 +9,11 @@ build/
 .venv/
 venv/
 
+# Rust build artifacts (machine-specific; the binary is rebuilt from src/)
+target/
+*.rlib
+*.rmeta
+
 # Node
 node_modules/
 *.min.js

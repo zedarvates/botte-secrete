@@ -12,6 +12,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
+from skills.console_utf8 import force_utf8
+
+force_utf8()  # Windows cp1252 consoles crash on the ✅/→ output below.
+
 from skills.botte_nn.cli import (
     _find_model, _predict_python, _MODEL_META, _MODELS_DIR,
     do_predict, do_list, do_which,
