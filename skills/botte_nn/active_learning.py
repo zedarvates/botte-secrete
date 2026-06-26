@@ -27,12 +27,20 @@ from typing import Optional
 
 import numpy as np
 
-# Ajouter le parent pour les imports
-_botte_path = Path(__file__).resolve().parents[1]
-if str(_botte_path) not in sys.path:
-    sys.path.insert(0, str(_botte_path))
+# Repo root (parent of skills/) on the path so `skills.*` imports resolve even
+# when this file is run directly, not only via `python -m`.
+_repo_root = Path(__file__).resolve().parents[2]
+if str(_repo_root) not in sys.path:
+    sys.path.insert(0, str(_repo_root))
 
 from skills.botte_nn.training.train import TinyNN
+
+try:  # Windows cp1252 consoles crash on the emoji output below.
+    from skills.console_utf8 import force_utf8
+
+    force_utf8()
+except Exception:  # noqa: BLE001
+    pass
 
 
 # ── Stockage des logs d'apprentissage ──
@@ -79,12 +87,18 @@ class ActiveLearning:
                     continue
 
     def save(self):
-        """Sauvegarde les logs sur le disque."""
+        """Réécrit tout le fichier (compaction; coûteux — réservé aux rares cas)."""
         log_file = self.data_dir / "inference_logs.jsonl"
         with open(log_file, "w") as f:
             for logs_list in self.logs.values():
                 for log in logs_list:
                     f.write(json.dumps(asdict(log)) + "\n")
+
+    def _append(self, log: InferenceLog):
+        """Append O(1) — le chemin chaud ne doit pas réécrire tout le fichier."""
+        log_file = self.data_dir / "inference_logs.jsonl"
+        with open(log_file, "a") as f:
+            f.write(json.dumps(asdict(log)) + "\n")
 
     # ── Collecte ──
 
@@ -102,7 +116,7 @@ class ActiveLearning:
             latency_ms=latency_ms,
         )
         self.logs[model_name].append(log)
-        self.save()
+        self._append(log)
 
     def collect(self, verbose: bool = True) -> dict[str, int]:
         """Analyse les logs collectés et retourne les stats."""
@@ -164,48 +178,58 @@ class ActiveLearning:
                 print(f"  ⏳ {model_name}: {len(valid_logs)} logs avec la bonne dimension")
             return None
 
-        # Préparer les données
-        X = np.array([l.features for l in valid_logs], dtype=float)
-        y = np.zeros((len(valid_logs), n_classes), dtype=float)
-        for i, l in enumerate(valid_logs):
-            if l.actual_class is not None and l.actual_class < n_classes:
-                y[i, l.actual_class] = 1.0
+        # ── Split déterministe train/val (80/20) pour une évaluation honnête ──
+        # Sans set de validation tenu à l'écart, on mesurerait l'accuracy sur les
+        # données d'entraînement → biais d'overfit, on déploierait de pires modèles.
+        rng = np.random.default_rng(42)
+        order = rng.permutation(len(valid_logs))
+        n_val = max(1, len(valid_logs) // 5)
+        val_logs = [valid_logs[i] for i in order[:n_val]]
+        train_logs = [valid_logs[i] for i in order[n_val:]]
 
-        # Créer un nouveau modèle et le charger depuis les poids existants
-        model = TinyNN(layers, activations)
-        # Réinitialiser avec des poids aléatoires pour l'apprentissage
-        model = TinyNN(layers, activations)
+        def _xy(sample):
+            xs = np.array([l.features for l in sample], dtype=float)
+            ys = np.zeros((len(sample), n_classes), dtype=float)
+            for i, l in enumerate(sample):
+                if l.actual_class is not None and l.actual_class < n_classes:
+                    ys[i, l.actual_class] = 1.0
+            return xs, ys
 
-        # Entraînement
-        old_accuracy = sum(1 for l in valid_logs if l.correct) / max(len(valid_logs), 1)
+        X_train, y_train = _xy(train_logs)
+        X_val, y_val = _xy(val_logs)
+
+        # Baseline : accuracy de l'ancien modèle sur le set de validation,
+        # d'après ses prédictions déjà loggées (predicted_class).
+        old_accuracy = float(np.mean([l.predicted_class == l.actual_class for l in val_logs]))
+
+        # Warm-start : on repart des poids existants (fine-tuning), pas de zéro.
+        model = TinyNN.from_json_data(weight_data)
 
         if verbose:
-            print(f"  🧠 {model_name}: entraînement sur {len(valid_logs)} échantillons...")
-            print(f"     Accuracy actuelle: {old_accuracy:.1%}")
+            print(f"  🧠 {model_name}: fine-tuning sur {len(train_logs)} échantillons "
+                  f"(validation: {len(val_logs)})...")
+            print(f"     Accuracy actuelle (val): {old_accuracy:.1%}")
 
-        model.train(X, y, epochs=epochs, lr=lr, verbose=verbose)
+        model.train(X_train, y_train, epochs=epochs, lr=lr, verbose=verbose)
 
-        # Évaluer
-        preds = model.predict(X)
-        new_accuracy = np.mean(preds.argmax(axis=1) == y.argmax(axis=1))
+        # Évaluer sur le set de validation tenu à l'écart.
+        new_accuracy = float(np.mean(model.predict(X_val).argmax(axis=1) == y_val.argmax(axis=1)))
 
         if verbose:
-            print(f"     Nouvelle accuracy: {new_accuracy:.1%}")
+            print(f"     Nouvelle accuracy (val): {new_accuracy:.1%}")
 
+        # On ne déploie QUE si le modèle généralise mieux sur des données non vues.
         if new_accuracy > old_accuracy:
-            # Sauvegarder le nouveau modèle
-            data = model.export_json()
             with open(model_path, "w") as f:
-                json.dump(data, f, indent=2)
-
+                json.dump(model.export_json(), f, indent=2)
             if verbose:
-                print(f"  ✅ {model_name}: amélioré {old_accuracy:.1%} → {new_accuracy:.1%}")
-
+                print(f"  ✅ {model_name}: amélioré {old_accuracy:.1%} → {new_accuracy:.1%} "
+                      f"(poids Rust embarqués à régénérer: active_learning rebuild)")
             return new_accuracy
         else:
             if verbose:
-                print(f"  ➖ {model_name}: pas d'amélioration "
-                      f"({new_accuracy:.1%} vs {old_accuracy:.1%})")
+                print(f"  ➖ {model_name}: pas d'amélioration sur la validation "
+                      f"({new_accuracy:.1%} vs {old_accuracy:.1%}) — ancien modèle conservé")
             return old_accuracy
 
     def train_all(self, epochs: int = 2000, verbose: bool = True) -> dict[str, float]:
@@ -309,7 +333,7 @@ def main(argv=None) -> int:
         # 2. Regénérer les poids embarqués
         import subprocess
         embed_script = Path(__file__).resolve().parent / "training" / "embed_weights.py"
-        result = subprocess.run(["python3", str(embed_script)],
+        result = subprocess.run([sys.executable, str(embed_script)],
                                 capture_output=True, text=True, cwd=str(embed_script.parent.parent))
         print(result.stdout)
 
