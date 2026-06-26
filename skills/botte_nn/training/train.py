@@ -76,6 +76,22 @@ class TinyNN:
             self.weights.append(np.random.uniform(-limit, limit, (in_dim, out_dim)))
             self.biases.append(np.zeros(out_dim))
 
+    @classmethod
+    def from_json_data(cls, data):
+        """Build a model pre-loaded with exported weights (warm start).
+
+        Inverse of export_json: the flat weight arrays are row-major
+        (out_dim, in_dim); internal matrices are (in_dim, out_dim).
+        """
+        model = cls(data["layers"], data["activations"])
+        for i, (flat, bias) in enumerate(zip(data["weights"], data["biases"])):
+            out_dim = data["layers"][i + 1]
+            in_dim = data["layers"][i]
+            w_oi = np.array(flat, dtype=float).reshape(out_dim, in_dim)
+            model.weights[i] = w_oi.T.copy()       # → (in_dim, out_dim)
+            model.biases[i] = np.array(bias, dtype=float)
+        return model
+
     def forward(self, x):
         """Forward pass. Returns (output, layer_outputs) for backprop."""
         layer_outputs = []
