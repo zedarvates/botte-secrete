@@ -53,6 +53,7 @@ SUITES = [
     ("features", [sys.executable, "-m", "skills.botte_nn.test_features"]),
     ("local_harness", [sys.executable, "-m", "skills.local_harness.test_verifier"]),
     ("harness_executor", [sys.executable, "-m", "skills.local_harness.test_executor"]),
+    ("harness_bench", [sys.executable, "-m", "skills.local_harness.test_bench"]),
     ("calibration", [sys.executable, "-m", "skills.botte_nn.test_calibration"]),
 ]
 
