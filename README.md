@@ -1,7 +1,8 @@
 # 🧦 Botte Secrète — Multi-Agent Token Optimization Platform
 
 [![CI](https://github.com/zedarvates/botte-secrete/actions/workflows/ci.yml/badge.svg)](https://github.com/zedarvates/botte-secrete/actions)
-[![Tests](https://img.shields.io/badge/tests-396%2F396-brightgreen)](https://github.com/zedarvates/botte-secrete)
+[![Tests](https://img.shields.io/badge/tests-459%2F459-brightgreen)](https://github.com/zedarvates/botte-secrete)
+[![License](https://img.shields.io/badge/license-MIT-blue)](https://github.com/zedarvates/botte-secrete/blob/main/LICENSE)
 [![Release](https://img.shields.io/badge/release-v1.4.0-blue)](https://github.com/zedarvates/botte-secrete/releases)
 [![Token Savings](https://img.shields.io/badge/token%20savings-85%25-blue)](https://github.com/zedarvates/botte-secrete)
 [![Self-Audit](https://img.shields.io/badge/self--audit-75%2F100%20(B)-yellowgreen)](https://github.com/zedarvates/botte-secrete)
@@ -16,7 +17,19 @@ its agent routes cheap work to local models (LM Studio / Ollama) for **0 cloud
 tokens**, escalates only the hard parts to the cloud, picks tools locally, and
 tells you what hardware/infra changes would cut cost further.
 
-## 🎯 What It Does
+### Quick Facts
+
+| Metric | Value |
+|--------|-------|
+| Tests | **459 passed, 0 failed** |
+| Skills | **50+** (code audit, fix, routing, MCP, NLP, solvers, security, docs) |
+| Micro-NN | **6 trained models** (binary_router, effort_classifier, anomaly_detector, token_estimator, priority_estimator, error_classifier) |
+| Token savings | **~65%** combined (reported by users) |
+| Dependencies | numpy + Python **stdlib only** |
+| License | **MIT** — free forever |
+| Deploy | One command: `python -m skills.bootstrap.cli /your-project` |
+
+## What It Does
 
 1. **Audit** — Static analysis (dead code, duplication, complexity, secrets, boundaries)
 2. **Fix** — Automated corrections with verification
@@ -37,6 +50,37 @@ python -m skills.llm_backends.cli audit --fresh        # what local models can t
 After deploy, restart your agent in the project — it gains the `botte-llm` MCP
 tools: `auto_route`, `local_chat`, `fusion`, `find_skills`, `infra_tips`,
 `auto_audit`, `audit_local_usage`, and more.
+
+## 🔒 System Impact
+
+Before running anything, here's exactly what Botte Secrète changes on your machine:
+
+| Item | Change |
+|------|--------|
+| `.mcp.json` | Adds 5+ MCP tools (auto_route, local_chat, fusion, find_skills, infra_tips) |
+| `.botte-cache/` | Created at project root — caches scan results between runs |
+| `.skills-profile` | Per-project skill selection — reduces context tokens |
+| Network | **None by default.** Only connects to local LLM servers (localhost:1234, etc.) |
+| System services | **None.** No cron, no daemon, no sudo, no startup entries |
+| Dependencies | `numpy` + Python stdlib only. Zero external ML frameworks |
+| Telemetry | **None.** No analytics, no tracking, no phone-home |
+
+**Verify for yourself:** the entire test suite runs offline:
+```bash
+python scripts/run_tests.py   # 459 tests, 0 cloud calls
+```
+
+## ✅ Smoke Test
+
+Clone, verify, and run in under 60 seconds:
+
+```bash
+git clone https://github.com/zedarvates/botte-secrete.git
+cd botte-secrete
+python scripts/run_tests.py                    # 459 tests — everything works
+python -m skills.llm_backends.cli scan         # detect local LLMs
+python -m skills.auto_router.cli route "hello" # 0-token routing decision
+```
 
 ## 📋 Copy-paste prompts
 
