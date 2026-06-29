@@ -1,0 +1,25 @@
+# Third-party runtime dependencies used across skills/ (everything else is the
+# Python standard library). CI installs these — see .github/workflows/ci.yml.
+#
+#   pip install -r requirements.txt
+
+numpy
+
+# fallow_like analyzers: typed models + tree-sitter parsing
+pydantic>=2,<3
+pydantic-settings>=2,<3
+tree-sitter>=0.23,<0.26
+tree-sitter-python
+tree-sitter-javascript
+tree-sitter-typescript
+tree-sitter-rust
+tree-sitter-go
+tree-sitter-java
+tree-sitter-c
+tree-sitter-cpp
+
+# pipelines / harness specs, CLIs, capability graph
+pyyaml
+rich
+typer
+networkx
