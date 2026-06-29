@@ -62,6 +62,12 @@ def local_vs_cloud_hint(complexity: float, budget_ratio: float,
 
     if not out or len(out) < 2:
         return None
+    # Calibrate the raw softmax so the CONFIDENCE cutoff is meaningful (Hermes #3).
+    # Identity (T=1.0) until binary_router is actually calibrated, so behaviour is
+    # unchanged by default.
+    from skills.botte_nn import calibration
+
+    out = calibration.apply_temperature(out, calibration.load_temperature("binary_router"))
     label = "local" if out[0] >= out[1] else "cloud"
     confidence = float(max(out))
     if confidence < CONFIDENCE:

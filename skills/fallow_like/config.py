@@ -39,3 +39,4 @@ class FallowConfig(BaseSettings):
     class Config:
         env_prefix = "FALLOW_"
         env_file = ".env"
+        extra = "ignore"

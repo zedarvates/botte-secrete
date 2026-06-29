@@ -1,7 +1,7 @@
 # 🧦 Botte Secrète — Multi-Agent Token Optimization Platform
 
 [![CI](https://github.com/zedarvates/botte-secrete/actions/workflows/ci.yml/badge.svg)](https://github.com/zedarvates/botte-secrete/actions)
-[![Tests](https://img.shields.io/badge/tests-459%2F459-brightgreen)](https://github.com/zedarvates/botte-secrete)
+[![Tests](https://img.shields.io/badge/tests-523%2F523-brightgreen)](https://github.com/zedarvates/botte-secrete)
 [![License](https://img.shields.io/badge/license-MIT-blue)](https://github.com/zedarvates/botte-secrete/blob/main/LICENSE)
 [![Release](https://img.shields.io/badge/release-v1.4.0-blue)](https://github.com/zedarvates/botte-secrete/releases)
 [![Token Savings](https://img.shields.io/badge/token%20savings-85%25-blue)](https://github.com/zedarvates/botte-secrete)
@@ -21,11 +21,11 @@ tells you what hardware/infra changes would cut cost further.
 
 | Metric | Value |
 |--------|-------|
-| Tests | **459 passed, 0 failed** |
+| Tests | **523 passed, 0 failed** |
 | Skills | **50+** (code audit, fix, routing, MCP, NLP, solvers, security, docs) |
 | Micro-NN | **6 trained models** (binary_router, effort_classifier, anomaly_detector, token_estimator, priority_estimator, error_classifier) |
 | Token savings | **~65%** combined (reported by users) |
-| Dependencies | numpy + Python **stdlib only** |
+| Dependencies | `numpy`, `pydantic`, `tree-sitter` — see [`requirements.txt`](requirements.txt) |
 | License | **MIT** — free forever |
 | Deploy | One command: `python -m skills.bootstrap.cli /your-project` |
 
@@ -38,6 +38,24 @@ tells you what hardware/infra changes would cut cost further.
 5. **Route local↔cloud** — Auto effort estimate sends cheap tasks to local LLMs,
    hard ones to the cloud (DeepSeek/GLM/Nemotron/Grok/Gemma); fusion makes them collaborate
 6. **Deploy** — One command wires the whole stack into any project via MCP
+
+## 🧠 The 4-filter stack — why it's cheap
+
+Every task passes through four filters, **cheapest first**. Each filter that handles a
+task saves the cost of every filter above it — so most work never reaches the cloud.
+
+| Filter | What runs | Cost | Modules |
+|--------|-----------|------|---------|
+| **1 · Micro-NN** | tiny trained nets decide routing / classification in ~0 ms | **0 tokens** | `botte_nn` (binary_router, effort_classifier, …) + `features` |
+| **2 · Deterministic** | rules, gazetteers, exact solvers — no model at all | **0 tokens** | `nlp_deterministic`, `solvers`, `context_budget` |
+| **3 · Local LLM** | small local models (LM Studio / Ollama), wrapped in an anti-hallucination harness | **0 cloud tokens** | `llm_backends`, `local_harness` |
+| **4 · Cloud LLM** | only genuinely hard reasoning escalates, cheapest capable model | paid | `auto_router`, `fusion` |
+
+The **NN belt** (`auto_router` + `botte_nn`) decides which filter a task needs; the
+**harness** keeps the local model honest (structured output + deterministic verification —
+*escalate, don't hallucinate*); the **active-learning loop** sharpens the belt from real
+outcomes. Trivial work stays local at 0 tokens; the expensive model is spent only where it
+earns its keep.
 
 ## ⚡ Deploy into your project
 
@@ -62,12 +80,12 @@ Before running anything, here's exactly what Botte Secrète changes on your mach
 | `.skills-profile` | Per-project skill selection — reduces context tokens |
 | Network | **None by default.** Only connects to local LLM servers (localhost:1234, etc.) |
 | System services | **None.** No cron, no daemon, no sudo, no startup entries |
-| Dependencies | `numpy` + Python stdlib only. Zero external ML frameworks |
+| Dependencies | `numpy` + `pydantic` / `tree-sitter` for the analyzers (`requirements.txt`). No heavy ML frameworks |
 | Telemetry | **None.** No analytics, no tracking, no phone-home |
 
 **Verify for yourself:** the entire test suite runs offline:
 ```bash
-python scripts/run_tests.py   # 459 tests, 0 cloud calls
+python scripts/run_tests.py   # 523 tests, 0 cloud calls
 ```
 
 ## ✅ Smoke Test
@@ -77,7 +95,7 @@ Clone, verify, and run in under 60 seconds:
 ```bash
 git clone https://github.com/zedarvates/botte-secrete.git
 cd botte-secrete
-python scripts/run_tests.py                    # 459 tests — everything works
+python scripts/run_tests.py                    # 523 tests — everything works
 python -m skills.llm_backends.cli scan         # detect local LLMs
 python -m skills.auto_router.cli route "hello" # 0-token routing decision
 ```
@@ -180,6 +198,9 @@ Red Team: **Rochefort ∥ Milady ∥ Cte Wardes → Le Cardinal** (parallel coun
 | `nlp_deterministic/` | **P38** — Classify/extract without an LLM (rules + gazetteers + local embedding) | 0-token triage/routing |
 | `solvers/` | **P39** — Deterministic assignment / bin-packing / precedence scheduling (OR-Tools-style, stdlib) | 0-token structured decisions |
 | `cwe_kb/` | **P40** — Local CWE knowledge base (RAG) — enrich/de-noise security findings with name, description, mitigation | Explain & prioritise findings |
+| `botte_nn/` | **Nano-NN belt** — 6 tiny trained nets (Rust + numpy fallback) decide routing/classification in ~0 ms; self-improving via an active-learning loop | Trivial decisions → 0 cloud tokens |
+| `botte_nn/features` | **Featurizer** — documented, range-validated feature schema for every micro-NN (`featurize`/`classify`); turns raw input into the exact vector each model expects | No silent garbage-in |
+| `local_harness/` | **Anti-hallucination harness** — structured output + deterministic verification (schema / evidence-in-context / citations-exist / code-parses); abstain & escalate rather than invent | Trust small local models |
 | `infra_advisor/` | **P20** — Hardware/software/MCP cluster tips + auto audit (ASCII diagram) | Cut cost beyond code |
 | `prompt_improver/` | **P21** — Rewrite rough prompts into pro structured/JSON prompts locally | 0-token prompt eng. |
 | `ingest/` | **P24/P33** — Local web scraping + Qdrant ingestion with real local embeddings (auto-resolved, hash fallback) | 0-token extraction |

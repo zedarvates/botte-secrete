@@ -1,0 +1,36 @@
+# Anti-hallucination harness for a local model doing grounded extraction.
+# Run:  python -m skills.local_harness.cli run examples/harnesses/local-extract.yaml "..."
+# See:  docs/plans/2026-06-26_local-model-harness-spec.md
+harness: local-extract-v1
+model: auto                      # use the best reachable local backend
+
+gate:
+  max_effort: 0.45               # harder than this → escalate to cloud, don't try local
+  allow_task_types: [extract, classify, summarize_grounded]
+
+output:
+  format: json_schema            # the model MUST return this shape
+  schema:
+    type: object
+    required: [answer, evidence]
+    properties:
+      answer:   { type: string }
+      evidence: { type: array, items: { type: string } }
+  max_tokens: 512
+
+ground:
+  source: files:.                # inject retrieved context (here: provided directly)
+  rule: answer_from_context_only
+  escalate_token: NEEDS_ESCALATION
+
+verify:
+  - schema                       # parses + matches the schema
+  - evidence_in_context          # every 'evidence' span must appear in the context
+
+self_consistency:
+  samples: 1                     # bump to 3 for critical tasks
+  agree: 1
+
+on_fail: escalate                # verification fails → fusion.cascade to cloud
+escalate_to: STANDARD
+learn: true                      # log the outcome for the active-learning loop

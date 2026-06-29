@@ -119,6 +119,15 @@ def load_findings(path: str) -> list[dict]:
 
 
 def main():
+    # Windows cp1252 consoles crash on the emoji in the output below.
+    for _s in (sys.stdout, sys.stderr):
+        _rc = getattr(_s, "reconfigure", None)
+        if _rc:
+            try:
+                _rc(encoding="utf-8", errors="replace")
+            except (ValueError, OSError):
+                pass
+
     if len(sys.argv) < 2:
         print(__doc__)
         sys.exit(1)
