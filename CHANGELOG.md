@@ -2,9 +2,36 @@
 
 All notable changes to Botte Secrète. This project follows [SemVer](https://semver.org).
 
-## Unreleased
+## v1.5.0 — 2026-06-23
+
+The belt-over-the-harness iteration. Tiny local neural nets + an anti-hallucination
+harness now sit *above* the LLM stack: trivial routing/triage is decided by trained
+micro-models at ~0 ms, local models are constrained to structured output and verified
+before trust, and the whole belt sharpens itself from real outcomes. Plus the security
+track closes (CWE knowledge base + malicious-pattern scan in CI). 0 cloud tokens
+throughout.
 
 ### Added
+- **Micro-NN belt** (`skills/botte_nn/` + `auto_router/nn_belt.py`) — tiny trained
+  neural nets (binary_router, effort_classifier, token_estimator, priority_estimator,
+  error_classifier, anomaly_detector; Rust core + numpy fallback) decide local-vs-cloud
+  routing and triage at ~0 ms, **0 cloud tokens**. A feature schema registry/featurizer
+  feeds them consistent signals; the belt abstains below a confidence floor.
+- **Self-improving loop** — `active_learning` retrains the micro-models from logged
+  outcomes (warm-start + honest eval); `auto_router` implicit feedback finally gives the
+  loop ground truth.
+- **Anti-hallucination harness** (`skills/local_harness/`) — a 5-layer `HarnessSpec`
+  executor + deterministic `verifier`, plus structured-output constraints on local models
+  (`llm_backends`) and a with/without-harness **hallucination bench** — *escalate, don't
+  hallucinate*.
+- **`pipeline_dsl`** — author custom local-first workflows in YAML.
+- **`audit_dag`** — one canonical machine-first audit DAG with derived views.
+- **Trajectory learning** — solver-optimization trajectories feed the learning loop.
+- **CWE knowledge base** (`skills/cwe_kb/`) — the DeepAudit idea, local-first: a
+  curated on-disk CWE catalog + local-embedding retrieval to enrich and de-noise
+  security findings. `lookup(id)` exact entry; `match(text)` ranks weaknesses by
+  local-embedding cosine; `enrich(findings)` attaches name/description/mitigation.
+  Wired into `security_scan` + new `cwe_explain` MCP tool. 0 cloud tokens.
 - **Malicious-pattern scan in `/checkup` (and CI)** — the `security_scanner` (regex +
   AST detection of obfuscation/exfiltration/remote-exec/runtime-install) is now wired
   into the canonical checkup: a `malicious` summary (full scan count + by-severity) with
@@ -12,14 +39,6 @@ All notable changes to Botte Secrète. This project follows [SemVer](https://sem
   scanner's own catalog) that drives drift and the PR comment — so supply-chain code-safety
   rides into CI via the existing `botte-pr-checkup` workflow. New `scan_malicious` MCP tool.
   0 cloud tokens.
-- **CWE knowledge base** (`skills/cwe_kb/`) — the DeepAudit idea, local-first: a
-  curated on-disk CWE catalog + local-embedding retrieval to enrich and de-noise
-  security findings. `lookup(id)` returns the exact entry; `match(text)` ranks
-  weaknesses by local-embedding cosine (real `/v1/embeddings` endpoint or the
-  deterministic hash fallback + `vector_protocol` cosine); `enrich(findings)`
-  attaches name/description/mitigation to each taint finding (by the analyzer's
-  CWE tag, else by matching its message). Wired into the `security_scan` MCP tool
-  (findings come back enriched) + new `cwe_explain` MCP tool and CLI. 0 cloud tokens.
 
 ## v1.4.0 — 2026-06-23
 

@@ -3,7 +3,7 @@
 [![CI](https://github.com/zedarvates/botte-secrete/actions/workflows/ci.yml/badge.svg)](https://github.com/zedarvates/botte-secrete/actions)
 [![Tests](https://img.shields.io/badge/tests-528%2F528-brightgreen)](https://github.com/zedarvates/botte-secrete)
 [![License](https://img.shields.io/badge/license-MIT-blue)](https://github.com/zedarvates/botte-secrete/blob/main/LICENSE)
-[![Release](https://img.shields.io/badge/release-v1.4.0-blue)](https://github.com/zedarvates/botte-secrete/releases)
+[![Release](https://img.shields.io/badge/release-v1.5.0-blue)](https://github.com/zedarvates/botte-secrete/releases)
 [![Token Savings](https://img.shields.io/badge/token%20savings-85%25-blue)](https://github.com/zedarvates/botte-secrete)
 [![Self-Audit](https://img.shields.io/badge/self--audit-75%2F100%20(B)-yellowgreen)](https://github.com/zedarvates/botte-secrete)
 
@@ -411,7 +411,7 @@ Also exposed as MCP tools (`auto_route`, `fusion`). See
 
 ## 📝 Changelog
 
-See [CHANGELOG.md](CHANGELOG.md). Current: **v1.4.0**.
+See [CHANGELOG.md](CHANGELOG.md). Current: **v1.5.0**.
 
 ## 📜 License
 
