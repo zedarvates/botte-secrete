@@ -53,7 +53,10 @@ def run(project: Path) -> dict:
     # 6. security — taint / data-flow scan (0 cloud tokens, symbolic)
     out["security"] = _security_summary(project)
 
-    # 7. drift checks
+    # 7. malicious-pattern scan — dangerous/obfuscated code (0 cloud tokens)
+    out["malicious"] = _malicious_summary(project)
+
+    # 8. drift checks
     d = out["directives"]
     if isinstance(d, dict):
         if d.get("score", 100) < 90:
@@ -67,6 +70,11 @@ def run(project: Path) -> dict:
         out["drift"].append(
             f"{sec['high']} security finding(s) (taint/data-flow) — "
             "run `python -m skills.fallow_like.cli taint .`")
+    mal = out["malicious"]
+    if mal.get("suspicious"):
+        out["drift"].append(
+            f"{mal['suspicious']} suspicious code pattern(s) "
+            "(obfuscation/exfiltration) — run `python -m skills.security_scanner.cli scan .`")
 
     out["deep_audit_hint"] = ("For secrets/dead-code: PYTHONPATH=. python "
                               "skills/mousquetaires/scripts/porthos_audit.py <project> <out>")
@@ -96,6 +104,55 @@ def _security_summary(project: Path) -> dict:
            for f in sorted(findings, key=lambda x: -x.confidence)[:5]]
     return {"count": len(findings), "high": high, "by_cwe": by_cwe,
             "top": top, "available": True}
+
+
+# Genuinely-suspicious patterns (obfuscation / exfiltration / runtime install /
+# remote exec) — these rarely appear in legit first-party code, unlike the broad
+# eval/exec/subprocess/os_system the scanner also flags. Only these fire drift.
+_MALICIOUS_HIGH_SIGNAL = {
+    "exec_from_string", "pip_install_from_code", "requests_to_ip",
+    "send_environ", "xor_obfuscation", "bytes_decode_obfuscation",
+}
+
+
+_MALICIOUS_CODE_EXTS = {".py", ".rs", ".sh", ".bash", ".js", ".ts"}
+
+
+def _suspect_excluded(path: str) -> bool:
+    """Exclude contexts where high-signal patterns are expected/benign:
+    test fixtures, the scanner's own pattern catalog, and declarative config
+    (e.g. `pip install` in a CI .yml is not runtime code execution)."""
+    p = path.replace("\\", "/").lower()
+    name = p.rsplit("/", 1)[-1]
+    if name.startswith("test_") or name.endswith("_test.py") or name == "conftest.py":
+        return True
+    if "/security_scanner/" in p:  # the scanner's own pattern definitions
+        return True
+    return Path(name).suffix not in _MALICIOUS_CODE_EXTS
+
+
+def _malicious_summary(project: Path) -> dict:
+    """Scan the project for dangerous/obfuscated code patterns (0 cloud tokens).
+
+    Reports the full scan, but only flags the high-signal subset (obfuscation /
+    exfiltration / runtime install / remote exec, outside test fixtures) as
+    *suspicious* — that subset is what drives drift, to avoid drowning in the
+    scanner's high-recall eval/exec/subprocess matches on legit code.
+    """
+    try:
+        from skills.security_scanner import scan_dir, scan_report
+    except ImportError:
+        return {"count": 0, "suspicious": 0, "by_severity": {}, "top": [], "available": False}
+    # fail_on='critical' returns *all* findings (the scanner keeps severity >= min).
+    findings = scan_dir(str(project), fail_on="critical")
+    rep = scan_report(findings)
+    suspicious = [f for f in findings
+                  if f.pattern in _MALICIOUS_HIGH_SIGNAL and not _suspect_excluded(f.file)]
+    top = [{"file": f.file, "line": f.line, "pattern": f.pattern,
+            "severity": f.severity, "snippet": (f.snippet or "")[:80]}
+           for f in suspicious[:5]]
+    return {"count": rep.count, "suspicious": len(suspicious),
+            "by_severity": rep.by_severity, "top": top, "available": True}
 
 
 # Stable marker so a CI bot can find & update its own comment instead of spamming.
@@ -153,6 +210,21 @@ def format_pr_comment(result: dict, *, repo: str | None = None,
         lines.append("### 🛡️ Security — no taint/data-flow candidates")
         lines.append("")
 
+    mal = result.get("malicious") or {}
+    if mal.get("suspicious"):
+        bys = mal.get("by_severity", {})
+        sevs = " ".join(f"{k}×{v}" for k, v in bys.items() if v)
+        lines.append(f"### 🦠 Malicious-pattern scan — {mal['suspicious']} suspicious "
+                     f"(obfuscation/exfiltration) of {mal['count']} total · {sevs}")
+        for t in mal.get("top", []):
+            lines.append(f"- `{t['file']}:{t['line']}` [{t['severity']}] {t['pattern']}"
+                         + (f" — `{t['snippet']}`" if t.get('snippet') else ""))
+        lines.append("")
+    elif mal.get("available"):
+        lines.append(f"### 🦠 Malicious-pattern scan — no suspicious patterns "
+                     f"({mal.get('count', 0)} powerful-primitive matches reviewed)")
+        lines.append("")
+
     footer = "_local-first checkup · 0 cloud tokens_"
     if repo and sha:
         footer += f" · [`{sha[:7]}`](https://github.com/{repo}/commit/{sha})"
@@ -199,6 +271,12 @@ def main(argv=None) -> int:
               f"({sec.get('high', 0)} high) · {cwes}")
     elif sec.get("available"):
         print("\n   🛡️  Security: no taint/data-flow candidates")
+    mal = r.get("malicious") or {}
+    if mal.get("suspicious"):
+        print(f"\n   🦠 Malicious patterns: {mal['suspicious']} suspicious "
+              f"(obfuscation/exfiltration) of {mal['count']} total")
+    elif mal.get("available"):
+        print(f"\n   🦠 Malicious patterns: clean ({mal.get('count', 0)} reviewed)")
     if r["drift"]:
         print("\n   ⚠️  Drift to fix:")
         for x in r["drift"]:

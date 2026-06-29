@@ -1,7 +1,7 @@
 # 🧦 Botte Secrète — Multi-Agent Token Optimization Platform
 
 [![CI](https://github.com/zedarvates/botte-secrete/actions/workflows/ci.yml/badge.svg)](https://github.com/zedarvates/botte-secrete/actions)
-[![Tests](https://img.shields.io/badge/tests-523%2F523-brightgreen)](https://github.com/zedarvates/botte-secrete)
+[![Tests](https://img.shields.io/badge/tests-528%2F528-brightgreen)](https://github.com/zedarvates/botte-secrete)
 [![License](https://img.shields.io/badge/license-MIT-blue)](https://github.com/zedarvates/botte-secrete/blob/main/LICENSE)
 [![Release](https://img.shields.io/badge/release-v1.4.0-blue)](https://github.com/zedarvates/botte-secrete/releases)
 [![Token Savings](https://img.shields.io/badge/token%20savings-85%25-blue)](https://github.com/zedarvates/botte-secrete)
@@ -21,7 +21,7 @@ tells you what hardware/infra changes would cut cost further.
 
 | Metric | Value |
 |--------|-------|
-| Tests | **523 passed, 0 failed** |
+| Tests | **528 passed, 0 failed** |
 | Skills | **50+** (code audit, fix, routing, MCP, NLP, solvers, security, docs) |
 | Micro-NN | **6 trained models** (binary_router, effort_classifier, anomaly_detector, token_estimator, priority_estimator, error_classifier) |
 | Token savings | **~65%** combined (reported by users) |
@@ -85,7 +85,7 @@ Before running anything, here's exactly what Botte Secrète changes on your mach
 
 **Verify for yourself:** the entire test suite runs offline:
 ```bash
-python scripts/run_tests.py   # 523 tests, 0 cloud calls
+python scripts/run_tests.py   # 528 tests, 0 cloud calls
 ```
 
 ## ✅ Smoke Test
@@ -95,7 +95,7 @@ Clone, verify, and run in under 60 seconds:
 ```bash
 git clone https://github.com/zedarvates/botte-secrete.git
 cd botte-secrete
-python scripts/run_tests.py                    # 523 tests — everything works
+python scripts/run_tests.py                    # 528 tests — everything works
 python -m skills.llm_backends.cli scan         # detect local LLMs
 python -m skills.auto_router.cli route "hello" # 0-token routing decision
 ```
@@ -198,7 +198,7 @@ Red Team: **Rochefort ∥ Milady ∥ Cte Wardes → Le Cardinal** (parallel coun
 | `nlp_deterministic/` | **P38** — Classify/extract without an LLM (rules + gazetteers + local embedding) | 0-token triage/routing |
 | `solvers/` | **P39** — Deterministic assignment / bin-packing / precedence scheduling (OR-Tools-style, stdlib) | 0-token structured decisions |
 | `cwe_kb/` | **P40** — Local CWE knowledge base (RAG) — enrich/de-noise security findings with name, description, mitigation | Explain & prioritise findings |
-| `botte_nn/` | **Nano-NN belt** — 6 tiny trained nets (Rust + numpy fallback) decide routing/classification in ~0 ms; self-improving via an active-learning loop | Trivial decisions → 0 cloud tokens |
+| `botte_nn/` | **Micro-NN belt** — 6 tiny trained *classifiers* (feedforward nets, Rust + numpy fallback — not LLMs) decide routing/classification in ~0 ms; self-improving via an active-learning loop | Trivial decisions → 0 cloud tokens |
 | `botte_nn/features` | **Featurizer** — documented, range-validated feature schema for every micro-NN (`featurize`/`classify`); turns raw input into the exact vector each model expects | No silent garbage-in |
 | `local_harness/` | **Anti-hallucination harness** — structured output + deterministic verification (schema / evidence-in-context / citations-exist / code-parses); abstain & escalate rather than invent | Trust small local models |
 | `infra_advisor/` | **P20** — Hardware/software/MCP cluster tips + auto audit (ASCII diagram) | Cut cost beyond code |

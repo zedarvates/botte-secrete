@@ -365,6 +365,16 @@ TOOLS = [
         },
     },
     {
+        "name": "scan_malicious",
+        "description": "Scan a project's code for dangerous/obfuscated/malicious patterns "
+                       "(eval/exec of decoded data, base64+exec, dynamic import, exfiltration, "
+                       "suspicious subprocess/network) via regex + AST. Supply-chain self-check "
+                       "for tools/skills before trusting them. 0 cloud tokens.",
+        "inputSchema": {"type": "object", "properties": {
+            "project": {"type": "string", "default": "."}},
+        },
+    },
+    {
         "name": "docs_map",
         "description": "Scoped documentation map for a multi-component project (server/client/"
                        "tools/…). Detects components, classifies docs as global vs "
@@ -648,6 +658,15 @@ def _tool_execute_plan(args: dict) -> str:
     return json.dumps(r, ensure_ascii=False, indent=2)
 
 
+def _tool_scan_malicious(args: dict) -> str:
+    from skills.security_scanner import scan_dir, scan_report
+    findings = scan_dir(str(args.get("project", ".")), fail_on="critical")
+    rep = scan_report(findings)
+    return json.dumps({"count": rep.count, "by_severity": rep.by_severity,
+                       "findings": [vars(f) for f in findings]},
+                      ensure_ascii=False, indent=2, default=str)
+
+
 def _tool_security_scan(args: dict) -> str:
     from skills.fallow_like.config import FallowConfig
     from skills.fallow_like.cli import run_analysis
@@ -742,6 +761,7 @@ DISPATCH = {
     "conduct": _tool_conduct,
     "execute_plan": _tool_execute_plan,
     "security_scan": _tool_security_scan,
+    "scan_malicious": _tool_scan_malicious,
     "docs_map": _tool_docs_map,
     "docs_lifecycle": _tool_docs_lifecycle,
     "cwe_explain": _tool_cwe_explain,

