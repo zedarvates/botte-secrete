@@ -5,6 +5,13 @@ All notable changes to Botte Secrète. This project follows [SemVer](https://sem
 ## Unreleased
 
 ### Added
+- **Malicious-pattern scan in `/checkup` (and CI)** — the `security_scanner` (regex +
+  AST detection of obfuscation/exfiltration/remote-exec/runtime-install) is now wired
+  into the canonical checkup: a `malicious` summary (full scan count + by-severity) with
+  a curated **high-signal** subset (obfuscation/exfiltration outside test fixtures and the
+  scanner's own catalog) that drives drift and the PR comment — so supply-chain code-safety
+  rides into CI via the existing `botte-pr-checkup` workflow. New `scan_malicious` MCP tool.
+  0 cloud tokens.
 - **CWE knowledge base** (`skills/cwe_kb/`) — the DeepAudit idea, local-first: a
   curated on-disk CWE catalog + local-embedding retrieval to enrich and de-noise
   security findings. `lookup(id)` returns the exact entry; `match(text)` ranks
