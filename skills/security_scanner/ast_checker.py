@@ -15,8 +15,12 @@ from skills.security_scanner.patterns import Pattern, PATTERN_MAP
 
 
 def _is_static_arg(node: ast.AST) -> bool:
-    """Check if an AST node is a static/literal argument (not from a variable)."""
-    return isinstance(node, (ast.Constant, ast.Str, ast.Num, ast.Bytes))
+    """Check if an AST node is a static/literal argument (not from a variable).
+
+    ``ast.Constant`` covers all literals on Python 3.8+; the legacy ``ast.Str``/
+    ``Num``/``Bytes`` aliases were removed in 3.12, so we no longer reference them.
+    """
+    return isinstance(node, ast.Constant)
 
 
 def _get_call_name(node: ast.Call) -> Optional[str]:

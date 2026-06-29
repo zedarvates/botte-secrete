@@ -143,8 +143,8 @@ def _malicious_summary(project: Path) -> dict:
         from skills.security_scanner import scan_dir, scan_report
     except ImportError:
         return {"count": 0, "suspicious": 0, "by_severity": {}, "top": [], "available": False}
-    # fail_on='critical' returns *all* findings (the scanner keeps severity >= min).
-    findings = scan_dir(str(project), fail_on="critical")
+    # fail_on='info' returns *all* findings (every severity is at-least-as-severe as info).
+    findings = scan_dir(str(project), fail_on="info")
     rep = scan_report(findings)
     suspicious = [f for f in findings
                   if f.pattern in _MALICIOUS_HIGH_SIGNAL and not _suspect_excluded(f.file)]

@@ -660,7 +660,7 @@ def _tool_execute_plan(args: dict) -> str:
 
 def _tool_scan_malicious(args: dict) -> str:
     from skills.security_scanner import scan_dir, scan_report
-    findings = scan_dir(str(args.get("project", ".")), fail_on="critical")
+    findings = scan_dir(str(args.get("project", ".")), fail_on="info")  # all severities
     rep = scan_report(findings)
     return json.dumps({"count": rep.count, "by_severity": rep.by_severity,
                        "findings": [vars(f) for f in findings]},
