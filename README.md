@@ -25,7 +25,7 @@ tells you what hardware/infra changes would cut cost further.
 | Skills | **50+** (code audit, fix, routing, MCP, NLP, solvers, security, docs) |
 | Micro-NN | **6 trained models** (binary_router, effort_classifier, anomaly_detector, token_estimator, priority_estimator, error_classifier) |
 | Token savings | **~65%** combined (reported by users) |
-| Dependencies | numpy + Python **stdlib only** |
+| Dependencies | `numpy`, `pydantic`, `tree-sitter` — see [`requirements.txt`](requirements.txt) |
 | License | **MIT** — free forever |
 | Deploy | One command: `python -m skills.bootstrap.cli /your-project` |
 
@@ -80,7 +80,7 @@ Before running anything, here's exactly what Botte Secrète changes on your mach
 | `.skills-profile` | Per-project skill selection — reduces context tokens |
 | Network | **None by default.** Only connects to local LLM servers (localhost:1234, etc.) |
 | System services | **None.** No cron, no daemon, no sudo, no startup entries |
-| Dependencies | `numpy` + Python stdlib only. Zero external ML frameworks |
+| Dependencies | `numpy` + `pydantic` / `tree-sitter` for the analyzers (`requirements.txt`). No heavy ML frameworks |
 | Telemetry | **None.** No analytics, no tracking, no phone-home |
 
 **Verify for yourself:** the entire test suite runs offline:
