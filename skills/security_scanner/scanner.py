@@ -164,12 +164,13 @@ def scan_dir(root: str, fail_on: str = "error", max_workers: int = 8,
                     snippet=f"Scan error: {e}",
                 ))
 
-    # Filter by fail_on severity
+    # Keep findings at least as severe as `fail_on` (critical=most severe).
+    # Lower order number = more severe, so "at least as severe" is `<= min_level`.
     severity_order = {"critical": 0, "error": 1, "warning": 2, "info": 3}
     min_level = severity_order.get(fail_on, 1)
     filtered = [
         f for f in all_findings
-        if severity_order.get(f.severity, 99) >= min_level
+        if severity_order.get(f.severity, 99) <= min_level
     ]
 
     return filtered

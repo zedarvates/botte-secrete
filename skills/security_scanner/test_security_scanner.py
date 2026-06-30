@@ -197,6 +197,20 @@ def main() -> int:
     _ok("clean dir scan returns findings or empty",
         isinstance(clean_scan, list), state)
 
+    # ── fail_on severity filter: keep findings AT LEAST AS SEVERE ──
+    with tempfile.TemporaryDirectory() as fd:
+        (Path(fd) / "mix.py").write_text(
+            "import hashlib\nhashlib.md5(b'x')\neval(user_input)\n", encoding="utf-8")
+        errplus = {f.severity for f in scan_dir(fd, fail_on="error")}
+        _ok("fail_on=error keeps critical, drops warning",
+            "critical" in errplus and "warning" not in errplus, state)
+        allsev = {f.severity for f in scan_dir(fd, fail_on="info")}
+        _ok("fail_on=info returns every severity (incl. critical + warning)",
+            "critical" in allsev and "warning" in allsev, state)
+        crit_only = {f.severity for f in scan_dir(fd, fail_on="critical")}
+        _ok("fail_on=critical keeps only critical",
+            crit_only == {"critical"} if crit_only else True, state)
+
     # ── Edge: nonexistent path ──
     missing = scan_dir("/nonexistent/path/xyz")
     _ok("nonexistent path returns error finding",
