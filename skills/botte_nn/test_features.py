@@ -78,9 +78,11 @@ def main() -> int:
     _ok(f"classify(binary_router, easy+local) → 'local' ({conf:.2f})",
         label == "local" and 0.0 <= conf <= 1.0 and len(probs) == 2, state)
 
+    # Regression guard for the distilled error_classifier: a ValueError traceback
+    # must classify as 'runtime' (the synthetic model wrongly said 'syntax').
     elabel, econf, _ = features.classify("error_classifier", ev)
-    _ok(f"classify(error_classifier, ValueError tb) → a known label ({elabel})",
-        elabel in _MODEL_META["error_classifier"]["labels"], state)
+    _ok(f"classify(error_classifier, ValueError tb) → 'runtime' (distilled) [{elabel}]",
+        elabel == "runtime", state)
 
     passed, failed = state
     print(f"\nRESULT: {passed} passed, {failed} failed")

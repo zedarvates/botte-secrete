@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""botton_nn — CLI Python pour inference tiny neural network Rust.
+"""botte_nn — CLI Python pour inférence de classifieurs feedforward minuscules (Rust).
 
 Utilise soit:
 1. Le binaire Rust compilé (botte_nn_cli) — rapide, 0 dépendance
