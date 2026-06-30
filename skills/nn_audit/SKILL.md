@@ -18,12 +18,16 @@ python -m skills.nn_audit.cli <dir> --json
 Per model it reports:
 - **data_source** — `real` | `synthetic` | `unknown`, inferred from the training
   script's content (distill/corpus/labelled → real; `np.random` → synthetic).
+- **wired** — does any *production* file (not tests/training/registry) consume it,
+  and which (`usage`)? Tells **synthetic-but-driving-behaviour** (real risk) apart
+  from **synthetic-but-orphan** (dead weight).
 - **has_provenance** — does the `.json` record `trained_on` / `eval_accuracy` / `data`?
 - **has_test_guard** — does a test assert a specific real-world output for it?
-- **verdict** — `grounded` | `synthetic — mimics a hand rule` | `unknown`, plus an
-  `at_risk` flag (synthetic + no guard).
+- **verdict** — `grounded` | `synthetic — drives behaviour: ground it` |
+  `synthetic + orphan: delete or wire` | `unknown`; **`at_risk` = synthetic AND wired**.
 
-The fix for a synthetic model is binary: **ground it** on real data (distillation
-/ active-learning, like `error_classifier`) **or replace it** with the rule it
-imitates. Exposed via [[llm_mcp]] as `nn_audit`; pairs with [[botte_nn]] and the
-deterministic-vs-learned discussion. Pure file inspection, 0 cloud tokens.
+The fix is decided by both axes: a **wired synthetic** net (e.g. `binary_router`
+in the routing belt) must be **grounded** on real data (distillation / active-
+learning, like `error_classifier`); an **orphan synthetic** net is dead weight to
+**delete or wire**. Exposed via [[llm_mcp]] as `nn_audit`; pairs with [[botte_nn]].
+Pure file inspection, 0 cloud tokens.

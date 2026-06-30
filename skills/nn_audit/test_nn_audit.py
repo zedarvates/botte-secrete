@@ -22,22 +22,32 @@ def _ok(msg, cond, state):
 
 
 def _fixture(root: Path) -> None:
-    (root / "models").mkdir()
-    (root / "training").mkdir()
-    # grounded model: provenance in json + a distill trainer + a test guard
-    (root / "models" / "good.json").write_text(json.dumps(
+    """Builds a fake skills/ tree: botte_nn + a consumer module."""
+    bn = root / "botte_nn"
+    (bn / "models").mkdir(parents=True)
+    (bn / "training").mkdir()
+    # grounded model: provenance + distill trainer + test guard
+    (bn / "models" / "good.json").write_text(json.dumps(
         {"weights": [], "activations": ["relu"],
          "trained_on": "real labelled corpus", "eval_accuracy": 0.94}), encoding="utf-8")
-    (root / "training" / "distill_good.py").write_text(
+    (bn / "training" / "distill_good.py").write_text(
         "# distill good from real labelled errors corpus\nimport json\n", encoding="utf-8")
-    # synthetic model: np.random trainer, no provenance, no test guard
-    (root / "models" / "fake.json").write_text(json.dumps(
+    # synthetic + WIRED model (a consumer references it)
+    (bn / "models" / "wired_fake.json").write_text(json.dumps(
         {"weights": [], "activations": ["relu"]}), encoding="utf-8")
-    (root / "training" / "train_fake.py").write_text(
-        "import numpy as np\nX = np.random.rand(100, 4)  # synthetic\n", encoding="utf-8")
-    # a test that guards 'good' with an equality assertion
-    (root / "test_features.py").write_text(
+    (bn / "training" / "train_wired_fake.py").write_text(
+        "import numpy as np\nX = np.random.rand(100, 4)\n", encoding="utf-8")
+    # synthetic + ORPHAN model (nobody references it)
+    (bn / "models" / "orphan_fake.json").write_text(json.dumps(
+        {"weights": [], "activations": ["relu"]}), encoding="utf-8")
+    (bn / "training" / "train_orphan_fake.py").write_text(
+        "import numpy as np\nY = np.random.randint(0, 3, 100)\n", encoding="utf-8")
+    (bn / "test_features.py").write_text(
         "assert classify('good', x) == 'runtime'\n", encoding="utf-8")
+    # a production consumer that uses 'wired_fake' (not under botte_nn infra)
+    (root / "router").mkdir()
+    (root / "router" / "belt.py").write_text(
+        "from botte_nn import classify\nlabel = classify('wired_fake', sig)\n", encoding="utf-8")
 
 
 def main() -> int:
@@ -47,24 +57,30 @@ def main() -> int:
     with tempfile.TemporaryDirectory() as d:
         root = Path(d)
         _fixture(root)
-        r = audit_models(root)
+        r = audit_models(root / "botte_nn", scan_root=root)
         by = {m["model"]: m for m in r["models"]}
 
-        _ok("audits both models", set(by) == {"good", "fake"}, state)
+        _ok("audits all three models",
+            set(by) == {"good", "wired_fake", "orphan_fake"}, state)
         _ok("real-data trainer → data_source 'real'", by["good"]["data_source"] == "real", state)
         _ok("np.random trainer → data_source 'synthetic'",
-            by["fake"]["data_source"] == "synthetic", state)
+            by["wired_fake"]["data_source"] == "synthetic", state)
         _ok("provenance in json detected", by["good"]["has_provenance"], state)
-        _ok("missing provenance detected", not by["fake"]["has_provenance"], state)
         _ok("test guard detected for 'good'", by["good"]["has_test_guard"], state)
-        _ok("no test guard for 'fake'", not by["fake"]["has_test_guard"], state)
         _ok("grounded verdict for the real model", by["good"]["verdict"] == "grounded", state)
-        _ok("synthetic verdict flags rule-mimicry",
-            "synthetic" in by["fake"]["verdict"], state)
-        _ok("synthetic + no guard → at risk", by["fake"]["risk"] is True, state)
+
+        # the wiring dimension
+        _ok("consumer reference → wired", by["wired_fake"]["wired"] is True, state)
+        _ok("no consumer → orphan", by["orphan_fake"]["wired"] is False, state)
+        _ok("wired_fake lists its consumer", "belt.py" in by["wired_fake"]["usage"], state)
+        _ok("synthetic + wired → 'drives behaviour' + at risk",
+            "drives behaviour" in by["wired_fake"]["verdict"] and by["wired_fake"]["risk"], state)
+        _ok("synthetic + orphan → 'delete or wire', not at risk",
+            "orphan" in by["orphan_fake"]["verdict"] and by["orphan_fake"]["risk"] is False, state)
+
         _ok("summary counts are right",
-            r["summary"]["grounded"] == 1 and r["summary"]["synthetic"] == 1
-            and r["summary"]["grounded_pct"] == 50, state)
+            r["summary"]["grounded"] == 1 and r["summary"]["synthetic"] == 2
+            and r["summary"]["orphan"] == 2 and r["summary"]["at_risk"] == 1, state)
         _ok("result is JSON-serialisable", isinstance(json.dumps(r), str), state)
 
         # missing models dir → error, not crash

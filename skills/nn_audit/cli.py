@@ -32,20 +32,23 @@ def main(argv=None) -> int:
     s = r["summary"]
     print(f"🧠 NN audit — {r['botte_nn']}")
     print(f"   {s['grounded']}/{s['total']} grounded ({s['grounded_pct']}%) · "
-          f"{s['synthetic']} synthetic · {s['at_risk']} at-risk\n")
-    icon = {"grounded": "✅", "grounded (add provenance)": "🟡",
-            "synthetic — mimics a hand rule": "⚠️", "unknown": "❔"}
+          f"{s['synthetic']} synthetic · {s.get('orphan', 0)} orphan · "
+          f"{s['at_risk']} at-risk (synthetic+wired)\n")
     for m in r["models"]:
+        icon = "✅" if m["data_source"] == "real" else ("⚠️" if m["risk"] else "💤")
+        wired = "wired" if m["wired"] else "orphan"
         flags = []
         if not m["has_provenance"]:
             flags.append("no-provenance")
         if not m["has_test_guard"]:
             flags.append("no-test-guard")
         tail = f"  [{', '.join(flags)}]" if flags else ""
-        print(f"   {icon.get(m['verdict'], '•')} {m['model']:20} {m['verdict']}{tail}")
-    print("\n   A net trained on synthetic data just copies a hand rule — ground it "
-          "on real data or replace it with the rule.")
-    return 0 if s["at_risk"] == 0 else 0  # report-only; never fails the build
+        print(f"   {icon} {m['model']:20} {wired:6} — {m['verdict']}{tail}")
+        if m["usage"]:
+            print(f"        used by: {', '.join(m['usage'][:4])}")
+    print("\n   at-risk = synthetic net that drives behaviour → ground it on real data; "
+          "orphan synthetic → delete or wire.")
+    return 0  # report-only; never fails the build
 
 
 if __name__ == "__main__":
