@@ -2,6 +2,18 @@
 
 All notable changes to Botte Secrète. This project follows [SemVer](https://semver.org).
 
+## Unreleased
+
+### Added
+- **`nn_audit`** (`skills/nn_audit/`) — audits the micro-NNs: per model, is it
+  grounded in REAL data or a synthetic copy of a hand rule? Reports `data_source`
+  (real/synthetic/unknown, inferred from the training script), whether the `.json`
+  records provenance (`trained_on`/`eval_accuracy`), whether a test guards a
+  real-world output, and a grounded/synthetic verdict + `at_risk` flag. Pure file
+  inspection, 0 cloud tokens. CLI + `nn_audit` MCP tool. Dogfood today: 0/6 grounded
+  (only `error_classifier` flips once its distillation lands) — a net trained on
+  `np.random` just mimics a rule, so ground it or replace it with the rule.
+
 ## v1.5.0 — 2026-06-23
 
 The belt-over-the-harness iteration. Tiny local neural nets + an anti-hallucination

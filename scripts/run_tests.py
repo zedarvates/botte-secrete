@@ -56,6 +56,7 @@ SUITES = [
     ("harness_bench", [sys.executable, "-m", "skills.local_harness.test_bench"]),
     ("calibration", [sys.executable, "-m", "skills.botte_nn.test_calibration"]),
     ("audit_dag", [sys.executable, "-m", "skills.audit_dag.test_audit_dag"]),
+    ("nn_audit", [sys.executable, "-m", "skills.nn_audit.test_nn_audit"]),
 ]
 
 _RESULT_RE = re.compile(r"(\d+)\s+passed,\s+(\d+)\s+failed")
