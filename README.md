@@ -1,7 +1,7 @@
 # 🧦 Botte Secrète — Multi-Agent Token Optimization Platform
 
 [![CI](https://github.com/zedarvates/botte-secrete/actions/workflows/ci.yml/badge.svg)](https://github.com/zedarvates/botte-secrete/actions)
-[![Tests](https://img.shields.io/badge/tests-528%2F528-brightgreen)](https://github.com/zedarvates/botte-secrete)
+[![Tests](https://img.shields.io/badge/tests-542%2F542-brightgreen)](https://github.com/zedarvates/botte-secrete)
 [![License](https://img.shields.io/badge/license-MIT-blue)](https://github.com/zedarvates/botte-secrete/blob/main/LICENSE)
 [![Release](https://img.shields.io/badge/release-v1.5.0-blue)](https://github.com/zedarvates/botte-secrete/releases)
 [![Token Savings](https://img.shields.io/badge/token%20savings-85%25-blue)](https://github.com/zedarvates/botte-secrete)
@@ -21,7 +21,7 @@ tells you what hardware/infra changes would cut cost further.
 
 | Metric | Value |
 |--------|-------|
-| Tests | **528 passed, 0 failed** |
+| Tests | **542 passed, 0 failed** |
 | Skills | **50+** (code audit, fix, routing, MCP, NLP, solvers, security, docs) |
 | Micro-NN | **6 trained models** (binary_router, effort_classifier, anomaly_detector, token_estimator, priority_estimator, error_classifier) |
 | Token savings | **~65%** combined (reported by users) |
@@ -85,7 +85,7 @@ Before running anything, here's exactly what Botte Secrète changes on your mach
 
 **Verify for yourself:** the entire test suite runs offline:
 ```bash
-python scripts/run_tests.py   # 528 tests, 0 cloud calls
+python scripts/run_tests.py   # 542 tests, 0 cloud calls
 ```
 
 ## ✅ Smoke Test
@@ -95,7 +95,7 @@ Clone, verify, and run in under 60 seconds:
 ```bash
 git clone https://github.com/zedarvates/botte-secrete.git
 cd botte-secrete
-python scripts/run_tests.py                    # 528 tests — everything works
+python scripts/run_tests.py                    # 542 tests — everything works
 python -m skills.llm_backends.cli scan         # detect local LLMs
 python -m skills.auto_router.cli route "hello" # 0-token routing decision
 ```

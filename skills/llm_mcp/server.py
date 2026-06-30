@@ -375,6 +375,16 @@ TOOLS = [
         },
     },
     {
+        "name": "nn_audit",
+        "description": "Audit the micro-NNs (skills/botte_nn): per model, is it grounded in "
+                       "REAL data or a synthetic copy of a hand rule? Reports data_source, "
+                       "provenance metadata, test guard, and a grounded/synthetic verdict — a "
+                       "net trained on np.random just mimics a rule. 0 cloud tokens.",
+        "inputSchema": {"type": "object", "properties": {
+            "path": {"type": "string", "default": "skills/botte_nn"}},
+        },
+    },
+    {
         "name": "docs_map",
         "description": "Scoped documentation map for a multi-component project (server/client/"
                        "tools/…). Detects components, classifies docs as global vs "
@@ -658,6 +668,12 @@ def _tool_execute_plan(args: dict) -> str:
     return json.dumps(r, ensure_ascii=False, indent=2)
 
 
+def _tool_nn_audit(args: dict) -> str:
+    from skills.nn_audit import audit_models
+    return json.dumps(audit_models(args.get("path", "skills/botte_nn")),
+                      ensure_ascii=False, indent=2)
+
+
 def _tool_scan_malicious(args: dict) -> str:
     from skills.security_scanner import scan_dir, scan_report
     findings = scan_dir(str(args.get("project", ".")), fail_on="critical")
@@ -762,6 +778,7 @@ DISPATCH = {
     "execute_plan": _tool_execute_plan,
     "security_scan": _tool_security_scan,
     "scan_malicious": _tool_scan_malicious,
+    "nn_audit": _tool_nn_audit,
     "docs_map": _tool_docs_map,
     "docs_lifecycle": _tool_docs_lifecycle,
     "cwe_explain": _tool_cwe_explain,

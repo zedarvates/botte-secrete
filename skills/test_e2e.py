@@ -246,6 +246,7 @@ def main():
         "skills/nlp_deterministic",
         "skills/solvers",
         "skills/cwe_kb",
+        "skills/nn_audit",
         "skills/control_loop",
         "skills/report",
         "skills/cost_estimator",
