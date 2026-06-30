@@ -39,8 +39,28 @@ def _read(p: Path) -> str:
         return ""
 
 
-def audit_models(botte_nn_dir: str | Path) -> dict:
-    """Audit every model under <botte_nn_dir>/models against its trainer + tests."""
+def _production_files(scan_root: Path, botte_nn: Path) -> dict:
+    """Map .py file → text for code that could *consume* a model — i.e. anything
+    under scan_root except tests, and except botte_nn's own infra (training/,
+    models/, cli.py registry, features.py schema, the nn_audit tool itself)."""
+    out: dict = {}
+    bn = str(botte_nn.resolve()).replace("\\", "/").lower()
+    for p in scan_root.rglob("*.py"):
+        sp = str(p.resolve()).replace("\\", "/").lower()
+        name = p.name.lower()
+        if name.startswith("test_") or "/nn_audit/" in sp:
+            continue
+        if sp.startswith(bn) and (
+                "/training/" in sp or "/models/" in sp
+                or name in ("cli.py", "features.py")):
+            continue
+        out[sp] = _read(p)
+    return out
+
+
+def audit_models(botte_nn_dir: str | Path, scan_root: str | Path | None = None) -> dict:
+    """Audit every model under <botte_nn_dir>/models against its trainer, tests,
+    and whether anything in production actually consumes it (wired vs orphan)."""
     base = Path(botte_nn_dir)
     models_dir = base / "models"
     training_dir = base / "training"
@@ -49,6 +69,8 @@ def audit_models(botte_nn_dir: str | Path) -> dict:
 
     scripts = {p.name: _read(p) for p in training_dir.glob("*.py")} if training_dir.exists() else {}
     test_blob = "\n".join(_read(p) for p in base.glob("test_*.py"))
+    root = Path(scan_root) if scan_root else base.parent  # default: skills/
+    prod = _production_files(root, base)
 
     results: list = []
     for mj in sorted(models_dir.glob("*.json")):
@@ -75,32 +97,39 @@ def audit_models(botte_nn_dir: str | Path) -> dict:
         has_provenance = bool(provenance)
         # A "guard" = the model name appears in a test with an equality check.
         has_test_guard = (stem in test_blob and ("==" in test_blob))
+        # "wired" = some production file (not infra/tests) references the model.
+        usage_files = sorted(Path(sp).name for sp, body in prod.items() if stem in body)
+        wired = bool(usage_files)
 
         if data_source == "real":
             verdict = "grounded" if has_provenance else "grounded (add provenance)"
         elif data_source == "synthetic":
-            verdict = "synthetic — mimics a hand rule"
+            verdict = ("synthetic — drives behaviour: ground it" if wired
+                       else "synthetic + orphan: delete or wire")
         else:
             verdict = "unknown"
 
         results.append({
-            "model": stem, "data_source": data_source,
+            "model": stem, "data_source": data_source, "wired": wired,
+            "usage": usage_files,
             "has_provenance": has_provenance, "provenance_keys": provenance,
             "has_test_guard": has_test_guard, "trainers": trainers,
             "verdict": verdict,
-            "risk": data_source != "real" and not has_test_guard,
+            # highest risk = a synthetic net that actually drives behaviour
+            "risk": data_source == "synthetic" and wired,
         })
 
     total = len(results)
     grounded = sum(1 for r in results if r["data_source"] == "real")
     synthetic = sum(1 for r in results if r["data_source"] == "synthetic")
+    orphan = sum(1 for r in results if not r["wired"])
     at_risk = sum(1 for r in results if r["risk"])
     score = round(100 * grounded / total) if total else 0
     return {
         "botte_nn": str(base),
         "models": results,
         "summary": {"total": total, "grounded": grounded, "synthetic": synthetic,
-                    "unknown": total - grounded - synthetic, "at_risk": at_risk,
-                    "grounded_pct": score},
+                    "unknown": total - grounded - synthetic, "orphan": orphan,
+                    "at_risk": at_risk, "grounded_pct": score},
         "cloud_tokens": 0,
     }

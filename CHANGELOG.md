@@ -4,6 +4,14 @@ All notable changes to Botte Secrète. This project follows [SemVer](https://sem
 
 ## Unreleased
 
+### Changed
+- **`nn_audit` gains a wiring dimension** — it now scans production code for each
+  model's *consumers*, so a synthetic net is judged on two axes: **synthetic +
+  wired** (`binary_router`, `effort_classifier`, `anomaly_detector` — drives
+  routing behaviour → **ground it**) vs **synthetic + orphan** (`token_estimator`,
+  `priority_estimator` — dead weight → **delete or wire**). Reports `wired`,
+  `usage` (which files), an `orphan` count, and `at_risk = synthetic AND wired`.
+
 ### Added
 - **`nn_audit`** (`skills/nn_audit/`) — audits the micro-NNs: per model, is it
   grounded in REAL data or a synthetic copy of a hand rule? Reports `data_source`
