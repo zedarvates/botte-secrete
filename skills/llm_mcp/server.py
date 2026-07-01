@@ -385,6 +385,16 @@ TOOLS = [
         },
     },
     {
+        "name": "context_profile",
+        "description": "Measure a project's always-on prefix (directives + core rules + MCP "
+                       "tool schemas + skill catalogue) in tokens and as a % of small local "
+                       "windows (64k/128k/256k), with a reduction plan (lazy tools, on-demand "
+                       "skill search). Helps modest machines fit a usable local context. 0 tokens.",
+        "inputSchema": {"type": "object", "properties": {
+            "project": {"type": "string", "default": "."}},
+        },
+    },
+    {
         "name": "docs_map",
         "description": "Scoped documentation map for a multi-component project (server/client/"
                        "tools/…). Detects components, classifies docs as global vs "
@@ -668,6 +678,11 @@ def _tool_execute_plan(args: dict) -> str:
     return json.dumps(r, ensure_ascii=False, indent=2)
 
 
+def _tool_context_profile(args: dict) -> str:
+    from skills.context_profiler import profile
+    return json.dumps(profile(args.get("project", ".")), ensure_ascii=False, indent=2)
+
+
 def _tool_nn_audit(args: dict) -> str:
     from skills.nn_audit import audit_models
     return json.dumps(audit_models(args.get("path", "skills/botte_nn")),
@@ -779,6 +794,7 @@ DISPATCH = {
     "security_scan": _tool_security_scan,
     "scan_malicious": _tool_scan_malicious,
     "nn_audit": _tool_nn_audit,
+    "context_profile": _tool_context_profile,
     "docs_map": _tool_docs_map,
     "docs_lifecycle": _tool_docs_lifecycle,
     "cwe_explain": _tool_cwe_explain,

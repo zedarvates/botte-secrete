@@ -58,6 +58,7 @@ SUITES = [
     ("audit_dag", [sys.executable, "-m", "skills.audit_dag.test_audit_dag"]),
     ("nn_audit", [sys.executable, "-m", "skills.nn_audit.test_nn_audit"]),
     ("security_scanner", [sys.executable, "-m", "skills.security_scanner.test_security_scanner"]),
+    ("context_profiler", [sys.executable, "-m", "skills.context_profiler.test_context_profiler"]),
 ]
 
 _RESULT_RE = re.compile(r"(\d+)\s+passed,\s+(\d+)\s+failed")
