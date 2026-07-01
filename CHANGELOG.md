@@ -4,6 +4,15 @@ All notable changes to Botte Secrète. This project follows [SemVer](https://sem
 
 ## Unreleased
 
+### Added
+- **`context_profiler`** (`skills/context_profiler/`) — measures a project's
+  always-on prefix (agent directives + core rules + **MCP tool schemas** + skill
+  catalogue) in tokens and as a % of small local windows (64k/128k/256k), with a
+  reduction plan (lazy tool loading, on-demand skill search). Serves the "let modest
+  machines run local LLMs usably" axis: on this repo the prefix is ~7.9k tok (12% of
+  a 64k window) and shrinks to ~1.4k tok (2%) once tools are lazy-loaded and skills
+  fetched on demand. New CLI + `context_profile` MCP tool. 0 cloud tokens.
+
 ### Changed
 - **`nn_audit` gains a wiring dimension** — it now scans production code for each
   model's *consumers*, so a synthetic net is judged on two axes: **synthetic +

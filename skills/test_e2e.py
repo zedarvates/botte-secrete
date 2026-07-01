@@ -247,6 +247,7 @@ def main():
         "skills/solvers",
         "skills/cwe_kb",
         "skills/nn_audit",
+        "skills/context_profiler",
         "skills/control_loop",
         "skills/report",
         "skills/cost_estimator",
