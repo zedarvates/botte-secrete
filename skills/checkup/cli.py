@@ -56,7 +56,10 @@ def run(project: Path) -> dict:
     # 7. malicious-pattern scan — dangerous/obfuscated code (0 cloud tokens)
     out["malicious"] = _malicious_summary(project)
 
-    # 8. drift checks
+    # 8. micro-NN grounding audit (only if the project ships botte_nn)
+    out["nn"] = _nn_summary(project)
+
+    # 9. drift checks
     d = out["directives"]
     if isinstance(d, dict):
         if d.get("score", 100) < 90:
@@ -75,6 +78,11 @@ def run(project: Path) -> dict:
         out["drift"].append(
             f"{mal['suspicious']} suspicious code pattern(s) "
             "(obfuscation/exfiltration) — run `python -m skills.security_scanner.cli scan .`")
+    nn = out["nn"]
+    if nn.get("at_risk"):
+        out["drift"].append(
+            f"{nn['at_risk']} micro-NN(s) synthetic AND wired (drive behaviour "
+            "on invented rules) — run `python -m skills.nn_audit.cli`")
 
     out["deep_audit_hint"] = ("For secrets/dead-code: PYTHONPATH=. python "
                               "skills/mousquetaires/scripts/porthos_audit.py <project> <out>")
@@ -155,6 +163,26 @@ def _malicious_summary(project: Path) -> dict:
             "by_severity": rep.by_severity, "top": top, "available": True}
 
 
+def _nn_summary(project: Path) -> dict:
+    """Audit micro-NN grounding IF the project ships skills/botte_nn (0 tokens)."""
+    botte_nn = Path(project) / "skills" / "botte_nn"
+    if not (botte_nn / "models").exists():
+        return {"available": False}
+    try:
+        from skills.nn_audit import audit_models
+    except ImportError:
+        return {"available": False}
+    r = audit_models(botte_nn, scan_root=Path(project) / "skills")
+    s = r.get("summary", {})
+    at_risk = [m["model"] for m in r.get("models", []) if m.get("risk")]
+    orphan = [m["model"] for m in r.get("models", [])
+              if not m.get("wired") and m.get("data_source") == "synthetic"]
+    return {"available": True, "total": s.get("total", 0),
+            "grounded": s.get("grounded", 0), "at_risk": len(at_risk),
+            "at_risk_models": at_risk, "orphan_models": orphan,
+            "grounded_pct": s.get("grounded_pct", 0)}
+
+
 # Stable marker so a CI bot can find & update its own comment instead of spamming.
 PR_COMMENT_MARKER = "<!-- botte-checkup -->"
 
@@ -225,6 +253,16 @@ def format_pr_comment(result: dict, *, repo: str | None = None,
                      f"({mal.get('count', 0)} powerful-primitive matches reviewed)")
         lines.append("")
 
+    nn = result.get("nn") or {}
+    if nn.get("available"):
+        if nn.get("at_risk"):
+            lines.append(f"### 🧠 Micro-NN grounding — {nn['grounded']}/{nn['total']} grounded, "
+                         f"{nn['at_risk']} synthetic+wired: {', '.join(nn['at_risk_models'])}")
+        else:
+            lines.append(f"### 🧠 Micro-NN grounding — {nn['grounded']}/{nn['total']} grounded, "
+                         "none synthetic-and-wired")
+        lines.append("")
+
     footer = "_local-first checkup · 0 cloud tokens_"
     if repo and sha:
         footer += f" · [`{sha[:7]}`](https://github.com/{repo}/commit/{sha})"
@@ -277,6 +315,11 @@ def main(argv=None) -> int:
               f"(obfuscation/exfiltration) of {mal['count']} total")
     elif mal.get("available"):
         print(f"\n   🦠 Malicious patterns: clean ({mal.get('count', 0)} reviewed)")
+    nn = r.get("nn") or {}
+    if nn.get("available"):
+        extra = (f" · at-risk: {', '.join(nn['at_risk_models'])}"
+                 if nn.get("at_risk") else "")
+        print(f"\n   🧠 Micro-NN: {nn['grounded']}/{nn['total']} grounded{extra}")
     if r["drift"]:
         print("\n   ⚠️  Drift to fix:")
         for x in r["drift"]:

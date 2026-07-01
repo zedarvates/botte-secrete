@@ -10,9 +10,9 @@ garbage-in). This module lifts those schemas into runtime data so the models are
   * validated    — `featurize` rejects unknown/missing features and clamps ranges
   * usable        — `classify` goes raw input → named features → label, in one call
 
-Schemas are recovered verbatim from training/ (train_model.py, train_token_estimator,
-train_priority_estimator, train_error_classifier). Keep them in sync if a model is
-retrained with different inputs.
+Schemas are recovered verbatim from training/ (train_model.py,
+train_error_classifier). Keep them in sync if a model is retrained with different
+inputs.
 
 Deterministic, stdlib + numpy only, 0 cloud tokens.
 """
@@ -31,11 +31,7 @@ class FeatureSpec:
     desc: str
 
 
-def _onehot(prefix: str, names: tuple[str, ...], desc: str) -> list[FeatureSpec]:
-    return [FeatureSpec(f"{prefix}{n}", 0.0, 1.0, f"{desc}: {n} (one-hot)") for n in names]
-
-
-# ── The six schemas, in model input order ──────────────────────────────────────
+# ── The schemas, in model input order ──────────────────────────────────────────
 SCHEMAS: dict[str, list[FeatureSpec]] = {
     "binary_router": [
         FeatureSpec("complexity", 0.0, 1.0, "task complexity (e.g. effort score)"),
@@ -54,26 +50,6 @@ SCHEMAS: dict[str, list[FeatureSpec]] = {
         FeatureSpec("unique_errors", 0.0, 1.0, "distinct error types / 10"),
         FeatureSpec("avg_latency", 0.0, 1.0, "request latency / 1000ms"),
         FeatureSpec("retry_count", 0.0, 1.0, "retries / 5"),
-    ],
-    "token_estimator": [
-        FeatureSpec("prompt_length_ratio", 0.0, 1.0, "prompt length / 8000"),
-        *_onehot("tt_", ("code", "reasoning", "creative", "analysis", "search", "simple"),
-                 "task type"),
-        *_onehot("tm_", ("local_small", "local_medium", "cloud_small", "cloud_large"),
-                 "target model"),
-        FeatureSpec("complexity", 0.0, 1.0, "task complexity"),
-        FeatureSpec("has_context", 0.0, 1.0, "conversation history present (0/1)"),
-        FeatureSpec("expected_depth", 0.0, 1.0, "reasoning steps / 10"),
-    ],
-    "priority_estimator": [
-        FeatureSpec("urgency", 0.0, 1.0, "urgent/critical/bug keywords"),
-        FeatureSpec("dependencies_count", 0.0, 1.0, "blocking deps / 10"),
-        FeatureSpec("wait_time_ratio", 0.0, 1.0, "wait time / threshold"),
-        *_onehot("pt_", ("code", "fix", "review", "security", "search", "report"),
-                 "task type"),
-        FeatureSpec("user_tier", 0.0, 1.0, "paying user (0/1)"),
-        FeatureSpec("has_deadline", 0.0, 1.0, "deadline present (0/1)"),
-        FeatureSpec("complexity", 0.0, 1.0, "task complexity"),
     ],
     "error_classifier": [
         FeatureSpec("error_code_norm", 0.0, 1.0, "exit code / 255"),
@@ -128,8 +104,8 @@ def featurize(model: str, values: dict[str, float]) -> list[float]:
 
 
 # ── Deterministic extractors: raw input → feature dict (for the text-derivable
-#    models). The rest (anomaly/priority/token need queue/log/conversation context)
-#    are documented via SCHEMAS so a caller with that data can featurize() safely.
+#    models). The rest (anomaly_detector needs log/queue context) are documented
+#    via SCHEMAS so a caller with that data can featurize() safely.
 
 _CODE_RE = re.compile(r"```|\bdef \b|\bclass \b|\bfunction\b|\bimport \b|=>|;\s*$", re.M)
 

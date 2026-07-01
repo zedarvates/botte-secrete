@@ -4,7 +4,18 @@ All notable changes to Botte Secrète. This project follows [SemVer](https://sem
 
 ## Unreleased
 
+### Removed
+- **2 orphan synthetic micro-NNs** — `token_estimator` and `priority_estimator`
+  had 0 production consumers and were trained on `np.random` (nn_audit flagged
+  them "synthetic + orphan: delete or wire"). Removed their weights, trainers,
+  registry + schema entries, and the now-unused `_onehot` helper. `botte_nn` is
+  down to 4 models, all wired.
+
 ### Changed
+- **`nn_audit` wired into `/checkup`** — the checkup now reports micro-NN grounding
+  (`grounded/total`, at-risk = synthetic AND wired) and raises drift when a
+  synthetic net drives behaviour, so NN honesty rides into CI alongside the
+  security scans. Skipped automatically for projects that don't ship `botte_nn`.
 - **`nn_audit` gains a wiring dimension** — it now scans production code for each
   model's *consumers*, so a synthetic net is judged on two axes: **synthetic +
   wired** (`binary_router`, `effort_classifier`, `anomaly_detector` — drives

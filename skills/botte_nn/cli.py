@@ -68,20 +68,6 @@ _MODEL_META = {
         "labels": ["normal", "anomaly"],
         "description": "Detect log anomalies: error ratio, latency, retries",
     },
-    "token_estimator": {
-        "path": "token_estimator.json",
-        "input_size": 14,
-        "output_size": 3,
-        "labels": ["low (<500)", "medium (500-2000)", "high (>2000)"],
-        "description": "Estimate token consumption before execution: prompt length, task type, target model, context",
-    },
-    "priority_estimator": {
-        "path": "priority_estimator.json",
-        "input_size": 12,
-        "output_size": 3,
-        "labels": ["low", "normal", "high"],
-        "description": "Prioritize tasks in queue: urgency, dependencies, wait time, user tier, deadline",
-    },
     "error_classifier": {
         "path": "error_classifier.json",
         "input_size": 12,

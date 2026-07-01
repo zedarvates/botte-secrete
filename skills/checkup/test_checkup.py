@@ -32,11 +32,13 @@ def main() -> int:
         _ok("returns the canonical sections",
             all(k in r for k in ("directives", "infra_tips", "duplication",
                                  "cost", "by_component", "drift", "headline",
-                                 "security", "malicious")), state)
+                                 "security", "malicious", "nn")), state)
         _ok("clean project has no security findings",
             r["security"]["count"] == 0 and r["security"]["available"], state)
         _ok("clean project has a malicious-scan section, nothing suspicious",
             r["malicious"]["available"] and r["malicious"]["suspicious"] == 0, state)
+        _ok("nn audit is skipped when the project ships no botte_nn",
+            r["nn"]["available"] is False, state)
 
         # a project with a real taint flow surfaces in security + drift + comment
         (proj / "vuln.py").write_text(
