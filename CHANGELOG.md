@@ -5,6 +5,17 @@ All notable changes to Botte Secrète. This project follows [SemVer](https://sem
 ## Unreleased
 
 ### Added
+- **Lazy MCP tool loading** (`skills/llm_mcp/lazy.py`) — the biggest single amont
+  cut `context_profiler` identified: `tools/list` now returns only a small core
+  (`local_chat`, `auto_route`, `find_skills`, `conduct`) + a `find_tool(query)`
+  meta-tool instead of injecting all ~39 tools' full JSON Schema on every turn —
+  the same pattern this harness itself uses (ToolSearch). `find_tool` is a 0-token
+  lexical search over name+description; a strong match returns the full schema in
+  one round trip. `tools/call` still dispatches any tool by name regardless of
+  listing — lazy loading only shrinks the catalog, not what's callable. Toggle
+  with `BOTTE_MCP_LAZY_TOOLS=0`. **Measured saving: ~3.3k tokens (84% of the
+  tool-schema cost)** — `context_profiler` now reports the real lazy-mode number
+  instead of an estimate.
 - **`context_profiler`** (`skills/context_profiler/`) — measures a project's
   always-on prefix (agent directives + core rules + **MCP tool schemas** + skill
   catalogue) in tokens and as a % of small local windows (64k/128k/256k), with a

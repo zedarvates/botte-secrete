@@ -59,6 +59,7 @@ SUITES = [
     ("nn_audit", [sys.executable, "-m", "skills.nn_audit.test_nn_audit"]),
     ("security_scanner", [sys.executable, "-m", "skills.security_scanner.test_security_scanner"]),
     ("context_profiler", [sys.executable, "-m", "skills.context_profiler.test_context_profiler"]),
+    ("lazy_tools", [sys.executable, "-m", "skills.llm_mcp.test_lazy"]),
 ]
 
 _RESULT_RE = re.compile(r"(\d+)\s+passed,\s+(\d+)\s+failed")

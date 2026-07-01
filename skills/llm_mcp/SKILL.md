@@ -38,6 +38,21 @@ Add to `.mcp.json` at the project root (an example ships at
 Then in a session: *"discover my local backends"*, *"classify these 50 tickets
 locally"*, *"is local routing active?"* — the agent calls the tools directly.
 
+## Lazy tool loading (default on)
+
+The server has grown to ~39 tools; injecting every full JSON Schema into an
+agent's context costs ~3.9k tokens **on every turn**, whether or not that turn
+uses them — [[context_profiler]] measured it as the single biggest slice of
+always-on prefix on this repo. So `tools/list` returns only a small core
+(`local_chat`, `auto_route`, `find_skills`, `conduct`) plus a `find_tool(query)`
+meta-tool — the same pattern this very harness uses (ToolSearch). Call
+`find_tool` to discover anything else; a strong match returns the full schema in
+one round trip. `tools/call` still dispatches **any** tool by name regardless of
+what was listed — lazy loading only shrinks the catalog, not what's callable.
+
+Measured saving: ~3.3k tokens (84% of the tool-schema cost). Disable with
+`BOTTE_MCP_LAZY_TOOLS=0` for a client that expects the full catalog upfront.
+
 ## Manual smoke test
 
 ```bash

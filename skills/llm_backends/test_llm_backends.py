@@ -76,9 +76,25 @@ def main() -> int:
         init["result"]["protocolVersion"] == mcp.PROTOCOL_VERSION, state)
     tools = mcp.handle({"jsonrpc": "2.0", "id": 2, "method": "tools/list"})
     names = {t["name"] for t in tools["result"]["tools"]}
-    _ok("MCP tools/list exposes the core local-LLM tools",
-        {"discover_backends", "list_models", "audit_local_usage", "route_task", "local_chat"} <= names,
-        state)
+    # Lazy tool loading (skills/llm_mcp/lazy.py) means tools/list only returns a
+    # small core + find_tool by default — most tools, including the local-LLM
+    # ones below, are one find_tool() lookup away rather than listed upfront.
+    # What must still hold: they're all dispatchable via tools/call, and
+    # discoverable via find_tool. "local_chat" is in the always-listed core.
+    _ok("MCP tools/list always includes local_chat (core) + find_tool",
+        {"local_chat", "find_tool"} <= names, state)
+    core_local_llm_tools = {"discover_backends", "list_models", "audit_local_usage",
+                            "route_task", "local_chat"}
+    _ok("the core local-LLM tools are all dispatchable via tools/call",
+        core_local_llm_tools <= set(mcp.DISPATCH), state)
+    found = mcp.handle({"jsonrpc": "2.0", "id": 21, "method": "tools/call",
+                        "params": {"name": "find_tool",
+                                   "arguments": {"query": "discover local LLM backends"}}})
+    import json as _json
+    found_names = {m["name"] for m in
+                   _json.loads(found["result"]["content"][0]["text"])["matches"]}
+    _ok("find_tool surfaces discover_backends for a discovery query",
+        "discover_backends" in found_names, state)
     notif = mcp.handle({"jsonrpc": "2.0", "method": "notifications/initialized"})
     _ok("MCP notification returns no response", notif is None, state)
     routed = mcp.handle({"jsonrpc": "2.0", "id": 3, "method": "tools/call",

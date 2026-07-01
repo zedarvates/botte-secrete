@@ -12,6 +12,13 @@ client (Claude Code, Cursor, etc.) can:
 Implements the minimal MCP handshake: initialize → tools/list → tools/call.
 Newline-delimited JSON-RPC over stdin/stdout. No third-party dependencies.
 
+Lazy tool loading (skills/llm_mcp/lazy.py, default on): tools/list returns only a
+small core set + find_tool(query) instead of every tool's full schema — that
+alone was ~3.3k tokens of always-on prefix (measured by context_profiler). Call
+find_tool to discover and load the schema for anything else; tools/call still
+dispatches ANY tool by name regardless of what was listed. Disable with
+BOTTE_MCP_LAZY_TOOLS=0 for a client that doesn't expect a search step.
+
 Register in Claude Code (.mcp.json or settings):
     {
       "mcpServers": {
@@ -855,11 +862,19 @@ def handle(request: dict):
         return _result(req_id, {})
 
     if method == "tools/list":
-        return _result(req_id, {"tools": TOOLS})
+        from skills.llm_mcp.lazy import lazy_tool_list, lazy_enabled
+        return _result(req_id, {"tools": lazy_tool_list(TOOLS) if lazy_enabled() else TOOLS})
 
     if method == "tools/call":
         name = params.get("name")
         args = params.get("arguments", {}) or {}
+        if name == "find_tool":
+            from skills.llm_mcp.lazy import find_tool
+            import json as _json
+            text = _json.dumps(find_tool(args.get("query", ""), TOOLS,
+                                         top_k=int(args.get("top_k", 5))),
+                               ensure_ascii=False, indent=2)
+            return _result(req_id, {"content": [{"type": "text", "text": text}]})
         fn = DISPATCH.get(name)
         if not fn:
             return _error(req_id, -32602, f"Unknown tool: {name}")
