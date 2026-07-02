@@ -127,6 +127,7 @@ class AutoRouter:
     def run(self, prompt: str, *, task_type: str = "", system: Optional[str] = None,
             max_tokens: int = 1024, force_tier: Optional[Tier] = None) -> dict:
         d = self.decide(prompt, task_type=task_type, force_tier=force_tier)
+        _log_route(d)
         if d.mode == "none":
             return {"decision": d.to_dict(), "error": d.reason}
         if d.mode == "local":
@@ -138,6 +139,7 @@ class AutoRouter:
                 # The belt routed local and local failed → strong implicit feedback
                 # that this should have been cloud. Label it for the loop.
                 self._log_feedback(d, actual_class=1)  # 1 = cloud
+                _log_escalate("local", "cloud", f"local call failed: {e}")
                 return {"decision": d.to_dict(), "error": str(e)}
             else:
                 # Local handled it → tentative positive label for binary_router.
@@ -181,6 +183,25 @@ class AutoRouter:
             return False
         self._log_feedback(decision, 0 if should_have_been == "local" else 1)
         return True
+
+
+def _log_route(d: AutoDecision) -> None:
+    """Best-effort: append this decision to the project's live event log."""
+    try:
+        from skills.events import log_event
+        log_event("route", filter=(1 if d._belt_ctx else 2), out=d.mode,
+                   tier=d.tier.name, model=d.model, reason=d.reason,
+                   est_cost=round(d.est_cost, 6))
+    except Exception:
+        pass
+
+
+def _log_escalate(from_mode: str, to_mode: str, reason: str) -> None:
+    try:
+        from skills.events import log_event
+        log_event("escalate", **{"from": from_mode, "to": to_mode, "reason": reason})
+    except Exception:
+        pass
 
 
 def _cloud_chat(d: AutoDecision, prompt: str, system: Optional[str],

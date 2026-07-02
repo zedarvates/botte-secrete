@@ -1,9 +1,9 @@
 ---
 name: checkup
-description: Run the canonical, already-optimal project checkup in one command — policy presence, directives health, per-component metrics, infra tips, duplication, and drift detection — so you never have to hand-write a good checkup prompt. Use when the user says "do a complete checkup", after a component update, when onboarding to a project, or when multiple agents/devs may have caused drift.
+description: Run the canonical, already-optimal project checkup in one command — policy presence, directives health, per-component metrics, infra tips, duplication, and drift detection — so you never have to hand-write a good checkup prompt. Use when the user says "do a complete checkup", "botte doctor", after a component update, when onboarding to a project, or when multiple agents/devs may have caused drift.
 ---
 
-# checkup — the canonical project checkup
+# checkup — the canonical project checkup ("botte doctor")
 
 So a "complete checkup" doesn't depend on you writing a good prompt: one command
 runs the standard sequence in the right order and prints a single verdict, all
@@ -13,7 +13,23 @@ local / 0 cloud tokens.
 python -m skills.checkup.cli            # current dir
 python -m skills.checkup.cli <project> --json
 python -m skills.checkup.cli . --pr-comment   # Markdown verdict for a PR comment
+python -m skills.checkup.cli . --doctor       # + machine scan + ranked top-3 opportunities
+python -m skills.checkup.cli . --doctor --fresh   # re-scan for local LLM backends (not cached)
 ```
+
+## `--doctor` — the one-verb assembly
+
+`--doctor` is `checkup` plus two things it doesn't otherwise do:
+
+- **machine scan** — is a local LLM backend reachable (LM Studio/Ollama)? via
+  [[llm_backends]] `audit()`; reads the cached registry unless `--fresh`.
+- **ranked top-3 opportunities** — fixes from [[fix]] `find_fixes()`, ranked by
+  estimated token cost (highest first), plus any remaining drift items, capped
+  at 3.
+
+Both feed a **one-line verdict**: `✅ sain` when there's no drift and a local
+backend is active, or `⚠️ N optimisation(s), ~X tokens d'opportunités`
+otherwise. Pure assembly of existing modules — no new skill, no new report format.
 
 ## Sequence (cheap → deeper)
 

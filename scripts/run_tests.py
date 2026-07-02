@@ -60,6 +60,11 @@ SUITES = [
     ("security_scanner", [sys.executable, "-m", "skills.security_scanner.test_security_scanner"]),
     ("context_profiler", [sys.executable, "-m", "skills.context_profiler.test_context_profiler"]),
     ("lazy_tools", [sys.executable, "-m", "skills.llm_mcp.test_lazy"]),
+    ("events", [sys.executable, "-m", "skills.events.test_events"]),
+    ("demo", [sys.executable, "-m", "skills.demo.test_demo"]),
+    ("bench", [sys.executable, "-m", "skills.bench.test_bench"]),
+    ("hermes_bridge", [sys.executable, "-m", "skills.hermes_bridge.test_hermes_bridge"]),
+    ("statusline", [sys.executable, "-m", "skills.statusline.test_statusline"]),
 ]
 
 _RESULT_RE = re.compile(r"(\d+)\s+passed,\s+(\d+)\s+failed")

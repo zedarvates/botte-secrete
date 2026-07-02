@@ -72,9 +72,18 @@ class ProjectCache:
 
     def get(self, name: str) -> Optional[dict]:
         """Charge depuis le cache. Retourne None si pas de cache ou périmé."""
-        if not self.is_fresh(name):
+        fresh = self.is_fresh(name)
+        self._log_hit(name, fresh)
+        if not fresh:
             return None
         return json.loads(self._path(name).read_text(encoding="utf-8"))
+
+    def _log_hit(self, name: str, hit: bool) -> None:
+        try:
+            from skills.events import log_event
+            log_event("cache", project_root=self.root, key=name, hit=hit)
+        except Exception:
+            pass
 
     def set(self, name: str, data: dict):
         """Sauvegarde dans le cache avec métadonnées."""

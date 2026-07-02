@@ -1,7 +1,7 @@
 # 🧦 Botte Secrète — Multi-Agent Token Optimization Platform
 
 [![CI](https://github.com/zedarvates/botte-secrete/actions/workflows/ci.yml/badge.svg)](https://github.com/zedarvates/botte-secrete/actions)
-[![Tests](https://img.shields.io/badge/tests-604%2F604-brightgreen)](https://github.com/zedarvates/botte-secrete)
+[![Tests](https://img.shields.io/badge/tests-652%2F652-brightgreen)](https://github.com/zedarvates/botte-secrete)
 [![License](https://img.shields.io/badge/license-MIT-blue)](https://github.com/zedarvates/botte-secrete/blob/main/LICENSE)
 [![Release](https://img.shields.io/badge/release-v1.5.0-blue)](https://github.com/zedarvates/botte-secrete/releases)
 [![Token Savings](https://img.shields.io/badge/token%20savings-85%25-blue)](https://github.com/zedarvates/botte-secrete)
@@ -21,7 +21,7 @@ tells you what hardware/infra changes would cut cost further.
 
 | Metric | Value |
 |--------|-------|
-| Tests | **604 passed, 0 failed** |
+| Tests | **652 passed, 0 failed** |
 | Skills | **50+** (code audit, fix, routing, MCP, NLP, solvers, security, docs) |
 | Micro-NN | **4 models** (binary_router, effort_classifier, anomaly_detector, error_classifier) — grounding tracked by `nn_audit` |
 | Token savings | **~65%** combined (reported by users) |
@@ -57,6 +57,42 @@ The **NN belt** (`auto_router` + `botte_nn`) decides which filter a task needs; 
 outcomes. Trivial work stays local at 0 tokens; the expensive model is spent only where it
 earns its keep.
 
+## 🎬 See it decide, live
+
+Don't take the filter table on faith — watch it work. No LLM, no network, no
+setup required:
+
+```bash
+python -m skills.demo.cli scripted
+```
+
+```
+┌─ ROUTING ────────────────────────┐  ┌─ SAVINGS (session) ──────────────┐
+│ CLOUD  design a distributed co...│  │ tokens saved          1210       │
+│ LOCAL  is this diff a bugfix o...│  │ cloud calls made         1       │
+│ LOCAL  rename variable "a" to ...│  │ cloud calls saved        2       │
+└──────────────────────────────────┘  │ cache hits               1       │
+                                       └──────────────────────────────────┘
+
+┌─ MICRO-NN ───────────────────────┐  ┌─ ESCALATIONS ────────────────────┐
+│ anomaly_detector   [0.04|0.96]...│  │ local → cloud  verification_fa...│
+│ effort_classifier  conf=0.93     │  └──────────────────────────────────┘
+└──────────────────────────────────┘
+```
+
+That's the built-in scripted scenario — 6 fixed steps touching every filter
+(micro-NN routing, a deterministic classifier, a cache hit, a cloud
+escalation, a verification-failure escalation, an anomaly-detector output).
+Once deployed into a real project, `python -m skills.demo.cli live .` shows
+the same panels fed by genuine decisions while an agent works, and
+`python -m skills.dashboard.cli . --tui` / `--watch` gives the metrics/cost
+counterpart. Don't trust the "~65%" savings number either — run
+`python -m skills.bench.cli` for a reproducible, checkable measurement.
+Full checkup + machine scan + ranked opportunities in one command:
+`python -m skills.checkup.cli . --doctor`. See
+[skills/demo](skills/demo/SKILL.md), [skills/dashboard](skills/dashboard/SKILL.md),
+[skills/bench](skills/bench/SKILL.md), [skills/checkup](skills/checkup/SKILL.md).
+
 ## ⚡ Deploy into your project
 
 ```bash
@@ -85,7 +121,7 @@ Before running anything, here's exactly what Botte Secrète changes on your mach
 
 **Verify for yourself:** the entire test suite runs offline:
 ```bash
-python scripts/run_tests.py   # 604 tests, 0 cloud calls
+python scripts/run_tests.py   # 652 tests, 0 cloud calls
 ```
 
 ## ✅ Smoke Test
@@ -95,7 +131,7 @@ Clone, verify, and run in under 60 seconds:
 ```bash
 git clone https://github.com/zedarvates/botte-secrete.git
 cd botte-secrete
-python scripts/run_tests.py                    # 604 tests — everything works
+python scripts/run_tests.py                    # 652 tests — everything works
 python -m skills.llm_backends.cli scan         # detect local LLMs
 python -m skills.auto_router.cli route "hello" # 0-token routing decision
 ```

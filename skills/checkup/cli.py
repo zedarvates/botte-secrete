@@ -183,6 +183,70 @@ def _nn_summary(project: Path) -> dict:
             "grounded_pct": s.get("grounded_pct", 0)}
 
 
+def _machine_summary(fresh: bool = False) -> dict:
+    """Scan the machine for local-LLM capability (0 tokens, no network by default)."""
+    try:
+        from skills.llm_backends.audit import audit
+    except ImportError:
+        return {"available": False}
+    try:
+        a = audit(fresh=fresh)
+    except Exception as e:
+        return {"available": False, "error": str(e)}
+    return {"available": True, "uses_local_models": a["uses_local_models"],
+            "chat_backends": a["chat_backends"],
+            "recommended_model": a["recommended_model"], "next_steps": a["next_steps"]}
+
+
+def _rank_actions(result: dict, project: Path) -> list[dict]:
+    """Top opportunities, ranked — fixes by cost-to-apply (tokens), drift items
+    by risk (no token estimate, but they're free to fix and cheap to skip). Fixes
+    surface first since they carry a concrete number; the roadmap's "reuse the
+    cost framing of fix/metrics" instead of inventing a new savings model."""
+    actions: list[dict] = []
+    try:
+        from skills.fix import find_fixes
+        f = find_fixes(project)
+        for kind, cost in sorted(f.get("cost_by_kind", {}).items(),
+                                  key=lambda kv: -(kv[1].get("tokens_in", 0)
+                                                    + kv[1].get("tokens_out", 0))):
+            actions.append({
+                "action": f"Fix {cost['count']} {kind} issue(s)",
+                "est_tokens": cost.get("tokens_in", 0) + cost.get("tokens_out", 0),
+                "est_usd": cost.get("usd", 0.0),
+                "how": "python -m skills.fix.cli . --save md",
+            })
+    except Exception:
+        pass
+    for item in result.get("drift", []):
+        actions.append({"action": item, "est_tokens": None, "est_usd": None, "how": ""})
+    return actions[:3]
+
+
+def _verdict(result: dict) -> str:
+    drift_n = len(result.get("drift", []))
+    machine = result.get("machine", {}) or {}
+    if drift_n == 0 and (not machine.get("available") or machine.get("uses_local_models")):
+        return "✅ sain — rien à corriger, routing local actif."
+    if drift_n == 0:
+        return ("⚠️ sain côté code, mais aucun backend local détecté — "
+                "chaque tâche part au cloud. Voir 'machine' ci-dessous.")
+    top = _rank_actions(result, Path(result["project"]))
+    tok = sum(a["est_tokens"] or 0 for a in top)
+    tok_note = f", ~{tok:,} tokens d'opportunités identifiées" if tok else ""
+    return f"⚠️ {drift_n} optimisation(s) disponible(s){tok_note}."
+
+
+def doctor(project: Path, *, machine_fresh: bool = False) -> dict:
+    """The full checkup, plus a machine scan and a ranked action list — one
+    verb that assembles checkup + llm_backends + fix into a single verdict."""
+    r = run(project)
+    r["machine"] = _machine_summary(fresh=machine_fresh)
+    r["top_actions"] = _rank_actions(r, project)
+    r["verdict"] = _verdict(r)
+    return r
+
+
 # Stable marker so a CI bot can find & update its own comment instead of spamming.
 PR_COMMENT_MARKER = "<!-- botte-checkup -->"
 
@@ -279,9 +343,35 @@ def main(argv=None) -> int:
                    help="print a Markdown PR comment (for the GitHub Action)")
     p.add_argument("--save", nargs="?", const="both", choices=["md", "html", "both"],
                    help="save a timestamped report under <project>/.botte/reports/")
+    p.add_argument("--doctor", action="store_true",
+                   help="also scan the machine (local-LLM capability) and rank "
+                        "top opportunities by estimated token cost")
+    p.add_argument("--fresh", action="store_true",
+                   help="with --doctor, re-scan for local backends instead of "
+                        "reading the cached registry")
     args = p.parse_args(argv)
 
-    r = run(Path(args.project))
+    r = (doctor(Path(args.project), machine_fresh=args.fresh) if args.doctor
+         else run(Path(args.project)))
+    if args.doctor and not args.json and not args.pr_comment:
+        print(f"🩺 {r['verdict']}")
+        m = r.get("machine", {})
+        if m.get("available"):
+            local = "✓ local backend(s): " + ", ".join(m["chat_backends"]) \
+                if m.get("uses_local_models") else "✗ no local backend detected"
+            print(f"   machine: {local}")
+            if not m.get("uses_local_models"):
+                for step in m.get("next_steps", [])[:3]:
+                    print(f"     {step}")
+        if r.get("top_actions"):
+            print("\n   🎯 top opportunities:")
+            for a in r["top_actions"]:
+                cost = f" (~{a['est_tokens']:,} tok · ${a['est_usd']:.4f})" \
+                    if a.get("est_tokens") else ""
+                print(f"     • {a['action']}{cost}")
+                if a.get("how"):
+                    print(f"       → {a['how']}")
+        print()
     if args.pr_comment:
         import os
         print(format_pr_comment(r, repo=os.environ.get("GITHUB_REPOSITORY"),
