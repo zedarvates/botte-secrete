@@ -9,12 +9,33 @@ Two sources feed the same panels:
 
 from __future__ import annotations
 
+import json
 import time
 from pathlib import Path
 from typing import Iterable, Iterator
 
 from skills.demo.render import Panel, render_grid, clear_screen, c
 from skills.demo import scenario as _scenario
+
+
+def load_events_file(path: str | Path) -> list[dict]:
+    """Load a captured event list for `replay` — accepts either a raw
+    `.botte/events.jsonl` (one JSON object per line, what `events`/`auto_router`
+    actually write) or a JSON array (e.g. from `events tail --json`)."""
+    text = Path(path).read_text(encoding="utf-8")
+    stripped = text.strip()
+    if stripped.startswith("["):
+        return json.loads(stripped)
+    events = []
+    for line in text.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            events.append(json.loads(line))
+        except json.JSONDecodeError:
+            continue
+    return events
 
 
 def _routing_lines(events: list[dict]) -> list[str]:

@@ -14,10 +14,10 @@ Four panels, refreshed as decisions happen: **ROUTING**, **SAVINGS**,
 python -m skills.demo.cli scripted                    # built-in scenario, ~4s total
 python -m skills.demo.cli scripted --speed 0 --no-clear # dump all frames, no timing
 python -m skills.demo.cli live .                       # tail a real project while an agent works
-python -m skills.demo.cli replay events.json --speed 0.3
+python -m skills.demo.cli replay .botte/events.jsonl --speed 0.3   # the "black box" — replay a real session
 ```
 
-## Two modes, same renderer
+## Three modes, same renderer
 
 - **`scripted`** — 6 fixed steps (`scenario.py`) covering every filter of the
   belt: micro-NN routing, a deterministic classifier, a cache hit, a cloud
@@ -27,10 +27,16 @@ python -m skills.demo.cli replay events.json --speed 0.3
 - **`live`** — tails a real project's `.botte/events.jsonl` (written by
   [[auto_router]], [[cache]], …) while an agent works. Genuine decisions,
   genuine numbers.
+- **`replay`** — the "black box": replays a captured event log at real or
+  sped-up pace. Accepts a raw `.botte/events.jsonl` (JSONL, exactly what
+  `events`/`auto_router` write) or a JSON array (e.g. from `events tail
+  --json`) via `load_events_file()`, which auto-detects the shape. Useful for
+  debugging a real routing session after the fact, demoing with real data
+  without a live agent running, or as raw material for the active-learning
+  loop.
 
-Both funnel through `build_panels(events) -> list[Panel]` and
-`render_grid(panels) -> str`, so a third source (e.g. a captured replay file)
-is just another list of event dicts — see `replay`.
+All three funnel through `build_panels(events) -> list[Panel]` and
+`render_grid(panels) -> str`.
 
 ## Design
 

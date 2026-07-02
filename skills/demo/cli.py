@@ -2,17 +2,16 @@
 
     python -m skills.demo.cli scripted [--speed 0.6] [--no-clear]
     python -m skills.demo.cli live <project> [--interval 0.5]
-    python -m skills.demo.cli replay <events.json> [--speed 0.3]
+    python -m skills.demo.cli replay <project>/.botte/events.jsonl [--speed 0.3]
 """
 
 from __future__ import annotations
 
 import argparse
-import json
 import sys
 
 from skills.console_utf8 import force_utf8
-from skills.demo.demo import run_scripted, run_live, run_replay
+from skills.demo.demo import run_scripted, run_live, run_replay, load_events_file
 
 
 def main(argv=None) -> int:
@@ -29,7 +28,8 @@ def main(argv=None) -> int:
     s.add_argument("--interval", type=float, default=0.5)
     s.add_argument("--no-clear", action="store_true")
 
-    s = sub.add_parser("replay", help="replay a captured event list (JSON array)")
+    s = sub.add_parser("replay", help="replay a captured event log "
+                       "(.botte/events.jsonl or a JSON array from `events tail --json`)")
     s.add_argument("events_file")
     s.add_argument("--speed", type=float, default=0.3)
     s.add_argument("--no-clear", action="store_true")
@@ -47,7 +47,7 @@ def main(argv=None) -> int:
                                   clear=not args.no_clear):
                 print(frame)
             return 0
-        events = json.loads(open(args.events_file, encoding="utf-8").read())
+        events = load_events_file(args.events_file)
         for frame in run_replay(events, delay=args.speed, clear=not args.no_clear):
             print(frame)
         return 0

@@ -201,11 +201,13 @@ sortie = tableau tokens/coût/latence. Aujourd'hui le README annonce "~65 %
 affirmation en preuve. **C'est le meilleur argument pour P4-étape 3 et pour
 l'adoption en général.** Effort : M.
 
-### P5b — Session replay ("boîte noire") ⏪
-`python -m skills.demo.cli --replay .botte/events.jsonl` : rejouer une vraie
-session au rythme réel ou accéléré. Quasi gratuit une fois P0 + P1 faits
-(même renderer). Usage : debug du routing, démos avec de vraies données, et
-matière première pour l'active-learning loop. Effort : S.
+### P5b — Session replay ("boîte noire") ⏪ ✅ fait (2026-07-02)
+`python -m skills.demo.cli replay .botte/events.jsonl [--speed]` : livré comme
+sous-produit direct de P1 (même renderer), mais **corrigé le 2026-07-02** — la
+première version de `replay` n'acceptait qu'un tableau JSON, pas le vrai format
+JSONL écrit par `events`/`auto_router`, donc la commande documentée plantait.
+`demo.load_events_file()` détecte maintenant les deux formats. 3 nouveaux
+tests couvrant explicitement le cas JSONL réel.
 
 ### P5c — GitHub Action packagée ⚙️ ✅ déjà en place (constaté 2026-07-02)
 `.github/workflows/botte-pr-checkup.yml` existe déjà et fait exactement ça :

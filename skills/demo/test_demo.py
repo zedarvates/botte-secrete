@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 import sys
 import tempfile
@@ -16,7 +17,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 os.environ["NO_COLOR"] = "1"
 
 from skills.demo import scenario as sc
-from skills.demo.demo import build_panels, run_scripted, run_replay
+from skills.demo.demo import build_panels, run_scripted, run_replay, load_events_file
 from skills.demo.render import Panel, render_grid
 
 
@@ -69,6 +70,27 @@ def main() -> int:
         panels2 = build_panels(read_events(d))
         _ok("build_panels works on real events.jsonl records too",
             len(panels2) == 4, state)
+
+    # P5b — session replay must accept the exact file `events` actually writes
+    # (JSONL), not just a JSON array, since that's the roadmap's documented usage.
+    with tempfile.TemporaryDirectory() as d:
+        from skills.events import log_event
+        log_event("route", project_root=d, out="local", tokens_saved=10)
+        log_event("cache", project_root=d, hit=True, tokens_saved=20)
+        jsonl_path = Path(d) / ".botte" / "events.jsonl"
+        loaded = load_events_file(jsonl_path)
+        _ok("load_events_file reads a raw .botte/events.jsonl (JSONL, not an array)",
+            len(loaded) == 2 and loaded[0]["kind"] == "route", state)
+
+        array_path = Path(d) / "captured.json"
+        array_path.write_text(json.dumps(loaded), encoding="utf-8")
+        loaded2 = load_events_file(array_path)
+        _ok("load_events_file also reads a JSON array (e.g. `events tail --json`)",
+            loaded2 == loaded, state)
+
+        frames = list(run_replay(load_events_file(jsonl_path), delay=0, clear=False))
+        _ok("a replayed real events.jsonl produces one frame per event",
+            len(frames) == 2, state)
 
     passed, failed = state
     print(f"\nRESULT: {passed} passed, {failed} failed")
