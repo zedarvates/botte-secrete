@@ -1,7 +1,7 @@
 # 🧦 Botte Secrète — Multi-Agent Token Optimization Platform
 
 [![CI](https://github.com/zedarvates/botte-secrete/actions/workflows/ci.yml/badge.svg)](https://github.com/zedarvates/botte-secrete/actions)
-[![Tests](https://img.shields.io/badge/tests-652%2F652-brightgreen)](https://github.com/zedarvates/botte-secrete)
+[![Tests](https://img.shields.io/badge/tests-667%2F667-brightgreen)](https://github.com/zedarvates/botte-secrete)
 [![License](https://img.shields.io/badge/license-MIT-blue)](https://github.com/zedarvates/botte-secrete/blob/main/LICENSE)
 [![Release](https://img.shields.io/badge/release-v1.5.0-blue)](https://github.com/zedarvates/botte-secrete/releases)
 [![Token Savings](https://img.shields.io/badge/token%20savings-85%25-blue)](https://github.com/zedarvates/botte-secrete)
@@ -21,7 +21,7 @@ tells you what hardware/infra changes would cut cost further.
 
 | Metric | Value |
 |--------|-------|
-| Tests | **652 passed, 0 failed** |
+| Tests | **667 passed, 0 failed** |
 | Skills | **50+** (code audit, fix, routing, MCP, NLP, solvers, security, docs) |
 | Micro-NN | **4 models** (binary_router, effort_classifier, anomaly_detector, error_classifier) — grounding tracked by `nn_audit` |
 | Token savings | **~65%** combined (reported by users) |
@@ -113,7 +113,9 @@ Before running anything, here's exactly what Botte Secrète changes on your mach
 |------|--------|
 | `.mcp.json` | Adds 5+ MCP tools (auto_route, local_chat, fusion, find_skills, infra_tips) |
 | `.botte-cache/` | Created at project root — caches scan results between runs |
+| `.botte/events.jsonl` | Created at project root, opt-in via use — local decision log for `demo`/`dashboard`/`statusline`, rotates at 5 MB, never leaves the machine |
 | `.skills-profile` | Per-project skill selection — reduces context tokens |
+| `~/.botte/fleet.json` | **Only if you run `dashboard fleet add`** — an explicit, opt-in registry of project paths for the multi-project `--fleet` view. Nothing is scanned or registered automatically |
 | Network | **None by default.** Only connects to local LLM servers (localhost:1234, etc.) |
 | System services | **None.** No cron, no daemon, no sudo, no startup entries |
 | Dependencies | `numpy` + `pydantic` / `tree-sitter` for the analyzers (`requirements.txt`). No heavy ML frameworks |
@@ -121,7 +123,7 @@ Before running anything, here's exactly what Botte Secrète changes on your mach
 
 **Verify for yourself:** the entire test suite runs offline:
 ```bash
-python scripts/run_tests.py   # 652 tests, 0 cloud calls
+python scripts/run_tests.py   # 667 tests, 0 cloud calls
 ```
 
 ## ✅ Smoke Test
@@ -131,7 +133,7 @@ Clone, verify, and run in under 60 seconds:
 ```bash
 git clone https://github.com/zedarvates/botte-secrete.git
 cd botte-secrete
-python scripts/run_tests.py                    # 652 tests — everything works
+python scripts/run_tests.py                    # 667 tests — everything works
 python -m skills.llm_backends.cli scan         # detect local LLMs
 python -m skills.auto_router.cli route "hello" # 0-token routing decision
 ```

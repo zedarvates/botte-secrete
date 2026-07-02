@@ -28,3 +28,18 @@ stop) — the metrics/routing/fixes counterpart to `demo --live`'s routing feed.
 Metric panels include unicode sparklines (`▁▂▅▇`) sourced from `trends.show()`'s
 last 10 snapshots — run `python -m skills.trends.cli snapshot .` periodically
 (e.g. from CI) to build up history.
+
+## `--fleet` — every project on this machine, one view
+
+```bash
+python -m skills.dashboard.cli fleet add /path/to/project    # opt-in registry
+python -m skills.dashboard.cli fleet list
+python -m skills.dashboard.cli fleet remove /path/to/project
+python -m skills.dashboard.cli --fleet [--json]               # aggregate them all
+```
+
+`~/.botte/fleet.json` is an **explicit opt-in registry**, not a filesystem
+scan — nothing gets touched unless you `fleet add` it. `--fleet` runs
+`collect()` on every registered project and sums LOC / tokens saved /
+outstanding fixes; a project that's vanished or errors out is reported
+under `errored`, not silently dropped or a crash. See `skills/dashboard/fleet.py`.

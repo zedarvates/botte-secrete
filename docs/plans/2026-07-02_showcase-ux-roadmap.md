@@ -227,11 +227,15 @@ mode scripté + les 4 commandes vitrine (`demo`, `dashboard --tui`, `bench`,
 tard, mais la preuve texte/capture est déjà en place et 100% reproductible
 (`python -m skills.demo.cli scripted`).
 
-### P5f — Fleet view multi-projets 🗺️
-`dashboard --fleet` : agréger les `.botte/` de tous les projets de la machine
-en une vue (économies totales, projets non encore équipés). Transforme botte
-d'outil par-repo en plateforme machine-wide. Effort : M. **À garder pour plus
-tard** — dépend de P0/P2 stabilisés.
+### P5f — Fleet view multi-projets 🗺️ ✅ fait (2026-07-02)
+`skills/dashboard/fleet.py` livré : registre **opt-in explicite**
+(`~/.botte/fleet.json`, jamais de scan filesystem automatique) —
+`dashboard fleet add/remove/list` + `dashboard --fleet [--json]` qui agrège
+LOC/tokens économisés/fixes en attente sur tous les projets enregistrés ; un
+projet disparu/en erreur est reporté séparément (`errored`), jamais silencieux
+ni un crash. Documenté dans le tableau "System Impact" du README pour la
+transparence (le projet a une politique de divulguer tout état écrit sur la
+machine). 6 nouveaux tests dans `test_dashboard.py`.
 
 ---
 
