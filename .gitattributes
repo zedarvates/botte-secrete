@@ -1,0 +1,64 @@
+# Botte Secrète — consistent line endings
+# Prevents the "LF will be replaced by CRLF" noise on every git add
+# (observed: 30+ warning lines per commit on Windows, each re-read by the agent)
+
+# Default: text files get LF in the repo, native on checkout
+* text=auto
+
+# Explicitly binary (no line-ending conversion)
+*.pyc binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.mp3 binary
+*.mp4 binary
+*.wav binary
+*.ogg binary
+*.pdf binary
+*.zip binary
+*.gz binary
+*.tar binary
+*.ttf binary
+*.woff binary
+*.woff2 binary
+*.eot binary
+*.onnx binary
+*.hef binary
+
+# Python: force LF (cross-platform consistency)
+*.py text eol=lf
+*.pyi text eol=lf
+*.pyx text eol=lf
+
+# Shell: force LF (won't run with CRLF)
+*.sh text eol=lf
+*.bash text eol=lf
+
+# Config/data: force LF
+*.toml text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.txt text eol=lf
+*.cfg text eol=lf
+*.ini text eol=lf
+*.env text eol=lf
+.env.* text eol=lf
+
+# Web: force LF
+*.html text eol=lf
+*.css text eol=lf
+*.js text eol=lf
+*.mjs text eol=lf
+*.ts text eol=lf
+*.jsx text eol=lf
+*.tsx text eol=lf
+*.svg text eol=lf
+
+# Windows-specific: leave as-is
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
