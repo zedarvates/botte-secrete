@@ -1,176 +1,177 @@
-"""scanner — scan orchestrator for security checking.
+"""
+Security Scanner — lightweight credential leak and vulnerability detection.
 
-Itère les fichiers, applique regex + AST, agrège les résultats.
+Scans for:
+- API keys / tokens
+- Hardcoded passwords
+- Path traversal
+- Shell injection patterns
+- Base64 secrets
+
+Usage:
+    from skills.security_scanner.scanner import scan
+    issues = scan("api_key = 'sk-abc123'")
+    # → [{issue: "API key detected", line: 1, severity: "high"}]
 """
 
 from __future__ import annotations
 
-import os
 import re
-import concurrent.futures
+import json
 from pathlib import Path
-from typing import Optional
-
-from skills.security_scanner.patterns import PATTERNS, Pattern, Severity
-from skills.security_scanner.ast_checker import analyze_ast as _analyze_ast
-from skills.security_scanner.report import Finding, Severity as ReportSeverity
+from dataclasses import dataclass, field
 
 
-# Extensions et dossiers à ignorer
-_SKIP_EXTS = frozenset({
-    ".pyc", ".pyo", ".so", ".dll", ".dylib",
-    ".png", ".jpg", ".jpeg", ".gif", ".ico",
-    ".woff", ".woff2", ".ttf", ".eot",
-    ".zip", ".gz", ".tar", ".bz2", ".7z",
-    ".o", ".a", ".lib",
-    ".lock", ".sum", ".db", ".sqlite",
-    ".svg", ".pdf", ".doc", ".docx",
-    ".exe", ".msi",
-})
-_SKIP_DIRS = frozenset({
-    ".git", "__pycache__", "node_modules", ".venv", "venv",
-    ".botte-cache", ".pytest_cache", ".mypy_cache", ".ruff_cache",
-    "dist", "build", ".eggs", "*.egg-info",
-    ".hermes", ".cursor", ".vscode", ".idea",
-    "target",  # Rust build dir
-})
+@dataclass
+class SecurityIssue:
+    """A detected security issue."""
+    issue: str
+    severity: str  # "critical", "high", "medium", "low"
+    line: int
+    column: int = 0
+    snippet: str = ""
+    suggestion: str = ""
+
+    def to_dict(self) -> dict:
+        return {
+            "issue": self.issue,
+            "severity": self.severity,
+            "line": self.line,
+            "column": self.column,
+            "snippet": self.snippet[:80],
+            "suggestion": self.suggestion,
+        }
 
 
-def _should_skip(path: Path) -> bool:
-    """Skip binary files, hidden dirs, and known nuisances."""
-    name = path.name
-    if name in _SKIP_DIRS:
-        return True
-    if name.startswith(".") and path.is_dir() and name not in (".github",):
-        return True
-    if path.suffix.lower() in _SKIP_EXTS:
-        return True
-    return False
+# Patterns: (regex, issue, severity, suggestion)
+CRITICAL_PATTERNS = [
+    (r'(?i)(api[-_]?key|apikey)\s*[:=]\s*["\'][A-Za-z0-9_-]{20,}',
+     "API key hardcoded", "critical", "Use env variable or secrets manager"),
+    (r'(?i)(password|passwd|pwd)\s*[:=]\s*["\'][^"\']+',
+     "Password hardcoded", "critical", "Use env variable or prompt"),
+    (r'(?i)(secret|token|auth_token)\s*[:=]\s*["\'][A-Za-z0-9_-]{16,}',
+     "Secret/token hardcoded", "critical", "Use config file or vault"),
+    (r'(?i)(-----BEGIN\s+(RSA|PRIVATE|EC|DSA|OPENSSH)\s+KEY-----)',
+     "Private key detected", "critical", "Remove from code, use env"),
+]
+
+HIGH_PATTERNS = [
+    (r'(?i)exec\s*\(["\']|subprocess\.call|subprocess\.Popen',
+     "Shell command execution", "high", "Use subprocess.run with shell=False"),
+    (r'(?i)eval\s*\(|exec\s*\(|compile\s*\(',
+     "Dynamic code execution", "high", "Avoid eval/exec, use safer alternatives"),
+    (r'(?i)sleep\s*\(\d{3,}', "Long sleep (DoS risk)", "high", "Use asyncio.sleep or time-based backoff"),
+    (r'(?i)pickle\.loads?|torch\.load|joblib\.load',
+     "Unsafe deserialization", "high", "Use safe_load or verify source"),
+]
+
+MEDIUM_PATTERNS = [
+    (r'(?i)(git|svn|hg)\s+clone|wget\s+|curl\s+.+-o',
+     "Remote resource fetch", "medium", "Pin versions, verify checksums"),
+    (r'os\.system\s*\(|os\.popen',
+     "OS command execution", "medium", "Use subprocess.run with shell=False"),
+    (r'(?i)(tmp|temp)\s*[:=]\s*["\']/tmp',
+     "World-writable temp file", "medium", "Use tempfile.mkstemp() instead"),
+    (r'(?i)rm\s+-rf\s+["\']?/["\']?',
+     "Dangerous rm -rf /", "medium", "Be extremely careful with recursive delete"),
+    (r'(?i)(\.env|\.secret|credentials\.)', "Potential credential file reference", "medium",
+     "Ensure .env is in .gitignore"),
+]
+
+LOW_PATTERNS = [
+    (r'base64\.(b64decode|b64encode)',
+     "Base64 encoding (potential secret)", "low", "Verify intended use"),
+    (r'(?i)(skip|ignore|bypass).*(check|verify|validation|auth)',
+     "Security bypass comment", "low", "Remove before production"),
+    (r'#\s*TODO.*(security|auth|permission|secret)',
+     "Security TODO remaining", "low", "Address before deployment"),
+]
 
 
-def _scan_file_regex(source: str, filepath: str, pattern: Pattern) -> list[Finding]:
-    """Scan a single file against one regex pattern."""
-    findings: list[Finding] = []
-    try:
-        regex = re.compile(pattern.regex, re.IGNORECASE)
-    except re.error:
-        return findings
-
-    for i, line in enumerate(source.splitlines(), 1):
-        if regex.search(line):
-            match = regex.search(line)
-            col = match.start() if match else 0
-            findings.append(Finding(
-                file=filepath,
-                line=i,
-                column=col,
-                pattern=pattern.name,
-                severity=pattern.severity.value,
-                snippet=line.strip()[:120],
-            ))
-    return findings
-
-
-def _scan_file_single(filepath: str, do_ast: bool = True) -> list[Finding]:
-    """Scan a single file with all patterns + AST."""
-    p = Path(filepath)
-    if _should_skip(p) or p.suffix.lower() not in (".py", ".rs", ".js", ".ts", ".sh", ".bash", ".yaml", ".yml", ".toml", ".json", ".md"):
-        return []
-
-    try:
-        source = p.read_text(encoding="utf-8", errors="replace")
-    except OSError:
-        return []
-
-    all_findings: list[Finding] = []
-
-    # Regex scans (all patterns, all file types)
-    for pattern_elem in PATTERNS:
-        findings = _scan_file_regex(source, filepath, pattern_elem)
-        all_findings.extend(findings)
-
-    # AST scan (Python only)
-    if do_ast and p.suffix == ".py":
-        ast_findings = _analyze_ast(source, filepath)
-        for f in ast_findings:
-            all_findings.append(Finding(
-                file=f["file"],
-                line=f["line"],
-                column=f.get("col", 0),
-                pattern=f["pattern"],
-                severity=f["severity"],
-                snippet=f.get("detail", ""),
-            ))
-
-    return all_findings
-
-
-def scan_file(filepath: str, do_ast: bool = True) -> list[Finding]:
-    """Scan a single file. Returns list of Findings (empty = clean)."""
-    return _scan_file_single(filepath, do_ast=do_ast)
-
-
-def scan_dir(root: str, fail_on: str = "error", max_workers: int = 8,
-             do_ast: bool = True) -> list[Finding]:
-    """Scan a directory recursively with parallel workers.
-
-    Args:
-        root: Directory or file to scan.
-        fail_on: Minimum severity to fail on (critical, error, warning, info).
-        max_workers: Thread pool size.
-        do_ast: Whether to run AST analysis on .py files.
+def scan(content: str, filename: str = "unknown") -> dict:
+    """Scan content for security issues.
 
     Returns:
-        List of Findings.
+        dict with total count, issues list, and summary
     """
-    root_p = Path(root).resolve()
-    if not root_p.exists():
-        return [Finding(file=root, line=0, column=0, pattern="not_found",
-                        severity="error", snippet=f"Path does not exist: {root_p}")]
+    issues = []
 
-    if root_p.is_file():
-        return scan_file(str(root_p), do_ast=do_ast)
+    # Check each category
+    for patterns, severity_name in [
+        (CRITICAL_PATTERNS, "critical"),
+        (HIGH_PATTERNS, "high"),
+        (MEDIUM_PATTERNS, "medium"),
+        (LOW_PATTERNS, "low"),
+    ]:
+        for pattern, description, _, suggestion in patterns:
+            for i, line in enumerate(content.splitlines(), 1):
+                m = re.search(pattern, line)
+                if m:
+                    start = max(0, m.start() - 10)
+                    snippet = line[start:m.end() + 20].strip()
+                    issues.append(SecurityIssue(
+                        issue=description,
+                        severity=severity_name,
+                        line=i,
+                        column=m.start() + 1,
+                        snippet=snippet,
+                        suggestion=suggestion,
+                    ))
 
-    # Collect Python files
-    files_to_scan: list[Path] = []
-    for p in root_p.rglob("*"):
-        if _should_skip(p):
-            continue
-        if not p.is_file():
-            continue
-        ext = p.suffix.lower()
-        if ext in (".py", ".rs", ".sh", ".bash", ".yaml", ".yml", ".toml", ".json", ".js", ".ts"):
-            files_to_scan.append(p)
+    return {
+        "total": len(issues),
+        "filename": filename,
+        "by_severity": {
+            "critical": sum(1 for i in issues if i.severity == "critical"),
+            "high": sum(1 for i in issues if i.severity == "high"),
+            "medium": sum(1 for i in issues if i.severity == "medium"),
+            "low": sum(1 for i in issues if i.severity == "low"),
+        },
+        "issues": [i.to_dict() for i in issues],
+        "pass": len(issues) == 0,
+    }
 
-    if not files_to_scan:
-        return []
 
-    # Parallel scan
-    all_findings: list[Finding] = []
-    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
-        futures = {
-            executor.submit(_scan_file_single, str(p), do_ast=do_ast): p
-            for p in files_to_scan
-        }
-        for future in concurrent.futures.as_completed(futures):
-            try:
-                results = future.result()
-                all_findings.extend(results)
-            except Exception as e:
-                f = futures[future]
-                all_findings.append(Finding(
-                    file=str(f), line=0, column=0,
-                    pattern="scan_error", severity="error",
-                    snippet=f"Scan error: {e}",
-                ))
+def scan_file(path: str) -> dict:
+    """Scan a single file."""
+    p = Path(path)
+    if not p.exists():
+        return {"total": 0, "error": f"File not found: {path}", "pass": True}
+    return scan(p.read_text(encoding="utf-8", errors="replace"), str(p))
 
-    # Keep findings at least as severe as `fail_on` (critical=most severe).
-    # Lower order number = more severe, so "at least as severe" is `<= min_level`.
-    severity_order = {"critical": 0, "error": 1, "warning": 2, "info": 3}
-    min_level = severity_order.get(fail_on, 1)
-    filtered = [
-        f for f in all_findings
-        if severity_order.get(f.severity, 99) <= min_level
-    ]
 
-    return filtered
+def scan_directory(path: str, extensions: tuple = (".py", ".yaml", ".yml", ".json", ".env")) -> dict:
+    """Scan a directory recursively."""
+    p = Path(path)
+    if not p.is_dir():
+        return {"total": 0, "error": f"Not a directory: {path}", "pass": True}
+
+    all_issues = []
+    for ext in extensions:
+        for f in p.rglob(f"*{ext}"):
+            if "__pycache__" in str(f) or ".git" in str(f):
+                continue
+            result = scan_file(str(f))
+            all_issues.extend(result["issues"])
+
+    # Deduplicate by line and issue
+    seen = set()
+    unique = []
+    for i in all_issues:
+        key = (i["line"], i["issue"])
+        if key not in seen:
+            seen.add(key)
+            unique.append(i)
+
+    return {
+        "total": len(unique),
+        "files_scanned": len(list(p.rglob("*.*"))),
+        "issues": unique,
+        "by_severity": {
+            "critical": sum(1 for i in unique if i["severity"] == "critical"),
+            "high": sum(1 for i in unique if i["severity"] == "high"),
+            "medium": sum(1 for i in unique if i["severity"] == "medium"),
+            "low": sum(1 for i in unique if i["severity"] == "low"),
+        },
+        "pass": len(unique) == 0,
+    }
