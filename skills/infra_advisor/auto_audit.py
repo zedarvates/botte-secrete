@@ -112,6 +112,32 @@ def auto_audit(project: str | Path = ".", scan_subnet: bool = False) -> dict:
     except Exception:
         out["skill_catalog_size"] = 0
 
+    # host skill catalog — estimate runtime overhead from Hermes
+    try:
+        from skills.context_profiler import profile_host
+        hp = profile_host(str(project))
+        out["host_prefix"] = {
+            "total": hp["total_prefix_tokens"],
+            "host_tokens": hp["breakdown"]["host"],
+            "host_pct": hp["breakdown"]["host_pct"],
+            "host_skill_catalog_tokens": hp["components"]["host_skill_catalog"],
+            "host_skill_count": hp["counts"]["host_skills"],
+            "reducible": hp["reducible_tokens"],
+        }
+        hsc = hp["components"]["host_skill_catalog"]
+        if hsc > 5000:
+            out.setdefault("infra_tips", []).append({
+                "priority": "P1",
+                "category": "infra",
+                "title": f"Host skill catalog ~{hsc:,} tok ({hp['counts']['host_skills']} skills) — use lazy loading",
+                "why": "The runtime injects all skill descriptions every turn. "
+                       "This is the single largest source of token waste for any agent session.",
+                "impact": f"Switch host to find_skills (keyword search): saves ~{hsc:,} tok/turn. "
+                         "See `python -m skills.context_profiler.cli . --host` for full breakdown.",
+            })
+    except Exception:
+        out["host_prefix"] = {"available": False}
+
     out["deeper_passes"] = _DEEPER
     out["headline"] = _headline(out)
     return out

@@ -59,7 +59,10 @@ def run(project: Path) -> dict:
     # 8. micro-NN grounding audit (only if the project ships botte_nn)
     out["nn"] = _nn_summary(project)
 
-    # 9. drift checks
+    # 9. host prefix profiling — estimate what the runtime (Hermes) injects
+    out["host_prefix"] = _host_prefix_summary(project)
+
+    # 10. drift checks
     d = out["directives"]
     if isinstance(d, dict):
         if d.get("score", 100) < 90:
@@ -83,6 +86,20 @@ def run(project: Path) -> dict:
         out["drift"].append(
             f"{nn['at_risk']} micro-NN(s) synthetic AND wired (drive behaviour "
             "on invented rules) — run `python -m skills.nn_audit.cli`")
+
+    hp = out["host_prefix"]
+    if hp.get("available"):
+        hsc = hp.get("host_skill_catalog_tokens", 0)
+        if hsc > 5000:
+            out["drift"].append(
+                f"Host skill catalog ~{hsc:,} tok injected every turn — "
+                "the host should use find_skills (keyword search) instead of listing all skills. "
+                "Run `python -m skills.context_profiler.cli . --host` for breakdown.")
+        host_pct = hp.get("host_pct", 0)
+        if host_pct > 50:
+            out["drift"].append(
+                f"Host prefix is {host_pct}% of total context ({hp['host_tokens']:,} tok) — "
+                "more than half the context is runtime overhead, not your project.")
 
     out["deep_audit_hint"] = ("For secrets/dead-code: PYTHONPATH=. python "
                               "skills/mousquetaires/scripts/porthos_audit.py <project> <out>")
@@ -183,6 +200,34 @@ def _nn_summary(project: Path) -> dict:
             "grounded_pct": s.get("grounded_pct", 0)}
 
 
+def _host_prefix_summary(project: Path) -> dict:
+    """Estimate the host (Hermes runtime) prefix cost via context_profiler --host."""
+    try:
+        from skills.context_profiler import profile_host
+    except ImportError:
+        return {"available": False}
+    try:
+        r = profile_host(str(project))
+    except Exception:
+        return {"available": False}
+    bd = r.get("breakdown", {})
+    comp = r.get("components", {})
+    return {
+        "available": True,
+        "total_tokens": r.get("total_prefix_tokens", 0),
+        "project_tokens": bd.get("project", 0),
+        "host_tokens": bd.get("host", 0),
+        "host_pct": bd.get("host_pct", 0),
+        "project_pct": bd.get("project_pct", 0),
+        "host_skill_catalog_tokens": comp.get("host_skill_catalog", 0),
+        "host_skill_count": r.get("counts", {}).get("host_skills", 0),
+        "mcp_server_tokens": comp.get("mcp_servers", 0),
+        "system_reminder_tokens": comp.get("system_reminder", 0),
+        "reducible_tokens": r.get("reducible_tokens", 0),
+        "minimal_prefix_tokens": r.get("minimal_prefix_tokens", 0),
+    }
+
+
 # Stable marker so a CI bot can find & update its own comment instead of spamming.
 PR_COMMENT_MARKER = "<!-- botte-checkup -->"
 
@@ -263,6 +308,19 @@ def format_pr_comment(result: dict, *, repo: str | None = None,
                          "none synthetic-and-wired")
         lines.append("")
 
+    hp = result.get("host_prefix") or {}
+    if hp.get("available") and hp.get("host_tokens"):
+        lines.append(f"### 🖥️ Host prefix — {hp['host_tokens']:,} tok "
+                     f"({hp['host_pct']}% of total)")
+        lines.append(f"- Host skill catalog: {hp['host_skill_catalog_tokens']:,} tok "
+                     f"({hp.get('host_skill_count', '?')} skills)")
+        lines.append(f"- MCP server descriptions: {hp.get('mcp_server_tokens', 0):,} tok")
+        lines.append(f"- System + memory + profile: {hp.get('system_reminder_tokens', 0):,} tok")
+        if hp.get("reducible_tokens", 0) > 5000:
+            lines.append(f"- ✂️ {hp['reducible_tokens']:,} tok reducible → "
+                         f"min {hp['minimal_prefix_tokens']:,} tok")
+        lines.append("")
+
     footer = "_local-first checkup · 0 cloud tokens_"
     if repo and sha:
         footer += f" · [`{sha[:7]}`](https://github.com/{repo}/commit/{sha})"
@@ -320,6 +378,16 @@ def main(argv=None) -> int:
         extra = (f" · at-risk: {', '.join(nn['at_risk_models'])}"
                  if nn.get("at_risk") else "")
         print(f"\n   🧠 Micro-NN: {nn['grounded']}/{nn['total']} grounded{extra}")
+
+    hp = r.get("host_prefix") or {}
+    if hp.get("available") and hp.get("host_tokens"):
+        print(f"\n   🖥️  Host prefix: {hp['host_tokens']:,} tok "
+              f"({hp['host_pct']}% of total) · "
+              f"skill catalog {hp['host_skill_catalog_tokens']:,} tok "
+              f"({hp.get('host_skill_count', '?')} skills)")
+        if hp.get("reducible_tokens", 0) > 5000:
+            print(f"      ✂️  {hp['reducible_tokens']:,} tok reducible → "
+                  f"min {hp['minimal_prefix_tokens']:,} tok")
     if r["drift"]:
         print("\n   ⚠️  Drift to fix:")
         for x in r["drift"]:
