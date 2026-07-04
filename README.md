@@ -1,11 +1,12 @@
 # 🧦 Botte Secrète — Multi-Agent Token Optimization Platform
 
 [![CI](https://github.com/zedarvates/botte-secrete/actions/workflows/ci.yml/badge.svg)](https://github.com/zedarvates/botte-secrete/actions)
-[![Tests](https://img.shields.io/badge/tests-583%2F583-brightgreen)](https://github.com/zedarvates/botte-secrete)
+[![Tests](https://img.shields.io/badge/tests-138%2F138-brightgreen)](https://github.com/zedarvates/botte-secrete)
 [![License](https://img.shields.io/badge/license-MIT-blue)](https://github.com/zedarvates/botte-secrete/blob/main/LICENSE)
+[![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/)
 [![Release](https://img.shields.io/badge/release-v1.5.0-blue)](https://github.com/zedarvates/botte-secrete/releases)
-[![Token Savings](https://img.shields.io/badge/token%20savings-85%25-blue)](https://github.com/zedarvates/botte-secrete)
-[![Self-Audit](https://img.shields.io/badge/self--audit-75%2F100%20(B)-yellowgreen)](https://github.com/zedarvates/botte-secrete)
+[![Token Savings](https://img.shields.io/badge/token%20savings-65%25-blue)](https://github.com/zedarvates/botte-secrete)
+[![GPG Signed](https://img.shields.io/badge/commits-GPG%20signed-green)](https://github.com/zedarvates/botte-secrete)
 
 > *"Tous pour un, un pour tous."* — Les Trois Mousquetaires
 
@@ -21,7 +22,7 @@ tells you what hardware/infra changes would cut cost further.
 
 | Metric | Value |
 |--------|-------|
-| Tests | **583 passed, 0 failed** |
+| Tests | **138 passed, 0 failed** (51 e2e + 87 module) |
 | Skills | **50+** (code audit, fix, routing, MCP, NLP, solvers, security, docs) |
 | Micro-NN | **4 models** (binary_router, effort_classifier, anomaly_detector, error_classifier) — grounding tracked by `nn_audit` |
 | Token savings | **~65%** combined (reported by users) |
@@ -85,7 +86,7 @@ Before running anything, here's exactly what Botte Secrète changes on your mach
 
 **Verify for yourself:** the entire test suite runs offline:
 ```bash
-python scripts/run_tests.py   # 583 tests, 0 cloud calls
+python scripts/run_tests.py   # 138 tests, 0 cloud calls
 ```
 
 ## ✅ Smoke Test
