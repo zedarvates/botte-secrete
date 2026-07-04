@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 """Run every Botte Secrète test suite and report a single total.
 
-    python scripts/run_tests.py
+    python scripts/run_tests.py                  # all suites
+    python scripts/run_tests.py --changed         # only suites for changed files
+    python scripts/run_tests.py -q                # quiet: one line per suite (detail on failure)
+    python scripts/run_tests.py --changed -q      # both
 
 Cross-platform: forces UTF-8 + PYTHONPATH for child processes, so it works on a
 default Windows console too. Exit code is non-zero if any suite fails.
@@ -9,6 +12,7 @@ default Windows console too. Exit code is non-zero if any suite fails.
 
 from __future__ import annotations
 
+import argparse
 import os
 import re
 import subprocess
@@ -17,55 +21,97 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
 
-# (label, command) — the e2e script + every module's test_<module>.
+# (label, command, module_prefix) — the e2e script + every module's test_<module>.
+# module_prefix is the skills/ directory prefix used for --changed matching.
 SUITES = [
-    ("e2e", [sys.executable, "skills/test_e2e.py"]),
-    ("llm_backends", [sys.executable, "-m", "skills.llm_backends.test_llm_backends"]),
-    ("directives_audit", [sys.executable, "-m", "skills.directives_audit.test_directives_audit"]),
-    ("auto_router", [sys.executable, "-m", "skills.auto_router.test_auto_router"]),
-    ("skill_finder", [sys.executable, "-m", "skills.skill_finder.test_skill_finder"]),
-    ("bootstrap", [sys.executable, "-m", "skills.bootstrap.test_bootstrap"]),
-    ("infra_advisor", [sys.executable, "-m", "skills.infra_advisor.test_infra_advisor"]),
-    ("prompt_improver", [sys.executable, "-m", "skills.prompt_improver.test_prompt_improver"]),
-    ("metrics", [sys.executable, "-m", "skills.metrics.test_metrics"]),
-    ("preflight", [sys.executable, "-m", "skills.preflight.test_preflight"]),
-    ("checkup", [sys.executable, "-m", "skills.checkup.test_checkup"]),
-    ("ingest", [sys.executable, "-m", "skills.ingest.test_ingest"]),
-    ("docgen", [sys.executable, "-m", "skills.docgen.test_docgen"]),
-    ("app_test", [sys.executable, "-m", "skills.app_test.test_app_test"]),
-    ("capabilities", [sys.executable, "-m", "skills.capabilities.test_capabilities"]),
-    ("cluster", [sys.executable, "-m", "skills.cluster.test_cluster"]),
-    ("conductor", [sys.executable, "-m", "skills.conductor.test_conductor"]),
-    ("control_loop", [sys.executable, "-m", "skills.control_loop.test_control_loop"]),
-    ("report", [sys.executable, "-m", "skills.report.test_report"]),
-    ("cost_estimator", [sys.executable, "-m", "skills.cost_estimator.test_cost_estimator"]),
-    ("trends", [sys.executable, "-m", "skills.trends.test_trends"]),
-    ("dashboard", [sys.executable, "-m", "skills.dashboard.test_dashboard"]),
-    ("fallow_scanner", [sys.executable, "-m", "skills.fallow_like.test_scanner"]),
-    ("dead_code", [sys.executable, "-m", "skills.fallow_like.test_dead_code"]),
-    ("taint", [sys.executable, "-m", "skills.fallow_like.test_taint"]),
-    ("docs_steward", [sys.executable, "-m", "skills.docs_steward.test_docs_steward"]),
-    ("context_budget", [sys.executable, "-m", "skills.context_budget.test_context_budget"]),
-    ("nlp_deterministic", [sys.executable, "-m", "skills.nlp_deterministic.test_nlp_deterministic"]),
-    ("solvers", [sys.executable, "-m", "skills.solvers.test_solvers"]),
-    ("cwe_kb", [sys.executable, "-m", "skills.cwe_kb.test_cwe_kb"]),
-    ("botte_nn", [sys.executable, "-m", "skills.botte_nn.test_botte_nn"]),
-    ("features", [sys.executable, "-m", "skills.botte_nn.test_features"]),
-    ("local_harness", [sys.executable, "-m", "skills.local_harness.test_verifier"]),
-    ("harness_executor", [sys.executable, "-m", "skills.local_harness.test_executor"]),
-    ("harness_bench", [sys.executable, "-m", "skills.local_harness.test_bench"]),
-    ("calibration", [sys.executable, "-m", "skills.botte_nn.test_calibration"]),
-    ("audit_dag", [sys.executable, "-m", "skills.audit_dag.test_audit_dag"]),
-    ("nn_audit", [sys.executable, "-m", "skills.nn_audit.test_nn_audit"]),
-    ("security_scanner", [sys.executable, "-m", "skills.security_scanner.test_security_scanner"]),
-    ("context_profiler", [sys.executable, "-m", "skills.context_profiler.test_context_profiler"]),
+    ("e2e", [sys.executable, "skills/test_e2e.py"], ""),
+    ("llm_backends", [sys.executable, "-m", "skills.llm_backends.test_llm_backends"], "skills/llm_backends/"),
+    ("directives_audit", [sys.executable, "-m", "skills.directives_audit.test_directives_audit"], "skills/directives_audit/"),
+    ("auto_router", [sys.executable, "-m", "skills.auto_router.test_auto_router"], "skills/auto_router/"),
+    ("skill_finder", [sys.executable, "-m", "skills.skill_finder.test_skill_finder"], "skills/skill_finder/"),
+    ("bootstrap", [sys.executable, "-m", "skills.bootstrap.test_bootstrap"], "skills/bootstrap/"),
+    ("infra_advisor", [sys.executable, "-m", "skills.infra_advisor.test_infra_advisor"], "skills/infra_advisor/"),
+    ("prompt_improver", [sys.executable, "-m", "skills.prompt_improver.test_prompt_improver"], "skills/prompt_improver/"),
+    ("metrics", [sys.executable, "-m", "skills.metrics.test_metrics"], "skills/metrics/"),
+    ("preflight", [sys.executable, "-m", "skills.preflight.test_preflight"], "skills/preflight/"),
+    ("checkup", [sys.executable, "-m", "skills.checkup.test_checkup"], "skills/checkup/"),
+    ("ingest", [sys.executable, "-m", "skills.ingest.test_ingest"], "skills/ingest/"),
+    ("docgen", [sys.executable, "-m", "skills.docgen.test_docgen"], "skills/docgen/"),
+    ("app_test", [sys.executable, "-m", "skills.app_test.test_app_test"], "skills/app_test/"),
+    ("capabilities", [sys.executable, "-m", "skills.capabilities.test_capabilities"], "skills/capabilities/"),
+    ("cluster", [sys.executable, "-m", "skills.cluster.test_cluster"], "skills/cluster/"),
+    ("conductor", [sys.executable, "-m", "skills.conductor.test_conductor"], "skills/conductor/"),
+    ("control_loop", [sys.executable, "-m", "skills.control_loop.test_control_loop"], "skills/control_loop/"),
+    ("report", [sys.executable, "-m", "skills.report.test_report"], "skills/report/"),
+    ("cost_estimator", [sys.executable, "-m", "skills.cost_estimator.test_cost_estimator"], "skills/cost_estimator/"),
+    ("trends", [sys.executable, "-m", "skills.trends.test_trends"], "skills/trends/"),
+    ("dashboard", [sys.executable, "-m", "skills.dashboard.test_dashboard"], "skills/dashboard/"),
+    ("fallow_scanner", [sys.executable, "-m", "skills.fallow_like.test_scanner"], "skills/fallow_like/"),
+    ("dead_code", [sys.executable, "-m", "skills.fallow_like.test_dead_code"], "skills/fallow_like/"),
+    ("taint", [sys.executable, "-m", "skills.fallow_like.test_taint"], "skills/fallow_like/"),
+    ("docs_steward", [sys.executable, "-m", "skills.docs_steward.test_docs_steward"], "skills/docs_steward/"),
+    ("context_budget", [sys.executable, "-m", "skills.context_budget.test_context_budget"], "skills/context_budget/"),
+    ("nlp_deterministic", [sys.executable, "-m", "skills.nlp_deterministic.test_nlp_deterministic"], "skills/nlp_deterministic/"),
+    ("solvers", [sys.executable, "-m", "skills.solvers.test_solvers"], "skills/solvers/"),
+    ("cwe_kb", [sys.executable, "-m", "skills.cwe_kb.test_cwe_kb"], "skills/cwe_kb/"),
+    ("botte_nn", [sys.executable, "-m", "skills.botte_nn.test_botte_nn"], "skills/botte_nn/"),
+    ("features", [sys.executable, "-m", "skills.botte_nn.test_features"], "skills/botte_nn/"),
+    ("local_harness", [sys.executable, "-m", "skills.local_harness.test_verifier"], "skills/local_harness/"),
+    ("harness_executor", [sys.executable, "-m", "skills.local_harness.test_executor"], "skills/local_harness/"),
+    ("harness_bench", [sys.executable, "-m", "skills.local_harness.test_bench"], "skills/local_harness/"),
+    ("calibration", [sys.executable, "-m", "skills.botte_nn.test_calibration"], "skills/botte_nn/"),
+    ("audit_dag", [sys.executable, "-m", "skills.audit_dag.test_audit_dag"], "skills/audit_dag/"),
+    ("nn_audit", [sys.executable, "-m", "skills.nn_audit.test_nn_audit"], "skills/nn_audit/"),
+    ("security_scanner", [sys.executable, "-m", "skills.security_scanner.test_security_scanner"], "skills/security_scanner/"),
+    ("context_profiler", [sys.executable, "-m", "skills.context_profiler.test_context_profiler"], "skills/context_profiler/"),
 ]
 
 _RESULT_RE = re.compile(r"(\d+)\s+passed,\s+(\d+)\s+failed")
 _ANSI_RE = re.compile(r"\x1b\[[0-9;]*m")
 
 
+def _git_changed_files(repo: Path) -> list[str]:
+    """Return list of changed files relative to repo root (git diff --name-only)."""
+    try:
+        proc = subprocess.run(
+            ["git", "diff", "--name-only", "HEAD"],
+            cwd=repo, capture_output=True, text=True, timeout=10,
+        )
+        if proc.returncode == 0:
+            return [l.strip() for l in proc.stdout.splitlines() if l.strip()]
+    except (subprocess.TimeoutExpired, OSError, FileNotFoundError):
+        pass
+    return []
+
+
+def _suites_for_changes(changed: list[str]) -> set[int]:
+    """Return indices of suites affected by the changed files.
+
+    A changed file matches a suite if its path starts with the suite's module_prefix.
+    The e2e suite (index 0) always runs — it tests cross-cutting concerns.
+    Scripts/ changes also trigger e2e.
+    """
+    affected = {0}  # e2e always runs
+    for f in changed:
+        for idx, (label, cmd, prefix) in enumerate(SUITES):
+            if not prefix:  # skip e2e (already handled)
+                continue
+            if f.startswith(prefix):
+                affected.add(idx)
+        # scripts/ changes may affect multiple suites
+        if f.startswith("scripts/"):
+            affected.add(0)  # e2e covers script-level behavior
+    return affected
+
+
 def main() -> int:
+    p = argparse.ArgumentParser(description="Run Botte Secrète test suites")
+    p.add_argument("--changed", action="store_true",
+                   help="Only run suites for files changed since last commit")
+    p.add_argument("-q", "--quiet", action="store_true",
+                   help="Compact output: one line per suite, full detail only on failure")
+    args = p.parse_args()
+
     for s in (sys.stdout, sys.stderr):
         rc = getattr(s, "reconfigure", None)
         if rc:
@@ -76,9 +122,32 @@ def main() -> int:
 
     env = {**os.environ, "PYTHONUTF8": "1", "PYTHONIOENCODING": "utf-8",
            "PYTHONPATH": str(REPO)}
+
+    # Determine which suites to run
+    if args.changed:
+        changed = _git_changed_files(REPO)
+        if not changed:
+            print("Botte Secrète — no changed files, nothing to test")
+            return 0
+        affected = _suites_for_changes(changed)
+        active = [(label, cmd) for i, (label, cmd, _) in enumerate(SUITES) if i in affected]
+        if args.quiet:
+            print(f"Botte Secrète — {len(active)} suite(s) for {len(changed)} changed file(s)\n")
+        else:
+            print(f"Botte Secrète — {len(active)} suite(s) for {len(changed)} changed file(s)")
+            for f in changed[:10]:
+                print(f"  M {f}")
+            if len(changed) > 10:
+                print(f"  ... and {len(changed) - 10} more")
+            print()
+    else:
+        active = [(label, cmd) for label, cmd, _ in SUITES]
+        if not args.quiet:
+            print("Botte Secrète — test suites\n")
+
     total_pass = total_fail = 0
     rows = []
-    for label, cmd in SUITES:
+    for label, cmd in active:
         proc = subprocess.run(cmd, cwd=REPO, env=env, capture_output=True,
                                text=True, encoding="utf-8", errors="replace")
         m = None
@@ -91,11 +160,33 @@ def main() -> int:
             f = max(f, 1)
         total_pass += p
         total_fail += f
-        mark = "OK " if f == 0 and (m or proc.returncode == 0) else "FAIL"
-        rows.append(f"  [{mark}] {label:<18} {p} passed, {f} failed")
 
-    print("Botte Secrète — test suites\n")
-    print("\n".join(rows))
+        mark = "OK " if f == 0 and (m or proc.returncode == 0) else "FAIL"
+        row = f"  [{mark}] {label:<18} {p} passed, {f} failed"
+        rows.append((row, f, proc, label))
+
+    # Output
+    if args.quiet:
+        # Only show failures inline; successes are summarized
+        failed_rows = [(r, f, proc, label) for r, f, proc, label in rows if f > 0]
+        ok_count = len(rows) - len(failed_rows)
+        if ok_count:
+            print(f"  [OK ] {ok_count} suite(s) passed")
+        for row, f, proc, label in failed_rows:
+            print(row)
+            if proc.stderr:
+                print(f"       stderr: {proc.stderr.strip()[:200]}")
+            if proc.stdout and f > 0:
+                # Show last 3 lines of output for context
+                out_lines = proc.stdout.strip().splitlines()
+                for l in out_lines[-3:]:
+                    print(f"       {l.strip()[:120]}")
+        if not failed_rows:
+            print(f"\n  ✅ All {ok_count} suites passed")
+    else:
+        for row, _, _, _ in rows:
+            print(row)
+
     print(f"\nTOTAL: {total_pass} passed, {total_fail} failed")
     return 0 if total_fail == 0 else 1
 
