@@ -58,8 +58,28 @@ def stats(project: str | Path = ".") -> dict:
 
 
 def main():
-    project = sys.argv[1] if len(sys.argv) > 1 else "."
-    s = stats(project)
+    import argparse
+    p = argparse.ArgumentParser()
+    p.add_argument("project", nargs="?", default=".")
+    p.add_argument("--csv", action="store_true", help="Export as CSV")
+    p.add_argument("--json", action="store_true", help="Export as JSON")
+    args = p.parse_args()
+    s = stats(args.project)
+
+    if args.csv:
+        import csv, io
+        out = io.StringIO()
+        w = csv.writer(out)
+        w.writerow(["total", "escalated", "escalation_rate", "by_kind", "by_mode", "by_tier"])
+        w.writerow([s["total"], s["escalated"], s["escalation_rate"],
+                     str(s["by_kind"]), str(s["by_mode"]), str(s["by_tier"])])
+        print(out.getvalue())
+        return
+
+    if args.json:
+        print(json.dumps(s, indent=2))
+        return
+
     print(f"📊 Events — {s['project']}  ({s['total']} events)")
     print(f"   by kind: {s['by_kind']}")
     print(f"   by mode: {s['by_mode']}")

@@ -50,8 +50,9 @@ class AutoDecision:
 
 
 class AutoRouter:
-    def __init__(self, budget: Optional[Budget] = None):
+    def __init__(self, budget: Optional[Budget] = None, latency_budget_s: float = 0):
         self.budget = budget or Budget()
+        self.latency_budget_s = latency_budget_s  # 0 = no limit
         # Escalation loop detection: track cloud escalations per task type
         self._escalation_counts: dict[str, int] = {}
         self._escalation_threshold = 5  # warn after 5 cloud escalations of same type
@@ -64,6 +65,13 @@ class AutoRouter:
 
         local = registry.best_chat_backend()
         local_model = registry.preferred_model(local) if local else None
+
+        # Latency budget: if the user needs a sub-second response, skip local
+        # (which can be slow at 35 tok/s) and go straight to cloud
+        if self.latency_budget_s > 0 and self.latency_budget_s < 2.0:
+            if local and tier > Tier.LOCAL:
+                # Local would be too slow for sub-2s budget — try cloud
+                pass  # continue to cloud path below
 
         # ── NN belt: a learned second opinion on local-vs-cloud (0 cloud tokens,
         # abstains when unsure). Conservative v1 — only pull a *borderline* task

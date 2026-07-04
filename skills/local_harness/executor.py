@@ -108,6 +108,9 @@ def run_harness(spec: HarnessSpec, task: str, *, task_type: str = "",
         return _escalate(f"gate: effort {score:.2f} > {spec.max_effort}", source="gated")
     if spec.allow_task_types and task_type and task_type not in spec.allow_task_types:
         return _escalate(f"gate: task_type '{task_type}' not allowed", source="gated")
+    # Strict mode: silently refuse critical/security tasks instead of risking hallucination
+    if spec.strict and task_type in ("critical_fix", "security_audit", "architecture"):
+        return _escalate(f"gate: strict mode — '{task_type}' must use cloud", source="gated")
 
     # 2·3 · GROUND + CONSTRAIN — structured output, optionally grounded.
     sys_prompt, user_prompt = _build_prompt(spec, task, context)
