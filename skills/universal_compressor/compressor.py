@@ -79,6 +79,15 @@ def _compress_text(content: str) -> CompressedResult:
             omitted_chars = 0
         deduped.append(line)
 
+    # Final flush: handle repeated lines at end of content
+    if repeats >= 2:
+        marker = f"[... {repeats} identical lines omitted ...]"
+        if omitted_chars > len(marker):
+            deduped.append(marker)
+        else:
+            for _ in range(repeats):
+                deduped.append(deduped[-1] if deduped else "")
+
     # Collapse multiple blank lines
     result = []
     blank_count = 0
