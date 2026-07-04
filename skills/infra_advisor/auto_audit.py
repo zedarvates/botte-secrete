@@ -135,6 +135,19 @@ def auto_audit(project: str | Path = ".", scan_subnet: bool = False) -> dict:
                 "impact": f"Switch host to find_skills (keyword search): saves ~{hsc:,} tok/turn. "
                          "See `python -m skills.context_profiler.cli . --host` for full breakdown.",
             })
+
+        # Godot/Blender MCP: detect unused heavyweight MCP servers
+        mcp_tokens = hp["components"].get("mcp_servers", 0)
+        if mcp_tokens > 500:
+            out.setdefault("infra_tips", []).append({
+                "priority": "P2",
+                "category": "mcp",
+                "title": f"MCP server descriptions ~{mcp_tokens:,} tok — audit unused servers",
+                "why": "MCP servers like Godot-AI, Blender, Desktop Commander inject "
+                       "long instruction blocks even when not relevant to the project type.",
+                "impact": f"Remove unused MCP servers from config to save ~{mcp_tokens:,} tok/turn. "
+                         "Run `skill_project_optimizer` to detect mismatched MCP servers.",
+            })
     except Exception:
         out["host_prefix"] = {"available": False}
 

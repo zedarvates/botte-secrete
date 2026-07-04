@@ -99,6 +99,27 @@
       "description": "Authentication can be bypassed or is not enforced where required.",
       "mitigation": "Enforce auth on every protected path; use vetted auth libraries; fail closed.",
       "common": ["missing auth check on an endpoint", "trusting a client-supplied identity"]
+    },
+    {
+      "id": "CWE-AI-01",
+      "name": "Prompt Injection (AI Agent)",
+      "description": "Untrusted content (web pages, tool output, user messages) is injected into an LLM prompt, allowing manipulation of the agent's behavior.",
+      "mitigation": "Never pass raw tool output directly into the prompt without sanitization. Use structured output formats. Separate instructions from data with clear delimiters.",
+      "common": ["directly injecting web content into prompt", "tool output concatenation without validation", "mid-turn user steering spoofing"]
+    },
+    {
+      "id": "CWE-AI-02",
+      "name": "Tool Output Exfiltration",
+      "description": "An agent tool that reads files or executes commands exposes sensitive data by including it in the agent's context or response.",
+      "mitigation": "Truncate tool output before it enters the LLM context. Redact secrets from terminal/file output. Never echo API keys.",
+      "common": ["full file content returned to agent", "terminal output with secrets", "unredacted config values"]
+    },
+    {
+      "id": "CWE-AI-03",
+      "name": "Arbitrary Code Execution via Agent Tools",
+      "description": "An agent tool (MCP server, terminal, code executor) runs attacker-controlled code from a prompt or tool output without validation.",
+      "mitigation": "Sandbox all code execution. Validate inputs against allowlists. Never pass raw prompt content to exec/eval/subprocess without sanitization.",
+      "common": ["terminal() with unsanitized prompt", "Python exec() on tool output", "MCP tool with raw command passthrough"]
     }
   ]
 }
