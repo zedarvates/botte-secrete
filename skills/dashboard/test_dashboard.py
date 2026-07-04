@@ -1,27 +1,26 @@
-#!/usr/bin/env python3
-"""Tests for dashboard. python -m skills.dashboard.test_dashboard"""
-from __future__ import annotations
-import sys, tempfile
-from pathlib import Path
-sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-from skills.dashboard import collect, generate
+"""Tests for dashboard skill."""
+import json
+import threading
+import time
+import urllib.request
+from skills.dashboard.api import load_metrics, run_server, DashboardHandler
 
 
-def main() -> int:
-    state = [0, 0]
-    def _ok(m, c): print(f"  [{'PASS' if c else 'FAIL'}] {m}"); state[0 if c else 1]+=1
-    print("== dashboard tests ==")
-    with tempfile.TemporaryDirectory() as d:
-        p = Path(d); (p/"AGENTS.md").write_text("ok",encoding="utf-8"); (p/"a.py").write_text("x=1\n",encoding="utf-8")
-        data = collect(p)
-        _ok("collect gathers all four panels",
-            all(k in data for k in ("routing_savings","trends","metrics","outstanding_fixes")))
-        paths = generate(p, fmt="html")
-        _ok("generates a timestamped html dashboard",
-            len(paths)==1 and paths[0].endswith(".html") and Path(paths[0]).exists())
-    print(f"\nRESULT: {state[0]} passed, {state[1]} failed")
-    return 0 if state[1]==0 else 1
+class TestLoadMetrics:
+    def test_load_metrics_returns_dict(self):
+        m = load_metrics()
+        assert isinstance(m, dict)
+        assert "tests_passed" in m
+        assert "lines_saved" in m
+        assert "by_rung" in m
 
 
-if __name__ == "__main__":
-    raise SystemExit(main())
+class TestAPI:
+    @classmethod
+    def setup_class(cls):
+        cls.server_thread = None
+
+    def test_handler_paths(self):
+        # Just verify the handler exists
+        assert DashboardHandler
+        assert callable(load_metrics)

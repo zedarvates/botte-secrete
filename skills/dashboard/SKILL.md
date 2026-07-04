@@ -1,17 +1,37 @@
 ---
 name: dashboard
-layer: GOVERN
-description: Generate one self-contained, timestamped HTML dashboard of the system's cost picture — routing savings (control loop), metric trends, current metrics, and the cost of outstanding fixes. Use when the user wants a single visual view of cost/savings/health over time.
+description: "Live dashboard for botte-secrete metrics — Decision Ladder, Universal Compressor, AutoMemory."
+version: 1.0.0
 ---
 
-# dashboard — the cost picture in one page
+# Dashboard Skill
+
+Live metrics visualization for botte-secrete.
+
+## Components
+
+- `index.html` — Dashboard UI
+- `api.py` — HTTP API (`/api/stats`, `/`)
+- `cron_hook.py` — Periodic notifications
+
+## Usage
 
 ```bash
-python -m skills.dashboard.cli .          # → .botte/reports/dashboard_<stamp>.html
-python -m skills.dashboard.cli . --json   # the assembled data
+# Start API server
+python3 -m skills.dashboard.api
+
+# View dashboard
+open http://localhost:8765
+
+# CLI stats
+python3 -c "from skills.dashboard.api import load_metrics; print(load_metrics())"
 ```
 
-Assembles live numbers from `control_loop` (routing savings), `trends` (metrics
-over time), `metrics` (LOC/cost), and `fix` (cost to apply outstanding fixes) into
-one timestamped HTML page, browsable any time. Exposed via [[llm_mcp]] as
-`dashboard`. Related: [[control_loop]], [[trends]], [[metrics]], [[fix]], [[report]].
+## Metrics Served
+
+- `tests_passed` — Total test count
+- `lines_saved` — Lines avoided via decision ladder
+- `avoidable_pct` — % of tasks that didn't need new code
+- `by_rung` — Breakdown by decision ladder rung
+- `compressor` — Compression stats
+- `memory_entries` — AutoMemory entry count
