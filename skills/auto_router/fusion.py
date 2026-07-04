@@ -71,8 +71,10 @@ def cascade(prompt: str, *, task_type: str = "", max_tokens: int = 512,
 
     first = router.run(prompt, task_type=task_type, max_tokens=max_tokens)
     text = first.get("text", "")
+    confident = confidence(text)
     steps.append({"stage": "primary", "backend": first["decision"]["label"],
-                  "confident": confidence(text)})
+                  "confident": confident,
+                  "reason": "model confident" if confident else "low-confidence, escalating"})
     if confidence(text):
         return {"strategy": "cascade", "answer": text, "escalated": False, "steps": steps}
 
