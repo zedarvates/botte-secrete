@@ -45,3 +45,6 @@ built to lean on local hardware and cheap models wherever possible.
 
 Run the relevant tests, keep diffs minimal, and don't commit machine-specific
 generated files (e.g. `configs/llm-endpoints.json`, `.mcp.json` — both ignored).
+
+## Botte Secrète policy
+This project follows `.botte/policy.md` (prefer local models for cheap work, improve prompts locally, run `/checkup` after updates). Read it.
