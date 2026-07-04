@@ -40,7 +40,7 @@ def _norm(src: str) -> str:
     return "\n".join(out)
 
 
-def duplication_scan(project: Path, min_lines: int = 5, top: int = 15) -> dict:
+def duplication_scan(project: Path, min_lines: int = 8, top: int = 15) -> dict:
     """Find duplicate function/method bodies across the project's Python files."""
     buckets: dict[str, list] = defaultdict(list)
     files = 0
