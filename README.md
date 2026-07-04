@@ -1,10 +1,9 @@
 # 🧦 Botte Secrète — Multi-Agent Token Optimization Platform
 
 [![CI](https://github.com/zedarvates/botte-secrete/actions/workflows/ci.yml/badge.svg)](https://github.com/zedarvates/botte-secrete/actions)
-[![Tests](https://img.shields.io/badge/tests-138%2F138-brightgreen)](https://github.com/zedarvates/botte-secrete)
-[![License](https://img.shields.io/badge/license-MIT-blue)](https://github.com/zedarvates/botte-secrete/blob/main/LICENSE)
+[![Tests](https://img.shields.io/badge/tests-214%2B-brightgreen)](https://github.com/zedarvates/botte-secrete)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/)
-[![Release](https://img.shields.io/badge/release-v1.5.0-blue)](https://github.com/zedarvates/botte-secrete/releases)
+[![Release](https://img.shields.io/badge/release-v1.6.0-blue)](https://github.com/zedarvates/botte-secrete/releases)
 [![Token Savings](https://img.shields.io/badge/token%20savings-65%25-blue)](https://github.com/zedarvates/botte-secrete)
 [![GPG Signed](https://img.shields.io/badge/commits-GPG%20signed-green)](https://github.com/zedarvates/botte-secrete)
 
@@ -22,13 +21,90 @@ tells you what hardware/infra changes would cut cost further.
 
 | Metric | Value |
 |--------|-------|
-| Tests | **138 passed, 0 failed** (51 e2e + 87 module) |
-| Skills | **50+** (code audit, fix, routing, MCP, NLP, solvers, security, docs) |
+| Tests | **214+ passing** (77 pytest + standalone) |
+| Skills | **57+** (code audit, fix, routing, MCP, NLP, solvers, security, docs, compression, memory) |
 | Micro-NN | **4 models** (binary_router, effort_classifier, anomaly_detector, error_classifier) — grounding tracked by `nn_audit` |
 | Token savings | **~65%** combined (reported by users) |
 | Dependencies | `numpy`, `pydantic`, `tree-sitter` — see [`requirements.txt`](requirements.txt) |
 | License | **MIT** — free forever |
 | Deploy | One command: `python -m skills.bootstrap.cli /your-project` |
+
+## ✨ Fable6 — New in v1.6.0
+
+7 new skills from the Fable6 R&D phase (Headroom, Ponytail, Stanford AutoMem):
+
+### 🗜️ Universal Compressor (`skills/universal_compressor/`)
+Multi-type content compression before it reaches the LLM. Auto-detects type, applies best strategy, reversible (CCR-like).
+
+```bash
+python -m skills.universal_compressor.cli compress file.log --type log
+python -m skills.universal_compressor.mcp_server       # MCP mode
+```
+
+| Type | Strategy | Savings |
+|------|----------|---------|
+| `text` | Dedup lines, collapse blanks | 0-30% |
+| `json` | Compact + truncate arrays | 20-60% |
+| `log` | Pattern dedup + sampling | 80-98% |
+| `tool_output` | Head+tail, strip ANSI | 50-90% |
+| `code` | Strip comments, collapse imports | 20-40% |
+
+### 🪜 Decision Ladder (`skills/decision_ladder/`)
+Ponytail-inspired YAGNI enforcement. Before writing code, climb 4 rungs:
+
+```python
+from skills.decision_ladder.ladder import climb
+result = climb("parse JSON config")  # → rung="stdlib", saved_lines=15
+```
+
+`stdlib` → `regex_oneliner` → `existing_module` → `new_code`
+
+### 💾 AutoMemory (`skills/auto_memory/`)
+Memory as a learnable skill (Stanford AutoMem). Store, recall, compress, and consolidate agent memories.
+
+```python
+from skills.auto_memory import init_memory, store_memory, recall_memory
+bank = init_memory()
+store_memory("user_pref.format", "concise", category="user_pref")
+```
+
+Tracks: memory bank, trajectory recorder, pattern extraction, bottleneck compression.
+
+### 📊 Dashboard (`skills/dashboard/`)
+Live metrics visualization for all botte-secrete skills.
+
+```bash
+python -m skills.dashboard.api        # Start on http://localhost:8765
+open http://localhost:8765            # View dashboard
+```
+
+Shows: test counts, lines saved, avoidable %, memory stats, compression ratios.
+
+### 🔗 Hermes Bridge (`skills/hermes_bridge/`)
+MCP gateway connecting Hermes Agent to botte-secrete tools.
+
+```bash
+python -m skills.hermes_bridge.mcp_server  # MCP stdio server
+```
+
+Exposes 4 tools: `decision_ladder`, `compress_content`, `memory_stats`, `dashboard_stats`.
+
+### 🧭 Micro-NN Router (`skills/nn_router/`)
+4-tier task routing by complexity: nano (rules) → micro (0.5B) → medium (4B) → macro (API).
+
+```python
+from skills.nn_router.router import route
+tier, model, score = route("audit code quality")  # → ("medium", "gemma-4-e2b", 4)
+```
+
+### 🔒 Security Scanner (`skills/security_scanner/`)
+Lightweight vulnerability detection: credential leaks, shell injection, path traversal.
+
+```python
+from skills.security_scanner.scanner import scan
+issues = scan_file("config.py")
+# → {"total": 2, "by_severity": {"critical": 1, "high": 0, ...}}
+```
 
 ## What It Does
 
@@ -86,7 +162,8 @@ Before running anything, here's exactly what Botte Secrète changes on your mach
 
 **Verify for yourself:** the entire test suite runs offline:
 ```bash
-python scripts/run_tests.py   # 138 tests, 0 cloud calls
+python -m pytest --rootdir=. -q     # 77 Fable6 tests (0 cloud calls)
+python scripts/run_tests.py         # 138+ standalone tests (0 cloud calls)
 ```
 
 ## ✅ Smoke Test
@@ -96,9 +173,10 @@ Clone, verify, and run in under 60 seconds:
 ```bash
 git clone https://github.com/zedarvates/botte-secrete.git
 cd botte-secrete
-python scripts/run_tests.py                    # 583 tests — everything works
-python -m skills.llm_backends.cli scan         # detect local LLMs
-python -m skills.auto_router.cli route "hello" # 0-token routing decision
+python -m pytest --rootdir=.                    # 77 Fable6 tests
+python scripts/run_tests.py                     # 214+ total — everything works
+python -m skills.llm_backends.cli scan          # detect local LLMs
+python -m skills.auto_router.cli route "hello"  # 0-token routing decision
 ```
 
 ## 📋 Copy-paste prompts
