@@ -64,3 +64,6 @@ configs/llm-endpoints.json
 # Per-project deployer output (machine-specific paths + config)
 .botte/
 !.botte/policy.md
+
+# Generated artifacts
+fix-report.json

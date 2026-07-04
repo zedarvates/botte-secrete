@@ -48,3 +48,8 @@ generated files (e.g. `configs/llm-endpoints.json`, `.mcp.json` — both ignored
 
 ## Botte Secrète policy
 This project follows `.botte/policy.md` (prefer local models for cheap work, improve prompts locally, run `/checkup` after updates). Read it.
+
+## Token-efficient workflows
+- **Batch independent tool calls**: read multiple files, search multiple patterns, extract multiple URLs in ONE turn instead of chaining them sequentially. Each round-trip costs context tokens.
+- **Never re-read after edit**: the edit tool guarantees the post-edit state. Only re-read a file when you need it for a DIFFERENT purpose.
+- **Cache checkup/bench results**: if you ran `checkup .` or `bench` less than 5 min ago with no file changes since, use the cached result from `.botte-cache/` instead of re-scanning.
