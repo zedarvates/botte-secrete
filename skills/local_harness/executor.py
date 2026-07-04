@@ -50,14 +50,23 @@ def _default_escalate(task: str, tier: str) -> str:
     return (fusion.cascade(task).get("answer") or "")
 
 
-def _build_prompt(spec: HarnessSpec, task: str, context: Optional[str]) -> str:
+def _build_prompt(spec: HarnessSpec, task: str, context: Optional[str]) -> tuple[str, str]:
+    """Build (system_prompt, user_prompt) for KV-cache-friendly local inference.
+
+    The system prompt is STABLE across calls — same instruction every time,
+    enabling Ollama/LM Studio prefix caching (no re-computation of KV-cache
+    for the shared prefix). The user prompt carries the variable context + task.
+    """
+    system = (
+        "You are a precise, honest assistant. Answer the task using ONLY the "
+        "context provided. If the answer is not in the context, reply exactly "
+        f"'{spec.escalate_token}'. Never guess or fabricate."
+    )
     if spec.ground_source != "none" and context:
-        return (
-            f"Answer the task using ONLY the context below. If the answer is not in "
-            f"the context, reply exactly '{spec.escalate_token}'.\n\n"
-            f"## Context\n{context}\n\n## Task\n{task}"
-        )
-    return task
+        user = f"## Context\n{context}\n\n## Task\n{task}"
+    else:
+        user = task
+    return system, user
 
 
 def _consensus(outputs: list[dict], agree: int) -> Optional[dict]:
@@ -101,13 +110,13 @@ def run_harness(spec: HarnessSpec, task: str, *, task_type: str = "",
         return _escalate(f"gate: task_type '{task_type}' not allowed", source="gated")
 
     # 2·3 · GROUND + CONSTRAIN — structured output, optionally grounded.
-    prompt = _build_prompt(spec, task, context)
+    sys_prompt, user_prompt = _build_prompt(spec, task, context)
     client = client or _default_client()
     outputs: list[dict] = []
     for _ in range(max(1, spec.samples)):
         try:
-            outputs.append(client.chat_json(prompt, schema=spec.output_schema,
-                                             max_tokens=spec.max_tokens))
+            outputs.append(client.chat_json(user_prompt, schema=spec.output_schema,
+                                             system=sys_prompt, max_tokens=spec.max_tokens))
         except Exception as e:  # noqa: BLE001 — local failure ⇒ escalate, don't crash
             return _escalate(f"local call failed: {e}")
 
