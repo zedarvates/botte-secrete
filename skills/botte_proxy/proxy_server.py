@@ -70,9 +70,11 @@ class ProxyStats:
             self.errors += 1
         self.requests_by_model[model] = self.requests_by_model.get(model, 0) + 1
         if model not in self.savings_by_model:
-            self.savings_by_model[model] = {"input_saved": 0, "input_total": 0}
+            self.savings_by_model[model] = {"input_saved": 0, "input_total": 0, "output_saved": 0, "output_total": 0}
         self.savings_by_model[model]["input_saved"] += input_original - input_compressed
         self.savings_by_model[model]["input_total"] += input_original
+        self.savings_by_model[model]["output_saved"] += output_original - output_compressed
+        self.savings_by_model[model]["output_total"] += output_original
 
     def to_dict(self) -> dict:
         return {
@@ -221,37 +223,59 @@ def create_proxy_app(target_url: str, api_key: Optional[str] = None):
             self.wfile.write(body)
 
         def _compress_and_forward_chat(self, body_dict: dict) -> dict:
-            """Compress a chat/completions request and forward it."""
+            """Compress a chat/completions request and forward it.
+            
+            Also applies output reduction:
+            - Verbosity steering (system prompt injection) on the request
+            - Content trimming on the response
+            """
             start = time.time()
             model = body_dict.get("model", "unknown")
             messages = body_dict.get("messages", [])
 
-            # Compress messages
-            compressed_messages, orig_tokens, comp_tokens = compress_messages(messages)
+            # ═══ Output reduction: verbosity steering ═══
+            from skills.botte_proxy.output_shaper import (
+                add_verbosity_steer, shape_response, should_shape,
+            )
+            apply_output_shaping = should_shape()
+
+            if apply_output_shaping:
+                shaped_messages = add_verbosity_steer(messages)
+            else:
+                shaped_messages = messages
+
+            # Compress messages (input side)
+            compressed_messages, orig_tokens, comp_tokens = compress_messages(shaped_messages)
 
             # Build compressed request
             compressed_body = dict(body_dict)
             compressed_body["messages"] = compressed_messages
 
-            # Add compression metadata header
             body_bytes = json.dumps(compressed_body).encode()
 
             # Forward
             response = self._forward_request(body_bytes)
             elapsed_ms = (time.time() - start) * 1000
 
-            # Estimate output tokens from response
+            # ═══ Output reduction: shape the response ═══
             output_original = 0
             output_compressed = 0
             try:
                 if response.get("body"):
                     resp_json = json.loads(response["body"])
+                    if "choices" in resp_json:
+                        shaped_json, output_original, output_compressed = shape_response(
+                            resp_json, shaped=apply_output_shaping
+                        )
+                        response["body"] = json.dumps(shaped_json).encode()
+                    # Also parse usage info
                     if "usage" in resp_json:
                         usage = resp_json["usage"]
-                        output_original = usage.get("completion_tokens", 0)
-                        # Estimate what output tokens would have been without compression
-                        output_compressed = output_original
-            except (json.JSONDecodeError, KeyError):
+                        if output_original == 0:
+                            output_original = usage.get("completion_tokens", 0)
+                        if output_compressed == 0:
+                            output_compressed = output_original
+            except (json.JSONDecodeError, KeyError, Exception) as e:
                 pass
 
             # Record stats
@@ -268,7 +292,11 @@ def create_proxy_app(target_url: str, api_key: Optional[str] = None):
 
             # Log
             savings = round((1 - comp_tokens / max(orig_tokens, 1)) * 100, 1)
-            print(f"  📊 {model}: {orig_tokens} → {comp_tokens} tok ({savings}% saved) in {elapsed_ms:.0f}ms")
+            out_savings = ""
+            if output_original > 0:
+                out_pct = round((1 - output_compressed / max(output_original, 1)) * 100, 1)
+                out_savings = f" / out: {output_original}→{output_compressed} ({out_pct}%)"
+            print(f"  📊 {model}: in {orig_tokens}→{comp_tokens} tok ({savings}% saved){out_savings} in {elapsed_ms:.0f}ms")
 
             return response
 
@@ -305,6 +333,10 @@ th {{ color: #9b59b6; }}
 <div class="card">
   <div class="value">{stats['total_input_tokens_saved']:,} / {stats['total_input_tokens_original']:,}</div>
   <div class="label">Input Tokens Saved / Total ({stats['input_savings_pct']}%)</div>
+</div>
+<div class="card">
+  <div class="value">{stats['total_output_tokens_saved']:,} / {stats['total_output_tokens_original']:,}</div>
+  <div class="label">Output Tokens Saved / Total ({round(stats['total_output_tokens_saved']/max(stats['total_output_tokens_original'],1)*100,1)}%)</div>
 </div>
 <div class="card">
   <div class="value">{stats['avg_time_ms']} ms</div>
