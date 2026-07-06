@@ -34,6 +34,30 @@ class ProxyStats:
     savings_by_model: dict[str, dict] = field(default_factory=dict)
     start_time: float = field(default_factory=time.time)
 
+    # Prix par million de tokens (USD) — taux standard
+    # Basé sur les prix publics des providers populaires
+    MODEL_PRICES: dict[str, tuple[float, float]] = field(default_factory=lambda: {
+        "claude":      (3.00,  15.00),   # Claude Sonnet 4
+        "claude-opus": (15.00, 75.00),   # Claude Opus 4
+        "claude-haiku":(0.80,  4.00),    # Claude Haiku 3.5
+        "gpt":         (2.50,  10.00),   # GPT-4o
+        "gpt-4":       (2.50,  10.00),
+        "gpt-4o":      (2.50,  10.00),
+        "gpt-4.1":     (2.00,  8.00),
+        "gpt-4.5":     (75.00, 150.00),  # GPT-4.5 Preview
+        "deepseek":    (0.50,  2.00),    # DeepSeek-V3
+        "deepseek-r1": (0.55,  2.19),
+        "gemini":      (0.10,  0.40),    # Gemini 2.5 Flash
+        "gemini-pro":  (1.25,  5.00),    # Gemini 2.5 Pro
+        "qwen":        (0.40,  0.80),    # Qwen 2.5
+        "mistral":     (2.00,  6.00),    # Mistral Large
+        "llama":       (0.25,  1.00),    # Llama 3 (via provider)
+        "codestral":   (1.00,  3.00),    # Codestral
+        "sonnet":      (3.00,  15.00),   # Claude Sonnet alias
+        "haiku":       (0.80,  4.00),
+        "default":     (3.00,  15.00),   # Fallback: prix Sonnet
+    })
+
     @property
     def input_savings_ratio(self) -> float:
         if self.total_input_tokens_original == 0:
@@ -49,6 +73,100 @@ class ProxyStats:
     @property
     def uptime_seconds(self) -> float:
         return time.time() - self.start_time
+
+    def _model_key(self, model: str) -> str:
+        """Extract pricing key from model name."""
+        mlower = model.lower()
+        for key in self.MODEL_PRICES:
+            if key in mlower:
+                return key
+        return "default"
+
+    def input_cost_per_1m(self, model: str) -> float:
+        """Input cost per 1M tokens for a model."""
+        key = self._model_key(model)
+        return self.MODEL_PRICES.get(key, self.MODEL_PRICES["default"])[0]
+
+    def output_cost_per_1m(self, model: str) -> float:
+        """Output cost per 1M tokens for a model."""
+        key = self._model_key(model)
+        return self.MODEL_PRICES.get(key, self.MODEL_PRICES["default"])[1]
+
+    def dollars_saved(self, model: str = "") -> tuple[float, float]:
+        """(input_saved_usd, output_saved_usd) for a model or total."""
+        def _calc(saved_orig: int, saved_now: int, price_per_1m: float) -> float:
+            diff = saved_orig - saved_now
+            return round(diff / 1_000_000 * price_per_1m, 2)
+
+        if model:
+            sm = self.savings_by_model.get(model, {})
+            inp = _calc(sm.get("input_total", 0), sm.get("input_total", 0) - sm.get("input_saved", 0), self.input_cost_per_1m(model))
+            oup = _calc(sm.get("output_total", 0), sm.get("output_total", 0) - sm.get("output_saved", 0), self.output_cost_per_1m(model))
+            return (inp, oup)
+
+        total_input_cost = self.total_input_tokens_original / 1_000_000 * self.input_cost_per_1m("default")
+        input_saved_cost = self.total_input_tokens_saved / 1_000_000 * self.input_cost_per_1m("default")
+        total_output_cost = self.total_output_tokens_original / 1_000_000 * self.output_cost_per_1m("default")
+        output_saved_cost = self.total_output_tokens_saved / 1_000_000 * self.output_cost_per_1m("default")
+
+        # More precise: average per-model pricing
+        inp_total = 0.0
+        inp_saved = 0.0
+        oup_total = 0.0
+        oup_saved = 0.0
+        for mdl, sm in self.savings_by_model.items():
+            inp_p = self.input_cost_per_1m(mdl)
+            oup_p = self.output_cost_per_1m(mdl)
+            inp_total += sm.get("input_total", 0) / 1_000_000 * inp_p
+            inp_saved += sm.get("input_saved", 0) / 1_000_000 * inp_p
+            oup_total += sm.get("output_total", 0) / 1_000_000 * oup_p
+            oup_saved += sm.get("output_saved", 0) / 1_000_000 * oup_p
+
+        return (round(inp_saved, 2), round(oup_saved, 2))
+
+    def projected_monthly_savings(self, daily_requests: int = 100) -> dict:
+        """Project monthly savings based on current averages."""
+        if self.total_requests == 0:
+            return {"monthly_savings_usd": 0, "yearly_savings_usd": 0}
+
+        per_request_input_saved = self.total_input_tokens_saved / self.total_requests
+        per_request_output_saved = self.total_output_tokens_saved / self.total_requests
+        avg_input_price = self.input_cost_per_1m("default")
+        avg_output_price = self.output_cost_per_1m("default")
+
+        monthly_input_saved = per_request_input_saved * daily_requests * 30
+        monthly_output_saved = per_request_output_saved * daily_requests * 30
+        monthly_usd = round(monthly_input_saved / 1_000_000 * avg_input_price +
+                           monthly_output_saved / 1_000_000 * avg_output_price, 2)
+
+        return {
+            "monthly_savings_usd": monthly_usd,
+            "yearly_savings_usd": round(monthly_usd * 12, 2),
+            "avg_daily_requests": daily_requests,
+        }
+
+    def to_dict(self) -> dict:
+        input_saved_usd, output_saved_usd = self.dollars_saved()
+        proj = self.projected_monthly_savings()
+        return {
+            "total_requests": self.total_requests,
+            "total_input_tokens_saved": self.total_input_tokens_saved,
+            "total_input_tokens_original": self.total_input_tokens_original,
+            "input_savings_pct": self.input_savings_ratio,
+            "total_output_tokens_saved": self.total_output_tokens_saved,
+            "total_output_tokens_original": self.total_output_tokens_original,
+            "input_cost_saved_usd": input_saved_usd,
+            "output_cost_saved_usd": output_saved_usd,
+            "total_cost_saved_usd": round(input_saved_usd + output_saved_usd, 2),
+            "projected_monthly_usd": proj["monthly_savings_usd"],
+            "projected_yearly_usd": proj["yearly_savings_usd"],
+            "avg_time_ms": self.avg_time_ms,
+            "errors": self.errors,
+            "uptime_seconds": round(self.uptime_seconds, 1),
+            "requests_by_model": self.requests_by_model,
+            "savings_by_model": self.savings_by_model,
+            "start_time": datetime.fromtimestamp(self.start_time).isoformat(),
+        }
 
     def record_request(
         self,
@@ -75,22 +193,6 @@ class ProxyStats:
         self.savings_by_model[model]["input_total"] += input_original
         self.savings_by_model[model]["output_saved"] += output_original - output_compressed
         self.savings_by_model[model]["output_total"] += output_original
-
-    def to_dict(self) -> dict:
-        return {
-            "total_requests": self.total_requests,
-            "total_input_tokens_saved": self.total_input_tokens_saved,
-            "total_input_tokens_original": self.total_input_tokens_original,
-            "input_savings_pct": self.input_savings_ratio,
-            "total_output_tokens_saved": self.total_output_tokens_saved,
-            "total_output_tokens_original": self.total_output_tokens_original,
-            "avg_time_ms": self.avg_time_ms,
-            "errors": self.errors,
-            "uptime_seconds": round(self.uptime_seconds, 1),
-            "requests_by_model": self.requests_by_model,
-            "savings_by_model": self.savings_by_model,
-            "start_time": datetime.fromtimestamp(self.start_time).isoformat(),
-        }
 
 
 # Global stats singleton
@@ -349,6 +451,14 @@ th {{ color: #9b59b6; }}
 <div class="card">
   <div class="value">{stats['total_output_tokens_saved']:,} / {stats['total_output_tokens_original']:,}</div>
   <div class="label">Output Tokens Saved / Total ({round(stats['total_output_tokens_saved']/max(stats['total_output_tokens_original'],1)*100,1)}%)</div>
+</div>
+<div class="card" style="border: 2px solid #2ecc71;">
+  <div class="value" style="color: #2ecc71;">${stats['total_cost_saved_usd']}</div>
+  <div class="label">💰 Total Cost Saved (since start)</div>
+</div>
+<div class="card" style="border: 2px solid #f1c40f;">
+  <div class="value" style="color: #f1c40f;">${stats['projected_monthly_usd']}/mo</div>
+  <div class="label">📈 Projected Monthly Savings (est.)</div>
 </div>
 <div class="card">
   <div class="value">{stats['avg_time_ms']} ms</div>
