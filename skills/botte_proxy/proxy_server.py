@@ -244,8 +244,14 @@ def create_proxy_app(target_url: str, api_key: Optional[str] = None):
             else:
                 shaped_messages = messages
 
+            # ═══ CacheAligner: normalize prefixes for KV cache hits ═══
+            from skills.botte_proxy.cache_aligner import align_messages
+            aligned_messages, cache_info = align_messages(shaped_messages)
+            cache_hit = cache_info.get("hit", False)
+            cache_savings = cache_info.get("estimated_saved_tokens", 0)
+
             # Compress messages (input side)
-            compressed_messages, orig_tokens, comp_tokens = compress_messages(shaped_messages)
+            compressed_messages, orig_tokens, comp_tokens = compress_messages(aligned_messages)
 
             # Build compressed request
             compressed_body = dict(body_dict)
@@ -296,21 +302,27 @@ def create_proxy_app(target_url: str, api_key: Optional[str] = None):
             if output_original > 0:
                 out_pct = round((1 - output_compressed / max(output_original, 1)) * 100, 1)
                 out_savings = f" / out: {output_original}→{output_compressed} ({out_pct}%)"
-            print(f"  📊 {model}: in {orig_tokens}→{comp_tokens} tok ({savings}% saved){out_savings} in {elapsed_ms:.0f}ms")
+            cache_tag = " [cache]" if cache_hit else ""
+            print(f"  📊 {model}: in {orig_tokens}→{comp_tokens} tok ({savings}% saved){out_savings}{cache_tag} in {elapsed_ms:.0f}ms")
 
             return response
 
         def _handle_stats(self):
             """Return proxy statistics as JSON."""
+            from skills.botte_proxy.cache_aligner import cache_stats
+            data = get_stats().to_dict()
+            data["cache"] = cache_stats()
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
             self.send_header("Access-Control-Allow-Origin", "*")
             self.end_headers()
-            self.wfile.write(json.dumps(get_stats().to_dict()).encode())
+            self.wfile.write(json.dumps(data).encode())
 
         def _handle_dashboard(self):
             """Return a simple HTML dashboard."""
+            from skills.botte_proxy.cache_aligner import cache_stats
             stats = get_stats().to_dict()
+            cstats = cache_stats()
             html = f"""<!DOCTYPE html>
 <html><head><title>Botte Proxy Dashboard</title>
 <style>
@@ -345,6 +357,14 @@ th {{ color: #9b59b6; }}
 <div class="card">
   <div class="value">{stats['errors']}</div>
   <div class="label">Errors</div>
+</div>
+<div class="card">
+  <div class="value">{cstats['hit_rate_pct']}%</div>
+  <div class="label">Cache Hit Rate ({cstats['cache_hits']} hits / {cstats['cache_misses']} misses)</div>
+</div>
+<div class="card">
+  <div class="value">{cstats['total_estimated_saved_tokens']:,}</div>
+  <div class="label">Tokens Saved by Cache</div>
 </div>
 <h2>Per-Model Savings</h2>
 <table>
