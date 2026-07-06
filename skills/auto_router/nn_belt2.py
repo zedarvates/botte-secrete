@@ -19,7 +19,7 @@ from typing import Optional
 
 # ── Confidence thresholds ──────────────────────────────────────
 
-CONFIDENCE = 0.66  # Seuil commun, ajustable par projet
+CONFIDENCE = 0.50  # Seuil commun — abaissé pour les modèles Belt 2.0
 
 
 def _predict(model_name: str, values: dict[str, float],
