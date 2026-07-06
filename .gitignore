@@ -67,3 +67,6 @@ configs/llm-endpoints.json
 
 # Generated artifacts
 fix-report.json
+*.vtt
+.venv312/
+transcript.fr.srt
