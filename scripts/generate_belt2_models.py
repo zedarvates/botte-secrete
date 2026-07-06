@@ -45,7 +45,8 @@ def make_model(name: str) -> dict:
     return {
         "model": name,
         "architecture": "feedforward",
-        "layers": [
+        "layers": [n_in, n_hidden, n_out],  # layer sizes for _predict_python
+        "layer_config": [                     # detailed layer info
             {
                 "name": "hidden",
                 "weights": w1.tolist(),
@@ -65,6 +66,16 @@ def make_model(name: str) -> dict:
         "num_samples": 0,
         "accuracy": 0.0,
         "generated": "bootstrap",
+        # Flat formats for _predict_python compatibility
+        "activations": ["relu", "softmax"],
+        "weights": [
+            w1.flatten().tolist(),   # input → hidden
+            w2.flatten().tolist(),   # hidden → output
+        ],
+        "biases": [
+            b1.tolist(),
+            b2.tolist(),
+        ],
     }
 
 

@@ -14,7 +14,50 @@ import sys
 from pathlib import Path
 
 from skills.console_utf8 import force_utf8
-from skills.security_scanner import scan_dir, scan_report
+from skills.security_scanner import scan_file, scan_directory
+
+
+SEVERITY_ORDER = {"critical": 4, "high": 3, "medium": 2, "low": 1}
+
+
+def _filter_by_severity(issues: list[dict], min_severity: str) -> list[dict]:
+    """Keep only issues at or above min_severity."""
+    min_level = SEVERITY_ORDER.get(min_severity, 0)
+    return [i for i in issues if SEVERITY_ORDER.get(i.get("severity", "low"), 0) >= min_level]
+
+
+def _format_compact(issues: list[dict], target: str) -> str:
+    if not issues:
+        return f"✅ {target}: clean\n"
+    lines = [f"🔍 {target}: {len(issues)} issue(s)"]
+    for i in issues:
+        sev = i.get("severity", "?").upper()
+        loc = f"{i.get('line', '?')}:{i.get('column', '?')}"
+        snippet = i.get("snippet", "")[:60]
+        lines.append(f"  [{sev}] L{loc}  {snippet}")
+    return "\n".join(lines) + "\n"
+
+
+def _format_json(issues: list[dict], target: str) -> str:
+    return json.dumps({"target": target, "issues": issues, "total": len(issues)}, indent=2)
+
+
+def _format_markdown(issues: list[dict], target: str) -> str:
+    from datetime import datetime
+    lines = [f"# 🔬 Security Scan: {target}", f"_Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}_\n"]
+    if not issues:
+        lines.append("✅ **Clean** — no issues found.")
+        return "\n".join(lines)
+    lines.append(f"**{len(issues)} issue(s) detected**\n")
+    lines.append("| Severity | Line | Issue | Snippet |")
+    lines.append("|----------|------|-------|---------|")
+    for i in issues:
+        sev = i.get("severity", "?")
+        line = i.get("line", "?")
+        issue = i.get("issue", "?")
+        snippet = i.get("snippet", "")[:40]
+        lines.append(f"| {sev} | {line} | {issue} | `{snippet}` |")
+    return "\n".join(lines)
 
 
 def main(argv=None) -> int:
@@ -24,70 +67,69 @@ def main(argv=None) -> int:
 
     s = sub.add_parser("scan", help="Scan a file or directory for security issues")
     s.add_argument("target", help="File or directory to scan")
-    s.add_argument("--fail-on", choices=["critical", "error", "warning", "info"],
-                   default="error", help="Minimum severity to fail on (default: error)")
+    s.add_argument("--fail-on", choices=["critical", "high", "medium", "low", "info"],
+                   default="high", help="Minimum severity to report (default: high)")
     s.add_argument("--format", choices=["compact", "json", "markdown"],
                    default="compact", help="Output format (default: compact)")
     s.add_argument("--output", "-o", default=None, help="Write output to file")
     s.add_argument("--verbose", "-v", action="store_true", help="Show progress")
-    s.add_argument("--no-ast", action="store_true", help="Skip AST analysis")
-    s.add_argument("--workers", type=int, default=8, help="Parallel workers")
 
     s = sub.add_parser("audit", help="Full audit with markdown report")
     s.add_argument("target", help="File or directory to audit")
     s.add_argument("--output", "-o", default=None)
-    s.add_argument("--no-ast", action="store_true")
 
     args = p.parse_args(argv)
 
+    target = str(Path(args.target).resolve())
+    p_target = Path(target)
+
+    if args.verbose:
+        print(f"🔍 Scanning: {target}")
+
+    if p_target.is_file():
+        result = scan_file(target)
+        issues = result.get("issues", [])
+    elif p_target.is_dir():
+        result = scan_directory(target)
+        issues = result.get("issues", [])
+    else:
+        print(f"❌ Target not found: {target}", file=sys.stderr)
+        return 1
+
+    # Filter by severity (fail-on means min severity to include)
     if args.cmd == "scan":
-        target = str(Path(args.target).resolve())
+        min_sev = args.fail_on
+        if min_sev == "info":
+            displayed = issues
+        else:
+            displayed = _filter_by_severity(issues, min_sev)
+    else:
+        displayed = issues
 
+    # Format output
+    fmt = getattr(args, "format", "markdown")
+    if fmt == "json":
+        output = _format_json(displayed, target)
+    elif fmt == "markdown" or args.cmd == "audit":
+        output = _format_markdown(displayed, target)
+    else:
+        output = _format_compact(displayed, target)
+
+    if args.output:
+        Path(args.output).write_text(output, encoding="utf-8")
         if args.verbose:
-            print(f"🔍 Scanning: {target}")
-            print(f"   Fail-on: {args.fail_on}")
-            print(f"   AST:     {'disabled' if args.no_ast else 'enabled'}")
+            print(f"   Output written to {args.output}")
+    else:
+        print(output)
 
-        findings = scan_dir(target, fail_on=args.fail_on,
-                            max_workers=args.workers, do_ast=not args.no_ast)
-        report = scan_report(findings)
-
-        if args.format == "json":
-            output = report.to_json()
-        elif args.format == "markdown":
-            output = report.markdown()
-        else:
-            output = report.compact()
-
-        if args.output:
-            Path(args.output).write_text(output, encoding="utf-8")
-            if args.verbose:
-                print(f"   Output written to {args.output}")
-        else:
-            print(output)
-
-        # Exit with code: 0 = clean, 1 = critical, 2 = errors, 3 = warnings only
-        if report.has_critical:
-            return 1
-        if report.has_errors:
-            return 2
-        if report.count > 0:
-            return 0  # warnings only — still OK
-        return 0
-
-    elif args.cmd == "audit":
-        target = str(Path(args.target).resolve())
-        findings = scan_dir(target, fail_on="info", do_ast=not args.no_ast)
-        report = scan_report(findings)
-        output = report.markdown()
-
-        if args.output:
-            Path(args.output).write_text(output, encoding="utf-8")
-        else:
-            print(output)
-        return 0
-
-    return 1
+    # Exit code: 0 = clean, non-zero if critical/high issues
+    criticals = sum(1 for i in displayed if i.get("severity") == "critical")
+    highs = sum(1 for i in displayed if i.get("severity") == "high")
+    if criticals:
+        return 1
+    if highs:
+        return 2
+    return 0
 
 
 if __name__ == "__main__":
