@@ -488,6 +488,28 @@ TOOLS = [
                        "and the recommended target (LRU spread to idle boxes / fastest).",
         "inputSchema": {"type": "object", "properties": {"scan_subnet": {"type": "boolean"}}},
     },
+    {
+        "name": "bench_run",
+        "description": "Run the botte-secrete benchmark and return savings metrics "
+                       "(token savings, routing accuracy, local-vs-cloud ratio). 0 cloud tokens.",
+        "inputSchema": {"type": "object", "properties": {
+            "project": {"type": "string", "description": "Project path. Default: current."}}},
+    },
+    {
+        "name": "doctor",
+        "description": "Full project health checkup — directives, infra, security, "
+                       "micro-NN grounding, host prefix analysis. Equivalent to checkup CLI. "
+                       "0 cloud tokens.",
+        "inputSchema": {"type": "object", "properties": {
+            "project": {"type": "string", "description": "Project path. Default: current."}}},
+    },
+    {
+        "name": "fleet_status",
+        "description": "Aggregate fleet status across all registered projects — "
+                       "token savings, routing stats, drift items per project.",
+        "inputSchema": {"type": "object", "properties": {
+            "sort": {"type": "string", "description": "Sort by: tokens_saved, loc, fixes."}}},
+    },
 ]
 
 

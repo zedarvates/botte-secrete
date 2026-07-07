@@ -70,6 +70,16 @@ def main() -> int:
     except Exception:
         _ok("botte_local_chat dispatch never raises (error or real result)", False, state)
 
+    # registry (from main's implementation) — both bridge styles coexist
+    from skills.hermes_bridge.registry import SkillRegistry, get_registry, init_registry
+    reg = SkillRegistry()
+    _ok("registry lists skills", isinstance(reg.list_skills(), list), state)
+    _ok("get_registry is a singleton", get_registry() is get_registry(), state)
+    _ok("init_registry loads skills", len(init_registry()._skills) > 0, state)
+    reg.register_function("test_func", lambda x: x * 2)
+    _ok("registry register/get function round-trips",
+        reg.get_function("test_func")(5) == 10, state)
+
     passed, failed = state
     print(f"\nRESULT: {passed} passed, {failed} failed")
     return 0 if failed == 0 else 1

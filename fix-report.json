@@ -1,8 +1,0 @@
-{
-  "project": ".",
-  "fixed": 26,
-  "total": 27,
-  "remaining": [
-    "skills/mousquetaires/scripts/aramis_optimize.py \u2014 deduplication (manual)"
-  ]
-}

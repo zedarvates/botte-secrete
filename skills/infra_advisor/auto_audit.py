@@ -40,7 +40,7 @@ def _norm(src: str) -> str:
     return "\n".join(out)
 
 
-def duplication_scan(project: Path, min_lines: int = 5, top: int = 15) -> dict:
+def duplication_scan(project: Path, min_lines: int = 8, top: int = 15) -> dict:
     """Find duplicate function/method bodies across the project's Python files."""
     buckets: dict[str, list] = defaultdict(list)
     files = 0
@@ -111,6 +111,45 @@ def auto_audit(project: str | Path = ".", scan_subnet: bool = False) -> dict:
         out["skill_catalog_size"] = len(load_catalog())
     except Exception:
         out["skill_catalog_size"] = 0
+
+    # host skill catalog — estimate runtime overhead from Hermes
+    try:
+        from skills.context_profiler import profile_host
+        hp = profile_host(str(project))
+        out["host_prefix"] = {
+            "total": hp["total_prefix_tokens"],
+            "host_tokens": hp["breakdown"]["host"],
+            "host_pct": hp["breakdown"]["host_pct"],
+            "host_skill_catalog_tokens": hp["components"]["host_skill_catalog"],
+            "host_skill_count": hp["counts"]["host_skills"],
+            "reducible": hp["reducible_tokens"],
+        }
+        hsc = hp["components"]["host_skill_catalog"]
+        if hsc > 5000:
+            out.setdefault("infra_tips", []).append({
+                "priority": "P1",
+                "category": "infra",
+                "title": f"Host skill catalog ~{hsc:,} tok ({hp['counts']['host_skills']} skills) — use lazy loading",
+                "why": "The runtime injects all skill descriptions every turn. "
+                       "This is the single largest source of token waste for any agent session.",
+                "impact": f"Switch host to find_skills (keyword search): saves ~{hsc:,} tok/turn. "
+                         "See `python -m skills.context_profiler.cli . --host` for full breakdown.",
+            })
+
+        # Godot/Blender MCP: detect unused heavyweight MCP servers
+        mcp_tokens = hp["components"].get("mcp_servers", 0)
+        if mcp_tokens > 500:
+            out.setdefault("infra_tips", []).append({
+                "priority": "P2",
+                "category": "mcp",
+                "title": f"MCP server descriptions ~{mcp_tokens:,} tok — audit unused servers",
+                "why": "MCP servers like Godot-AI, Blender, Desktop Commander inject "
+                       "long instruction blocks even when not relevant to the project type.",
+                "impact": f"Remove unused MCP servers from config to save ~{mcp_tokens:,} tok/turn. "
+                         "Run `skill_project_optimizer` to detect mismatched MCP servers.",
+            })
+    except Exception:
+        out["host_prefix"] = {"available": False}
 
     out["deeper_passes"] = _DEEPER
     out["headline"] = _headline(out)

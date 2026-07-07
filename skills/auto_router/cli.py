@@ -26,6 +26,8 @@ def main(argv=None) -> int:
 
     s = sub.add_parser("route", help="decide backend (no call)")
     s.add_argument("prompt"); s.add_argument("--task-type", default="")
+    s.add_argument("--explain", action="store_true",
+                   help="Show detailed reasoning: effort signals, NN belt, budget, cloud search")
 
     s = sub.add_parser("run", help="decide + execute")
     s.add_argument("prompt"); s.add_argument("--task-type", default="")
@@ -40,7 +42,12 @@ def main(argv=None) -> int:
     args = p.parse_args(argv)
 
     if args.cmd == "route":
-        print(json.dumps(auto_route(args.prompt, args.task_type), ensure_ascii=False, indent=2))
+        if getattr(args, "explain", False):
+            from skills.auto_router.router import AutoRouter
+            r = AutoRouter()
+            print(json.dumps(r.explain(args.prompt, args.task_type), ensure_ascii=False, indent=2))
+        else:
+            print(json.dumps(auto_route(args.prompt, args.task_type), ensure_ascii=False, indent=2))
     elif args.cmd == "run":
         print(json.dumps(auto_run(args.prompt, task_type=args.task_type,
                                   max_tokens=args.max_tokens), ensure_ascii=False, indent=2))

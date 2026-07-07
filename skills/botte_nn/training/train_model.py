@@ -30,6 +30,7 @@ _SAMPLES = 5000
 
 
 def _class_weight(labels):
+    # DEAD CODE: unused function
     """Normalize class distribution."""
     counts = np.sum(labels, axis=0)
     total = len(labels)

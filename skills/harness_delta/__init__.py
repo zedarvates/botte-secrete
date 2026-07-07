@@ -1,0 +1,1 @@
+"""Harness Delta — vérification différentielle."""

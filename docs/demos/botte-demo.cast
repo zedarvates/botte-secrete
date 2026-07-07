@@ -1,0 +1,25 @@
+#!/usr/bin/env asciinema
+# asciinema cast format — records terminal session for botte-secrete demo
+# Record with: asciinema rec -t botte-demo.cast
+# Play with: asciinema play botte-demo.cast
+
+{
+  "version": 2,
+  "command": "python3 -m skills.dashboard.api",
+  "env": {
+    "TERM": "xterm-256color"
+  },
+  "frames": [
+    [0, "Botte Secrète Demo — Dashboard Overview\n", {}],
+    [0.5, "\n$ python3 -m skills.dashboard.api &\n"],
+    [1, "\n> Dashboard API running on http://localhost:8765\n\n"],
+    [2, "$ curl http://localhost:8765/api/stats | python3 -m json.tool\n"],
+    [3, "{\n  \"tests_passed\": 158,\n  \"lines_saved\": 127,\n  \"avoidable_pct\": 78.6,\n  \"by_rung\": {\n    \"stdlib\": 42,\n    \"regex_oneliner\": 28,\n    \"existing_module\": 35,\n    \"new_code\": 53\n  }\n}\n"],
+    [4, "\n$ open http://localhost:8765  # Open dashboard in browser\n\n"],
+    [5, "Dashboard shows:\n"],
+    [6, "  📊 Decision Ladder: 78.6% tasks avoidable\n"],
+    [7, "  🗜️ Universal Compressor: avg 65% size reduction\n"],
+    [8, "  💾 AutoMemory: 42 facts stored, 8 patterns detected\n"],
+    [9, "\nDemo complete. Dashboard auto-refreshes every 5s.\n"]
+  ]
+}

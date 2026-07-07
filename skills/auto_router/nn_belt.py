@@ -25,7 +25,22 @@ from __future__ import annotations
 from typing import Optional
 
 # Below this max-softmax confidence the belt abstains -> the heuristic decides.
+# Overridable per project via .botte/policy.md: _BELT_CONFIDENCE = 0.80
 CONFIDENCE = 0.66
+
+
+def _load_confidence() -> float:
+    """Load belt confidence threshold from project policy if configured."""
+    try:
+        from skills.preflight.policy import load
+        policy = load(".")
+        import re
+        m = re.search(r"_BELT_CONFIDENCE\s*=\s*([0-9.]+)", policy)
+        if m:
+            return float(m.group(1))
+    except Exception:
+        pass
+    return CONFIDENCE
 
 
 def featurize_binary_router(complexity: float, budget_ratio: float,
@@ -70,6 +85,7 @@ def local_vs_cloud_hint(complexity: float, budget_ratio: float,
     out = calibration.apply_temperature(out, calibration.load_temperature("binary_router"))
     label = "local" if out[0] >= out[1] else "cloud"
     confidence = float(max(out))
-    if confidence < CONFIDENCE:
+    threshold = _load_confidence()
+    if confidence < threshold:
         return None
     return label, confidence

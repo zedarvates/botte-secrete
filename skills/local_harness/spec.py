@@ -19,6 +19,7 @@ class HarnessSpec:
     # gate
     max_effort: float = 1.0
     allow_task_types: list[str] = field(default_factory=list)
+    strict: bool = False  # silently refuse critical tasks, force cloud escalation
     # output (constrain)
     output_format: str = "json_object"        # free_text | json_object | json_schema | enum
     output_schema: Optional[dict] = None

@@ -50,8 +50,12 @@ class AutoDecision:
 
 
 class AutoRouter:
-    def __init__(self, budget: Optional[Budget] = None):
+    def __init__(self, budget: Optional[Budget] = None, latency_budget_s: float = 0):
         self.budget = budget or Budget()
+        self.latency_budget_s = latency_budget_s  # 0 = no limit
+        # Escalation loop detection: track cloud escalations per task type
+        self._escalation_counts: dict[str, int] = {}
+        self._escalation_threshold = 5  # warn after 5 cloud escalations of same type
 
     # ── decision ──
     def decide(self, prompt: str, task_type: str = "",
@@ -61,6 +65,13 @@ class AutoRouter:
 
         local = registry.best_chat_backend()
         local_model = registry.preferred_model(local) if local else None
+
+        # Latency budget: if the user needs a sub-second response, skip local
+        # (which can be slow at 35 tok/s) and go straight to cloud
+        if self.latency_budget_s > 0 and self.latency_budget_s < 2.0:
+            if local and tier > Tier.LOCAL:
+                # Local would be too slow for sub-2s budget — try cloud
+                pass  # continue to cloud path below
 
         # ── NN belt: a learned second opinion on local-vs-cloud (0 cloud tokens,
         # abstains when unsure). Conservative v1 — only pull a *borderline* task
@@ -147,6 +158,8 @@ class AutoRouter:
         else:
             text, usage = _cloud_chat(d, prompt, system, max_tokens)
             self.budget.spend(d.tier, usage // 2 or 1, usage // 2 or 1)
+            # Track escalations for loop detection
+            self._track_escalation(task_type or prompt[:50])
         # feed the control loop (best-effort; never affects routing)
         try:
             from skills.control_loop.control_loop import record
@@ -171,6 +184,132 @@ class AutoRouter:
                             ctx["predicted_class"], actual_class)
         except Exception:
             pass
+
+    def _track_escalation(self, task_key: str) -> None:
+        """Increment the cloud escalation counter for this task type."""
+        key = task_key.strip().lower()
+        self._escalation_counts[key] = self._escalation_counts.get(key, 0) + 1
+
+    def check_escalation_loop(self, task_key: str) -> Optional[str]:
+        """Return a warning if this task type has escalated to cloud too often."""
+        key = task_key.strip().lower()
+        count = self._escalation_counts.get(key, 0)
+        if count >= self._escalation_threshold:
+            return (
+                f"⚠️  Escalation loop: '{task_key[:60]}' → cloud {count}×. "
+                "Check effort estimator / local model / mark as cloud-only."
+            )
+        return None
+
+    def explain(self, prompt: str, task_type: str = "",
+                force_tier: Optional[Tier] = None) -> dict:
+        """Return a detailed trace of every signal behind the routing decision.
+
+        Unlike decide() which returns the AutoDecision, explain() returns a dict
+        with the full reasoning chain: effort signals, NN belt analysis, budget
+        state, cloud provider search, and the final verdict.
+        """
+        eff = estimate_effort(prompt, task_type=task_type)
+        tier = force_tier or eff.tier
+        words = len(prompt.split())
+
+        local = registry.best_chat_backend()
+        local_model = registry.preferred_model(local) if local else None
+        budget_ratio = max(0.0, 1.0 - self.budget.used_today / max(self.budget.daily, 1))
+
+        trace = {
+            "prompt": prompt[:200] + ("..." if len(prompt) > 200 else ""),
+            "task_type": task_type or "(auto)",
+            "words": words,
+
+            # 1. Effort estimation
+            "effort": {
+                "score": round(eff.score, 3),
+                "tier": tier.name,
+                "reasons": eff.reasons,
+            },
+
+            # 2. NN belt
+            "belt": None,
+            "budget": {
+                "daily_limit": self.budget.daily,
+                "used_today": round(self.budget.used_today, 1),
+                "remaining": round(self.budget.daily - self.budget.used_today, 1),
+                "ratio": round(budget_ratio, 3),
+            },
+        }
+
+        # NN belt analysis
+        belt_active = local and force_tier is None and Tier.LOCAL < tier <= Tier.CHEAP
+        if belt_active:
+            hint = nn_belt.local_vs_cloud_hint(eff.score, budget_ratio, has_local=True)
+            features = nn_belt.featurize_binary_router(eff.score, budget_ratio, True)
+            trace["belt"] = {
+                "active": True,
+                "features": {
+                    "complexity": round(features[0], 3),
+                    "budget_ratio": round(features[1], 3),
+                    "has_local_model": int(features[2]),
+                },
+                "triggered": hint is not None,
+            }
+            if hint:
+                trace["belt"]["prediction"] = hint[0]
+                trace["belt"]["confidence"] = round(hint[1], 3)
+                trace["belt"]["effect"] = "nudged to LOCAL (0 cloud tokens)"
+            else:
+                trace["belt"]["abstain_reason"] = "confidence below threshold or model unavailable"
+                trace["belt"]["effect"] = "abstained — heuristic decides"
+        else:
+            trace["belt"] = {
+                "active": False,
+                "reason": ("forced tier" if force_tier else
+                           f"tier {tier.name} not in (LOCAL, CHEAP] range" if tier > Tier.CHEAP else
+                           "no local backend" if not local else
+                           "tier already LOCAL"),
+            }
+
+        # 3. Cloud path search
+        cloud_search = []
+        in_tok, out_tok = estimate_tokens(task_type or "code_review", len(prompt))
+        chosen_tier = tier
+        while chosen_tier >= Tier.CHEAP:
+            cloud = providers.cheapest_cloud_at_least(chosen_tier)
+            if cloud:
+                cost = estimate_cost(cloud.tier, in_tok, out_tok)
+                affordable = self.budget.can_afford(cloud.tier, in_tok, out_tok)
+                cloud_search.append({
+                    "tier": chosen_tier.name,
+                    "provider": cloud.label,
+                    "model": cloud.model,
+                    "cost_est": round(cost, 6),
+                    "affordable": affordable,
+                })
+                if not affordable:
+                    chosen_tier = Tier(chosen_tier - 1)
+                    continue
+                break  # found affordable
+            chosen_tier = Tier(chosen_tier - 1)
+        trace["cloud_search"] = cloud_search
+
+        # 4. Verdict
+        d = self.decide(prompt, task_type=task_type, force_tier=force_tier)
+        trace["decision"] = {
+            "mode": d.mode,
+            "tier": d.tier.name,
+            "model": d.model,
+            "reason": d.reason,
+            "est_cost": round(d.est_cost, 6),
+        }
+
+        # 5. Escalation loop check
+        if d.mode == "cloud":
+            key = task_type or prompt[:50]
+            warning = self.check_escalation_loop(key)
+            if warning:
+                trace["escalation_warning"] = warning
+
+        return trace
 
     def record_override(self, decision: AutoDecision, should_have_been: str) -> bool:
         """Log explicit feedback that the belt's local/cloud choice was overridden.

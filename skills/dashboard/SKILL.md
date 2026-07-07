@@ -1,10 +1,16 @@
 ---
 name: dashboard
 layer: GOVERN
-description: Generate one self-contained, timestamped HTML dashboard of the system's cost picture — routing savings (control loop), metric trends, current metrics, and the cost of outstanding fixes. Also renders as a live ANSI terminal view (--tui, --watch). Use when the user wants a single visual view of cost/savings/health over time, or a live terminal view they don't have to open a browser for.
+description: Generate one self-contained, timestamped HTML dashboard of the system's cost picture — routing savings (control loop), metric trends, current metrics, and the cost of outstanding fixes. Also renders as a live ANSI terminal view (--tui, --watch) and serves a live HTTP API (api.py). Use when the user wants a single visual view of cost/savings/health over time, or a live terminal view they don't have to open a browser for.
+version: 1.0.0
 ---
 
-# dashboard — the cost picture in one page
+# Dashboard Skill
+
+Live metrics visualization for botte-secrete — one data source, three views
+(timestamped HTML report, ANSI TUI, live HTTP API).
+
+## Usage
 
 ```bash
 python -m skills.dashboard.cli .              # → .botte/reports/dashboard_<stamp>.html
@@ -43,3 +49,29 @@ scan — nothing gets touched unless you `fleet add` it. `--fleet` runs
 `collect()` on every registered project and sums LOC / tokens saved /
 outstanding fixes; a project that's vanished or errors out is reported
 under `errored`, not silently dropped or a crash. See `skills/dashboard/fleet.py`.
+
+## Live HTTP API
+
+- `index.html` — Dashboard UI
+- `api.py` — HTTP API (`/api/stats`, `/`)
+- `cron_hook.py` — Periodic notifications
+
+```bash
+# Start API server
+python -m skills.dashboard.api
+
+# View dashboard
+open http://localhost:8765
+
+# CLI stats
+python -c "from skills.dashboard.api import load_metrics; print(load_metrics())"
+```
+
+### Metrics served
+
+- `tests_passed` — Total test count
+- `lines_saved` — Lines avoided via decision ladder
+- `avoidable_pct` — % of tasks that didn't need new code
+- `by_rung` — Breakdown by decision ladder rung
+- `compressor` — Compression stats
+- `memory_entries` — AutoMemory entry count

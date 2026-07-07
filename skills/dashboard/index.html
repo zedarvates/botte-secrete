@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Botte Secrète — Dashboard</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:-apple-system,sans-serif;background:#111;color:#eee;min-height:100vh}
+  .container{max-width:1200px;margin:0 auto;padding:20px}
+  h1{color:#00d4ff;margin-bottom:20px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px}
+  .card{background:#1a1a1a;border-radius:12px;padding:20px}
+  .card h3{color:#888;font-size:14px;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
+  .card .value{font-size:36px;font-weight:bold;color:#00d4ff}
+  .card .trend{color:#888;font-size:12px}
+  .card .good{color:#00ff88}.card .bad{color:#ff4757}
+  .section{margin-top:30px}
+  .section h2{color:#00d4ff;margin-bottom:15px;font-size:18px}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:12px;text-align:left;border-bottom:1px solid #333}
+  th{color:#888;font-weight:normal}
+  .rung-bar{display:flex;height:24px;background:#333;border-radius:4;overflow:hidden}
+  .rung-bar .segment{height:100%;transition:width 0.3s}
+  .rung-bar .stdlib{background:#00d4ff}.rung-bar .regex{background:#00ff88}.rung-bar .existing{background:#ffa502}.rung-bar .newcode{background:#ff4757}
+  .refresh{color:#888;font-size:12px;margin-top:20px}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>📋 Botte Secrète — Dashboard</h1>
+  <div class="grid">
+    <div class="card"><h3>Tests passés</h3><div class="value" id="tests-passed">--</div></div>
+    <div class="card"><h3>Lignes gagnées</h3><div class="value" id="lines-saved">--</div></div>
+    <div class="card"><h3>Avoidable %</h3><div class="value" id="avoidable-pct">--</div></div>
+    <div class="card"><h3>Mémoire actuelle</h3><div class="value" id="memory-entries">--</div></div>
+  </div>
+  <div class="section">
+    <h2>📊 Par rung — Decision Ladder</h2>
+    <div class="rung-bar" id="rung-bar">--</div>
+    <table>
+      <tr><th>Rung</th><th>Count</th><th>Details</th></tr>
+      <tr><td>stdlib</td><td id="rung-stdlib">--</td><td>Modules stdlib utilisés</td></tr>
+      <tr><td>regex</td><td id="rung-regex">--</td><td>One-liners appliqués</td></tr>
+      <tr><td>existing</td><td id="rung-existing">--</td><td>Skills réutilisés</td></tr>
+      <tr><td>new_code</td><td id="rung-newcode">--</td><td>Frais développements</td></tr>
+    </table>
+  </div>
+  <div class="section">
+    <h2>🗜️ Universal Compressor</h2>
+    <table>
+      <tr><th>Type</th><th>Original</th><th>Compressed</th><th>Ratio</th></tr>
+      <tr><td>text</td><td id="comp-text">--</td><td>--</td><td>--</td></tr>
+      <tr><td>json</td><td id="comp-json">--</td><td>--</td><td>--</td></tr>
+      <tr><td>log</td><td id="comp-log">--</td><td>--</td><td>--</td></tr>
+    </table>
+  </div>
+  <div class="section">
+    <h2>💾 AutoMemory</h2>
+    <table>
+      <tr><th>Catégorie</th><th>Count</th></tr>
+      <tr><td>user_pref</td><td id="mem-pref">--</td></tr>
+      <tr><td>pattern</td><td id="mem-pattern">--</td></tr>
+      <tr><td>decision</td><td id="mem-decision">--</td></tr>
+    </table>
+  </div>
+  <p class="refresh">Dernière mise à jour: <span id="last-update">--</span></p>
+</div>
+
+<script>
+async function loadStats() {
+  try {
+    const r = await fetch('/api/stats');
+    const d = await r.json();
+    document.getElementById('tests-passed').textContent = d.tests_passed || '--';
+    document.getElementById('lines-saved').textContent = d.lines_saved || '--';
+    document.getElementById('avoidable-pct').textContent = (d.avoidable_pct || 0) + '%';
+    document.getElementById('memory-entries').textContent = d.memory_entries || '--';
+    // Rungs
+    const rungs = d.by_rung || {};
+    document.getElementById('rung-stdlib').textContent = rungs.stdlib || 0;
+    document.getElementById('rung-regex').textContent = rungs.regex_oneliner || 0;
+    document.getElementById('rung-existing').textContent = rungs.existing_module || 0;
+    document.getElementById('rung-newcode').textContent = rungs.new_code || 0;
+    // Barre
+    const total = d.total_tasks || 1;
+    document.getElementById('rung-bar').innerHTML = `
+      <div class="segment stdlib" style="width:${(rungs.stdlib||0)/total*100}%"></div>
+      <div class="segment regex" style="width:${(rungs.regex_oneliner||0)/total*100}%"></div>
+      <div class="segment existing" style="width:${(rungs.existing_module||0)/total*100}%"></div>
+      <div class="segment newcode" style="width:${(rungs.new_code||0)/total*100}%"></div>`;
+    document.getElementById('last-update').textContent = new Date().toLocaleTimeString();
+  } catch(e) { console.error(e); }
+}
+setInterval(loadStats, 5000);
+loadStats();
+</script>
+</body>
+</html>

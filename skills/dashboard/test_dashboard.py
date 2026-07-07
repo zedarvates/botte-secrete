@@ -69,6 +69,17 @@ def main() -> int:
         _ok("fleet.aggregate reports vanished projects as errored, not a crash",
             agg2["totals"]["projects_errored"] >= 1)
 
+    # api (main's live-dashboard implementation) — coexists with the HTML/TUI one
+    try:
+        from skills.dashboard.api import load_metrics, DashboardHandler
+        m = load_metrics()
+        _ok("api.load_metrics returns the expected dict",
+            isinstance(m, dict) and "tests_passed" in m and "lines_saved" in m and "by_rung" in m)
+        _ok("api.DashboardHandler exists and load_metrics is callable",
+            DashboardHandler is not None and callable(load_metrics))
+    except ImportError:
+        _ok("api module importable", False)
+
     print(f"\nRESULT: {state[0]} passed, {state[1]} failed")
     return 0 if state[1]==0 else 1
 

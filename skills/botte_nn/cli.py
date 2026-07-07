@@ -75,6 +75,56 @@ _MODEL_META = {
         "labels": ["syntax", "runtime", "network", "permission", "timeout", "resource"],
         "description": "Classify error type for auto-recovery: syntax, runtime, network, permission, timeout, resource",
     },
+    # ── Micro-NN Belt 2.0 ──────────────────────────────────────
+    "compressibility_predictor": {
+        "path": "compressibility_predictor.json",
+        "input_size": 6,
+        "output_size": 3,
+        "labels": ["none", "delta", "heavy"],
+        "description": "Predict optimal compression level: none, delta, or heavy",
+    },
+    "context_pruning_predictor": {
+        "path": "context_pruning_predictor.json",
+        "input_size": 6,
+        "output_size": 2,
+        "labels": ["keep", "prune"],
+        "description": "Predict which context sections to keep vs prune",
+    },
+    "skip_agent_predictor": {
+        "path": "skip_agent_predictor.json",
+        "input_size": 7,
+        "output_size": 2,
+        "labels": ["execute", "skip"],
+        "description": "Predict if agent execution can be skipped (cache hit, no change)",
+    },
+    "cloud_escalation_predictor": {
+        "path": "cloud_escalation_predictor.json",
+        "input_size": 7,
+        "output_size": 3,
+        "labels": ["local_small", "local_big", "cloud"],
+        "description": "Predict escalation target: local small, local big, or cloud",
+    },
+    "response_length_predictor": {
+        "path": "response_length_predictor.json",
+        "input_size": 6,
+        "output_size": 3,
+        "labels": ["short", "medium", "long"],
+        "description": "Predict optimal response length: short, medium, or long",
+    },
+    "tool_call_predictor": {
+        "path": "tool_call_predictor.json",
+        "input_size": 7,
+        "output_size": 2,
+        "labels": ["llm_only", "use_tool"],
+        "description": "Predict if agent should use a tool or stay pure LLM",
+    },
+    "semantic_cache_hit_predictor": {
+        "path": "semantic_cache_hit_predictor.json",
+        "input_size": 7,
+        "output_size": 2,
+        "labels": ["miss", "hit"],
+        "description": "Predict if query will hit semantic cache",
+    },
 }
 
 

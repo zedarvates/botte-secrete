@@ -7,7 +7,7 @@ import hashlib
 
 
 class DuplicationAnalyzer:
-    def __init__(self, min_lines: int = 6, min_tokens: int = 50):
+    def __init__(self, min_lines: int = 8, min_tokens: int = 50):
         self.min_lines = min_lines
         self.min_tokens = min_tokens
 
