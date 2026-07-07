@@ -30,7 +30,7 @@ class StubClient:
     def __init__(self, reply=None, exc=None):
         self.reply, self.exc, self.calls = reply, exc, 0
 
-    def chat_json(self, prompt, *, schema=None, max_tokens=512):
+    def chat_json(self, prompt, *, schema=None, system=None, max_tokens=512, **kw):
         self.calls += 1
         if self.exc:
             raise self.exc

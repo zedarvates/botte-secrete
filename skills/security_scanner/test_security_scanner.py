@@ -50,3 +50,25 @@ def test_scan_directory():
 def test_scan_file_nonexistent():
     result = scan_file("/nonexistent/path")
     assert result["pass"] is True
+
+
+# Runnable entry point — scripts/run_tests.py expects "N passed, N failed" output.
+def main() -> int:
+    import sys
+    sys.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parents[2]))
+    passed = failed = 0
+    for name, fn in sorted(globals().items()):
+        if name.startswith("test_") and callable(fn):
+            try:
+                fn()
+                passed += 1
+                print(f"  [PASS] {name}")
+            except Exception as e:  # noqa: BLE001
+                failed += 1
+                print(f"  [FAIL] {name}: {e}")
+    print(f"\nRESULT: {passed} passed, {failed} failed")
+    return 0 if failed == 0 else 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
