@@ -28,14 +28,20 @@ def _tok(text: str) -> int:
     return max(0, len(text or "") // 4)
 
 
-# ── project-level measurements (existing) ──────────────────────────────
+# ── project-level measurements ─────────────────────────────────────────
 
-def _tool_schema_tokens() -> tuple[int, int]:
+def _tool_schema_tokens() -> tuple[int, int, int]:
+    """(#tools, full-catalog tokens, actual lazy-mode tokens) for botte-llm's MCP
+    tools. Lazy loading (skills/llm_mcp/lazy.py) is real, not hypothetical, so this
+    measures what tools/list actually returns in lazy mode rather than estimating."""
     try:
         from skills.llm_mcp.server import TOOLS
+        from skills.llm_mcp.lazy import lazy_tool_list
     except Exception:
-        return 0, 0
-    return len(TOOLS), sum(_tok(json.dumps(t, ensure_ascii=False)) for t in TOOLS)
+        return 0, 0, 0
+    full = sum(_tok(json.dumps(t, ensure_ascii=False)) for t in TOOLS)
+    lazy = sum(_tok(json.dumps(t, ensure_ascii=False)) for t in lazy_tool_list(TOOLS))
+    return len(TOOLS), full, lazy
 
 
 def _skill_catalog_tokens() -> tuple[int, int]:
@@ -194,20 +200,33 @@ def _build_reduction_plan(components: dict) -> list[dict]:
     """Build reduction levers from components."""
     ts = components.get("tool_schemas", 0)
     n_tools = components.get("_n_tools", 0)
+    ts_lazy = components.get("_tool_schemas_lazy")  # real measurement, if available
     sc = components.get("skill_catalog", 0)
     hsc = components.get("host_skill_catalog", 0)
     hsc_n = components.get("_n_host_skills", 0)
     mcpd = components.get("mcp_servers", 0)
 
+    # Reduction levers. Prefer the ACTUAL lazy-mode measurement (lazy loading is
+    # implemented — skills/llm_mcp/lazy.py) over a formula estimate.
     plan = []
-    # Project-level levers
-    lazy_tools_saved = int(ts * (1 - _KEPT_CORE_TOOLS / n_tools)) if n_tools > _KEPT_CORE_TOOLS else 0
+    if ts_lazy is not None:
+        lazy_tools_saved = max(0, ts - int(ts_lazy))
+        lazy_how = ("lazy tool loading is implemented (skills/llm_mcp/lazy.py): "
+                    "tools/list already returns only the core set + find_tool(query) — "
+                    "this is the measured saving, not an estimate")
+    elif n_tools > _KEPT_CORE_TOOLS:
+        lazy_tools_saved = int(ts * (1 - _KEPT_CORE_TOOLS / n_tools))
+        lazy_how = (f"expose ~{_KEPT_CORE_TOOLS} core tools + find_tool(query); "
+                    "load a schema on demand (this harness's ToolSearch pattern)")
+    else:
+        lazy_tools_saved = 0
+        lazy_how = ""
     if lazy_tools_saved:
         plan.append({"lever": "lazy tool loading",
                      "applies_to": "tool_schemas",
                      "saves_tokens": lazy_tools_saved,
-                     "how": f"expose ~{_KEPT_CORE_TOOLS} core tools + find_tool(query); "
-                            "load a schema on demand"})
+                     "measured": ts_lazy is not None,
+                     "how": lazy_how})
     if sc:
         plan.append({"lever": "on-demand skill search",
                      "applies_to": "skill_catalog",
@@ -254,13 +273,14 @@ def summarize(components: dict, windows: dict | None = None) -> dict:
 def profile(project: str | Path = ".", windows: dict | None = None) -> dict:
     """Measure the always-on project-level prefix."""
     project = Path(project).resolve()
-    n_tools, tool_tok = _tool_schema_tokens()
+    n_tools, tool_tok, tool_tok_lazy = _tool_schema_tokens()
     n_skills, skill_tok = _skill_catalog_tokens()
     components = {
         "directives": _directives_tokens(project),
         "core_agent": _core_agent_tokens(project),
         "tool_schemas": tool_tok,
         "skill_catalog": skill_tok,
+        "_tool_schemas_lazy": tool_tok_lazy,
         "_n_tools": n_tools,
         "_n_skills": n_skills,
     }
@@ -279,7 +299,7 @@ def profile_host(project: str | Path = ".", windows: dict | None = None) -> dict
     project = Path(project).resolve()
 
     # Project-level
-    n_tools, tool_tok = _tool_schema_tokens()
+    n_tools, tool_tok, tool_tok_lazy = _tool_schema_tokens()
     n_skills, skill_tok = _skill_catalog_tokens()
     dir_tok = _directives_tokens(project)
     core_tok = _core_agent_tokens(project)
@@ -304,6 +324,7 @@ def profile_host(project: str | Path = ".", windows: dict | None = None) -> dict
         "host_skill_catalog": host_skill_tok,
         "mcp_servers": mcp_tok,
         # Internals
+        "_tool_schemas_lazy": tool_tok_lazy,
         "_n_tools": n_tools,
         "_n_skills": n_skills,
         "_n_host_skills": n_host_skills,

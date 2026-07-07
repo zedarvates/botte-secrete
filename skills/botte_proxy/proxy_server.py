@@ -75,10 +75,13 @@ class ProxyStats:
         return time.time() - self.start_time
 
     def _model_key(self, model: str) -> str:
-        """Extract pricing key from model name."""
+        """Extract pricing key from model name.
+
+        Longest key first — sinon "claude-opus-4" matche "claude" (prix Sonnet,
+        5x sous-estimé) et "gpt-4.5" matche "gpt" (30x sous-estimé)."""
         mlower = model.lower()
-        for key in self.MODEL_PRICES:
-            if key in mlower:
+        for key in sorted(self.MODEL_PRICES, key=len, reverse=True):
+            if key != "default" and key in mlower:
                 return key
         return "default"
 

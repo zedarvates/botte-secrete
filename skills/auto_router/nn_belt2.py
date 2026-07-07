@@ -20,6 +20,10 @@ from typing import Optional
 # ── Confidence thresholds ──────────────────────────────────────
 
 CONFIDENCE = 0.50  # Seuil commun — abaissé pour les modèles Belt 2.0
+# Pour un softmax à 2 classes, max(probs) >= 0.5 par construction : un seuil de
+# 0.50 ne fait JAMAIS abstenir un modèle binaire. Les binaires ont donc leur
+# propre plancher, aligné sur la belt 1.0 (nn_belt.CONFIDENCE).
+BINARY_CONFIDENCE = 0.66
 
 
 def _predict(model_name: str, values: dict[str, float],
@@ -47,7 +51,9 @@ def _predict(model_name: str, values: dict[str, float],
         label = labels[idx]
         confidence = float(probs[idx])
 
-        if confidence < threshold:
+        # 2 classes → le plancher binaire s'applique (sinon jamais d'abstention).
+        effective = max(threshold, BINARY_CONFIDENCE) if len(probs) == 2 else threshold
+        if confidence < effective:
             return None
         return label, confidence
 

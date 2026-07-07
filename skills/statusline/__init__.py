@@ -8,6 +8,10 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+from skills.statusline.statusline import render, summarize
+
+__all__ = ["render", "summarize", "statusline", "main"]
+
 
 def statusline(project: str | Path = ".", compact: bool = False) -> str:
     try:

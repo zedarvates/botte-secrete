@@ -9,6 +9,25 @@
 - **CacheAligner**: normalisation des préfixes pour KV caches provider
 - **Dollar savings**: MODEL_PRICES pour 20+ providers, dashboard $$$
 
+### Added
+- **Lazy MCP tool loading** (`skills/llm_mcp/lazy.py`) — the biggest single amont
+  cut `context_profiler` identified: `tools/list` now returns only a small core
+  (`local_chat`, `auto_route`, `find_skills`, `conduct`) + a `find_tool(query)`
+  meta-tool instead of injecting all ~39 tools' full JSON Schema on every turn —
+  the same pattern this harness itself uses (ToolSearch). `find_tool` is a 0-token
+  lexical search over name+description; a strong match returns the full schema in
+  one round trip. `tools/call` still dispatches any tool by name regardless of
+  listing — lazy loading only shrinks the catalog, not what's callable. Toggle
+  with `BOTTE_MCP_LAZY_TOOLS=0`. **Measured saving: ~3.3k tokens (84% of the
+  tool-schema cost)** — `context_profiler` now reports the real lazy-mode number
+  instead of an estimate.
+- **`context_profiler`** (`skills/context_profiler/`) — measures a project's
+  always-on prefix (agent directives + core rules + **MCP tool schemas** + skill
+  catalogue) in tokens and as a % of small local windows (64k/128k/256k), with a
+  reduction plan (lazy tool loading, on-demand skill search). Serves the "let modest
+  machines run local LLMs usably" axis: on this repo the prefix is ~7.9k tok (12% of
+  a 64k window) and shrinks to ~1.4k tok (2%) once tools are lazy-loaded and skills
+  fetched on demand. New CLI + `context_profile` MCP tool. 0 cloud tokens.
 ### 📊 Pipeline optimizations (P41-P47)
 - **Prefix pruner**: élague les sections de contexte inutilisées
 - **Agent cache**: skip-agent quand output prédictible (hash/fingerprint/fuzzy)

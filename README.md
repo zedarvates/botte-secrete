@@ -1,10 +1,12 @@
 # 🧦 Botte Secrète — Multi-Agent Token Optimization Platform
 
 [![CI](https://github.com/zedarvates/botte-secrete/actions/workflows/ci.yml/badge.svg)](https://github.com/zedarvates/botte-secrete/actions)
-[![Tests](https://img.shields.io/badge/tests-214%2B-brightgreen)](https://github.com/zedarvates/botte-secrete)
-[![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/)
+[![Tests](https://img.shields.io/badge/tests-670%2F670-brightgreen)](https://github.com/zedarvates/botte-secrete)
+[![License](https://img.shields.io/badge/license-MIT-blue)](https://github.com/zedarvates/botte-secrete/blob/main/LICENSE)
 [![Release](https://img.shields.io/badge/release-v1.7.0-blue)](https://github.com/zedarvates/botte-secrete/releases)
 [![Token Savings](https://img.shields.io/badge/token%20savings-81%25-blue)](https://github.com/zedarvates/botte-secrete)
+[![Self-Audit](https://img.shields.io/badge/self--audit-75%2F100%20(B)-yellowgreen)](https://github.com/zedarvates/botte-secrete)
+[![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/)
 [![GPG Signed](https://img.shields.io/badge/commits-GPG%20signed-green)](https://github.com/zedarvates/botte-secrete)
 
 > *"Tous pour un, un pour tous."* — Les Trois Mousquetaires
@@ -21,6 +23,10 @@ tells you what hardware/infra changes would cut cost further.
 
 | Metric | Value |
 |--------|-------|
+| Tests | **670 passed, 0 failed** |
+| Skills | **50+** (code audit, fix, routing, MCP, NLP, solvers, security, docs) |
+| Micro-NN | **4 models** (binary_router, effort_classifier, anomaly_detector, error_classifier) — grounding tracked by `nn_audit` |
+| Token savings | **~65%** combined (reported by users) |
 | Tests | **300+ passing** (77 pytest + standalone + belt checkup) |
 | Skills | **~90** (code audit, fix, routing, MCP, NLP, solvers, security, docs, compression, memory, proxy, distill, belt 2.0) |
 | Micro-NN | **11 models** (4 originals + 7 Belt 2.0) — grounding tracked by `nn_audit` |
@@ -173,6 +179,42 @@ The **NN belt** (`auto_router` + `botte_nn`) decides which filter a task needs; 
 outcomes. Trivial work stays local at 0 tokens; the expensive model is spent only where it
 earns its keep.
 
+## 🎬 See it decide, live
+
+Don't take the filter table on faith — watch it work. No LLM, no network, no
+setup required:
+
+```bash
+python -m skills.demo.cli scripted
+```
+
+```
+┌─ ROUTING ────────────────────────┐  ┌─ SAVINGS (session) ──────────────┐
+│ CLOUD  design a distributed co...│  │ tokens saved          1210       │
+│ LOCAL  is this diff a bugfix o...│  │ cloud calls made         1       │
+│ LOCAL  rename variable "a" to ...│  │ cloud calls saved        2       │
+└──────────────────────────────────┘  │ cache hits               1       │
+                                       └──────────────────────────────────┘
+
+┌─ MICRO-NN ───────────────────────┐  ┌─ ESCALATIONS ────────────────────┐
+│ anomaly_detector   [0.04|0.96]...│  │ local → cloud  verification_fa...│
+│ effort_classifier  conf=0.93     │  └──────────────────────────────────┘
+└──────────────────────────────────┘
+```
+
+That's the built-in scripted scenario — 6 fixed steps touching every filter
+(micro-NN routing, a deterministic classifier, a cache hit, a cloud
+escalation, a verification-failure escalation, an anomaly-detector output).
+Once deployed into a real project, `python -m skills.demo.cli live .` shows
+the same panels fed by genuine decisions while an agent works, and
+`python -m skills.dashboard.cli . --tui` / `--watch` gives the metrics/cost
+counterpart. Don't trust the "~65%" savings number either — run
+`python -m skills.bench.cli` for a reproducible, checkable measurement.
+Full checkup + machine scan + ranked opportunities in one command:
+`python -m skills.checkup.cli . --doctor`. See
+[skills/demo](skills/demo/SKILL.md), [skills/dashboard](skills/dashboard/SKILL.md),
+[skills/bench](skills/bench/SKILL.md), [skills/checkup](skills/checkup/SKILL.md).
+
 ## ⚡ Deploy into your project
 
 ```bash
@@ -193,7 +235,9 @@ Before running anything, here's exactly what Botte Secrète changes on your mach
 |------|--------|
 | `.mcp.json` | Adds 5+ MCP tools (auto_route, local_chat, fusion, find_skills, infra_tips) |
 | `.botte-cache/` | Created at project root — caches scan results between runs |
+| `.botte/events.jsonl` | Created at project root, opt-in via use — local decision log for `demo`/`dashboard`/`statusline`, rotates at 5 MB, never leaves the machine |
 | `.skills-profile` | Per-project skill selection — reduces context tokens |
+| `~/.botte/fleet.json` | **Only if you run `dashboard fleet add`** — an explicit, opt-in registry of project paths for the multi-project `--fleet` view. Nothing is scanned or registered automatically |
 | Network | **None by default.** Only connects to local LLM servers (localhost:1234, etc.) |
 | System services | **None.** No cron, no daemon, no sudo, no startup entries |
 | Dependencies | `numpy` + `pydantic` / `tree-sitter` for the analyzers (`requirements.txt`). No heavy ML frameworks |
@@ -201,8 +245,8 @@ Before running anything, here's exactly what Botte Secrète changes on your mach
 
 **Verify for yourself:** the entire test suite runs offline:
 ```bash
+python scripts/run_tests.py   # 670+ tests, 0 cloud calls
 python -m pytest --rootdir=. -q     # 77 Fable6 tests (0 cloud calls)
-python scripts/run_tests.py         # 138+ standalone tests (0 cloud calls)
 ```
 
 ## ✅ Smoke Test
@@ -212,10 +256,10 @@ Clone, verify, and run in under 60 seconds:
 ```bash
 git clone https://github.com/zedarvates/botte-secrete.git
 cd botte-secrete
-python -m pytest --rootdir=.                    # 77 Fable6 tests
-python scripts/run_tests.py                     # 214+ total — everything works
-python -m skills.llm_backends.cli scan          # detect local LLMs
-python -m skills.auto_router.cli route "hello"  # 0-token routing decision
+python scripts/run_tests.py                    # 670+ tests — everything works
+python -m pytest --rootdir=.                   # 77 Fable6 tests
+python -m skills.llm_backends.cli scan         # detect local LLMs
+python -m skills.auto_router.cli route "hello" # 0-token routing decision
 ```
 
 ## 📋 Copy-paste prompts

@@ -56,12 +56,24 @@ def main() -> int:
     _ok("no lazy-tools lever when tools <= core floor",
         all(p["lever"] != "lazy tool loading" for p in r2["reduction_plan"]), state)
 
+    # a real (measured) lazy-mode cost takes priority over the formula estimate
+    r3 = summarize({"tool_schemas": 4000, "_n_tools": 40, "_tool_schemas_lazy": 700,
+                    "skill_catalog": 0})
+    lazy_lever = next(p for p in r3["reduction_plan"] if p["lever"] == "lazy tool loading")
+    _ok("measured lazy saving is exact (ts - ts_lazy), not the formula",
+        lazy_lever["saves_tokens"] == 3300, state)
+    _ok("measured lever is flagged as measured, not estimated",
+        lazy_lever["measured"] is True, state)
+
     # profile() on the real repo: structure + measures the tool-schema cost
     pr = profile(".")
     _ok("profile returns totals + window_pct + counts",
         pr["total_prefix_tokens"] >= 0 and "window_pct" in pr and "counts" in pr, state)
     _ok("tool schemas are actually accounted (the hidden cost)",
         pr["components"]["tool_schemas"] > 0, state)
+    _ok("the lazy-tool-loading saving on the real repo is measured, not estimated",
+        any(p["lever"] == "lazy tool loading" and p.get("measured")
+            for p in pr["reduction_plan"]), state)
 
     passed, failed = state
     print(f"\nRESULT: {passed} passed, {failed} failed")

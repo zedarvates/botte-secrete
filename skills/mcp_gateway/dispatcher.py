@@ -8,6 +8,7 @@ from __future__ import annotations
 import json
 import shlex
 import subprocess
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -91,7 +92,8 @@ class Dispatcher:
                 cmd_args.append(flag)
                 cmd_args.extend(str(v) for v in value)
 
-        full_cmd = ["python3", "-m", tool.module_path] + cmd_args
+        # sys.executable, pas "python3" — sur Windows "python3" est le stub du Store.
+        full_cmd = [sys.executable, "-m", tool.module_path] + cmd_args
 
         try:
             result = subprocess.run(

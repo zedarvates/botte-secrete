@@ -22,6 +22,7 @@ from skills.tiered_router import Tier, TIER_INFO, Budget, estimate_tokens, estim
 from skills.auto_router.effort import estimate as estimate_effort, EffortEstimate
 from skills.auto_router import providers
 from skills.auto_router import nn_belt
+from skills.auto_router import nn_belt2
 from skills.llm_backends import registry
 from skills.llm_backends.client import LocalLLMClient, LocalLLMError, ChatResult
 
@@ -93,6 +94,22 @@ class AutoRouter:
                                    eff.score, budget_ratio, True),
                                "predicted_class": 0},  # 0 = local
                 )
+            # Belt 2.0 second opinion — cloud_escalation_predictor (3 classes,
+            # abstains under nn_belt2.CONFIDENCE). Only consulted when belt 1.0
+            # abstained, same conservative window: it can pull a borderline task
+            # to LOCAL, never push one to a pricier tier.
+            if hint is None:
+                hint2 = nn_belt2.cloud_escalation_hint(
+                    effort_score=eff.score, task_type=task_type or "analyze")
+                if hint2 and hint2[0] in ("local_small", "local_big"):
+                    return AutoDecision(
+                        mode="local", tier=Tier.LOCAL, effort=eff,
+                        model=local_model or "local-model",
+                        label=f"{local.label} {local.host}:{local.port}",
+                        base_url=local.base_url, via="local",
+                        reason=f"effort {eff.score:.2f}→{tier.name}; NN belt2 → "
+                               f"{hint2[0]} (conf {hint2[1]:.2f}, 0 cloud tokens)",
+                    )
 
         # Local handles FREE/LOCAL outright, and is the preferred fallback.
         if tier <= Tier.LOCAL and local:
@@ -138,6 +155,7 @@ class AutoRouter:
     def run(self, prompt: str, *, task_type: str = "", system: Optional[str] = None,
             max_tokens: int = 1024, force_tier: Optional[Tier] = None) -> dict:
         d = self.decide(prompt, task_type=task_type, force_tier=force_tier)
+        _log_route(d)
         if d.mode == "none":
             return {"decision": d.to_dict(), "error": d.reason}
         if d.mode == "local":
@@ -149,6 +167,7 @@ class AutoRouter:
                 # The belt routed local and local failed → strong implicit feedback
                 # that this should have been cloud. Label it for the loop.
                 self._log_feedback(d, actual_class=1)  # 1 = cloud
+                _log_escalate("local", "cloud", f"local call failed: {e}")
                 return {"decision": d.to_dict(), "error": str(e)}
             else:
                 # Local handled it → tentative positive label for binary_router.
@@ -258,6 +277,16 @@ class AutoRouter:
             else:
                 trace["belt"]["abstain_reason"] = "confidence below threshold or model unavailable"
                 trace["belt"]["effect"] = "abstained — heuristic decides"
+            hint2 = nn_belt2.cloud_escalation_hint(
+                effort_score=eff.score, task_type=task_type or "analyze")
+            trace["belt2"] = {
+                "active": True,
+                "predictor": "cloud_escalation_predictor",
+                "triggered": hint2 is not None,
+            }
+            if hint2:
+                trace["belt2"]["prediction"] = hint2[0]
+                trace["belt2"]["confidence"] = round(hint2[1], 3)
         else:
             trace["belt"] = {
                 "active": False,
@@ -320,6 +349,25 @@ class AutoRouter:
             return False
         self._log_feedback(decision, 0 if should_have_been == "local" else 1)
         return True
+
+
+def _log_route(d: AutoDecision) -> None:
+    """Best-effort: append this decision to the project's live event log."""
+    try:
+        from skills.events import log_event
+        log_event("route", filter=(1 if d._belt_ctx else 2), out=d.mode,
+                   tier=d.tier.name, model=d.model, reason=d.reason,
+                   est_cost=round(d.est_cost, 6))
+    except Exception:
+        pass
+
+
+def _log_escalate(from_mode: str, to_mode: str, reason: str) -> None:
+    try:
+        from skills.events import log_event
+        log_event("escalate", **{"from": from_mode, "to": to_mode, "reason": reason})
+    except Exception:
+        pass
 
 
 def _cloud_chat(d: AutoDecision, prompt: str, system: Optional[str],

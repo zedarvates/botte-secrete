@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 import os
 import subprocess
+import sys
 import tempfile
 import time
 from dataclasses import dataclass, field, asdict
@@ -26,49 +27,49 @@ _AGENT_CATALOG: dict[str, dict] = {
     "porthos": {
         "name": "porthos",
         "skill": "directives_audit",
-        "command": ["python3", "-m", "skills.directives_audit.cli", "audit"],
+        "command": [sys.executable, "-m", "skills.directives_audit.cli", "audit"],
         "description": "Audit des directives (AGENTS.md, CLAUDE.md)",
         "requires": [],
     },
     "rochefort": {
         "name": "rochefort",
         "skill": "cardinal",
-        "command": ["python3", "-m", "skills.cardinal.cli", "audit"],
+        "command": [sys.executable, "-m", "skills.cardinal.cli", "audit"],
         "description": "Contre-audit red team",
         "requires": ["porthos"],
     },
     "dartagnan": {
         "name": "d'artagnan",
         "skill": "fix",
-        "command": ["python3", "-m", "skills.fix.cli", "fix"],
+        "command": [sys.executable, "-m", "skills.fix.cli", "fix"],
         "description": "Correction automatique",
         "requires": ["porthos"],
     },
     "aramis": {
         "name": "aramis",
         "skill": "optimize",
-        "command": ["python3", "-m", "skills.skill_project_optimizer.cli", "optimize"],
+        "command": [sys.executable, "-m", "skills.skill_project_optimizer.cli", "optimize"],
         "description": "Optimisation token",
         "requires": [],
     },
     "security": {
         "name": "security",
         "skill": "security_scanner",
-        "command": ["python3", "-m", "skills.security_scanner.cli", "scan"],
+        "command": [sys.executable, "-m", "skills.security_scanner.cli", "scan"],
         "description": "Scan sécurité",
         "requires": [],
     },
     "fast_context": {
         "name": "fast_context",
         "skill": "fast_context",
-        "command": ["python3", "-m", "skills.fast_context.cli", "explore"],
+        "command": [sys.executable, "-m", "skills.fast_context.cli", "explore"],
         "description": "Exploration repo",
         "requires": [],
     },
     "test": {
         "name": "test",
         "skill": None,  # shell command
-        "command": ["python3", "-m", "pytest"],
+        "command": [sys.executable, "-m", "pytest"],
         "description": "Lance les tests",
         "requires": ["dartagnan"],
     },
@@ -161,7 +162,7 @@ class MetaHarness:
                 # Fallback: try as a raw CLI command
                 resolved.append(Step(
                     agent=name,
-                    command=["python3", "-m", name] if name == "test" else [name],
+                    command=[sys.executable, "-m", name] if name == "test" else [name],
                     args=[],
                     workdir=self.workdir,
                     requires=[],

@@ -13,7 +13,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from skills.checkup.cli import run, format_pr_comment, PR_COMMENT_MARKER
+from skills.checkup.cli import run, format_pr_comment, PR_COMMENT_MARKER, doctor
 
 
 def _ok(msg, cond, state):
@@ -94,6 +94,21 @@ def main() -> int:
         _ok("PR comment shows the no-drift verdict", "No drift" in md_clean, state)
         _ok("PR comment links the commit when repo+sha given",
             "abc1234" in md_clean and "/commit/abc1234def" in md_clean, state)
+
+    with tempfile.TemporaryDirectory() as d:
+        proj = Path(d)
+        (proj / "app.py").write_text("def f():\n    return 1\n", encoding="utf-8")
+        dr = doctor(proj)
+        _ok("doctor() adds machine + top_actions + verdict on top of checkup",
+            all(k in dr for k in ("machine", "top_actions", "verdict", "drift", "headline")), state)
+        _ok("doctor() verdict is a non-empty string", isinstance(dr["verdict"], str) and dr["verdict"], state)
+        _ok("doctor() top_actions is capped at 3", len(dr["top_actions"]) <= 3, state)
+        _ok("doctor() result is JSON-serialisable", bool(json.dumps(dr)), state)
+
+        # machine section never raises even if llm_backends can't reach anything
+        m = dr["machine"]
+        _ok("machine section reports availability + backend list shape",
+            "available" in m and (not m["available"] or "uses_local_models" in m), state)
 
     passed, failed = state
     print(f"\nRESULT: {passed} passed, {failed} failed")
