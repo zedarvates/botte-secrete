@@ -1,5 +1,46 @@
 # Changelog
 
+## v1.8.0 (2026-07-07) — Belt Wiring & Audit Fixes
+
+### Fixed — cost/logic bugs found via full-repo audit
+- `tiered_router.estimate_cost`: clamped input/output tokens to the tier's
+  nominal ceiling before billing, under-counting cost for any call bigger
+  than that ceiling (verified: -47% on a 20k/10k PREMIUM call). Affected both
+  pre-call estimates and `Budget.spend`/`record()`'s actual tracking.
+- `universal_compressor.compress`: some strategies could net-expand short
+  inputs (a real prompt went 321→325 bytes). Added a passthrough safety net.
+- `fallow_like` CLI `health` command: `calculate_health(result)` was called
+  without any analyzer results, so the score was always 100/A regardless of
+  real findings (verified: 319 findings, still 100/A → 48/D after the fix).
+- `security_scanner audit` subcommand crashed on every call (missing
+  `--verbose`/`--format` registration on that subparser).
+- `botte_proxy`: model pricing matched by substring in dict-insertion order —
+  `claude-opus` matched `claude` (Sonnet pricing, 5x under) and `gpt-4.5`
+  matched `gpt` (30x under). Now matches the longest key first.
+- Three README-cited scripts crashed on Windows consoles (missing UTF-8
+  setup): `scripts/benchmark_full.py`, `scripts/test_mcp_gateway.py`,
+  `skills/auto_router/checkup_belt2.py`. The first two also had a hardcoded
+  `python3` and (for `test_mcp_gateway.py`) a `subprocess` `env=` that
+  replaced the whole environment instead of extending it.
+- `scripts/test_readme_commands.py` executed ` ```python ` fenced snippets as
+  shell commands (guaranteed failures) — now only ` ```bash ` fences run.
+- `skills/fleet/status.py` read its own registry, silently diverging from the
+  one `dashboard fleet add` writes; now a view over the single source of truth.
+
+### Added — Belt 2.0 wired into the router
+- `auto_router.decide()` consults Belt 2.0's `cloud_escalation_predictor` when
+  Belt 1.0 abstains (local-pull only, same conservative window); exposed in
+  `explain()` under `trace['belt2']`.
+- Fixed the binary-abstention floor: a 2-class softmax's max is always ≥ 0.5,
+  so the belt could never abstain at threshold 0.50 — binaries now use 0.66.
+- MCP server: `bench_run`/`doctor`/`fleet_status` were declared but had no
+  dispatch handler (silent failure on call) — now wired. New tools `compress`,
+  `shape_query`, `belt2_hint` expose modules that existed since v1.7.0 but
+  were unreachable from the harness.
+
+691/691 tests (+2 regression tests: compressor never-expands, cost_estimator
+actual-tokens billing). Self-audit: 89/100 (B), up from a stale 75/100 badge.
+
 ## v1.7.0 (2026-07-06) — Copilot Analysis Edition
 
 ### 🚀 Infrastructure Proxy (5 features)
