@@ -1,0 +1,10 @@
+# Normalise les fins de ligne — coupe les 30+ warnings "LF will be replaced by
+# CRLF" à chaque git add sur Windows (bruit relu par les agents = tokens perdus).
+* text=auto eol=lf
+*.bat text eol=crlf
+*.ps1 text eol=crlf
+*.png binary
+*.jpg binary
+*.gif binary
+*.ico binary
+*.pdf binary
