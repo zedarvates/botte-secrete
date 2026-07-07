@@ -510,6 +510,37 @@ TOOLS = [
         "inputSchema": {"type": "object", "properties": {
             "sort": {"type": "string", "description": "Sort by: tokens_saved, loc, fixes."}}},
     },
+    {
+        "name": "compress",
+        "description": "Compress text/JSON/logs/tool-output before sending it to an LLM "
+                       "(universal_compressor) — returns the compressed content + ratio. "
+                       "0 cloud tokens.",
+        "inputSchema": {"type": "object", "required": ["content"], "properties": {
+            "content": {"type": "string", "description": "Content to compress."},
+            "content_type": {"type": "string",
+                             "description": "auto|text|json|log|tool_output|code (default auto)."}}},
+    },
+    {
+        "name": "shape_query",
+        "description": "Classify a query's effort and return the adaptive token-shaping "
+                       "profile (compression ratio, output-token target, verbosity steer) "
+                       "from token_shaper. 0 cloud tokens.",
+        "inputSchema": {"type": "object", "required": ["query"], "properties": {
+            "query": {"type": "string", "description": "The user query to shape."},
+            "agent_type": {"type": "string", "description": "Agent type (audit, fix, ...)."},
+            "context_size": {"type": "number", "description": "Current context size in tokens."}}},
+    },
+    {
+        "name": "belt2_hint",
+        "description": "Run the Belt 2.0 micro-NN predictors (compressibility, pruning, "
+                       "skip-agent, cloud escalation, response length, tool call, semantic "
+                       "cache) on a task and return their hints. 0 cloud tokens.",
+        "inputSchema": {"type": "object", "properties": {
+            "text": {"type": "string", "description": "Task text."},
+            "agent_type": {"type": "string", "description": "Agent type (default audit)."},
+            "task_type": {"type": "string", "description": "Task type (default analyze)."},
+            "criticality": {"type": "number", "description": "0..1 (default 0.5)."}}},
+    },
 ]
 
 
@@ -811,6 +842,52 @@ def _tool_curate(args: dict) -> str:
     return json.dumps(curate(args["goal"]), ensure_ascii=False, indent=2)
 
 
+def _tool_bench_run(args: dict) -> str:
+    from skills.bench.bench import run as _bench_run
+    return json.dumps(_bench_run(), ensure_ascii=False, indent=2, default=str)
+
+
+def _tool_doctor(args: dict) -> str:
+    from pathlib import Path as _P
+    from skills.checkup.cli import doctor as _doctor
+    return json.dumps(_doctor(_P(args.get("project", "."))),
+                      ensure_ascii=False, indent=2, default=str)
+
+
+def _tool_fleet_status(args: dict) -> str:
+    from skills.dashboard import fleet as _fleet
+    return json.dumps(_fleet.aggregate(), ensure_ascii=False, indent=2, default=str)
+
+
+def _tool_compress(args: dict) -> str:
+    import dataclasses
+    from skills.universal_compressor.compressor import compress as _compress
+    r = _compress(args["content"], args.get("content_type", "auto"))
+    return json.dumps(dataclasses.asdict(r), ensure_ascii=False, indent=2)
+
+
+def _tool_shape_query(args: dict) -> str:
+    from skills.token_shaper.shaper import TokenShaper
+    cfg = TokenShaper().shape(args["query"], args.get("agent_type", ""),
+                              int(args.get("context_size", 0)))
+    return json.dumps({"level": cfg.level.value, "compress_ratio": cfg.compress_ratio,
+                       "output_tokens_target": cfg.output_tokens_target,
+                       "skip_cache": cfg.skip_cache, "verbosity_steer": cfg.verbosity_steer,
+                       "retain_thinking": cfg.retain_thinking},
+                      ensure_ascii=False, indent=2)
+
+
+def _tool_belt2_hint(args: dict) -> str:
+    from skills.auto_router import nn_belt2
+    hints = nn_belt2.full_belt_hint(
+        text=args.get("text", ""), agent_type=args.get("agent_type", "audit"),
+        task_type=args.get("task_type", "analyze"),
+        criticality=float(args.get("criticality", 0.5)))
+    out = {k: ({"label": v[0], "confidence": round(v[1], 3)} if v else "abstain")
+           for k, v in hints.items()}
+    return json.dumps(out, ensure_ascii=False, indent=2)
+
+
 DISPATCH = {
     "dashboard": _tool_dashboard,
     "estimate_cost": _tool_estimate_cost,
@@ -851,6 +928,12 @@ DISPATCH = {
     "ingest_source": _tool_ingest_source,
     "draft_doc": _tool_draft_doc,
     "session_review": _tool_session_review,
+    "bench_run": _tool_bench_run,
+    "doctor": _tool_doctor,
+    "fleet_status": _tool_fleet_status,
+    "compress": _tool_compress,
+    "shape_query": _tool_shape_query,
+    "belt2_hint": _tool_belt2_hint,
 }
 
 
