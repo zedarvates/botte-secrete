@@ -354,6 +354,18 @@ def compress(
     compressor = strategies.get(content_type, _compress_text)
     result = compressor(content)
 
+    # Safety net: a compressor's whole job is to shrink content before it hits
+    # an LLM. Some strategies (e.g. strip_comments+collapse_imports on input
+    # with few/no comments) can net-expand short inputs — never hand back
+    # something bigger than what came in.
+    if result.original_size > 0 and result.compressed_size >= result.original_size:
+        result = CompressedResult(
+            data=content, content_type=result.content_type,
+            original_size=result.original_size, compressed_size=result.original_size,
+            ratio=1.0, strategy="none (would have expanded)",
+            warnings=[*result.warnings, f"'{result.strategy}' expanded the input; passthrough used"],
+        )
+
     if reversible:
         key = _make_reversible(result, content)
         result.reversible_key = key

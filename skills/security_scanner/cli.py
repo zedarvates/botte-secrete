@@ -76,14 +76,17 @@ def main(argv=None) -> int:
 
     s = sub.add_parser("audit", help="Full audit with markdown report")
     s.add_argument("target", help="File or directory to audit")
-    s.add_argument("--output", "-o", default=None)
+    s.add_argument("--format", choices=["compact", "json", "markdown"],
+                   default="markdown", help="Output format (default: markdown)")
+    s.add_argument("--output", "-o", default=None, help="Write output to file")
+    s.add_argument("--verbose", "-v", action="store_true", help="Show progress")
 
     args = p.parse_args(argv)
 
     target = str(Path(args.target).resolve())
     p_target = Path(target)
 
-    if args.verbose:
+    if getattr(args, "verbose", False):
         print(f"🔍 Scanning: {target}")
 
     if p_target.is_file():
@@ -107,10 +110,10 @@ def main(argv=None) -> int:
         displayed = issues
 
     # Format output
-    fmt = getattr(args, "format", "markdown")
+    fmt = args.format
     if fmt == "json":
         output = _format_json(displayed, target)
-    elif fmt == "markdown" or args.cmd == "audit":
+    elif fmt == "markdown":
         output = _format_markdown(displayed, target)
     else:
         output = _format_compact(displayed, target)

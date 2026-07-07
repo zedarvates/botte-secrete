@@ -9,9 +9,15 @@ Usage:
 """
 
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from skills.console_utf8 import force_utf8  # noqa: E402 — avant tout print d'émoji
+
+force_utf8()
 
 REPO = Path(__file__).resolve().parent.parent
 
@@ -28,14 +34,17 @@ def mcp_request(method: str, params: dict | None = None, req_id: int = 1) -> dic
 
     payload = json.dumps(request) + "\n"
 
+    # sys.executable, pas "python3" (stub Windows Store) ; env hérité + PYTHONPATH
+    # ajouté — {"PYTHONPATH": ...} seul écrasait PATH/SYSTEMROOT et pouvait
+    # empêcher l'interpréteur de démarrer sur Windows.
     result = subprocess.run(
-        ["python3", "-m", "skills.mcp_gateway.server"],
+        [sys.executable, "-m", "skills.mcp_gateway.server"],
         cwd=str(REPO),
         input=payload,
         capture_output=True,
         text=True,
         timeout=30,
-        env={"PYTHONPATH": str(REPO)},
+        env={**os.environ, "PYTHONPATH": str(REPO)},
     )
 
     if result.stdout:

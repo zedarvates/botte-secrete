@@ -9,6 +9,11 @@ import json
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from skills.console_utf8 import force_utf8  # noqa: E402 — avant tout print d'émoji
+
+force_utf8()
+
 
 def check_model(model_name: str) -> dict:
     """Check a single model: file exists, loads, predicts."""

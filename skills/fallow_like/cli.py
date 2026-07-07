@@ -103,7 +103,10 @@ def run_analysis(config: FallowConfig) -> AnalysisResult:
         duration_seconds=time.time() - start,
     )
 
-    result.health = calculate_health(result)
+    result.health = calculate_health(
+        result, dead_code=dc, duplication=dup, complexity=comp,
+        secrets=secs, boundaries=bounds, feature_flags=flags, taint=taint,
+    )
 
     if config.history_db_path:
         tracker = TrendTracker(config.history_db_path)
