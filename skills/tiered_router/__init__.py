@@ -122,10 +122,16 @@ def estimate_tokens(task_type: str, input_size: int, complexity: float = 1.0) ->
 
 
 def estimate_cost(tier: Tier, input_tokens: int, output_tokens: int) -> float:
-    """Estimate $ cost for a tier."""
-    max_tok, cost_per_1k, _ = TIER_INFO[tier]
-    total = min(input_tokens, max_tok) + min(output_tokens, max_tok)
-    return (total / 1000) * cost_per_1k
+    """Estimate $ cost for a tier.
+
+    Bills the ACTUAL token counts, not clamped to the tier's nominal ceiling
+    (TIER_INFO's max_tok describes what's *typical* for the tier, for tier
+    selection — using it to cap the billing math silently under-counted cost
+    for any call bigger than that ceiling, in both pre-call estimates and
+    record()'s post-call budget tracking).
+    """
+    _, cost_per_1k, _ = TIER_INFO[tier]
+    return ((input_tokens + output_tokens) / 1000) * cost_per_1k
 
 
 # ── Budget Manager ──

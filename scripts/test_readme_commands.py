@@ -11,20 +11,29 @@ import subprocess
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from skills.console_utf8 import force_utf8  # noqa: E402 — avant tout print d'émoji
+
+force_utf8()
+
 REPO = Path(__file__).resolve().parent.parent
 TIMEOUT = 30
 
 
 def extract_commands(readme: Path) -> list[str]:
+    """Shell-runnable lines from ```bash fences only — ```python fences hold
+    import snippets, not shell commands, and were previously fed to shell=True
+    verbatim (guaranteed failures, not real README bugs)."""
     text = readme.read_text(encoding="utf-8")
     commands = []
-    in_block = False
+    in_bash_block = False
     for line in text.splitlines():
-        if line.strip().startswith("```"):
-            in_block = not in_block
+        stripped = line.strip()
+        if stripped.startswith("```"):
+            in_bash_block = stripped[3:].strip().lower() == "bash"
             continue
-        if in_block and not line.strip().startswith("#"):
-            cmd = line.strip()
+        if in_bash_block and not stripped.startswith("#"):
+            cmd = stripped
             if cmd and not cmd.startswith("$ "):
                 commands.append(cmd)
             elif cmd.startswith("$ "):

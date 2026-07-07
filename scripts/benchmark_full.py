@@ -16,6 +16,11 @@ import sys
 import time
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from skills.console_utf8 import force_utf8  # noqa: E402 — avant tout print d'émoji
+
+force_utf8()
+
 
 # Sample content that mimics real agent workloads
 SAMPLE_CODE = """# main.py

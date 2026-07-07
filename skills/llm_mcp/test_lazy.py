@@ -97,6 +97,28 @@ def main() -> int:
     _ok(f"non-core tool '{non_core}' is dispatchable despite not being listed",
         non_core in DISPATCH, state)
 
+    # TOOLS and DISPATCH must stay in lockstep — a tool declared but not wired
+    # (or wired but not declared) is a silent capability gap.
+    _ok("every declared tool has a dispatch handler and vice versa",
+        real_names == set(DISPATCH), state)
+
+    # v1.7.0 tools wired into the MCP server (audit P1): bench_run/doctor/
+    # fleet_status existed in TOOLS but had no DISPATCH entry; compress/
+    # shape_query/belt2_hint expose universal_compressor/token_shaper/Belt 2.0
+    # which were otherwise unreachable from the harness.
+    for name, args in (
+        ("bench_run", {}),
+        ("doctor", {"project": "."}),
+        ("fleet_status", {}),
+        ("compress", {"content": "aaa bbb aaa bbb aaa bbb " * 10}),
+        ("shape_query", {"query": "fix a typo"}),
+        ("belt2_hint", {"text": "audit this repo"}),
+    ):
+        r = handle({"jsonrpc": "2.0", "id": 1, "method": "tools/call",
+                    "params": {"name": name, "arguments": args}})
+        ok = r is not None and not r["result"].get("isError")
+        _ok(f"'{name}' tool call succeeds", ok, state)
+
     passed, failed = state
     print(f"\nRESULT: {passed} passed, {failed} failed")
     return 0 if failed == 0 else 1

@@ -1,11 +1,11 @@
 # 🧦 Botte Secrète — Multi-Agent Token Optimization Platform
 
 [![CI](https://github.com/zedarvates/botte-secrete/actions/workflows/ci.yml/badge.svg)](https://github.com/zedarvates/botte-secrete/actions)
-[![Tests](https://img.shields.io/badge/tests-670%2F670-brightgreen)](https://github.com/zedarvates/botte-secrete)
+[![Tests](https://img.shields.io/badge/tests-691%2F691-brightgreen)](https://github.com/zedarvates/botte-secrete)
 [![License](https://img.shields.io/badge/license-MIT-blue)](https://github.com/zedarvates/botte-secrete/blob/main/LICENSE)
-[![Release](https://img.shields.io/badge/release-v1.7.0-blue)](https://github.com/zedarvates/botte-secrete/releases)
+[![Release](https://img.shields.io/badge/release-v1.8.0-blue)](https://github.com/zedarvates/botte-secrete/releases)
 [![Token Savings](https://img.shields.io/badge/token%20savings-81%25-blue)](https://github.com/zedarvates/botte-secrete)
-[![Self-Audit](https://img.shields.io/badge/self--audit-75%2F100%20(B)-yellowgreen)](https://github.com/zedarvates/botte-secrete)
+[![Self-Audit](https://img.shields.io/badge/self--audit-89%2F100%20(B)-green)](https://github.com/zedarvates/botte-secrete)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/)
 [![GPG Signed](https://img.shields.io/badge/commits-GPG%20signed-green)](https://github.com/zedarvates/botte-secrete)
 
@@ -23,17 +23,57 @@ tells you what hardware/infra changes would cut cost further.
 
 | Metric | Value |
 |--------|-------|
-| Tests | **670 passed, 0 failed** |
-| Skills | **50+** (code audit, fix, routing, MCP, NLP, solvers, security, docs) |
-| Micro-NN | **4 models** (binary_router, effort_classifier, anomaly_detector, error_classifier) — grounding tracked by `nn_audit` |
-| Token savings | **~65%** combined (reported by users) |
-| Tests | **300+ passing** (77 pytest + standalone + belt checkup) |
+| Tests | **691 passed, 0 failed** (77 pytest + standalone + belt checkup) |
 | Skills | **~90** (code audit, fix, routing, MCP, NLP, solvers, security, docs, compression, memory, proxy, distill, belt 2.0) |
-| Micro-NN | **11 models** (4 originals + 7 Belt 2.0) — grounding tracked by `nn_audit` |
+| Micro-NN | **11 models** (4 originals + 7 Belt 2.0) — grounding tracked by `nn_audit`, wired into `auto_router` |
 | Token savings | **81.5%** (benchmark: logs 90%, JSON 92%, code 5%, context 55%) |
+| Self-audit | **89/100 (B)** — `python -m skills.mousquetaires.scripts.porthos_audit . <out_dir>` |
 | Dependencies | `numpy`, `pydantic`, `tree-sitter` — see [`requirements.txt`](requirements.txt) |
 | License | **MIT** — free forever |
 | Deploy | One command: `python -m skills.bootstrap.cli /your-project` |
+
+## 🩹 v1.8.0 — Belt Wiring & Audit Fixes (July 2026)
+
+A correctness pass over v1.7.0: Belt 2.0 was trained but never consulted, several
+CLIs crashed on real invocations, and one cost formula silently under-billed.
+
+### Belt 2.0 is now live
+`auto_router.decide()` consults `cloud_escalation_predictor` whenever Belt 1.0
+abstains (same conservative window: borderline tier, local-pull only, never
+escalates) — the 7 trained predictors were previously reachable only from a
+benchmark script. Visible in `explain()`'s trace under `belt2`. Also fixed the
+binary-abstention floor: a 2-class softmax's max is always ≥ 0.5, so the old
+0.50 threshold could never abstain — binaries now use a 0.66 floor.
+
+### MCP server: 3 broken tools fixed, 3 new ones wired
+`bench_run`/`doctor`/`fleet_status` were declared in `tools/list` but had no
+dispatch handler (silent 404 on call). New: `compress` (universal_compressor),
+`shape_query` (token_shaper), `belt2_hint` (the 7 Belt 2.0 predictors) — modules
+that existed since v1.7.0 but were unreachable from the harness.
+
+### Real bugs found and fixed via a full-repo audit
+- **Cost under-billing**: `tiered_router.estimate_cost` clamped both token
+  counts to the tier's nominal ceiling before billing — a 20k-in/10k-out
+  PREMIUM call was billed as 8k/8k (47% under). Fed both pre-call estimates
+  and the actual budget tracker (`Budget.spend`).
+- **Compression that expands**: some `universal_compressor` strategies could
+  net-*grow* short inputs (321→325 bytes on a real prompt). Added a
+  passthrough safety net — never return more than came in.
+- **Fake health score**: the `fallow_like health` CLI command always reported
+  100/A regardless of real findings (a wiring bug — analyzer results were
+  never passed to the scorer). Now reflects them (48/D on a real run).
+- **`security_scanner audit` crashed on every invocation** (missing arg
+  registration); `botte-proxy` mispriced Claude Opus/GPT-4.5 (substring match
+  picked the wrong price tier — up to 30x under).
+- Three README-cited scripts crashed on Windows consoles (`benchmark_full.py`,
+  `test_mcp_gateway.py`, `checkup_belt2.py`) from missing UTF-8 setup, plus a
+  hardcoded `python3` and an environment-clobbering `subprocess` call.
+
+`skills/dashboard/fleet.py` and `skills/fleet/status.py` used to read two
+different, silently-diverging registries — `fleet/status.py` is now a thin
+view over the one true registry.
+
+691/691 tests (+2 new regression tests for the cost and compression fixes).
 
 ## 🚀 v1.7.0 — Copilot Analysis Edition (July 2026)
 
@@ -245,7 +285,7 @@ Before running anything, here's exactly what Botte Secrète changes on your mach
 
 **Verify for yourself:** the entire test suite runs offline:
 ```bash
-python scripts/run_tests.py   # 670+ tests, 0 cloud calls
+python scripts/run_tests.py   # 691+ tests, 0 cloud calls
 python -m pytest --rootdir=. -q     # 77 Fable6 tests (0 cloud calls)
 ```
 
@@ -256,7 +296,7 @@ Clone, verify, and run in under 60 seconds:
 ```bash
 git clone https://github.com/zedarvates/botte-secrete.git
 cd botte-secrete
-python scripts/run_tests.py                    # 670+ tests — everything works
+python scripts/run_tests.py                    # 691+ tests — everything works
 python -m pytest --rootdir=.                   # 77 Fable6 tests
 python -m skills.llm_backends.cli scan         # detect local LLMs
 python -m skills.auto_router.cli route "hello" # 0-token routing decision

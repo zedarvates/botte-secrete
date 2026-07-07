@@ -14,6 +14,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from skills.cost_estimator import estimate, estimate_fix
 from skills.fix import find_fixes
+from skills.tiered_router import Tier, estimate_cost
 
 
 def _ok(msg, cond, state):
@@ -59,6 +60,14 @@ def main() -> int:
             and "stale_ref" in r["cost_by_kind"], state)
         _ok("totals carry tokens + usd + seconds",
             all(k in r["totals"] for k in ("tokens", "usd", "seconds")), state)
+
+    # estimate_cost must bill actual tokens, not clamp to the tier's nominal
+    # ceiling — a call bigger than TIER_INFO's max_tok used to silently
+    # under-count cost (both pre-call estimates and post-call budget tracking
+    # in tiered_router.Budget.spend/record go through this function).
+    real = (20_000 + 10_000) / 1000 * 0.015
+    _ok("estimate_cost bills actual tokens beyond the tier's nominal ceiling",
+        abs(estimate_cost(Tier.PREMIUM, 20_000, 10_000) - real) < 1e-9, state)
 
     passed, failed = state
     print(f"\nRESULT: {passed} passed, {failed} failed")

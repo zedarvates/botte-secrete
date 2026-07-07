@@ -133,6 +133,27 @@ class TestMainAPI:
         assert s["stored_originals"] == 1
         assert s["total_original_bytes"] > 0
 
+    def test_never_expands_the_input(self):
+        """A natural-language prompt containing one short fenced code block is
+        misdetected as 'code' (_detect_type counts def/import/braces, not
+        prose ratio); strip_comments+collapse_imports on a single import line
+        nets it larger (# [1 import lines] > 'import os'). compress() must
+        never hand back something bigger than what came in — that would grow
+        the context it's meant to shrink. Regression for the exact input that
+        triggered it in scripts/benchmark_full.py's SAMPLE_PROMPT."""
+        content = (
+            "You are an AI assistant helping with code review.\n"
+            "Please analyze the following code for potential issues:\n\n"
+            "```python\ndef unsafe_function(user_input):\n"
+            '    import os\n    os.system(f"echo {user_input}")\n```\n\n'
+            "Identify security vulnerabilities and suggest fixes.\n"
+            "Consider: injection attacks, input validation, error handling.\n"
+        )
+        result = compress(content, content_type="auto")
+        assert result.compressed_size <= result.original_size
+        assert result.data == content
+        assert result.strategy == "none (would have expanded)"
+
 
 class TestCLIIntegration:
     def test_imports(self):
