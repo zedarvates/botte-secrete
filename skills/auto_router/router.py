@@ -22,6 +22,7 @@ from skills.tiered_router import Tier, TIER_INFO, Budget, estimate_tokens, estim
 from skills.auto_router.effort import estimate as estimate_effort, EffortEstimate
 from skills.auto_router import providers
 from skills.auto_router import nn_belt
+from skills.auto_router import nn_belt2
 from skills.llm_backends import registry
 from skills.llm_backends.client import LocalLLMClient, LocalLLMError, ChatResult
 
@@ -93,6 +94,22 @@ class AutoRouter:
                                    eff.score, budget_ratio, True),
                                "predicted_class": 0},  # 0 = local
                 )
+            # Belt 2.0 second opinion — cloud_escalation_predictor (3 classes,
+            # abstains under nn_belt2.CONFIDENCE). Only consulted when belt 1.0
+            # abstained, same conservative window: it can pull a borderline task
+            # to LOCAL, never push one to a pricier tier.
+            if hint is None:
+                hint2 = nn_belt2.cloud_escalation_hint(
+                    effort_score=eff.score, task_type=task_type or "analyze")
+                if hint2 and hint2[0] in ("local_small", "local_big"):
+                    return AutoDecision(
+                        mode="local", tier=Tier.LOCAL, effort=eff,
+                        model=local_model or "local-model",
+                        label=f"{local.label} {local.host}:{local.port}",
+                        base_url=local.base_url, via="local",
+                        reason=f"effort {eff.score:.2f}→{tier.name}; NN belt2 → "
+                               f"{hint2[0]} (conf {hint2[1]:.2f}, 0 cloud tokens)",
+                    )
 
         # Local handles FREE/LOCAL outright, and is the preferred fallback.
         if tier <= Tier.LOCAL and local:
@@ -260,6 +277,16 @@ class AutoRouter:
             else:
                 trace["belt"]["abstain_reason"] = "confidence below threshold or model unavailable"
                 trace["belt"]["effect"] = "abstained — heuristic decides"
+            hint2 = nn_belt2.cloud_escalation_hint(
+                effort_score=eff.score, task_type=task_type or "analyze")
+            trace["belt2"] = {
+                "active": True,
+                "predictor": "cloud_escalation_predictor",
+                "triggered": hint2 is not None,
+            }
+            if hint2:
+                trace["belt2"]["prediction"] = hint2[0]
+                trace["belt2"]["confidence"] = round(hint2[1], 3)
         else:
             trace["belt"] = {
                 "active": False,

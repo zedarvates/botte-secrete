@@ -147,14 +147,30 @@ def main() -> int:
         _ok("confident 'local' hint → mode=local via NN belt",
             d.mode == "local" and "NN belt" in d.reason, state)
 
-        nn_belt.local_vs_cloud_hint = lambda *a, **k: None  # abstain
+        # Belt 1 abstains → Belt 2.0 (cloud_escalation_predictor) gets a say.
+        from skills.auto_router import nn_belt2
+        o_hint2 = nn_belt2.cloud_escalation_hint
+
+        nn_belt.local_vs_cloud_hint = lambda *a, **k: None  # belt1 abstains
+        nn_belt2.cloud_escalation_hint = lambda *a, **k: ("local_small", 0.8)
+        d2b = AutoRouter().decide("borderline task")
+        _ok("belt1 abstains → confident belt2 'local_small' routes local",
+            d2b.mode == "local" and "NN belt2" in d2b.reason, state)
+
+        nn_belt2.cloud_escalation_hint = lambda *a, **k: ("cloud", 0.9)
+        d2c = AutoRouter().decide("borderline task")
+        _ok("belt2 'cloud' verdict never claims the decision (advisory only)",
+            "NN belt2" not in d2c.reason, state)
+
+        nn_belt2.cloud_escalation_hint = lambda *a, **k: None  # both abstain
         d2 = AutoRouter().decide("borderline task")
-        _ok("abstaining belt does not claim the decision",
+        _ok("abstaining belts do not claim the decision",
             "NN belt" not in d2.reason, state)
     finally:
         registry.best_chat_backend = o_best
         registry.preferred_model = o_pref
         nn_belt.local_vs_cloud_hint = o_hint
+        nn_belt2.cloud_escalation_hint = o_hint2
         router_mod.estimate_effort = o_est
 
     # 12. Implicit feedback: belt decisions get labelled for the active-learning loop.
