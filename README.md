@@ -30,7 +30,8 @@ tells you what hardware/infra changes would cut cost further.
 | Self-audit | **89/100 (B)** — `python -m skills.mousquetaires.scripts.porthos_audit . <out_dir>` |
 | Dependencies | `numpy`, `pydantic`, `tree-sitter` — see [`requirements.txt`](requirements.txt) |
 | License | **MIT** — free forever |
-| Deploy | One command: `python -m skills.bootstrap.cli /your-project` |
+| Install | `pip install git+https://github.com/zedarvates/botte-secrete` → `botte` + `botte-mcp` commands |
+| Deploy | One command: `botte bootstrap /your-project` |
 
 ## 🩹 v1.8.0 — Belt Wiring & Audit Fixes (July 2026)
 
@@ -255,7 +256,21 @@ Full checkup + machine scan + ranked opportunities in one command:
 [skills/demo](skills/demo/SKILL.md), [skills/dashboard](skills/dashboard/SKILL.md),
 [skills/bench](skills/bench/SKILL.md), [skills/checkup](skills/checkup/SKILL.md).
 
-## ⚡ Deploy into your project
+## ⚡ Install & deploy into your project
+
+**Option A — pip install (no clone needed):**
+
+```bash
+pip install git+https://github.com/zedarvates/botte-secrete
+botte --help          # doctor · route · dashboard · bootstrap · mcp · belt
+botte belt            # verify the 11 micro-NN ship with the package
+botte bootstrap /path/to/your-project
+```
+
+The install also provides `botte-mcp` — point your agent's `.mcp.json` at it
+directly instead of a repo checkout.
+
+**Option B — from a clone:**
 
 ```bash
 python -m skills.bootstrap.cli /path/to/your-project   # wire MCP tools, audit directives, write .botte config

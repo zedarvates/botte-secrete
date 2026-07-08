@@ -1,0 +1,57 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "botte-secrete"
+version = "1.8.0"
+description = "Multi-agent token optimization platform — local-first routing, micro-NN belt, code audit, MCP server. 0 cloud tokens by default."
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.10"
+authors = [{ name = "zedarvates" }]
+keywords = ["llm", "tokens", "routing", "mcp", "local-first", "agents"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Topic :: Software Development :: Quality Assurance",
+]
+# Mirror of requirements.txt (which stays authoritative for CI).
+dependencies = [
+    "numpy",
+    "pydantic>=2,<3",
+    "pydantic-settings>=2,<3",
+    "tree-sitter>=0.23,<0.26",
+    "tree-sitter-python",
+    "tree-sitter-javascript",
+    "tree-sitter-typescript",
+    "tree-sitter-rust",
+    "tree-sitter-go",
+    "tree-sitter-java",
+    "tree-sitter-c",
+    "tree-sitter-cpp",
+    "pyyaml",
+    "rich",
+    "typer",
+    "networkx",
+]
+
+[project.urls]
+Homepage = "https://github.com/zedarvates/botte-secrete"
+Changelog = "https://github.com/zedarvates/botte-secrete/blob/main/CHANGELOG.md"
+
+[project.scripts]
+botte = "skills.cli:main"
+botte-mcp = "skills.llm_mcp.server:main"
+
+[tool.setuptools.packages.find]
+# The historical top-level package is `skills` (a PyPI-unfriendly name — a
+# rename to `botte` is planned for 2.x). Installable today via:
+#   pip install git+https://github.com/zedarvates/botte-secrete
+include = ["skills*"]
+
+[tool.setuptools.package-data]
+# Trained micro-NN weights, harness specs, and skill docs ship with the code.
+"*" = ["*.json", "*.yaml", "*.yml", "*.md", "*.txt"]
