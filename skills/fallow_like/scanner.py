@@ -83,6 +83,7 @@ DEFAULT_IGNORE_DIRS = {
     ".kilo", ".kilocode", "worktrees", "Archives", ".archive",
     ".botte", ".botte-cache", ".pytest_cache", ".ruff_cache", ".mypy_cache",
     ".cache", ".gradle", ".next", ".nuxt", ".turbo", "coverage", ".godot",
+    ".claude", ".zig-cache", "zig-out",
 }
 
 DEFAULT_MAX_FILES = 4000  # safety cap so a pathological tree can't hang the scan

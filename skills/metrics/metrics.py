@@ -29,7 +29,8 @@ try:
 except Exception:  # keep metrics usable even if fallow deps are missing
     DEFAULT_IGNORE_DIRS = {".git", "__pycache__", ".venv", "venv", "node_modules",
                            "dist", "build", ".kilo", ".kilocode", "worktrees",
-                           "Archives", ".botte", ".pytest_cache", ".ruff_cache"}
+                           "Archives", ".botte", ".pytest_cache", ".ruff_cache",
+                           ".claude", ".zig-cache", "zig-out", ".next", "target"}
 
 # extension → (language, component-hint)
 _EXT_LANG = {

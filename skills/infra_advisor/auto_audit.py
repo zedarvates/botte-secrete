@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import ast
 import hashlib
+import os
 import re
 from collections import defaultdict
 from pathlib import Path
@@ -26,7 +27,8 @@ from skills.infra_advisor.advisor import advise
 _SKIP_DIRS = {".git", "__pycache__", ".venv", "venv", "node_modules", ".botte",
               "dist", "build", ".botte-cache",
               # duplicate working copies that inflate the dup count, not real dupes
-              ".kilo", ".kilocode", "worktrees", "Archives", ".archive"}
+              ".kilo", ".kilocode", "worktrees", "Archives", ".archive",
+              ".claude", ".zig-cache", "zig-out", ".next", "target"}
 
 
 def _norm(src: str) -> str:
@@ -44,24 +46,27 @@ def duplication_scan(project: Path, min_lines: int = 8, top: int = 15) -> dict:
     """Find duplicate function/method bodies across the project's Python files."""
     buckets: dict[str, list] = defaultdict(list)
     files = 0
-    for py in project.rglob("*.py"):
-        if any(part in _SKIP_DIRS for part in py.parts):
-            continue
-        try:
-            text = py.read_text(encoding="utf-8", errors="replace")
-            tree = ast.parse(text)
-        except (OSError, SyntaxError):
-            continue
-        files += 1
-        for node in ast.walk(tree):
-            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                seg = ast.get_source_segment(text, node) or ""
-                norm = _norm(seg)
-                if norm.count("\n") + 1 < min_lines:
-                    continue
-                h = hashlib.sha256(norm.encode()).hexdigest()[:12]
-                rel = py.relative_to(project).as_posix()
-                buckets[h].append(f"{rel}:{node.lineno} {node.name}()")
+    for dirpath, dirnames, filenames in os.walk(project):
+        dirnames[:] = [d for d in dirnames if d not in _SKIP_DIRS]
+        for fn in filenames:
+            if not fn.endswith(".py"):
+                continue
+            py = Path(dirpath) / fn
+            try:
+                text = py.read_text(encoding="utf-8", errors="replace")
+                tree = ast.parse(text)
+            except (OSError, SyntaxError):
+                continue
+            files += 1
+            for node in ast.walk(tree):
+                if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                    seg = ast.get_source_segment(text, node) or ""
+                    norm = _norm(seg)
+                    if norm.count("\n") + 1 < min_lines:
+                        continue
+                    h = hashlib.sha256(norm.encode()).hexdigest()[:12]
+                    rel = py.relative_to(project).as_posix()
+                    buckets[h].append(f"{rel}:{node.lineno} {node.name}()")
 
     dups = [{"hash": h, "count": len(locs), "locations": locs[:6]}
             for h, locs in buckets.items() if len(locs) > 1]

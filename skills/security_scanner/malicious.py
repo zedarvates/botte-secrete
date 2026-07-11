@@ -33,7 +33,15 @@ _SKIP_DIRS = frozenset({
     "dist", "build", ".eggs", "*.egg-info",
     ".hermes", ".cursor", ".vscode", ".idea",
     "target",  # Rust build dir
+    ".zig-cache", "zig-out",
+    "Library",  # Unity build/import cache (can hold multi-GB generated JSON)
 })
+
+# Source files are never legitimately this large; huge "source-looking" files
+# are almost always generated/build artifacts (e.g. Unity's Library/Bee dag
+# JSON, asset manifests) that would otherwise be read fully into memory and
+# regex-scanned line by line, hanging the scan for minutes on a single file.
+_MAX_SCAN_BYTES = 2 * 1024 * 1024
 
 
 def _should_skip(path: Path) -> bool:
@@ -45,6 +53,12 @@ def _should_skip(path: Path) -> bool:
         return True
     if path.suffix.lower() in _SKIP_EXTS:
         return True
+    if path.is_file():
+        try:
+            if path.stat().st_size > _MAX_SCAN_BYTES:
+                return True
+        except OSError:
+            return True
     return False
 
 
@@ -131,16 +145,19 @@ def scan_dir(root: str, fail_on: str = "error", max_workers: int = 8,
     if root_p.is_file():
         return scan_file(str(root_p), do_ast=do_ast)
 
-    # Collect Python files
+    # Collect files, pruning skipped directories during the walk so we never
+    # descend into node_modules / worktrees / build caches (rglob would still
+    # traverse them fully before filtering, which is what made this hang).
     files_to_scan: list[Path] = []
-    for p in root_p.rglob("*"):
-        if _should_skip(p):
-            continue
-        if not p.is_file():
-            continue
-        ext = p.suffix.lower()
-        if ext in (".py", ".rs", ".sh", ".bash", ".yaml", ".yml", ".toml", ".json", ".js", ".ts"):
-            files_to_scan.append(p)
+    for dirpath, dirnames, filenames in os.walk(root_p):
+        dirnames[:] = [d for d in dirnames if not _should_skip(Path(dirpath) / d)]
+        for fn in filenames:
+            p = Path(dirpath) / fn
+            if _should_skip(p):
+                continue
+            ext = p.suffix.lower()
+            if ext in (".py", ".rs", ".sh", ".bash", ".yaml", ".yml", ".toml", ".json", ".js", ".ts"):
+                files_to_scan.append(p)
 
     if not files_to_scan:
         return []
