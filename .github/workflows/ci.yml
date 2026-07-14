@@ -22,7 +22,8 @@ jobs:
         with:
           path: ~/.cache/pip
           key: pip-${{ runner.os }}-${{ matrix.python-version }}
-      - run: pip install numpy
+      - name: Install project dependencies
+        run: pip install -e .
       - name: Run tests (fail-fast)
         run: python scripts/run_tests.py -q
         timeout-minutes: 10
