@@ -10,6 +10,7 @@ from skills.loop_optimizer.models import (
     StopReason,
 )
 from skills.loop_optimizer.controller import LoopController
+from skills.loop_optimizer.features import FEATURE_NAMES, extract_features
 
 __all__ = [
     "LoopAction",
