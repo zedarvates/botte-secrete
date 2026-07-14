@@ -1,5 +1,22 @@
 # Changelog
 
+## v1.9.0rc1 (2026-07-14) — Loop Optimizer release candidate
+
+### Added
+- Deterministic Loop Optimizer: budgets, stop conditions, progress evaluation,
+  failure signatures, append-only ledger, exact cache and minimal context.
+- Optional, fail-closed Needle tool-router experiment with a 240-case bilingual
+  evaluation corpus and measurable activation gate.
+- Lazy MCP commands: `loop_decide`, `loop_explain`, `loop_record`, `loop_stats`.
+- Local loop telemetry and a dashboard Loop Optimizer panel.
+
+### Safety
+- `BOTTE_LOOP_OPTIMIZER=shadow` is the default; it never changes execution.
+- `BOTTE_NEEDLE_ROUTER=0` is the default; no Needle runtime or weights are
+  required for Botte Secrète.
+- Learned policy and production rollout remain blocked until real, verified
+  trajectory and staged-rollout thresholds are met.
+
 ## v1.8.0 (2026-07-07) — Belt Wiring & Audit Fixes
 
 ### Fixed — cost/logic bugs found via full-repo audit
@@ -46,8 +63,8 @@ actual-tokens billing). Self-audit: 89/100 (B), up from a stale 75/100 badge.
 ### 🚀 Infrastructure Proxy (5 features)
 - **Proxy mode**: `python -m skills.botte_proxy.cli proxy --port 8787`
 - **Agent wrap**: `python -m skills.botte_wrap.cli wrap claude|codex|aider|opencode`
-- **Output reduction**: verbosity steering + content trimming des réponses
-- **CacheAligner**: normalisation des préfixes pour KV caches provider
+- **Output reduction**: verbosity steering + response content trimming
+- **CacheAligner**: normalized prefixes for provider KV caches
 - **Dollar savings**: MODEL_PRICES pour 20+ providers, dashboard $$$
 
 ### Added
@@ -70,61 +87,61 @@ actual-tokens billing). Self-audit: 89/100 (B), up from a stale 75/100 badge.
   a 64k window) and shrinks to ~1.4k tok (2%) once tools are lazy-loaded and skills
   fetched on demand. New CLI + `context_profile` MCP tool. 0 cloud tokens.
 ### 📊 Pipeline optimizations (P41-P47)
-- **Prefix pruner**: élague les sections de contexte inutilisées
-- **Agent cache**: skip-agent quand output prédictible (hash/fingerprint/fuzzy)
+- **Prefix pruner**: removes unused context sections
+- **Agent cache**: skips agents when output is predictable (hash/fingerprint/fuzzy)
 - **Token shaper**: 4 niveaux de compression adaptative (aggressive→none)
-- **Self-budget**: agents qui gèrent leur propre budget token
+- **Self-budget**: agents manage their own token budgets
 - **Context slicer**: segmentation multi-window du contexte
-- **Token compressor**: hashing sémantique + byte-pair pruning
+- **Token compressor**: semantic hashing + byte-pair pruning
 - **Auto-distill**: distillation cloud → micro-NN (logistic regression pure numpy)
 
-### 🧠 Micro-NN Belt 2.0 (7 nouveaux modèles)
-- compressibility_predictor (6f→3c): niveau de compression optimal
-- context_pruning_predictor (6f→2c): section à garder/couper
-- skip_agent_predictor (7f→2c): exécuter ou skipper
+### 🧠 Micro-NN Belt 2.0 (7 new models)
+- compressibility_predictor (6f→3c): optimal compression level
+- context_pruning_predictor (6f→2c): section to keep or remove
+- skip_agent_predictor (7f→2c): execute or skip
 - cloud_escalation_predictor (7f→3c): local small/big/cloud
-- response_length_predictor (6f→3c): longueur de réponse
+- response_length_predictor (6f→3c): response length
 - tool_call_predictor (7f→2c): LLM seul ou avec outils
 - semantic_cache_hit_predictor (7f→2c): cache hit ou miss
-- **Total**: 11 micro-NN opérationnels ✅
+- **Total**: 11 operational micro-NNs ✅
 
-### 🔄 Boucles rétroactives cheap (P48-P55)
-- **Context windows**: fenêtres indépendantes + deltas entre étapes
-- **Prefix tree**: trie de préfixes + prompt diffing entre agents
-- **Harness delta**: vérification différentielle (sections modifiées seulement)
-- Loop budgeter, router, cache, compression (intégrés dans les modules ci-dessus)
+### 🔄 Cheap retroactive loops (P48-P55)
+- **Context windows**: independent windows + deltas between steps
+- **Prefix tree**: prefix trie + prompt diffing between agents
+- **Harness delta**: differential verification (changed sections only)
+- Loop budgeter, router, cache, and compression (integrated above)
 
 ### 🧩 DAG/RAG optimizations (P56-P62)
-- **DAG waves**: exécution par vagues synchrones (topological sort)
-- **DAG pruning**: suppression des nœuds/branches inutiles (BFS)
+- **DAG waves**: synchronous wave execution (topological sort)
+- **DAG pruning**: removal of unnecessary nodes and branches (BFS)
 - **DAG memoization**: cache par nœud (input hash → output)
 - **RAG delta retrieval**: documents nouveaux uniquement
-- **RAG query shaping**: reformulation concise (supprime le filler)
+- **RAG query shaping**: concise reformulation (removes filler)
 - **RAG-guided routing**: RAG → meilleur agent (keyword scoring)
 
 ### 🚀 Advanced Ideas (P63-P69)
-- **A2AC**: format binaire compressé inter-agents (dictionnaire 1024 entrées, 4-bit quantization)
-- **Loop Distillation**: distiller les boucles rétroactives réussies
-- **Skill-Level RAG**: ne charger que les skills nécessaires à la tâche
-- **Predictive Fix Planning**: prédire coût/utilité des corrections
-- **Agent Memory Compression**: clustering + dedup des mémoires agents
-- **Predictive Routing**: meilleur chemin d'agents avant exécution
-- **Agent Knowledge Distillation**: transfert de connaissance entre agents
+- **A2AC**: compressed binary inter-agent format (1024-entry dictionary, 4-bit quantization)
+- **Loop Distillation**: distill successful retroactive loops
+- **Skill-Level RAG**: load only skills needed for a task
+- **Predictive Fix Planning**: predict fix cost and utility
+- **Agent Memory Compression**: cluster and deduplicate agent memories
+- **Predictive Routing**: select the best agent path before execution
+- **Agent Knowledge Distillation**: transfer knowledge between agents
 
 ### 🧪 Benchmark
 - `scripts/benchmark_full.py`: mesure les 14 modules
-- Résultat: **81.5% compression** sur échantillons réels
+- Result: **81.5% compression** on real samples
 - Logs: 90.2% | JSON: 92.4% | Code: 5.2% | Contexte mixte: 55.4%
 
 ### 📈 Stats
 - Skills: 57 → **~90**
 - Micro-NN: 4 → **11**
-- Nouveaux modules: **35** (P41-P69)
+- New modules: **35** (P41-P69)
 - Commits cette session: **22**
-- Économies réelles: **590M tokens/mois** (mai 2026)
+- Measured savings: **590M tokens/month** (May 2026)
 
 ### 🔧 Autre
-- CogniARC: exploration adaptative, PuzzleStrategy, hypothèses génériques
-- Kanboard-Neo: dashboard stats réels, activity feed Linear-style
+- CogniARC: adaptive exploration, PuzzleStrategy, generic hypotheses
+- Kanboard-Neo: real dashboard metrics, Linear-style activity feed
 - arc-human-skills: 2 747 lignes drawing improvements
-- Provider Hermes `botte-proxy`: prêt à l'emploi
+- Hermes provider `botte-proxy`: ready to use

@@ -19,6 +19,7 @@ import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Optional
+from skills.atomic_json import write_json
 
 MEMORY_DIR = Path.home() / ".botte" / "memory"
 
@@ -66,7 +67,7 @@ class MemoryBank:
         index_file = self.base / "index.json"
         if index_file.exists():
             try:
-                data = json.loads(index_file.read_text())
+                data = json.loads(index_file.read_text(encoding="utf-8"))
                 for d in data:
                     self._index[d["key"]] = MemoryEntry.from_dict(d)
             except (json.JSONDecodeError, KeyError):
@@ -76,7 +77,7 @@ class MemoryBank:
         """Persist index to disk."""
         index_file = self.base / "index.json"
         data = [e.to_dict() for e in self._index.values()]
-        index_file.write_text(json.dumps(data, indent=2))
+        write_json(index_file, data)
 
     def store(self, key: str, value: Any, category: str = "fact",
               confidence: float = 1.0, tags: list[str] | None = None):

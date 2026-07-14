@@ -16,6 +16,7 @@ import json
 import hashlib
 import datetime
 from typing import Optional, Any
+from skills.atomic_json import write_json
 
 
 class ProjectCache:
@@ -34,6 +35,9 @@ class ProjectCache:
     CACHE_DIR_NAME = ".botte-cache"
     MAX_CACHE_AGE_HOURS = 24  # Invalider après 24h
     VERSION = 1  # Incrémenter si le format change
+    FINGERPRINT_IGNORES = {
+        ".git", ".botte", ".botte-cache", "__pycache__", ".pytest_cache",
+    }
 
     def __init__(self, project_root: str):
         self.root = Path(project_root).resolve()
@@ -51,6 +55,24 @@ class ProjectCache:
     def _path(self, name: str) -> Path:
         return self.cache_dir / f"{self._key(name)}.json"
 
+    def _project_fingerprint(self) -> str:
+        """Cheap metadata fingerprint used to reject stale scan results."""
+        digest = hashlib.sha256()
+        try:
+            files = sorted(
+                p for p in self.root.rglob("*")
+                if p.is_file()
+                and not any(part in self.FINGERPRINT_IGNORES
+                            for part in p.relative_to(self.root).parts)
+            )
+            for path in files:
+                stat = path.stat()
+                rel = path.relative_to(self.root).as_posix()
+                digest.update(f"{rel}\0{stat.st_size}\0{stat.st_mtime_ns}\n".encode("utf-8"))
+        except OSError:
+            return ""
+        return digest.hexdigest()
+
     def is_fresh(self, name: str) -> bool:
         """Vérifie si le cache existe et est récent."""
         p = self._path(name)
@@ -63,6 +85,10 @@ class ProjectCache:
                 p.unlink(missing_ok=True)
                 return False
             if data.get("version") != self.VERSION:
+                p.unlink(missing_ok=True)
+                return False
+            cached_fingerprint = data.get("project_fingerprint")
+            if cached_fingerprint and cached_fingerprint != self._project_fingerprint():
                 p.unlink(missing_ok=True)
                 return False
             return True
@@ -90,7 +116,8 @@ class ProjectCache:
         data["cached_at"] = datetime.datetime.now().isoformat()
         data["version"] = self.VERSION
         data["project_root"] = str(self.root)
-        self._path(name).write_text(json.dumps(data, indent=2, default=str), encoding="utf-8")
+        data["project_fingerprint"] = self._project_fingerprint()
+        write_json(self._path(name), data)
 
     def get_or_scan(self, scanner_fn) -> dict:
         """Récupère du cache ou scanne si nécessaire.

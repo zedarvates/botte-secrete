@@ -353,7 +353,7 @@
       (16 860 tok/session mesuré par `checkup` pendant cette session).
 - [ ] ⚪ Revisiter `fix-report.json` à la racine (fichier orphelin observé
       dans `ls` — vérifier s'il est encore généré/consommé quelque part).
-- [ ] 🟡 Vérifier la cohérence des badges de version (`v1.5.0`) avec le
+- [x] 🟡 Vérifier la cohérence des badges de version (`v1.9.0rc1`) avec le
       `CHANGELOG.md` — processus de bump à documenter/automatiser.
 - [ ] ⚪ Ajouter un script de nettoyage `.botte-cache/`/`.pytest_cache/`
       pour les machines de développement (déjà partiellement dans `cache`,

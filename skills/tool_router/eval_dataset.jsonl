@@ -1,0 +1,240 @@
+{"id":"seed-001","language":"fr","query":"Lis le fichier README.md","expected_tool":"read_file","expected_arguments":{"path":"README.md"},"kind":"valid"}
+{"id":"seed-002","language":"en","query":"Read local file AGENTS.md","expected_tool":"read_file","expected_arguments":{"path":"AGENTS.md"},"kind":"valid"}
+{"id":"seed-003","language":"fr","query":"Lance le contrôle du projet","expected_tool":"run_checkup","expected_arguments":{},"kind":"valid"}
+{"id":"seed-004","language":"en","query":"Run the project health check","expected_tool":"run_checkup","expected_arguments":{},"kind":"valid"}
+{"id":"seed-005","language":"fr","query":"Lis","expected_tool":null,"expected_arguments":{},"kind":"ambiguous"}
+{"id":"seed-006","language":"en","query":"Read","expected_tool":null,"expected_arguments":{},"kind":"ambiguous"}
+{"id":"seed-007","language":"fr","query":"Fais quelque chose d'inconnu","expected_tool":null,"expected_arguments":{},"kind":"abstain"}
+{"id":"seed-008","language":"en","query":"Do an unknown action","expected_tool":null,"expected_arguments":{},"kind":"abstain"}
+{"id":"seed-009","language":"fr","query":"Lis le fichier docs/plans/roadmap.md","expected_tool":"read_file","expected_arguments":{"path":"docs/plans/roadmap.md"},"kind":"valid"}
+{"id":"seed-010","language":"en","query":"Read local file skills/test_e2e.py","expected_tool":"read_file","expected_arguments":{"path":"skills/test_e2e.py"},"kind":"valid"}
+{"id":"seed-011","language":"fr","query":"Lance le contrôle du projet","expected_tool":"run_checkup","expected_arguments":{},"kind":"valid"}
+{"id":"seed-012","language":"en","query":"Run the project health check","expected_tool":"run_checkup","expected_arguments":{},"kind":"valid"}
+{"id":"seed-013","language":"fr","query":"Lis","expected_tool":null,"expected_arguments":{},"kind":"ambiguous"}
+{"id":"seed-014","language":"en","query":"Read","expected_tool":null,"expected_arguments":{},"kind":"ambiguous"}
+{"id":"seed-015","language":"fr","query":"Fais quelque chose d'inconnu","expected_tool":null,"expected_arguments":{},"kind":"abstain"}
+{"id":"seed-016","language":"en","query":"Do an unknown action","expected_tool":null,"expected_arguments":{},"kind":"abstain"}
+{"id":"seed-017","language":"fr","query":"Lis le fichier AGENTS.md","expected_tool":"read_file","expected_arguments":{"path":"AGENTS.md"},"kind":"valid"}
+{"id":"seed-018","language":"en","query":"Read local file pyproject.toml","expected_tool":"read_file","expected_arguments":{"path":"pyproject.toml"},"kind":"valid"}
+{"id":"seed-019","language":"fr","query":"Lance le contrôle du projet","expected_tool":"run_checkup","expected_arguments":{},"kind":"valid"}
+{"id":"seed-020","language":"en","query":"Run the project health check","expected_tool":"run_checkup","expected_arguments":{},"kind":"valid"}
+{"id":"seed-021","language":"fr","query":"Lis","expected_tool":null,"expected_arguments":{},"kind":"ambiguous"}
+{"id":"seed-022","language":"en","query":"Read","expected_tool":null,"expected_arguments":{},"kind":"ambiguous"}
+{"id":"seed-023","language":"fr","query":"Fais quelque chose d'inconnu","expected_tool":null,"expected_arguments":{},"kind":"abstain"}
+{"id":"seed-024","language":"en","query":"Do an unknown action","expected_tool":null,"expected_arguments":{},"kind":"abstain"}
+{"id":"seed-025","language":"fr","query":"Lis le fichier skills/test_e2e.py","expected_tool":"read_file","expected_arguments":{"path":"skills/test_e2e.py"},"kind":"valid"}
+{"id":"seed-026","language":"en","query":"Read local file README.md","expected_tool":"read_file","expected_arguments":{"path":"README.md"},"kind":"valid"}
+{"id":"seed-027","language":"fr","query":"Lance le contrôle du projet","expected_tool":"run_checkup","expected_arguments":{},"kind":"valid"}
+{"id":"seed-028","language":"en","query":"Run the project health check","expected_tool":"run_checkup","expected_arguments":{},"kind":"valid"}
+{"id":"seed-029","language":"fr","query":"Lis","expected_tool":null,"expected_arguments":{},"kind":"ambiguous"}
+{"id":"seed-030","language":"en","query":"Read","expected_tool":null,"expected_arguments":{},"kind":"ambiguous"}
+{"id":"seed-031","language":"fr","query":"Fais quelque chose d'inconnu","expected_tool":null,"expected_arguments":{},"kind":"abstain"}
+{"id":"seed-032","language":"en","query":"Do an unknown action","expected_tool":null,"expected_arguments":{},"kind":"abstain"}
+{"id":"seed-033","language":"fr","query":"Lis le fichier pyproject.toml","expected_tool":"read_file","expected_arguments":{"path":"pyproject.toml"},"kind":"valid"}
+{"id":"seed-034","language":"en","query":"Read local file docs/plans/roadmap.md","expected_tool":"read_file","expected_arguments":{"path":"docs/plans/roadmap.md"},"kind":"valid"}
+{"id":"seed-035","language":"fr","query":"Lance le contrôle du projet","expected_tool":"run_checkup","expected_arguments":{},"kind":"valid"}
+{"id":"seed-036","language":"en","query":"Run the project health check","expected_tool":"run_checkup","expected_arguments":{},"kind":"valid"}
+{"id":"seed-037","language":"fr","query":"Lis","expected_tool":null,"expected_arguments":{},"kind":"ambiguous"}
+{"id":"seed-038","language":"en","query":"Read","expected_tool":null,"expected_arguments":{},"kind":"ambiguous"}
+{"id":"seed-039","language":"fr","query":"Fais quelque chose d'inconnu","expected_tool":null,"expected_arguments":{},"kind":"abstain"}
+{"id":"seed-040","language":"en","query":"Do an unknown action","expected_tool":null,"expected_arguments":{},"kind":"abstain"}
+{"id":"seed-041","language":"fr","query":"Lis le fichier README.md","expected_tool":"read_file","expected_arguments":{"path":"README.md"},"kind":"valid"}
+{"id":"seed-042","language":"en","query":"Read local file AGENTS.md","expected_tool":"read_file","expected_arguments":{"path":"AGENTS.md"},"kind":"valid"}
+{"id":"seed-043","language":"fr","query":"Lance le contrôle du projet","expected_tool":"run_checkup","expected_arguments":{},"kind":"valid"}
+{"id":"seed-044","language":"en","query":"Run the project health check","expected_tool":"run_checkup","expected_arguments":{},"kind":"valid"}
+{"id":"seed-045","language":"fr","query":"Lis","expected_tool":null,"expected_arguments":{},"kind":"ambiguous"}
+{"id":"seed-046","language":"en","query":"Read","expected_tool":null,"expected_arguments":{},"kind":"ambiguous"}
+{"id":"seed-047","language":"fr","query":"Fais quelque chose d'inconnu","expected_tool":null,"expected_arguments":{},"kind":"abstain"}
+{"id":"seed-048","language":"en","query":"Do an unknown action","expected_tool":null,"expected_arguments":{},"kind":"abstain"}
+{"id":"seed-049","language":"fr","query":"Lis le fichier docs/plans/roadmap.md","expected_tool":"read_file","expected_arguments":{"path":"docs/plans/roadmap.md"},"kind":"valid"}
+{"id":"seed-050","language":"en","query":"Read local file skills/test_e2e.py","expected_tool":"read_file","expected_arguments":{"path":"skills/test_e2e.py"},"kind":"valid"}
+{"id":"seed-051","language":"fr","query":"Lance le contrôle du projet","expected_tool":"run_checkup","expected_arguments":{},"kind":"valid"}
+{"id":"seed-052","language":"en","query":"Run the project health check","expected_tool":"run_checkup","expected_arguments":{},"kind":"valid"}
+{"id":"seed-053","language":"fr","query":"Lis","expected_tool":null,"expected_arguments":{},"kind":"ambiguous"}
+{"id":"seed-054","language":"en","query":"Read","expected_tool":null,"expected_arguments":{},"kind":"ambiguous"}
+{"id":"seed-055","language":"fr","query":"Fais quelque chose d'inconnu","expected_tool":null,"expected_arguments":{},"kind":"abstain"}
+{"id":"seed-056","language":"en","query":"Do an unknown action","expected_tool":null,"expected_arguments":{},"kind":"abstain"}
+{"id":"seed-057","language":"fr","query":"Lis le fichier AGENTS.md","expected_tool":"read_file","expected_arguments":{"path":"AGENTS.md"},"kind":"valid"}
+{"id":"seed-058","language":"en","query":"Read local file pyproject.toml","expected_tool":"read_file","expected_arguments":{"path":"pyproject.toml"},"kind":"valid"}
+{"id":"seed-059","language":"fr","query":"Lance le contrôle du projet","expected_tool":"run_checkup","expected_arguments":{},"kind":"valid"}
+{"id":"seed-060","language":"en","query":"Run the project health check","expected_tool":"run_checkup","expected_arguments":{},"kind":"valid"}
+{"id":"seed-061","language":"fr","query":"Lis","expected_tool":null,"expected_arguments":{},"kind":"ambiguous"}
+{"id":"seed-062","language":"en","query":"Read","expected_tool":null,"expected_arguments":{},"kind":"ambiguous"}
+{"id":"seed-063","language":"fr","query":"Fais quelque chose d'inconnu","expected_tool":null,"expected_arguments":{},"kind":"abstain"}
+{"id":"seed-064","language":"en","query":"Do an unknown action","expected_tool":null,"expected_arguments":{},"kind":"abstain"}
+{"id":"seed-065","language":"fr","query":"Lis le fichier skills/test_e2e.py","expected_tool":"read_file","expected_arguments":{"path":"skills/test_e2e.py"},"kind":"valid"}
+{"id":"seed-066","language":"en","query":"Read local file README.md","expected_tool":"read_file","expected_arguments":{"path":"README.md"},"kind":"valid"}
+{"id":"seed-067","language":"fr","query":"Lance le contrôle du projet","expected_tool":"run_checkup","expected_arguments":{},"kind":"valid"}
+{"id":"seed-068","language":"en","query":"Run the project health check","expected_tool":"run_checkup","expected_arguments":{},"kind":"valid"}
+{"id":"seed-069","language":"fr","query":"Lis","expected_tool":null,"expected_arguments":{},"kind":"ambiguous"}
+{"id":"seed-070","language":"en","query":"Read","expected_tool":null,"expected_arguments":{},"kind":"ambiguous"}
+{"id":"seed-071","language":"fr","query":"Fais quelque chose d'inconnu","expected_tool":null,"expected_arguments":{},"kind":"abstain"}
+{"id":"seed-072","language":"en","query":"Do an unknown action","expected_tool":null,"expected_arguments":{},"kind":"abstain"}
+{"id":"seed-073","language":"fr","query":"Lis le fichier pyproject.toml","expected_tool":"read_file","expected_arguments":{"path":"pyproject.toml"},"kind":"valid"}
+{"id":"seed-074","language":"en","query":"Read local file docs/plans/roadmap.md","expected_tool":"read_file","expected_arguments":{"path":"docs/plans/roadmap.md"},"kind":"valid"}
+{"id":"seed-075","language":"fr","query":"Lance le contrôle du projet","expected_tool":"run_checkup","expected_arguments":{},"kind":"valid"}
+{"id":"seed-076","language":"en","query":"Run the project health check","expected_tool":"run_checkup","expected_arguments":{},"kind":"valid"}
+{"id":"seed-077","language":"fr","query":"Lis","expected_tool":null,"expected_arguments":{},"kind":"ambiguous"}
+{"id":"seed-078","language":"en","query":"Read","expected_tool":null,"expected_arguments":{},"kind":"ambiguous"}
+{"id":"seed-079","language":"fr","query":"Fais quelque chose d'inconnu","expected_tool":null,"expected_arguments":{},"kind":"abstain"}
+{"id":"seed-080","language":"en","query":"Do an unknown action","expected_tool":null,"expected_arguments":{},"kind":"abstain"}
+{"id":"seed-081","language":"fr","query":"Lis le fichier README.md","expected_tool":"read_file","expected_arguments":{"path":"README.md"},"kind":"valid"}
+{"id":"seed-082","language":"en","query":"Read local file AGENTS.md","expected_tool":"read_file","expected_arguments":{"path":"AGENTS.md"},"kind":"valid"}
+{"id":"seed-083","language":"fr","query":"Lance le contrôle du projet","expected_tool":"run_checkup","expected_arguments":{},"kind":"valid"}
+{"id":"seed-084","language":"en","query":"Run the project health check","expected_tool":"run_checkup","expected_arguments":{},"kind":"valid"}
+{"id":"seed-085","language":"fr","query":"Lis","expected_tool":null,"expected_arguments":{},"kind":"ambiguous"}
+{"id":"seed-086","language":"en","query":"Read","expected_tool":null,"expected_arguments":{},"kind":"ambiguous"}
+{"id":"seed-087","language":"fr","query":"Fais quelque chose d'inconnu","expected_tool":null,"expected_arguments":{},"kind":"abstain"}
+{"id":"seed-088","language":"en","query":"Do an unknown action","expected_tool":null,"expected_arguments":{},"kind":"abstain"}
+{"id":"seed-089","language":"fr","query":"Lis le fichier docs/plans/roadmap.md","expected_tool":"read_file","expected_arguments":{"path":"docs/plans/roadmap.md"},"kind":"valid"}
+{"id":"seed-090","language":"en","query":"Read local file skills/test_e2e.py","expected_tool":"read_file","expected_arguments":{"path":"skills/test_e2e.py"},"kind":"valid"}
+{"id":"seed-091","language":"fr","query":"Lance le contrôle du projet","expected_tool":"run_checkup","expected_arguments":{},"kind":"valid"}
+{"id":"seed-092","language":"en","query":"Run the project health check","expected_tool":"run_checkup","expected_arguments":{},"kind":"valid"}
+{"id":"seed-093","language":"fr","query":"Lis","expected_tool":null,"expected_arguments":{},"kind":"ambiguous"}
+{"id":"seed-094","language":"en","query":"Read","expected_tool":null,"expected_arguments":{},"kind":"ambiguous"}
+{"id":"seed-095","language":"fr","query":"Fais quelque chose d'inconnu","expected_tool":null,"expected_arguments":{},"kind":"abstain"}
+{"id":"seed-096","language":"en","query":"Do an unknown action","expected_tool":null,"expected_arguments":{},"kind":"abstain"}
+{"id":"seed-097","language":"fr","query":"Lis le fichier AGENTS.md","expected_tool":"read_file","expected_arguments":{"path":"AGENTS.md"},"kind":"valid"}
+{"id":"seed-098","language":"en","query":"Read local file pyproject.toml","expected_tool":"read_file","expected_arguments":{"path":"pyproject.toml"},"kind":"valid"}
+{"id":"seed-099","language":"fr","query":"Lance le contrôle du projet","expected_tool":"run_checkup","expected_arguments":{},"kind":"valid"}
+{"id":"seed-100","language":"en","query":"Run the project health check","expected_tool":"run_checkup","expected_arguments":{},"kind":"valid"}
+{"id":"seed-101","language":"fr","query":"Lis","expected_tool":null,"expected_arguments":{},"kind":"ambiguous"}
+{"id":"seed-102","language":"en","query":"Read","expected_tool":null,"expected_arguments":{},"kind":"ambiguous"}
+{"id":"seed-103","language":"fr","query":"Fais quelque chose d'inconnu","expected_tool":null,"expected_arguments":{},"kind":"abstain"}
+{"id":"seed-104","language":"en","query":"Do an unknown action","expected_tool":null,"expected_arguments":{},"kind":"abstain"}
+{"id":"seed-105","language":"fr","query":"Lis le fichier skills/test_e2e.py","expected_tool":"read_file","expected_arguments":{"path":"skills/test_e2e.py"},"kind":"valid"}
+{"id":"seed-106","language":"en","query":"Read local file README.md","expected_tool":"read_file","expected_arguments":{"path":"README.md"},"kind":"valid"}
+{"id":"seed-107","language":"fr","query":"Lance le contrôle du projet","expected_tool":"run_checkup","expected_arguments":{},"kind":"valid"}
+{"id":"seed-108","language":"en","query":"Run the project health check","expected_tool":"run_checkup","expected_arguments":{},"kind":"valid"}
+{"id":"seed-109","language":"fr","query":"Lis","expected_tool":null,"expected_arguments":{},"kind":"ambiguous"}
+{"id":"seed-110","language":"en","query":"Read","expected_tool":null,"expected_arguments":{},"kind":"ambiguous"}
+{"id":"seed-111","language":"fr","query":"Fais quelque chose d'inconnu","expected_tool":null,"expected_arguments":{},"kind":"abstain"}
+{"id":"seed-112","language":"en","query":"Do an unknown action","expected_tool":null,"expected_arguments":{},"kind":"abstain"}
+{"id":"seed-113","language":"fr","query":"Lis le fichier pyproject.toml","expected_tool":"read_file","expected_arguments":{"path":"pyproject.toml"},"kind":"valid"}
+{"id":"seed-114","language":"en","query":"Read local file docs/plans/roadmap.md","expected_tool":"read_file","expected_arguments":{"path":"docs/plans/roadmap.md"},"kind":"valid"}
+{"id":"seed-115","language":"fr","query":"Lance le contrôle du projet","expected_tool":"run_checkup","expected_arguments":{},"kind":"valid"}
+{"id":"seed-116","language":"en","query":"Run the project health check","expected_tool":"run_checkup","expected_arguments":{},"kind":"valid"}
+{"id":"seed-117","language":"fr","query":"Lis","expected_tool":null,"expected_arguments":{},"kind":"ambiguous"}
+{"id":"seed-118","language":"en","query":"Read","expected_tool":null,"expected_arguments":{},"kind":"ambiguous"}
+{"id":"seed-119","language":"fr","query":"Fais quelque chose d'inconnu","expected_tool":null,"expected_arguments":{},"kind":"abstain"}
+{"id":"seed-120","language":"en","query":"Do an unknown action","expected_tool":null,"expected_arguments":{},"kind":"abstain"}
+{"id":"seed-121","language":"fr","query":"Lis le fichier README.md","expected_tool":"read_file","expected_arguments":{"path":"README.md"},"kind":"valid"}
+{"id":"seed-122","language":"en","query":"Read local file AGENTS.md","expected_tool":"read_file","expected_arguments":{"path":"AGENTS.md"},"kind":"valid"}
+{"id":"seed-123","language":"fr","query":"Lance le contrôle du projet","expected_tool":"run_checkup","expected_arguments":{},"kind":"valid"}
+{"id":"seed-124","language":"en","query":"Run the project health check","expected_tool":"run_checkup","expected_arguments":{},"kind":"valid"}
+{"id":"seed-125","language":"fr","query":"Lis","expected_tool":null,"expected_arguments":{},"kind":"ambiguous"}
+{"id":"seed-126","language":"en","query":"Read","expected_tool":null,"expected_arguments":{},"kind":"ambiguous"}
+{"id":"seed-127","language":"fr","query":"Fais quelque chose d'inconnu","expected_tool":null,"expected_arguments":{},"kind":"abstain"}
+{"id":"seed-128","language":"en","query":"Do an unknown action","expected_tool":null,"expected_arguments":{},"kind":"abstain"}
+{"id":"seed-129","language":"fr","query":"Lis le fichier docs/plans/roadmap.md","expected_tool":"read_file","expected_arguments":{"path":"docs/plans/roadmap.md"},"kind":"valid"}
+{"id":"seed-130","language":"en","query":"Read local file skills/test_e2e.py","expected_tool":"read_file","expected_arguments":{"path":"skills/test_e2e.py"},"kind":"valid"}
+{"id":"seed-131","language":"fr","query":"Lance le contrôle du projet","expected_tool":"run_checkup","expected_arguments":{},"kind":"valid"}
+{"id":"seed-132","language":"en","query":"Run the project health check","expected_tool":"run_checkup","expected_arguments":{},"kind":"valid"}
+{"id":"seed-133","language":"fr","query":"Lis","expected_tool":null,"expected_arguments":{},"kind":"ambiguous"}
+{"id":"seed-134","language":"en","query":"Read","expected_tool":null,"expected_arguments":{},"kind":"ambiguous"}
+{"id":"seed-135","language":"fr","query":"Fais quelque chose d'inconnu","expected_tool":null,"expected_arguments":{},"kind":"abstain"}
+{"id":"seed-136","language":"en","query":"Do an unknown action","expected_tool":null,"expected_arguments":{},"kind":"abstain"}
+{"id":"seed-137","language":"fr","query":"Lis le fichier AGENTS.md","expected_tool":"read_file","expected_arguments":{"path":"AGENTS.md"},"kind":"valid"}
+{"id":"seed-138","language":"en","query":"Read local file pyproject.toml","expected_tool":"read_file","expected_arguments":{"path":"pyproject.toml"},"kind":"valid"}
+{"id":"seed-139","language":"fr","query":"Lance le contrôle du projet","expected_tool":"run_checkup","expected_arguments":{},"kind":"valid"}
+{"id":"seed-140","language":"en","query":"Run the project health check","expected_tool":"run_checkup","expected_arguments":{},"kind":"valid"}
+{"id":"seed-141","language":"fr","query":"Lis","expected_tool":null,"expected_arguments":{},"kind":"ambiguous"}
+{"id":"seed-142","language":"en","query":"Read","expected_tool":null,"expected_arguments":{},"kind":"ambiguous"}
+{"id":"seed-143","language":"fr","query":"Fais quelque chose d'inconnu","expected_tool":null,"expected_arguments":{},"kind":"abstain"}
+{"id":"seed-144","language":"en","query":"Do an unknown action","expected_tool":null,"expected_arguments":{},"kind":"abstain"}
+{"id":"seed-145","language":"fr","query":"Lis le fichier skills/test_e2e.py","expected_tool":"read_file","expected_arguments":{"path":"skills/test_e2e.py"},"kind":"valid"}
+{"id":"seed-146","language":"en","query":"Read local file README.md","expected_tool":"read_file","expected_arguments":{"path":"README.md"},"kind":"valid"}
+{"id":"seed-147","language":"fr","query":"Lance le contrôle du projet","expected_tool":"run_checkup","expected_arguments":{},"kind":"valid"}
+{"id":"seed-148","language":"en","query":"Run the project health check","expected_tool":"run_checkup","expected_arguments":{},"kind":"valid"}
+{"id":"seed-149","language":"fr","query":"Lis","expected_tool":null,"expected_arguments":{},"kind":"ambiguous"}
+{"id":"seed-150","language":"en","query":"Read","expected_tool":null,"expected_arguments":{},"kind":"ambiguous"}
+{"id":"seed-151","language":"fr","query":"Fais quelque chose d'inconnu","expected_tool":null,"expected_arguments":{},"kind":"abstain"}
+{"id":"seed-152","language":"en","query":"Do an unknown action","expected_tool":null,"expected_arguments":{},"kind":"abstain"}
+{"id":"seed-153","language":"fr","query":"Lis le fichier pyproject.toml","expected_tool":"read_file","expected_arguments":{"path":"pyproject.toml"},"kind":"valid"}
+{"id":"seed-154","language":"en","query":"Read local file docs/plans/roadmap.md","expected_tool":"read_file","expected_arguments":{"path":"docs/plans/roadmap.md"},"kind":"valid"}
+{"id":"seed-155","language":"fr","query":"Lance le contrôle du projet","expected_tool":"run_checkup","expected_arguments":{},"kind":"valid"}
+{"id":"seed-156","language":"en","query":"Run the project health check","expected_tool":"run_checkup","expected_arguments":{},"kind":"valid"}
+{"id":"seed-157","language":"fr","query":"Lis","expected_tool":null,"expected_arguments":{},"kind":"ambiguous"}
+{"id":"seed-158","language":"en","query":"Read","expected_tool":null,"expected_arguments":{},"kind":"ambiguous"}
+{"id":"seed-159","language":"fr","query":"Fais quelque chose d'inconnu","expected_tool":null,"expected_arguments":{},"kind":"abstain"}
+{"id":"seed-160","language":"en","query":"Do an unknown action","expected_tool":null,"expected_arguments":{},"kind":"abstain"}
+{"id":"seed-161","language":"fr","query":"Lis le fichier README.md","expected_tool":"read_file","expected_arguments":{"path":"README.md"},"kind":"valid"}
+{"id":"seed-162","language":"en","query":"Read local file AGENTS.md","expected_tool":"read_file","expected_arguments":{"path":"AGENTS.md"},"kind":"valid"}
+{"id":"seed-163","language":"fr","query":"Lance le contrôle du projet","expected_tool":"run_checkup","expected_arguments":{},"kind":"valid"}
+{"id":"seed-164","language":"en","query":"Run the project health check","expected_tool":"run_checkup","expected_arguments":{},"kind":"valid"}
+{"id":"seed-165","language":"fr","query":"Lis","expected_tool":null,"expected_arguments":{},"kind":"ambiguous"}
+{"id":"seed-166","language":"en","query":"Read","expected_tool":null,"expected_arguments":{},"kind":"ambiguous"}
+{"id":"seed-167","language":"fr","query":"Fais quelque chose d'inconnu","expected_tool":null,"expected_arguments":{},"kind":"abstain"}
+{"id":"seed-168","language":"en","query":"Do an unknown action","expected_tool":null,"expected_arguments":{},"kind":"abstain"}
+{"id":"seed-169","language":"fr","query":"Lis le fichier docs/plans/roadmap.md","expected_tool":"read_file","expected_arguments":{"path":"docs/plans/roadmap.md"},"kind":"valid"}
+{"id":"seed-170","language":"en","query":"Read local file skills/test_e2e.py","expected_tool":"read_file","expected_arguments":{"path":"skills/test_e2e.py"},"kind":"valid"}
+{"id":"seed-171","language":"fr","query":"Lance le contrôle du projet","expected_tool":"run_checkup","expected_arguments":{},"kind":"valid"}
+{"id":"seed-172","language":"en","query":"Run the project health check","expected_tool":"run_checkup","expected_arguments":{},"kind":"valid"}
+{"id":"seed-173","language":"fr","query":"Lis","expected_tool":null,"expected_arguments":{},"kind":"ambiguous"}
+{"id":"seed-174","language":"en","query":"Read","expected_tool":null,"expected_arguments":{},"kind":"ambiguous"}
+{"id":"seed-175","language":"fr","query":"Fais quelque chose d'inconnu","expected_tool":null,"expected_arguments":{},"kind":"abstain"}
+{"id":"seed-176","language":"en","query":"Do an unknown action","expected_tool":null,"expected_arguments":{},"kind":"abstain"}
+{"id":"seed-177","language":"fr","query":"Lis le fichier AGENTS.md","expected_tool":"read_file","expected_arguments":{"path":"AGENTS.md"},"kind":"valid"}
+{"id":"seed-178","language":"en","query":"Read local file pyproject.toml","expected_tool":"read_file","expected_arguments":{"path":"pyproject.toml"},"kind":"valid"}
+{"id":"seed-179","language":"fr","query":"Lance le contrôle du projet","expected_tool":"run_checkup","expected_arguments":{},"kind":"valid"}
+{"id":"seed-180","language":"en","query":"Run the project health check","expected_tool":"run_checkup","expected_arguments":{},"kind":"valid"}
+{"id":"seed-181","language":"fr","query":"Lis","expected_tool":null,"expected_arguments":{},"kind":"ambiguous"}
+{"id":"seed-182","language":"en","query":"Read","expected_tool":null,"expected_arguments":{},"kind":"ambiguous"}
+{"id":"seed-183","language":"fr","query":"Fais quelque chose d'inconnu","expected_tool":null,"expected_arguments":{},"kind":"abstain"}
+{"id":"seed-184","language":"en","query":"Do an unknown action","expected_tool":null,"expected_arguments":{},"kind":"abstain"}
+{"id":"seed-185","language":"fr","query":"Lis le fichier skills/test_e2e.py","expected_tool":"read_file","expected_arguments":{"path":"skills/test_e2e.py"},"kind":"valid"}
+{"id":"seed-186","language":"en","query":"Read local file README.md","expected_tool":"read_file","expected_arguments":{"path":"README.md"},"kind":"valid"}
+{"id":"seed-187","language":"fr","query":"Lance le contrôle du projet","expected_tool":"run_checkup","expected_arguments":{},"kind":"valid"}
+{"id":"seed-188","language":"en","query":"Run the project health check","expected_tool":"run_checkup","expected_arguments":{},"kind":"valid"}
+{"id":"seed-189","language":"fr","query":"Lis","expected_tool":null,"expected_arguments":{},"kind":"ambiguous"}
+{"id":"seed-190","language":"en","query":"Read","expected_tool":null,"expected_arguments":{},"kind":"ambiguous"}
+{"id":"seed-191","language":"fr","query":"Fais quelque chose d'inconnu","expected_tool":null,"expected_arguments":{},"kind":"abstain"}
+{"id":"seed-192","language":"en","query":"Do an unknown action","expected_tool":null,"expected_arguments":{},"kind":"abstain"}
+{"id":"seed-193","language":"fr","query":"Lis le fichier pyproject.toml","expected_tool":"read_file","expected_arguments":{"path":"pyproject.toml"},"kind":"valid"}
+{"id":"seed-194","language":"en","query":"Read local file docs/plans/roadmap.md","expected_tool":"read_file","expected_arguments":{"path":"docs/plans/roadmap.md"},"kind":"valid"}
+{"id":"seed-195","language":"fr","query":"Lance le contrôle du projet","expected_tool":"run_checkup","expected_arguments":{},"kind":"valid"}
+{"id":"seed-196","language":"en","query":"Run the project health check","expected_tool":"run_checkup","expected_arguments":{},"kind":"valid"}
+{"id":"seed-197","language":"fr","query":"Lis","expected_tool":null,"expected_arguments":{},"kind":"ambiguous"}
+{"id":"seed-198","language":"en","query":"Read","expected_tool":null,"expected_arguments":{},"kind":"ambiguous"}
+{"id":"seed-199","language":"fr","query":"Fais quelque chose d'inconnu","expected_tool":null,"expected_arguments":{},"kind":"abstain"}
+{"id":"seed-200","language":"en","query":"Do an unknown action","expected_tool":null,"expected_arguments":{},"kind":"abstain"}
+{"id":"seed-201","language":"fr","query":"Lis le fichier README.md","expected_tool":"read_file","expected_arguments":{"path":"README.md"},"kind":"valid"}
+{"id":"seed-202","language":"en","query":"Read local file AGENTS.md","expected_tool":"read_file","expected_arguments":{"path":"AGENTS.md"},"kind":"valid"}
+{"id":"seed-203","language":"fr","query":"Lance le contrôle du projet","expected_tool":"run_checkup","expected_arguments":{},"kind":"valid"}
+{"id":"seed-204","language":"en","query":"Run the project health check","expected_tool":"run_checkup","expected_arguments":{},"kind":"valid"}
+{"id":"seed-205","language":"fr","query":"Lis","expected_tool":null,"expected_arguments":{},"kind":"ambiguous"}
+{"id":"seed-206","language":"en","query":"Read","expected_tool":null,"expected_arguments":{},"kind":"ambiguous"}
+{"id":"seed-207","language":"fr","query":"Fais quelque chose d'inconnu","expected_tool":null,"expected_arguments":{},"kind":"abstain"}
+{"id":"seed-208","language":"en","query":"Do an unknown action","expected_tool":null,"expected_arguments":{},"kind":"abstain"}
+{"id":"seed-209","language":"fr","query":"Lis le fichier docs/plans/roadmap.md","expected_tool":"read_file","expected_arguments":{"path":"docs/plans/roadmap.md"},"kind":"valid"}
+{"id":"seed-210","language":"en","query":"Read local file skills/test_e2e.py","expected_tool":"read_file","expected_arguments":{"path":"skills/test_e2e.py"},"kind":"valid"}
+{"id":"seed-211","language":"fr","query":"Lance le contrôle du projet","expected_tool":"run_checkup","expected_arguments":{},"kind":"valid"}
+{"id":"seed-212","language":"en","query":"Run the project health check","expected_tool":"run_checkup","expected_arguments":{},"kind":"valid"}
+{"id":"seed-213","language":"fr","query":"Lis","expected_tool":null,"expected_arguments":{},"kind":"ambiguous"}
+{"id":"seed-214","language":"en","query":"Read","expected_tool":null,"expected_arguments":{},"kind":"ambiguous"}
+{"id":"seed-215","language":"fr","query":"Fais quelque chose d'inconnu","expected_tool":null,"expected_arguments":{},"kind":"abstain"}
+{"id":"seed-216","language":"en","query":"Do an unknown action","expected_tool":null,"expected_arguments":{},"kind":"abstain"}
+{"id":"seed-217","language":"fr","query":"Lis le fichier AGENTS.md","expected_tool":"read_file","expected_arguments":{"path":"AGENTS.md"},"kind":"valid"}
+{"id":"seed-218","language":"en","query":"Read local file pyproject.toml","expected_tool":"read_file","expected_arguments":{"path":"pyproject.toml"},"kind":"valid"}
+{"id":"seed-219","language":"fr","query":"Lance le contrôle du projet","expected_tool":"run_checkup","expected_arguments":{},"kind":"valid"}
+{"id":"seed-220","language":"en","query":"Run the project health check","expected_tool":"run_checkup","expected_arguments":{},"kind":"valid"}
+{"id":"seed-221","language":"fr","query":"Lis","expected_tool":null,"expected_arguments":{},"kind":"ambiguous"}
+{"id":"seed-222","language":"en","query":"Read","expected_tool":null,"expected_arguments":{},"kind":"ambiguous"}
+{"id":"seed-223","language":"fr","query":"Fais quelque chose d'inconnu","expected_tool":null,"expected_arguments":{},"kind":"abstain"}
+{"id":"seed-224","language":"en","query":"Do an unknown action","expected_tool":null,"expected_arguments":{},"kind":"abstain"}
+{"id":"seed-225","language":"fr","query":"Lis le fichier skills/test_e2e.py","expected_tool":"read_file","expected_arguments":{"path":"skills/test_e2e.py"},"kind":"valid"}
+{"id":"seed-226","language":"en","query":"Read local file README.md","expected_tool":"read_file","expected_arguments":{"path":"README.md"},"kind":"valid"}
+{"id":"seed-227","language":"fr","query":"Lance le contrôle du projet","expected_tool":"run_checkup","expected_arguments":{},"kind":"valid"}
+{"id":"seed-228","language":"en","query":"Run the project health check","expected_tool":"run_checkup","expected_arguments":{},"kind":"valid"}
+{"id":"seed-229","language":"fr","query":"Lis","expected_tool":null,"expected_arguments":{},"kind":"ambiguous"}
+{"id":"seed-230","language":"en","query":"Read","expected_tool":null,"expected_arguments":{},"kind":"ambiguous"}
+{"id":"seed-231","language":"fr","query":"Fais quelque chose d'inconnu","expected_tool":null,"expected_arguments":{},"kind":"abstain"}
+{"id":"seed-232","language":"en","query":"Do an unknown action","expected_tool":null,"expected_arguments":{},"kind":"abstain"}
+{"id":"seed-233","language":"fr","query":"Lis le fichier pyproject.toml","expected_tool":"read_file","expected_arguments":{"path":"pyproject.toml"},"kind":"valid"}
+{"id":"seed-234","language":"en","query":"Read local file docs/plans/roadmap.md","expected_tool":"read_file","expected_arguments":{"path":"docs/plans/roadmap.md"},"kind":"valid"}
+{"id":"seed-235","language":"fr","query":"Lance le contrôle du projet","expected_tool":"run_checkup","expected_arguments":{},"kind":"valid"}
+{"id":"seed-236","language":"en","query":"Run the project health check","expected_tool":"run_checkup","expected_arguments":{},"kind":"valid"}
+{"id":"seed-237","language":"fr","query":"Lis","expected_tool":null,"expected_arguments":{},"kind":"ambiguous"}
+{"id":"seed-238","language":"en","query":"Read","expected_tool":null,"expected_arguments":{},"kind":"ambiguous"}
+{"id":"seed-239","language":"fr","query":"Fais quelque chose d'inconnu","expected_tool":null,"expected_arguments":{},"kind":"abstain"}
+{"id":"seed-240","language":"en","query":"Do an unknown action","expected_tool":null,"expected_arguments":{},"kind":"abstain"}

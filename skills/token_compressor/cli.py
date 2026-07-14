@@ -17,11 +17,15 @@ Usage:
 from __future__ import annotations
 
 import json
+import base64
+import hashlib
 import re
 import sys
+import zlib
 from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Optional
+from skills.atomic_json import write_json
 
 
 # ── N-gram frequency table ─────────────────────────────────────
@@ -40,18 +44,17 @@ class NGramTable:
     def _load(self):
         if NGRAM_STORE.exists():
             try:
-                data = json.loads(NGRAM_STORE.read_text())
+                data = json.loads(NGRAM_STORE.read_text(encoding="utf-8"))
                 self.freq = data.get("freq", {})
                 self.n = data.get("n", self.n)
             except (json.JSONDecodeError, TypeError):
                 pass
 
     def _save(self):
-        NGRAM_STORE.parent.mkdir(parents=True, exist_ok=True)
-        NGRAM_STORE.write_text(json.dumps({
+        write_json(NGRAM_STORE, {
             "n": self.n,
             "freq": self.freq,
-        }))
+        })
 
     def learn(self, text: str):
         """Learn n-gram frequencies from text."""
@@ -131,28 +134,26 @@ class TokenCompressor:
         return re.sub(r'\{[^}]{50,}\}', _compact_json, text)
 
     def compress(self, text: str, level: str = "auto") -> str:
-        """Compress text at token level."""
-        original_size = len(text)
-        result = text
+        """Return a self-contained, deterministic and reversible payload.
 
-        if level in ("auto", "hash"):
-            result = self._semantic_hash(result)
-        if level in ("auto", "pair"):
-            result = self._byte_pair_prune(result)
-        if level in ("auto", "json"):
-            result = self._json_schema_compress(result)
-
-        compressed_size = len(result)
-        ratio = round(compressed_size / max(original_size, 1), 3)
-
-        return result
+        The previous text transforms discarded whitespace, hexadecimal values,
+        and JSON values.  A compressor must preserve its input, so all levels
+        now use the same versioned stdlib codec; ``level`` remains accepted for
+        CLI compatibility.
+        """
+        del level
+        payload = zlib.compress(text.encode("utf-8"), level=9)
+        return "TC1:" + base64.b85encode(payload).decode("ascii")
 
     def expand(self, text: str) -> str:
-        """Restore hashed patterns."""
-        result = text
-        for h, original in self.hash_map.items():
-            result = result.replace(f"[H#{h}]", original)
-        return result
+        """Restore a payload produced by :meth:`compress`."""
+        if not text.startswith("TC1:"):
+            raise ValueError("unsupported token-compressor payload")
+        try:
+            raw = base64.b85decode(text[4:].encode("ascii"))
+            return zlib.decompress(raw).decode("utf-8")
+        except (ValueError, zlib.error, UnicodeDecodeError) as exc:
+            raise ValueError("invalid token-compressor payload") from exc
 
 
 def main(argv=None) -> int:
@@ -176,10 +177,11 @@ def main(argv=None) -> int:
 
     s3 = sub.add_parser("hash", help="Hash a string for the table")
     s3.add_argument("text", help="Text to hash")
-    s3.set_defaults(func=lambda a: print(f"Hash: {hash(a.text) % 10**8}"))
+    s3.set_defaults(func=lambda a: print(
+        f"Hash: {hashlib.sha256(a.text.encode('utf-8')).hexdigest()[:16]}"))
 
     args = p.parse_args(argv)
-    return 0
+    return args.func(args) or 0
 
 
 def _cmd_compress(args, compressor: TokenCompressor):

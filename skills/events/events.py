@@ -25,7 +25,8 @@ from typing import Iterator, Optional
 MAX_BYTES = 5 * 1024 * 1024   # rotate past 5 MB
 KEEP_FRACTION = 0.5            # keep the newest half on rotation
 
-KNOWN_KINDS = {"route", "cache", "escalate", "nn_out", "fusion"}
+KNOWN_KINDS = {"route", "cache", "escalate", "nn_out", "fusion",
+               "loop_start", "loop_decision", "loop_stop", "loop_saving"}
 
 
 def _events_path(project_root: str | Path) -> Path:
@@ -89,6 +90,11 @@ def follow_events(project_root: str | Path = ".", *, poll_interval: float = 0.5
     seen = len(read_events(project_root))
     while True:
         recs = read_events(project_root)
+        if len(recs) < seen:
+            # Rotation replaced the file with a shorter tail. Treat its current
+            # contents as the new baseline instead of waiting for the old line
+            # count to be reached again.
+            seen = 0
         for rec in recs[seen:]:
             yield rec
         seen = len(recs)
