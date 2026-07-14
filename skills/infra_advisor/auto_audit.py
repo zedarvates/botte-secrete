@@ -25,6 +25,9 @@ from skills.infra_advisor.advisor import advise
 
 _SKIP_DIRS = {".git", "__pycache__", ".venv", "venv", "node_modules", ".botte",
               "dist", "build", ".botte-cache",
+              # Generated, vendored, exploratory, and test-only code is not part
+              # of the production duplication budget.
+              "godot-cpp", "scratch", "test", "tests",
               # duplicate working copies that inflate the dup count, not real dupes
               ".kilo", ".kilocode", "worktrees", "Archives", ".archive"}
 
