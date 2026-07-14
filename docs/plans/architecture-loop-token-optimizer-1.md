@@ -128,9 +128,9 @@ Critères de fin de phase : Needle reste désactivé si un seuil échoue; aucune
 | TASK-030 | Collecter au moins 2 000 transitions Botte vérifiées avant tout entraînement de politique. | | |
 | TASK-031 | Créer les features `iteration_ratio`, `budget_ratio`, `fingerprint_match`, `failure_repeat`, `progress_score`, `cache_history`, `verification_state`, `criticality` et `local_fail_rate`. | ✅ | 2026-07-14 |
 | TASK-032 | Entraîner d'abord un classificateur compact produisant `stop`, `retry_local`, `change_tool`, `verify`, `ask_local`, `escalate`; ne pas entraîner un générateur de texte. | | |
-| TASK-033 | Réserver 20% des trajectoires par période temporelle pour éviter la fuite entre variantes proches d'une même boucle. | | |
+| TASK-033 | Réserver 20% des trajectoires par période temporelle pour éviter la fuite entre variantes proches d'une même boucle. | ✅ | 2026-07-14 |
 | TASK-034 | Exiger une amélioration ≥ 10% des tokens moyens sans baisse du taux de réussite avant activation. | | |
-| TASK-035 | Conserver une abstention et un fallback déterministe pour chaque classe de sortie. | | |
+| TASK-035 | Conserver une abstention et un fallback déterministe pour chaque classe de sortie. | ✅ | 2026-07-14 |
 
 Critères de fin de phase : la politique apprise bat le contrôleur déterministe sur le holdout sans augmenter les régressions ni les escalades injustifiées.
 
