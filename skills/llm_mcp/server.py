@@ -541,6 +541,46 @@ TOOLS = [
             "task_type": {"type": "string", "description": "Task type (default analyze)."},
             "criticality": {"type": "number", "description": "0..1 (default 0.5)."}}},
     },
+    {
+        "name": "loop_decide",
+        "description": "Propose a deterministic loop action without executing a tool or model. "
+                       "The proposal is logged locally for shadow evaluation.",
+        "inputSchema": {"type": "object", "required": ["loop_id", "goal"], "properties": {
+            "loop_id": {"type": "string"}, "goal": {"type": "string"},
+            "allowed_tools": {"type": "array", "items": {"type": "string"}},
+            "iteration": {"type": "integer", "default": 0},
+            "criticality": {"type": "number", "default": 0.5},
+            "project": {"type": "string", "default": "."}}},
+    },
+    {
+        "name": "loop_explain",
+        "description": "Explain the cost-ordered loop decision and the layers avoided. No execution.",
+        "inputSchema": {"type": "object", "required": ["loop_id", "goal"], "properties": {
+            "loop_id": {"type": "string"}, "goal": {"type": "string"},
+            "allowed_tools": {"type": "array", "items": {"type": "string"}},
+            "iteration": {"type": "integer", "default": 0},
+            "criticality": {"type": "number", "default": 0.5},
+            "project": {"type": "string", "default": "."}}},
+    },
+    {
+        "name": "loop_record",
+        "description": "Append a verified loop outcome to the local ledger. Does not execute anything.",
+        "inputSchema": {"type": "object", "required": ["loop_id", "iteration", "action", "progress"], "properties": {
+            "loop_id": {"type": "string"}, "iteration": {"type": "integer"},
+            "action": {"type": "string"}, "progress": {"type": "string"},
+            "context_tokens": {"type": "integer", "default": 0},
+            "execution_tokens": {"type": "integer", "default": 0},
+            "verification_tokens": {"type": "integer", "default": 0},
+            "cloud_tokens": {"type": "integer", "default": 0},
+            "success": {"type": "boolean", "default": False},
+            "cache_hit": {"type": "boolean", "default": False},
+            "project": {"type": "string", "default": "."}}},
+    },
+    {
+        "name": "loop_stats",
+        "description": "Read local aggregate loop metrics from the append-only ledger. No network.",
+        "inputSchema": {"type": "object", "properties": {}},
+    },
 ]
 
 
@@ -888,6 +928,47 @@ def _tool_belt2_hint(args: dict) -> str:
     return json.dumps(out, ensure_ascii=False, indent=2)
 
 
+def _loop_request_state(args: dict):
+    from skills.loop_optimizer.models import LoopRequest, LoopState
+    request = LoopRequest(args["loop_id"], args["goal"],
+                          criticality=float(args.get("criticality", 0.5)),
+                          allowed_tools=tuple(args.get("allowed_tools", [])))
+    state = LoopState(args["loop_id"], iteration=int(args.get("iteration", 0)))
+    return request, state
+
+
+def _tool_loop_decide(args: dict) -> str:
+    from skills.loop_optimizer.controller import LoopController
+    request, state = _loop_request_state(args)
+    decision = LoopController(project_root=args.get("project", ".")).decide(request, state)
+    return json.dumps(decision.to_dict(), ensure_ascii=False, separators=(",", ":"))
+
+
+def _tool_loop_explain(args: dict) -> str:
+    from skills.loop_optimizer.controller import LoopController
+    request, state = _loop_request_state(args)
+    return json.dumps(LoopController(project_root=args.get("project", ".")).explain(request, state),
+                      ensure_ascii=False, separators=(",", ":"))
+
+
+def _tool_loop_record(args: dict) -> str:
+    from skills.loop_optimizer.controller import LoopController
+    from skills.loop_optimizer.models import LoopOutcome
+    fields = {name: args.get(name, default) for name, default in (
+        ("context_tokens", 0), ("execution_tokens", 0), ("verification_tokens", 0),
+        ("cloud_tokens", 0), ("success", False), ("cache_hit", False))}
+    outcome = LoopOutcome(args["loop_id"], int(args["iteration"]), args["action"],
+                          args["progress"], **fields)
+    record = LoopController(project_root=args.get("project", ".")).record(outcome)
+    return json.dumps(record, ensure_ascii=False, separators=(",", ":"))
+
+
+def _tool_loop_stats(_args: dict) -> str:
+    from skills.loop_optimizer.ledger import LoopLedger
+    ledger = LoopLedger()
+    return json.dumps(ledger.summarize(ledger.read()), ensure_ascii=False, separators=(",", ":"))
+
+
 DISPATCH = {
     "dashboard": _tool_dashboard,
     "estimate_cost": _tool_estimate_cost,
@@ -934,6 +1015,10 @@ DISPATCH = {
     "compress": _tool_compress,
     "shape_query": _tool_shape_query,
     "belt2_hint": _tool_belt2_hint,
+    "loop_decide": _tool_loop_decide,
+    "loop_explain": _tool_loop_explain,
+    "loop_record": _tool_loop_record,
+    "loop_stats": _tool_loop_stats,
 }
 
 

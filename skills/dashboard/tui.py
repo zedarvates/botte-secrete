@@ -75,11 +75,27 @@ def _trend_deltas(data: dict) -> list[str]:
     return lines
 
 
+def _loop_lines(data: dict) -> list[str]:
+    loops = data.get("loops", {}) or {}
+    if "error" in loops or not loops.get("events"):
+        return ["(no loop telemetry yet; shadow mode is safe to enable)"]
+    return [f"decisions    {loops.get('decisions', 0):>6}",
+            f"stops        {loops.get('stops', 0):>6}",
+            f"cache hits   {loops.get('cache_hits', 0):>6}",
+            f"tokens used  {loops.get('tokens_used', 0):>6,}",
+            f"avoided      {loops.get('iterations_avoided', 0):>6}",
+            f"skipped      {loops.get('agents_skipped', 0):>6}",
+            f"blocked      {loops.get('repetitions_blocked', 0):>6}",
+            f"escalations  {loops.get('escalations', 0):>6}",
+            f"cloud tokens {loops.get('cloud_tokens', 0):>6,}"]
+
+
 def build_panels(data: dict) -> list[Panel]:
     return [
         Panel(c("METRICS", "bold", "cyan"), _metrics_lines(data)),
         Panel(c("ROUTING SAVINGS", "bold", "green"), _routing_lines(data)),
         Panel(c("OUTSTANDING FIXES", "bold", "yellow"), _fixes_lines(data)),
+        Panel(c("LOOP OPTIMIZER", "bold", "blue"), _loop_lines(data)),
         Panel(c("TRENDS (Δ since last)", "bold", "magenta"), _trend_deltas(data)),
     ]
 

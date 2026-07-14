@@ -15,11 +15,13 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import struct
 import sys
 from collections import Counter
 from pathlib import Path
 from typing import Optional
+from skills.atomic_json import write_json
 
 DICT_STORE = Path.home() / ".botte" / "a2ac-dict.json"
 
@@ -36,22 +38,21 @@ class SharedDictionary:
     def _load(self):
         if DICT_STORE.exists():
             try:
-                data = json.loads(DICT_STORE.read_text())
+                data = json.loads(DICT_STORE.read_text(encoding="utf-8"))
                 self.symbols = data.get("symbols", {})
                 self.reverse = {int(k): v for k, v in data.get("reverse", {}).items()}
             except (json.JSONDecodeError, TypeError):
                 pass
 
     def _save(self):
-        DICT_STORE.parent.mkdir(parents=True, exist_ok=True)
-        DICT_STORE.write_text(json.dumps({
+        write_json(DICT_STORE, {
             "symbols": self.symbols,
             "reverse": {str(k): v for k, v in self.reverse.items()},
-        }, indent=2))
+        })
 
     def learn(self, text: str):
         """Extract frequent tokens from text."""
-        words = Counter(text.split())
+        words = Counter(re.findall(r"\s+|\S+", text))
         for word, count in words.most_common(100):
             if word not in self.symbols and len(self.symbols) < self.max_entries:
                 sid = len(self.symbols)
@@ -62,7 +63,7 @@ class SharedDictionary:
     def encode(self, text: str) -> bytes:
         """Encode text using shared dictionary."""
         result = bytearray()
-        for word in text.split():
+        for word in re.findall(r"\s+|\S+", text):
             if word in self.symbols:
                 # Store as 2-byte symbol ID
                 result.extend(struct.pack(">H", self.symbols[word]))
@@ -79,17 +80,25 @@ class SharedDictionary:
         words = []
         i = 0
         while i < len(data):
+            if i + 2 > len(data):
+                raise ValueError("truncated symbol id")
             sid = struct.unpack(">H", data[i:i+2])[0]
             i += 2
             if sid == 0xFFFF:
+                if i + 2 > len(data):
+                    raise ValueError("truncated raw token length")
                 # Raw bytes
                 length = struct.unpack(">H", data[i:i+2])[0]
                 i += 2
-                words.append(data[i:i+length].decode())
+                if i + length > len(data):
+                    raise ValueError("truncated raw token")
+                words.append(data[i:i+length].decode("utf-8"))
                 i += length
             else:
-                words.append(self.reverse.get(sid, f"<unk:{sid}>"))
-        return " ".join(words)
+                if sid not in self.reverse:
+                    raise ValueError(f"unknown dictionary symbol: {sid}")
+                words.append(self.reverse[sid])
+        return "".join(words)
 
 
 class A2ACCompressor:
@@ -116,36 +125,61 @@ class A2ACCompressor:
             "compression_ratio": round(compressed_bytes / max(original_bytes, 1), 3),
             "savings_pct": round((1 - compressed_bytes / max(original_bytes, 1)) * 100, 1),
             "content_hash": content_hash,
-            "symbols_used": sum(1 for w in text.split() if w in self.dict.symbols),
+            "symbols_used": sum(1 for w in re.findall(r"\s+|\S+", text)
+                                if w in self.dict.symbols),
             "total_words": len(text.split()),
         }
 
     def delta(self, old: str, new: str) -> dict:
-        """Compute delta between two agent messages."""
+        """Compute a compact, ordered and reversible splice delta."""
         old_hash = hashlib.sha256(old.encode()).hexdigest()[:16]
         new_hash = hashlib.sha256(new.encode()).hexdigest()[:16]
 
         if old_hash == new_hash:
-            return {"delta_type": "identical", "delta": "", "savings_pct": 100.0}
+            return {"delta_type": "identical", "delta": None, "savings_pct": 100.0}
 
-        old_words = set(old.split())
-        new_words = set(new.split())
-        added = new_words - old_words
-        removed = old_words - new_words
+        prefix = 0
+        limit = min(len(old), len(new))
+        while prefix < limit and old[prefix] == new[prefix]:
+            prefix += 1
 
-        delta_text = ""
-        if added:
-            delta_text += f"[+{len(added)} words] " + " ".join(list(added)[:20])
-        if removed:
-            delta_text += f" [-{len(removed)} words]"
+        suffix = 0
+        suffix_limit = min(len(old) - prefix, len(new) - prefix)
+        while suffix < suffix_limit and old[-1 - suffix] == new[-1 - suffix]:
+            suffix += 1
 
-        original_len = len(new)
-        delta_len = len(delta_text)
+        old_end = len(old) - suffix
+        new_end = len(new) - suffix
+        splice = {
+            "prefix": prefix,
+            "remove": old_end - prefix,
+            "insert": new[prefix:new_end],
+        }
+        delta_len = len(json.dumps(splice, ensure_ascii=False, separators=(",", ":")))
         return {
             "delta_type": "changed",
-            "delta": delta_text[:200],
-            "savings_pct": round((1 - delta_len / max(original_len, 1)) * 100, 1),
+            "delta": splice,
+            "savings_pct": round((1 - delta_len / max(len(new), 1)) * 100, 1),
         }
+
+    @staticmethod
+    def apply_delta(old: str, result: dict) -> str:
+        """Apply a value returned by :meth:`delta` to *old*."""
+        if result.get("delta_type") == "identical":
+            return old
+        splice = result.get("delta")
+        if not isinstance(splice, dict):
+            raise ValueError("invalid delta payload")
+        try:
+            prefix = int(splice["prefix"])
+            remove = int(splice["remove"])
+            insert = splice["insert"]
+        except (KeyError, TypeError, ValueError) as exc:
+            raise ValueError("invalid delta payload") from exc
+        if (prefix < 0 or remove < 0 or prefix + remove > len(old)
+                or not isinstance(insert, str)):
+            raise ValueError("invalid delta bounds")
+        return old[:prefix] + insert + old[prefix + remove:]
 
 
 def main(argv=None) -> int:
@@ -178,7 +212,7 @@ def main(argv=None) -> int:
         }, indent=2)))
 
     args = p.parse_args(argv)
-    return 0
+    return args.func(args) or 0
 
 
 def _learn(comp: A2ACCompressor, args):

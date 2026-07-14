@@ -23,6 +23,7 @@ import sys
 from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Optional
+from skills.atomic_json import write_json
 
 STORE = Path.home() / ".botte" / "agent-intel.json"
 
@@ -43,22 +44,23 @@ class AgentIntel:
     def _load(self):
         if STORE.exists():
             try:
-                data = json.loads(STORE.read_text())
+                data = json.loads(STORE.read_text(encoding="utf-8"))
                 self.loops = data.get("loops", [])
                 self.skills = data.get("skills", {})
                 self.fixes = data.get("fixes", [])
+                self.memories = defaultdict(list, data.get("memories", {}))
                 self.knowledge = defaultdict(list, data.get("knowledge", {}))
             except (json.JSONDecodeError, TypeError):
                 pass
 
     def _save(self):
-        STORE.parent.mkdir(parents=True, exist_ok=True)
-        STORE.write_text(json.dumps({
+        write_json(STORE, {
             "loops": self.loops[-500:],  # Keep last 500
             "skills": self.skills,
             "fixes": self.fixes[-500:],
+            "memories": dict(self.memories),
             "knowledge": dict(self.knowledge),
-        }, indent=2))
+        })
 
     # ── P64: Loop Distillation ─────────────────────────────
 
@@ -154,7 +156,9 @@ class AgentIntel:
         elif any(w in issue_lower for w in ["typo", "format", "style"]):
             complexity = 0.2
 
-        estimated_tokens = int(budget * complexity)
+        # Estimate the work independently from the caller's budget; deriving the
+        # estimate from the budget made ``estimated_tokens <= budget`` tautological.
+        estimated_tokens = max(100, int((400 + len(issue) * 2) * complexity))
         worth_it = estimated_tokens <= budget
 
         # Check history
@@ -327,7 +331,7 @@ def main(argv=None) -> int:
         }, indent=2)))
 
     args = p.parse_args(argv)
-    return 0
+    return args.func(args) or 0
 
 
 def _loop(intel: AgentIntel, args):

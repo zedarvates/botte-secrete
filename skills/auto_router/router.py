@@ -66,20 +66,16 @@ class AutoRouter:
 
         local = registry.best_chat_backend()
         local_model = registry.preferred_model(local) if local else None
+        allow_local = not (0 < self.latency_budget_s < 2.0)
 
         # Latency budget: if the user needs a sub-second response, skip local
         # (which can be slow at 35 tok/s) and go straight to cloud
-        if self.latency_budget_s > 0 and self.latency_budget_s < 2.0:
-            if local and tier > Tier.LOCAL:
-                # Local would be too slow for sub-2s budget — try cloud
-                pass  # continue to cloud path below
-
         # ── NN belt: a learned second opinion on local-vs-cloud (0 cloud tokens,
         # abstains when unsure). Conservative v1 — only pull a *borderline* task
         # (LOCAL < tier ≤ CHEAP) toward local when binary_router is confident and
         # a local backend exists. Hard tasks (STANDARD/PREMIUM) and forced tiers
         # are never touched, so the belt can save tokens but not raise cost/risk.
-        if local and force_tier is None and Tier.LOCAL < tier <= Tier.CHEAP:
+        if allow_local and local and force_tier is None and Tier.LOCAL < tier <= Tier.CHEAP:
             budget_ratio = max(0.0, 1.0 - self.budget.used_today / max(self.budget.daily, 1))
             hint = nn_belt.local_vs_cloud_hint(eff.score, budget_ratio, has_local=True)
             if hint and hint[0] == "local":
@@ -112,7 +108,7 @@ class AutoRouter:
                     )
 
         # Local handles FREE/LOCAL outright, and is the preferred fallback.
-        if tier <= Tier.LOCAL and local:
+        if tier <= Tier.LOCAL and allow_local and local:
             return AutoDecision(
                 mode="local", tier=tier, effort=eff,
                 model=local_model or "local-model",
@@ -140,7 +136,7 @@ class AutoRouter:
             chosen_tier = Tier(chosen_tier - 1)  # try a cheaper tier
 
         # No affordable/available cloud — fall back to local if we have it.
-        if local:
+        if local and allow_local:
             return AutoDecision(
                 mode="local", tier=Tier.LOCAL, effort=eff,
                 model=local_model or "local-model",
@@ -158,6 +154,20 @@ class AutoRouter:
         _log_route(d)
         if d.mode == "none":
             return {"decision": d.to_dict(), "error": d.reason}
+        cache = None
+        cache_context = json.dumps({
+            "system": system or "", "task_type": task_type,
+            "max_tokens": max_tokens, "mode": d.mode,
+        }, ensure_ascii=False, sort_keys=True)
+        try:
+            from skills.response_cache import _cache as cache
+            hit = cache.get(prompt, model=d.model, context=cache_context,
+                            use_semantic=False)
+        except (OSError, ValueError, TypeError):
+            hit = None
+        if hit is not None:
+            return {"decision": d.to_dict(), "text": hit.response, "tokens": 0,
+                    "cached": True}
         if d.mode == "local":
             try:
                 res = LocalLLMClient().chat(prompt, system=system, model=d.model,
@@ -174,7 +184,8 @@ class AutoRouter:
                 self._log_feedback(d, actual_class=0)  # 0 = local
         else:
             text, usage = _cloud_chat(d, prompt, system, max_tokens)
-            self.budget.spend(d.tier, usage // 2 or 1, usage // 2 or 1)
+            input_usage = usage // 2
+            self.budget.spend(d.tier, input_usage, usage - input_usage)
             # Track escalations for loop detection
             self._track_escalation(task_type or prompt[:50])
         # feed the control loop (best-effort; never affects routing)
@@ -187,6 +198,12 @@ class AutoRouter:
                    success=bool(text))
         except Exception:
             pass
+        if cache is not None:
+            try:
+                cache.set(prompt, text, model=d.model, tokens_used=usage,
+                          context=cache_context)
+            except (OSError, ValueError, TypeError):
+                pass
         return {"decision": d.to_dict(), "text": text, "tokens": usage}
 
     @staticmethod

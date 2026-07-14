@@ -16,6 +16,7 @@ import time
 from pathlib import Path
 from typing import Optional
 from dataclasses import dataclass, field
+from skills.atomic_json import write_json
 
 
 @dataclass
@@ -37,9 +38,24 @@ class ResponseCache:
         self.cache_dir = Path(cache_dir)
         self.cache_dir.mkdir(exist_ok=True)
         self.cache_file = self.cache_dir / "response_cache.json"
+        self.stats_file = self.cache_dir / "response_cache_stats.json"
         self._entries: dict[str, CachedResponse] = {}
         self._load()
-        self.stats = {"hits_exact": 0, "hits_semantic": 0, "misses": 0, "tokens_saved": 0}
+        self.stats = self._load_stats()
+
+    def _load_stats(self) -> dict:
+        defaults = {"hits_exact": 0, "hits_semantic": 0, "misses": 0,
+                    "tokens_saved": 0}
+        if not self.stats_file.exists():
+            return defaults
+        try:
+            data = json.loads(self.stats_file.read_text(encoding="utf-8"))
+            return {key: int(data.get(key, value)) for key, value in defaults.items()}
+        except (OSError, ValueError, TypeError, json.JSONDecodeError):
+            return defaults
+
+    def _save_stats(self) -> None:
+        write_json(self.stats_file, self.stats)
 
     def _load(self):
         """Load cache from disk."""
@@ -54,27 +70,32 @@ class ResponseCache:
     def _save(self):
         """Persist cache to disk."""
         data = {h: entry.__dict__ for h, entry in self._entries.items()}
-        self.cache_file.write_text(json.dumps(data, indent=2), encoding="utf-8")
+        write_json(self.cache_file, data)
 
-    def _hash(self, query: str) -> str:
+    def _hash(self, query: str, model: str = "", context: str = "") -> str:
         """Deterministic hash of a query."""
         # Normalize: strip whitespace, lowercase for case-insensitive matching
-        normalized = " ".join(query.lower().split())
-        return hashlib.sha256(normalized.encode()).hexdigest()[:16]
+        normalized = " ".join(query.split())
+        material = json.dumps(
+            {"query": normalized, "model": model, "context": context},
+            ensure_ascii=False, sort_keys=True,
+        )
+        return hashlib.sha256(material.encode("utf-8")).hexdigest()[:16]
 
-    def get_exact(self, query: str) -> Optional[CachedResponse]:
+    def get_exact(self, query: str, model: str = "", context: str = "") -> Optional[CachedResponse]:
         """Check exact hash match (fast, no embedding needed)."""
-        h = self._hash(query)
+        h = self._hash(query, model, context)
         if h in self._entries:
             entry = self._entries[h]
             entry.hit_count += 1
             self.stats["hits_exact"] += 1
             self.stats["tokens_saved"] += entry.tokens_saved
             self._save()
+            self._save_stats()
             return entry
         return None
 
-    def get_semantic(self, query: str) -> Optional[CachedResponse]:
+    def get_semantic(self, query: str, model: str = "") -> Optional[CachedResponse]:
         """Check semantic similarity via Qdrant.
         
         In production: use qdrant_search_vault(query) and check similarity score.
@@ -86,6 +107,8 @@ class ResponseCache:
         best_score = 0
 
         for h, entry in self._entries.items():
+            if entry.model != model:
+                continue
             entry_words = set(entry.query.lower().split())
             if not query_words or not entry_words:
                 continue
@@ -99,31 +122,34 @@ class ResponseCache:
             self.stats["hits_semantic"] += 1
             self.stats["tokens_saved"] += best_match.tokens_saved
             self._save()
+            self._save_stats()
             return best_match
 
         return None
 
-    def get(self, query: str, use_semantic: bool = True) -> Optional[CachedResponse]:
+    def get(self, query: str, use_semantic: bool = False, *, model: str = "",
+            context: str = "") -> Optional[CachedResponse]:
         """Two-level lookup: exact hash → semantic → miss."""
         # Level 1: Exact match
-        exact = self.get_exact(query)
+        exact = self.get_exact(query, model, context)
         if exact:
             return exact
 
         # Level 2: Semantic similarity (if enabled)
         if use_semantic:
-            semantic = self.get_semantic(query)
+            semantic = self.get_semantic(query, model)
             if semantic:
                 return semantic
 
         # Miss
         self.stats["misses"] += 1
+        self._save_stats()
         return None
 
     def set(self, query: str, response: str, model: str = "",
-            tokens_used: int = 0):
+            tokens_used: int = 0, context: str = ""):
         """Cache a response."""
-        h = self._hash(query)
+        h = self._hash(query, model, context)
         self._entries[h] = CachedResponse(
             query_hash=h,
             query=query,
@@ -166,16 +192,17 @@ class ResponseCache:
 # Singleton
 _cache = ResponseCache()
 
-def cached(query: str, response_fn, model: str = "", use_semantic: bool = True) -> tuple[str, bool]:
+def cached(query: str, response_fn, model: str = "", use_semantic: bool = False,
+           context: str = "", tokens_used: int = 0) -> tuple[str, bool]:
     """Cached LLM call wrapper.
     
     Usage:
         response, was_cached = cached("résume ce texte", lambda: llm_call(prompt))
     """
-    result = _cache.get(query, use_semantic)
+    result = _cache.get(query, use_semantic, model=model, context=context)
     if result:
         return result.response, True
 
     response = response_fn()
-    _cache.set(query, response, model)
+    _cache.set(query, response, model, tokens_used=tokens_used, context=context)
     return response, False

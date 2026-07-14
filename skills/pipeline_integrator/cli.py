@@ -22,6 +22,7 @@ import time
 from collections import defaultdict
 from pathlib import Path
 from typing import Optional
+from skills.atomic_json import write_json
 
 STORE = Path.home() / ".botte" / "pipeline-state.json"
 
@@ -42,13 +43,12 @@ class PipelineIntegrator:
     def _load(self):
         if STORE.exists():
             try:
-                self.state = json.loads(STORE.read_text())
+                self.state = json.loads(STORE.read_text(encoding="utf-8"))
             except (json.JSONDecodeError, TypeError):
                 pass
 
     def _save(self):
-        STORE.parent.mkdir(parents=True, exist_ok=True)
-        STORE.write_text(json.dumps(self.state, indent=2))
+        write_json(STORE, self.state)
 
     # ── P70: Pipeline Integration ──────────────────────────
 
@@ -306,7 +306,7 @@ def main(argv=None) -> int:
     s7.set_defaults(func=lambda a: print(json.dumps(pi.integration_report(), indent=2)))
 
     args = p.parse_args(argv)
-    return 0
+    return args.func(args) or 0
 
 
 def _budget(pi: PipelineIntegrator, args):

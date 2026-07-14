@@ -75,7 +75,7 @@ class TestCompressor:
 
 class TestHook:
     def test_init_and_stats(self, tmp_path):
-        bank = init_memory()
+        bank = init_memory(base_dir=tmp_path)
         bank.base = tmp_path  # override for test isolation
         store_memory("test.key", "test_value", category="user_pref")
         assert recall_memory("test.key") == "test_value"

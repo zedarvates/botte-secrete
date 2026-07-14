@@ -16,17 +16,18 @@ def main() -> int:
     with tempfile.TemporaryDirectory() as d:
         p = Path(d); (p/"AGENTS.md").write_text("ok",encoding="utf-8"); (p/"a.py").write_text("x=1\n",encoding="utf-8")
         data = collect(p)
-        _ok("collect gathers all four panels",
-            all(k in data for k in ("routing_savings","trends","metrics","outstanding_fixes")))
+        _ok("collect gathers dashboard and loop panels",
+            all(k in data for k in ("routing_savings", "trends", "metrics", "outstanding_fixes", "loops")))
         paths = generate(p, fmt="html")
         _ok("generates a timestamped html dashboard",
             len(paths)==1 and paths[0].endswith(".html") and Path(paths[0]).exists())
 
         # --tui / --watch data source: same collect() dict, rendered as ANSI panels
         panels = build_panels(data)
-        _ok("tui.build_panels returns the 4 fixed panels",
+        _ok("tui.build_panels returns the 5 fixed panels",
             [pnl.title for pnl in panels] == ["METRICS", "ROUTING SAVINGS",
-                                              "OUTSTANDING FIXES", "TRENDS (Δ since last)"])
+                                              "OUTSTANDING FIXES", "LOOP OPTIMIZER",
+                                              "TRENDS (Δ since last)"])
         out = render(data)
         _ok("tui.render includes the project header and box-drawing panels",
             "Botte dashboard" in out and "┌─" in out)

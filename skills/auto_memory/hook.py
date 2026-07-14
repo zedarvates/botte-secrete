@@ -2,6 +2,7 @@
 Hook for context_profiler — integrate AutoMemory into the control loop.
 """
 
+from pathlib import Path
 from typing import Any
 from skills.auto_memory.memory_bank import MemoryBank
 from skills.auto_memory.trajectory import TrajectoryRecorder
@@ -11,10 +12,10 @@ _memory_bank: MemoryBank | None = None
 _trajectory: TrajectoryRecorder | None = None
 
 
-def init_memory(task_id: str | None = None):
+def init_memory(task_id: str | None = None, base_dir: str | Path | None = None):
     """Initialize memory for the current session."""
     global _memory_bank, _trajectory
-    _memory_bank = MemoryBank()
+    _memory_bank = MemoryBank(base_dir=Path(base_dir) if base_dir is not None else None)
     if task_id:
         _trajectory = TrajectoryRecorder(task_id)
     return _memory_bank

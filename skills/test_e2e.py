@@ -35,7 +35,7 @@ def red(s): return f"\033[91m{s}\033[0m"
 def bold(s): return f"\033[1m{s}\033[0m"
 
 
-def test(name):
+def section(name):
     print(f"\n{bold('═══ ' + name + ' ═══')}")
 
 
@@ -59,7 +59,7 @@ def main():
     print(f"   Time: {__import__('datetime').datetime.now().isoformat()}")
 
     # ── 1. Project Cache ──
-    test("1. Project Cache")
+    section("1. Project Cache")
     with tempfile.TemporaryDirectory() as tmp:
         cache = ProjectCache(tmp)
         # Scan
@@ -101,7 +101,7 @@ def main():
             fail(f"Expected 50 after invalidation")
 
     # ── 2. Loader ──
-    test("2. Pre-Prompt Loader")
+    section("2. Pre-Prompt Loader")
     agents = list_agents()
     if len(agents) == 8:
         ok(f"8 agents found: {agents}")
@@ -142,7 +142,7 @@ def main():
         fail(f"Core size unexpected: {core_tokens} tokens")
 
     # ── 3. Clarification ──
-    test("3. Clarification")
+    section("3. Clarification")
     cr = portos_clarify(project, 40)
     if 2 <= len(cr.questions) <= 5:
         ok(f"Porthos asks {len(cr.questions)} questions")
@@ -169,7 +169,7 @@ def main():
         fail(f"No blocker questions in d'Artagnan (got {blockers})")
 
     # ── 4. Diff Language ──
-    test("4. Diff Language")
+    section("4. Diff Language")
     report = DiffReport()
     report.add(DiffLine(Op.FIX, "core.py", "42", "calc_tax", "CMT::grep→0", Sev.ERR))
     report.add(DiffLine(Op.SKIP, "utils.py", "88", "parse_input", "SKP::getattr", Sev.WARN))
@@ -198,7 +198,7 @@ def main():
         fail(f"50-entry savings only {savings}%")
 
     # ── 5. Agent Info Summary ──
-    test("5. Agent Metrics")
+    section("5. Agent Metrics")
     total_tokens = 0
     for a in agents:
         info = agent_info(a)
@@ -215,7 +215,7 @@ def main():
         fail(f"Total tokens {all_load} > 9000")
 
     # ── 6. Pipeline Structure ──
-    test("6. Pipeline Structure")
+    section("6. Pipeline Structure")
     required_dirs = [
         "skills/mousquetaires/prompts",
         "skills/cardinal/prompts",

@@ -23,6 +23,7 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 from typing import Optional
+from skills.atomic_json import write_json
 
 STORE = Path.home() / ".botte" / "dag-cache.json"
 
@@ -41,14 +42,13 @@ class DAGGraph:
     def _load(self):
         if STORE.exists():
             try:
-                data = json.loads(STORE.read_text())
+                data = json.loads(STORE.read_text(encoding="utf-8"))
                 self._memo = data.get("memo", {})
             except (json.JSONDecodeError, TypeError):
                 pass
 
     def _save(self):
-        STORE.parent.mkdir(parents=True, exist_ok=True)
-        STORE.write_text(json.dumps({"memo": self._memo}, indent=2))
+        write_json(STORE, {"memo": self._memo})
 
     def add_node(self, name: str, cost: float = 1.0, agent_type: str = "generic"):
         self.nodes[name] = {"name": name, "cost": cost, "type": agent_type}
@@ -119,12 +119,16 @@ class DAGGraph:
         return self._memo.get(key)
 
     def stats(self) -> dict:
+        clone = DAGGraph.__new__(DAGGraph)
+        clone.nodes = {name: dict(node) for name, node in self.nodes.items()}
+        clone.edges = list(self.edges)
+        clone._memo = dict(self._memo)
         return {
             "nodes": len(self.nodes),
             "edges": len(self.edges),
             "memo_entries": len(self._memo),
             "waves": len(self.waves()),
-            "prunable_nodes": len(self.prune()),  # Simulate to count
+            "prunable_nodes": len(clone.prune()),
         }
 
 
@@ -208,7 +212,7 @@ def main(argv=None) -> int:
         func=lambda a: print(json.dumps(dag.stats(), indent=2)))
 
     args = p.parse_args(argv)
-    return 0
+    return args.func(args) or 0
 
 
 def _wave(dag: DAGGraph, args):
