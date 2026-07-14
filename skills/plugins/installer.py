@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-SUPPORTED_TOOLS = ("claude", "cursor", "opencode", "codex", "antigravity")
+SUPPORTED_TOOLS = ("claude", "cursor", "opencode", "codex", "antigravity", "hermes", "openclaw")
 
 
 def _server(project: Path, botte_root: Path) -> dict[str, Any]:
@@ -61,6 +61,37 @@ def _codex_install(path: Path, server: dict[str, Any]) -> str:
     return action
 
 
+def _hermes_install(path: Path, server: dict[str, Any]) -> str:
+    """Append the documented Hermes YAML MCP block without requiring PyYAML."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    text = path.read_text(encoding="utf-8") if path.exists() else ""
+    if "name: botte-llm" in text:
+        return "updated"
+    block = ("\n# Botte Secrète MCP\nmcp_servers:\n  - name: botte-llm\n"
+             "    transport: stdio\n    command: " + json.dumps(server["command"]) +
+             "\n    args: [\"-m\", \"skills.llm_mcp.server\"]\n"
+             "    cwd: " + json.dumps(server["cwd"]) + "\n")
+    path.write_text(text.rstrip() + block, encoding="utf-8")
+    return "added"
+
+
+def _openclaw_install(path: Path, server: dict[str, Any]) -> str:
+    config = _read_json(path)
+    servers = config.setdefault("mcp", {}).setdefault("servers", [])
+    if not isinstance(servers, list):
+        raise ValueError(f"mcp.servers must be an array in {path}")
+    entry = {"name": "botte-llm", "enabled": True, "transport": "stdio",
+             "command": server["command"], "args": server["args"], "cwd": server["cwd"]}
+    found = next((item for item in servers if isinstance(item, dict) and item.get("name") == "botte-llm"), None)
+    action = "updated" if found is not None else "added"
+    if found is None:
+        servers.append(entry)
+    else:
+        found.update(entry)
+    _write_json(path, config)
+    return action
+
+
 def install_plugins(project: str | Path, *, tools: tuple[str, ...] = SUPPORTED_TOOLS,
                     botte_root: str | Path | None = None) -> dict[str, Any]:
     project_path = Path(project).resolve()
@@ -83,4 +114,8 @@ def install_plugins(project: str | Path, *, tools: tuple[str, ...] = SUPPORTED_T
             results[tool] = _codex_install(project_path / ".codex" / "config.toml", server)
         elif tool == "antigravity":
             results[tool] = _json_install(project_path / ".gemini" / "antigravity" / "mcp_config.json", "mcpServers", server)
+        elif tool == "hermes":
+            results[tool] = _hermes_install(project_path / ".hermes" / "config.yaml", server)
+        elif tool == "openclaw":
+            results[tool] = _openclaw_install(project_path / ".openclaw" / "openclaw.json", server)
     return {"project": str(project_path), "botte_root": str(root), "tools": results}

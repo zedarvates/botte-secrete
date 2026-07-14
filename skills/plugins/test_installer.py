@@ -7,12 +7,14 @@ from skills.plugins.installer import install_plugins
 def test_installer_preserves_existing_servers_and_writes_all_adapters(tmp_path):
     (tmp_path / ".mcp.json").write_text(json.dumps({"mcpServers": {"existing": {"command": "keep"}}}), encoding="utf-8")
     result = install_plugins(tmp_path)
-    assert set(result["tools"]) == {"claude", "cursor", "opencode", "codex", "antigravity"}
+    assert set(result["tools"]) == {"claude", "cursor", "opencode", "codex", "antigravity", "hermes", "openclaw"}
     assert json.loads((tmp_path / ".mcp.json").read_text(encoding="utf-8"))["mcpServers"]["existing"]["command"] == "keep"
     assert (tmp_path / ".cursor" / "mcp.json").exists()
     assert (tmp_path / "opencode.json").exists()
     assert '[mcp_servers."botte-llm"]' in (tmp_path / ".codex" / "config.toml").read_text(encoding="utf-8")
     assert (tmp_path / ".gemini" / "antigravity" / "mcp_config.json").exists()
+    assert "name: botte-llm" in (tmp_path / ".hermes" / "config.yaml").read_text(encoding="utf-8")
+    assert json.loads((tmp_path / ".openclaw" / "openclaw.json").read_text(encoding="utf-8"))["mcp"]["servers"][0]["name"] == "botte-llm"
 
 
 def test_installer_is_idempotent(tmp_path):
