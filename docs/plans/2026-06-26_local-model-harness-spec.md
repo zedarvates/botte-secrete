@@ -3,7 +3,7 @@
 > **Date :** 26 Juin 2026
 > **Sources :**
 > - Audit Hermes — « les agents locaux basés sur Gemma hallucinent beaucoup »
-> - Travail de session — NN belt, featurizer (`skills/botte_nn/features.py`), feedback implicite (`active_learning.record_feedback`)
+> - Travail de session — NN belt, featurizer (`skills/botte_nn/features.py`), observations puis verdicts explicites (`active_learning.record_verdict`)
 > - Existant — `auto_router`, `fusion`, `ingest`/Qdrant, `cwe_kb`, `nlp_deterministic`, `fallow_like`, `meta_harness/pipeline_dsl.py`
 
 ---
@@ -48,7 +48,7 @@ Et quand le doute subsiste : **abstenir + escalader** vaut toujours mieux que me
 | 2 | **Ancrer (RAG)** | injecter les faits ; « réponds **uniquement** depuis ce contexte, sinon `NEEDS_ESCALATION` » | ✅ `ingest`/Qdrant, `cwe_kb` | — |
 | 3 | **Vérifier** | le JSON parse ? chaque preuve est **dans** le contexte ? fichier/symbole cité **existe** ? code **parse** (ast) ? | ✅ `nlp_deterministic`, `fallow_like`, `features.featurize` | ⚠️ module `verifier` (composition) |
 | 4 | **Abstenir / Escalader** | échec de vérif ou confiance basse → escalade, jamais une réponse fausse | ✅ `fusion.cascade` | seuil **calibré** (cf. audit Hermes #3) |
-| 5 | **Apprendre** | chaque abstention/rejet/override = exemple labellisé | ✅ `active_learning.record_feedback` | — |
+| 5 | **Apprendre** | chaque résultat est observé ; seuls les verdicts explicites deviennent des labels | ✅ `active_learning.record_observation` + `record_verdict` | — |
 
 **3 des 5 couches existent déjà** ; il reste 2 briques + le câblage.
 
@@ -124,7 +124,8 @@ learn: true                        # logue l'issue vers active_learning (binary_
 5. DECIDE    tout passe → réponse ; sinon selon spec.on_fail :
                 escalate → fusion.cascade(task, escalate_to)
                 abstain  → {answer: null, reason: 'verification_failed'}
-6. LEARN     si spec.learn : record_feedback(...) (succès local / échec→escalade)
+6. LEARN     si spec.learn : record_observation(...) ; un vérificateur ou humain appelle
+            record_verdict(...) quand la route correcte est réellement connue
 ```
 
 `HarnessResult` : `{ answer, source: local|escalated|abstained, verifications: {...}, samples, escalated, reason }` — **traçable** (on sait *pourquoi* une réponse a été acceptée/rejetée).
@@ -173,4 +174,5 @@ Le reste — **gate, RAG, escalade, apprentissage — existe déjà** et n'a qu'
 
 ---
 
-*Dépendances : référence le NN belt, `features.py` et `active_learning.record_feedback` introduits dans la PR `integration/all-improvements` (à merger avant P3/P5).*
+*Dépendances : référence le NN belt, `features.py` et le ledger vérifié
+`active_learning.record_observation`/`record_verdict`.*

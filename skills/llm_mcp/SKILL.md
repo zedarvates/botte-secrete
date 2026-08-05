@@ -17,6 +17,8 @@ on its own. Pure stdlib, stdio JSON-RPC 2.0, no dependencies.
 | `audit_local_usage` | Local-usage report + hardware-aware setup steps |
 | `route_task` | Recommend cheapest tier + a concrete local backend/model |
 | `local_chat` | Run a prompt on a local model (0 cloud tokens) |
+| `auto_route` | Decide and optionally execute the cheapest capable route |
+| `route_feedback` | Verify an executed route by its `feedback_id` |
 
 ## Register in Claude Code
 

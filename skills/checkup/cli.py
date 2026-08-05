@@ -194,10 +194,31 @@ def _nn_summary(project: Path) -> dict:
     at_risk = [m["model"] for m in r.get("models", []) if m.get("risk")]
     orphan = [m["model"] for m in r.get("models", [])
               if not m.get("wired") and m.get("data_source") == "synthetic"]
+    learning = {
+        "observations": 0, "verified": 0, "train_ready": False,
+        "activation_ready": False, "activation_required": 2_000,
+        "verified_pct": 0.0,
+    }
+    try:
+        from skills.botte_nn.active_learning import ActiveLearning
+        status = ActiveLearning().status()
+        binary = status.get("models", {}).get("binary_router", {})
+        observations = int(binary.get("observations", 0))
+        verified = int(binary.get("with_outcome", 0))
+        learning.update({
+            "observations": observations,
+            "verified": verified,
+            "train_ready": verified >= 50,
+            "activation_ready": verified >= 2_000,
+            "verified_pct": round(100 * verified / 2_000, 1),
+            "storage": status.get("storage", ""),
+        })
+    except (ImportError, OSError, ValueError, TypeError):
+        pass
     return {"available": True, "total": s.get("total", 0),
             "grounded": s.get("grounded", 0), "at_risk": len(at_risk),
             "at_risk_models": at_risk, "orphan_models": orphan,
-            "grounded_pct": s.get("grounded_pct", 0)}
+            "grounded_pct": s.get("grounded_pct", 0), "learning": learning}
 
 
 def _machine_summary(fresh: bool = False) -> dict:
@@ -369,6 +390,12 @@ def format_pr_comment(result: dict, *, repo: str | None = None,
         else:
             lines.append(f"### 🧠 Micro-NN grounding — {nn['grounded']}/{nn['total']} grounded, "
                          "none synthetic-and-wired")
+        learning = nn.get("learning", {})
+        lines.append(f"- binary_router ledger: {learning.get('observations', 0)} observations, "
+                     f"{learning.get('verified', 0)}/2,000 verified "
+                     f"({learning.get('verified_pct', 0)}%); "
+                     f"training {'ready' if learning.get('train_ready') else 'blocked (<50)'}, "
+                     f"activation {'ready' if learning.get('activation_ready') else 'blocked'}")
         lines.append("")
 
     hp = result.get("host_prefix") or {}
@@ -467,6 +494,10 @@ def main(argv=None) -> int:
         extra = (f" · at-risk: {', '.join(nn['at_risk_models'])}"
                  if nn.get("at_risk") else "")
         print(f"\n   🧠 Micro-NN: {nn['grounded']}/{nn['total']} grounded{extra}")
+        learning = nn.get("learning", {})
+        print(f"      binary_router ledger: {learning.get('observations', 0)} observations · "
+              f"{learning.get('verified', 0)}/2,000 verified · "
+              f"activation {'ready' if learning.get('activation_ready') else 'blocked'}")
 
     hp = r.get("host_prefix") or {}
     if hp.get("available") and hp.get("host_tokens"):

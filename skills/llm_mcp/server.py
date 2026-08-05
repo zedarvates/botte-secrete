@@ -149,6 +149,21 @@ TOOLS = [
         },
     },
     {
+        "name": "route_feedback",
+        "description": "Attach an explicit local/cloud verdict to a prior auto_route "
+                       "feedback_id. Only verified verdicts become binary_router "
+                       "training data; backend success/failure alone never does.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "feedback_id": {"type": "string",
+                                "description": "Identifier returned by executed auto_route."},
+                "correct_route": {"type": "string", "enum": ["local", "cloud"]},
+            },
+            "required": ["feedback_id", "correct_route"],
+        },
+    },
+    {
         "name": "find_skills",
         "description": "Find the skills/tools relevant to a task by searching SKILL.md "
                        "files locally — 0 cloud tokens (lexical match; optional local-LLM "
@@ -656,6 +671,17 @@ def _tool_auto_route(args: dict) -> str:
                       ensure_ascii=False, indent=2)
 
 
+def _tool_route_feedback(args: dict) -> str:
+    from skills.botte_nn.active_learning import record_verdict
+    route = args["correct_route"]
+    if route not in ("local", "cloud"):
+        raise ValueError("correct_route must be local or cloud")
+    verdict_id = record_verdict(args["feedback_id"], 0 if route == "local" else 1)
+    return json.dumps({"feedback_id": args["feedback_id"], "correct_route": route,
+                       "verdict_id": verdict_id, "verified": True},
+                      ensure_ascii=False, indent=2)
+
+
 def _tool_fusion(args: dict) -> str:
     from skills.auto_router import fusion
     fn = {"cascade": fusion.cascade, "draft_refine": fusion.draft_refine,
@@ -999,6 +1025,7 @@ DISPATCH = {
     "route_task": _tool_route_task,
     "local_chat": _tool_local_chat,
     "auto_route": _tool_auto_route,
+    "route_feedback": _tool_route_feedback,
     "fusion": _tool_fusion,
     "find_skills": _tool_find_skills,
     "infra_tips": _tool_infra_tips,

@@ -173,7 +173,7 @@ def main() -> int:
         nn_belt2.cloud_escalation_hint = o_hint2
         router_mod.estimate_effort = o_est
 
-    # 12. Implicit feedback: belt decisions get labelled for the active-learning loop.
+    # 12. Belt observations remain unlabelled until an explicit verdict arrives.
     import json as _json
     import tempfile
     from pathlib import Path as _Path
@@ -186,10 +186,37 @@ def main() -> int:
         al_mod.record_feedback("binary_router", [0.2, 1.0, 1.0],
                                predicted_class=0, actual_class=1)
         logf = al_mod.DATA_DIR / "inference_logs.jsonl"
-        rows = [_json.loads(x) for x in logf.read_text().splitlines() if x.strip()]
+        rows = [_json.loads(x) for x in logf.read_text(encoding="utf-8").splitlines()
+                if x.strip()]
         _ok("record_feedback appends one labelled row (correct=False)",
-            len(rows) == 1 and rows[0]["actual_class"] == 1 and rows[0]["correct"] is False,
+            len(rows) == 1 and rows[0]["actual_class"] == 1
+            and rows[0]["correct"] is False and rows[0]["verified"] is True,
             state)
+
+        observation_id = al_mod.record_observation(
+            "binary_router", [0.3, 1.0, 1.0], predicted_class=0,
+            outcome="local_returned")
+        rows = [_json.loads(x) for x in logf.read_text(encoding="utf-8").splitlines()
+                if x.strip()]
+        _ok("automatic observation has no invented ground-truth label",
+            len(rows) == 2 and rows[1]["actual_class"] is None
+            and rows[1]["correct"] is None and rows[1]["verified"] is False
+            and rows[1]["outcome"] == "local_returned", state)
+
+        verdict_id = al_mod.record_verdict(observation_id, actual_class=1)
+        rows = [_json.loads(x) for x in logf.read_text(encoding="utf-8").splitlines()
+                if x.strip()]
+        _ok("explicit verdict links a verified label to its observation",
+            len(rows) == 3 and verdict_id == rows[2]["inference_id"]
+            and rows[2]["source_observation_id"] == observation_id
+            and rows[2]["actual_class"] == 1 and rows[2]["verified"] is True,
+            state)
+        try:
+            al_mod.record_verdict(observation_id, actual_class=0)
+            duplicate_rejected = False
+        except ValueError:
+            duplicate_rejected = True
+        _ok("an observation cannot be verified twice", duplicate_rejected, state)
 
         d_no = AutoDecision(mode="cloud", tier=Tier.CHEAP, effort=effort.estimate("x"))
         _ok("record_override no-ops without belt context",
@@ -197,10 +224,45 @@ def main() -> int:
 
         d_belt = AutoDecision(mode="local", tier=Tier.LOCAL, effort=effort.estimate("x"),
                               _belt_ctx={"features": [0.5, 1.0, 1.0], "predicted_class": 0})
+        router_observation_id = AutoRouter._log_observation(d_belt, "local_returned")
         logged = AutoRouter().record_override(d_belt, "cloud")
-        rows2 = [_json.loads(x) for x in logf.read_text().splitlines() if x.strip()]
+        rows2 = [_json.loads(x) for x in logf.read_text(encoding="utf-8").splitlines()
+                 if x.strip()]
+        _ok("router observation returns the feedback id exposed to callers",
+            isinstance(router_observation_id, str) and len(router_observation_id) == 32,
+            state)
         _ok("record_override logs a correction (local→cloud) when belt drove it",
-            logged and len(rows2) == 2 and rows2[1]["actual_class"] == 1, state)
+            logged and len(rows2) == 5 and rows2[4]["actual_class"] == 1
+            and rows2[4]["verified"] is True, state)
+
+        from skills import response_cache as cache_mod
+        original_decide = AutoRouter.decide
+        original_client = router_mod.LocalLLMClient
+        original_cache_get = cache_mod._cache.get
+        original_cache_set = cache_mod._cache.set
+
+        class _Result:
+            text = "verified later"
+            total_tokens = 7
+
+        class _Client:
+            def chat(self, *_args, **_kwargs):
+                return _Result()
+
+        AutoRouter.decide = lambda self, *_args, **_kwargs: d_belt
+        router_mod.LocalLLMClient = _Client
+        cache_mod._cache.get = lambda *_args, **_kwargs: None
+        cache_mod._cache.set = lambda *_args, **_kwargs: None
+        try:
+            run_result = AutoRouter().run("unique feedback-id contract test")
+        finally:
+            AutoRouter.decide = original_decide
+            router_mod.LocalLLMClient = original_client
+            cache_mod._cache.get = original_cache_get
+            cache_mod._cache.set = original_cache_set
+        _ok("executed belt route includes a verifiable feedback_id",
+            run_result.get("text") == "verified later"
+            and len(run_result.get("feedback_id", "")) == 32, state)
     finally:
         al_mod.DATA_DIR = o_data
 

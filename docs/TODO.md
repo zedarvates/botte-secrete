@@ -239,6 +239,8 @@
 
 - [ ] 🔴 Regrounder `binary_router` sur données réelles (actuellement flagué
       "synthetic + wired" par `nn_audit` selon le dernier `checkup --doctor`).
+      Le ledger distingue désormais observations et verdicts explicites via
+      `feedback_id`/`route_feedback`; activation bloquée jusqu'à 2 000 verdicts.
 - [ ] 🔴 Regrounder `effort_classifier` — même statut à risque.
 - [ ] 🔴 Regrounder ou retirer `anomaly_detector` — vérifier s'il a de vrais
       consommateurs en production avant de décider grounding vs suppression.
