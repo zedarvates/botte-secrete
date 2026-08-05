@@ -233,8 +233,10 @@ task saves the cost of every filter above it — so most work never reaches the 
 
 The **NN belt** (`auto_router` + `botte_nn`) decides which filter a task needs; the
 **harness** keeps the local model honest (structured output + deterministic verification —
-*escalate, don't hallucinate*); the **active-learning loop** sharpens the belt from real
-outcomes. Trivial work stays local at 0 tokens; the expensive model is spent only where it
+*escalate, don't hallucinate*); the **active-learning loop** sharpens the belt from
+explicitly verified outcomes. Executed `auto_route` calls return a `feedback_id`;
+`route_feedback` labels it only after a real local/cloud verdict. Trivial work stays local
+at 0 tokens; the expensive model is spent only where it
 earns its keep.
 
 ## 🎬 See it decide, live

@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+- Ground `binary_router` on explicit verdicts: automatic local returns/failures are
+  unlabelled observations, executed routes expose a `feedback_id`, and the new
+  `route_feedback` MCP tool appends the auditable local/cloud verdict.
+- `/checkup` now separates observations from verified labels and keeps training
+  and activation blocked below their 50/2,000 verified-sample gates.
+
 ## v1.9.0rc1 (2026-07-14) — Loop Optimizer release candidate
 
 ### Added

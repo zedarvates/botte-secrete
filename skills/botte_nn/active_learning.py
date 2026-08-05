@@ -12,6 +12,7 @@ Usage :
     python -m skills.botte_nn.active_learning collect   # Collecte les données
     python -m skills.botte_nn.active_learning train     # Ré-entraîne les modèles
     python -m skills.botte_nn.active_learning status    # État de l'apprentissage
+    python -m skills.botte_nn.active_learning verify <feedback_id> local|cloud
 """
 
 from __future__ import annotations
@@ -20,6 +21,7 @@ import argparse
 import json
 import sys
 import time
+import uuid
 from collections import defaultdict
 from dataclasses import dataclass, field, asdict
 from pathlib import Path
@@ -55,10 +57,14 @@ class InferenceLog:
     model_name: str
     features: list[float]
     predicted_class: int
-    actual_class: int            # None si pas encore vérifié
+    actual_class: Optional[int] = None
     correct: Optional[bool] = None  # None si pas encore vérifié
     timestamp: float = 0.0
     latency_ms: float = 0.0
+    verified: bool = False
+    outcome: str = ""
+    inference_id: str = ""
+    source_observation_id: str = ""
 
 
 class ActiveLearning:
@@ -77,7 +83,7 @@ class ActiveLearning:
         log_file = self.data_dir / "inference_logs.jsonl"
         if not log_file.exists():
             return
-        for line in log_file.read_text().splitlines():
+        for line in log_file.read_text(encoding="utf-8").splitlines():
             if line.strip():
                 try:
                     d = json.loads(line)
@@ -89,7 +95,7 @@ class ActiveLearning:
     def save(self):
         """Réécrit tout le fichier (compaction; coûteux — réservé aux rares cas)."""
         log_file = self.data_dir / "inference_logs.jsonl"
-        with open(log_file, "w") as f:
+        with open(log_file, "w", encoding="utf-8") as f:
             for logs_list in self.logs.values():
                 for log in logs_list:
                     f.write(json.dumps(asdict(log)) + "\n")
@@ -97,23 +103,28 @@ class ActiveLearning:
     def _append(self, log: InferenceLog):
         """Append O(1) — le chemin chaud ne doit pas réécrire tout le fichier."""
         log_file = self.data_dir / "inference_logs.jsonl"
-        with open(log_file, "a") as f:
+        with open(log_file, "a", encoding="utf-8") as f:
             f.write(json.dumps(asdict(log)) + "\n")
 
     # ── Collecte ──
 
     def log_inference(self, model_name: str, features: list[float],
                       predicted_class: int, actual_class: Optional[int] = None,
-                      latency_ms: float = 0.0):
-        """Enregistre un appel d'inférence pour apprentissage futur."""
+                      latency_ms: float = 0.0, *, verified: bool = False,
+                      outcome: str = ""):
+        """Enregistre une observation; seuls les verdicts vérifiés sont entraînables."""
+        if actual_class is not None and not verified:
+            raise ValueError("actual_class requires verified=True")
         log = InferenceLog(
             model_name=model_name,
             features=features,
             predicted_class=predicted_class,
             actual_class=actual_class,
-            correct=(predicted_class == actual_class) if actual_class is not None else None,
+            correct=(predicted_class == actual_class) if verified else None,
             timestamp=time.time(),
             latency_ms=latency_ms,
+            verified=verified,
+            outcome=outcome,
         )
         self.logs[model_name].append(log)
         self._append(log)
@@ -123,16 +134,18 @@ class ActiveLearning:
         stats = {}
         for model_name, logs_list in self.logs.items():
             total = len(logs_list)
-            with_outcome = sum(1 for l in logs_list if l.correct is not None)
+            observations = sum(1 for log in logs_list if not log.verified)
+            with_outcome = sum(1 for l in logs_list if l.verified and l.correct is not None)
             correct = sum(1 for l in logs_list if l.correct is True)
             stats[model_name] = {
                 "total": total,
+                "observations": observations,
                 "with_outcome": with_outcome,
                 "correct": correct,
                 "accuracy": round(correct / max(with_outcome, 1), 3),
             }
             if verbose:
-                print(f"  {model_name:<20} {total:>4} logs, "
+                print(f"  {model_name:<20} {observations:>4} observations, "
                       f"{with_outcome} validés, {correct} corrects "
                       f"({correct/max(with_outcome,1):.0%})")
         return stats
@@ -147,7 +160,10 @@ class ActiveLearning:
             Nouvelle accuracy ou None si pas assez de données.
         """
         logs = self.logs.get(model_name, [])
-        logs_with_outcome = [l for l in logs if l.correct is not None and l.actual_class is not None]
+        logs_with_outcome = [
+            l for l in logs
+            if l.verified and l.correct is not None and l.actual_class is not None
+        ]
 
         if len(logs_with_outcome) < 50:
             if verbose:
@@ -163,7 +179,7 @@ class ActiveLearning:
             return None
 
         # Charger le modèle original
-        with open(model_path) as f:
+        with open(model_path, encoding="utf-8") as f:
             weight_data = json.load(f)
 
         layers = weight_data["layers"]
@@ -220,7 +236,7 @@ class ActiveLearning:
 
         # On ne déploie QUE si le modèle généralise mieux sur des données non vues.
         if new_accuracy > old_accuracy:
-            with open(model_path, "w") as f:
+            with open(model_path, "w", encoding="utf-8") as f:
                 json.dump(model.export_json(), f, indent=2)
             if verbose:
                 print(f"  ✅ {model_name}: amélioré {old_accuracy:.1%} → {new_accuracy:.1%} "
@@ -247,12 +263,17 @@ class ActiveLearning:
         """Rapport complet de l'état d'apprentissage."""
         total_logs = sum(len(logs) for logs in self.logs.values())
         total_with_outcome = sum(
-            sum(1 for l in logs if l.correct is not None)
+            sum(1 for l in logs if l.verified and l.correct is not None)
+            for logs in self.logs.values()
+        )
+        total_observations = sum(
+            sum(1 for log in logs if not log.verified)
             for logs in self.logs.values()
         )
 
         return {
             "total_logs": total_logs,
+            "observations": total_observations,
             "with_outcome": total_with_outcome,
             "models": self.collect(verbose=False),
             "storage": str(self.data_dir / "inference_logs.jsonl"),
@@ -260,23 +281,72 @@ class ActiveLearning:
 
 
 def record_feedback(model_name: str, features: list[float], predicted_class: int,
-                    actual_class: int, latency_ms: float = 0.0) -> None:
+                    actual_class: int, latency_ms: float = 0.0, *,
+                    source_observation_id: str = "") -> str:
     """Append one *labelled* inference (ground truth known) for the loop to learn from.
 
     O(1) and load-free — the hot path must not read the whole history back. This is
-    how production fills `actual_class`: callers log the real outcome (e.g. a routing
-    override, or a local attempt that failed) so the micro-NN can be retrained on
-    what actually happened, not synthetic data.
+    how production fills `actual_class`: callers log an explicit override or a
+    deterministic verification result so the micro-NN can be retrained on ground
+    truth, not on whether a backend merely returned or failed.
     """
     DATA_DIR.mkdir(parents=True, exist_ok=True)
+    inference_id = uuid.uuid4().hex
     log = InferenceLog(
         model_name=model_name, features=[float(x) for x in features],
         predicted_class=int(predicted_class), actual_class=int(actual_class),
         correct=(int(predicted_class) == int(actual_class)),
-        timestamp=time.time(), latency_ms=latency_ms,
+        timestamp=time.time(), latency_ms=latency_ms, verified=True,
+        outcome="explicit_feedback", inference_id=inference_id,
+        source_observation_id=source_observation_id,
     )
-    with open(DATA_DIR / "inference_logs.jsonl", "a") as f:
+    with open(DATA_DIR / "inference_logs.jsonl", "a", encoding="utf-8") as f:
         f.write(json.dumps(asdict(log)) + "\n")
+    return inference_id
+
+
+def record_observation(model_name: str, features: list[float], predicted_class: int,
+                       outcome: str, latency_ms: float = 0.0) -> str:
+    """Append an unverified production observation; never used as a training label."""
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    inference_id = uuid.uuid4().hex
+    log = InferenceLog(
+        model_name=model_name, features=[float(x) for x in features],
+        predicted_class=int(predicted_class), timestamp=time.time(),
+        latency_ms=latency_ms, verified=False, outcome=str(outcome),
+        inference_id=inference_id,
+    )
+    with open(DATA_DIR / "inference_logs.jsonl", "a", encoding="utf-8") as f:
+        f.write(json.dumps(asdict(log)) + "\n")
+    return inference_id
+
+
+def record_verdict(observation_id: str, actual_class: int) -> str:
+    """Verify one prior observation by id and append an auditable labelled row."""
+    if actual_class not in (0, 1):
+        raise ValueError("actual_class must be 0 (local) or 1 (cloud)")
+    log_file = DATA_DIR / "inference_logs.jsonl"
+    if not log_file.exists():
+        raise ValueError(f"unknown observation_id: {observation_id}")
+    source = None
+    verified_sources: set[str] = set()
+    for line in log_file.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        try:
+            item = InferenceLog(**json.loads(line))
+        except (json.JSONDecodeError, TypeError):
+            continue
+        if item.verified and item.source_observation_id:
+            verified_sources.add(item.source_observation_id)
+        if item.inference_id == observation_id and not item.verified:
+            source = item
+    if source is None or observation_id in verified_sources:
+        raise ValueError(f"unknown or already-verified observation_id: {observation_id}")
+    return record_feedback(
+        source.model_name, source.features, source.predicted_class, actual_class,
+        latency_ms=source.latency_ms, source_observation_id=observation_id,
+    )
 
 
 def main(argv=None) -> int:
@@ -285,6 +355,10 @@ def main(argv=None) -> int:
 
     sub.add_parser("status", help="État de l'apprentissage")
     sub.add_parser("collect", help="Collecter et analyser les logs")
+
+    s = sub.add_parser("verify", help="Valider une observation avec un verdict réel")
+    s.add_argument("feedback_id", help="Identifiant renvoyé par auto_router.run")
+    s.add_argument("route", choices=("local", "cloud"), help="Route qui était correcte")
 
     s = sub.add_parser("train", help="Ré-entraîner les modèles")
     s.add_argument("--model", default=None, help="Modèle spécifique")
@@ -300,12 +374,12 @@ def main(argv=None) -> int:
     if args.cmd == "status":
         s = al.status()
         print("🧠 Active Learning Status")
-        print(f"  Logs totaux: {s['total_logs']}")
+        print(f"  Observations: {s['observations']}")
         print(f"  Avec verdict: {s['with_outcome']}")
         print(f"  Stockage: {s['storage']}")
         print()
         for model, stats in s["models"].items():
-            print(f"  {model:<20} {stats['total']:>4} logs, "
+            print(f"  {model:<20} {stats['observations']:>4} observations, "
                   f"{stats['with_outcome']} validés, "
                   f"{stats['accuracy']:.0%} accuracy")
         return 0
@@ -313,6 +387,11 @@ def main(argv=None) -> int:
     elif args.cmd == "collect":
         print("📊 Collecte des logs d'inférence :")
         al.collect()
+        return 0
+
+    elif args.cmd == "verify":
+        verdict_id = record_verdict(args.feedback_id, 0 if args.route == "local" else 1)
+        print(f"✅ Verdict vérifié: {args.feedback_id} → {args.route} ({verdict_id})")
         return 0
 
     elif args.cmd == "train":

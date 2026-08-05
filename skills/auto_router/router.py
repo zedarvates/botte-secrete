@@ -40,7 +40,7 @@ class AutoDecision:
     est_cost: float = 0.0
     _api_key: str = field(default="", repr=False)
     # binary_router features + predicted class when the NN belt drove this decision,
-    # so the outcome can be logged back as implicit feedback (None = belt didn't act).
+    # so telemetry can be linked to a later explicit verdict (None = belt didn't act).
     _belt_ctx: Optional[dict] = field(default=None, repr=False)
 
     def to_dict(self) -> dict:
@@ -168,20 +168,25 @@ class AutoRouter:
         if hit is not None:
             return {"decision": d.to_dict(), "text": hit.response, "tokens": 0,
                     "cached": True}
+        feedback_id = None
         if d.mode == "local":
             try:
                 res = LocalLLMClient().chat(prompt, system=system, model=d.model,
                                             max_tokens=max_tokens)
                 text, usage = res.text, res.total_tokens
             except LocalLLMError as e:
-                # The belt routed local and local failed → strong implicit feedback
-                # that this should have been cloud. Label it for the loop.
-                self._log_feedback(d, actual_class=1)  # 1 = cloud
+                # A local failure is useful telemetry, but it is not proof that cloud
+                # was the correct route. Keep it out of the training labels until an
+                # explicit override or verified fallback supplies ground truth.
+                feedback_id = self._log_observation(d, outcome="local_failed")
                 _log_escalate("local", "cloud", f"local call failed: {e}")
-                return {"decision": d.to_dict(), "error": str(e)}
+                result = {"decision": d.to_dict(), "error": str(e)}
+                if feedback_id:
+                    result["feedback_id"] = feedback_id
+                return result
             else:
-                # Local handled it → tentative positive label for binary_router.
-                self._log_feedback(d, actual_class=0)  # 0 = local
+                # Non-empty local output is still not a correctness verdict.
+                feedback_id = self._log_observation(d, outcome="local_returned")
         else:
             text, usage = _cloud_chat(d, prompt, system, max_tokens)
             input_usage = usage // 2
@@ -204,11 +209,14 @@ class AutoRouter:
                           context=cache_context)
             except (OSError, ValueError, TypeError):
                 pass
-        return {"decision": d.to_dict(), "text": text, "tokens": usage}
+        result = {"decision": d.to_dict(), "text": text, "tokens": usage}
+        if feedback_id:
+            result["feedback_id"] = feedback_id
+        return result
 
     @staticmethod
     def _log_feedback(d: AutoDecision, actual_class: int) -> None:
-        """Best-effort: record the belt's prediction + the real outcome for learning."""
+        """Best-effort: record an explicitly verified routing correction."""
         ctx = d._belt_ctx
         if not ctx:
             return
@@ -218,6 +226,19 @@ class AutoRouter:
                             ctx["predicted_class"], actual_class)
         except Exception:
             pass
+
+    @staticmethod
+    def _log_observation(d: AutoDecision, outcome: str) -> Optional[str]:
+        """Best-effort: record production telemetry without inventing a label."""
+        ctx = d._belt_ctx
+        if not ctx:
+            return None
+        try:
+            from skills.botte_nn.active_learning import record_observation
+            return record_observation("binary_router", ctx["features"],
+                                      ctx["predicted_class"], outcome)
+        except Exception:
+            return None
 
     def _track_escalation(self, task_key: str) -> None:
         """Increment the cloud escalation counter for this task type."""

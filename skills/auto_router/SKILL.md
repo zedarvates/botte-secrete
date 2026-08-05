@@ -30,6 +30,10 @@ Effort is scored from prompt signals (length, code, stack traces, reasoning vs
 trivial vocabulary, multi-file scope) → a `Tier`. `Tier ≤ LOCAL` with a local
 backend runs local (0 cloud tokens); higher tiers pick the cheapest available
 cloud model, budget-aware, and **fall back to local** when no cloud key is set.
+When the NN belt drives an executed local route, the result includes a
+`feedback_id`. Verify it with `route_feedback` (or
+`python -m skills.botte_nn.active_learning verify <id> local|cloud`) only after
+the correct route is known; a backend return/failure is telemetry, not a label.
 
 ## Cloud providers
 
@@ -65,5 +69,6 @@ All fusion modes degrade gracefully with no cloud key (local-only).
 
 ## MCP
 
-Exposed via [[llm_mcp]] as tools `auto_route` and `fusion`, so an agent can route
-and fuse on its own. Related: `tiered_router`, `llm_backends`, `response_cache`.
+Exposed via [[llm_mcp]] as tools `auto_route`, `route_feedback`, and `fusion`, so
+an agent can route, verify, and fuse on its own. Related: `tiered_router`,
+`llm_backends`, `response_cache`.

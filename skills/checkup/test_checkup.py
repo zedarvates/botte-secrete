@@ -13,7 +13,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from skills.checkup.cli import run, format_pr_comment, PR_COMMENT_MARKER, doctor
+from skills.checkup.cli import (
+    run, format_pr_comment, PR_COMMENT_MARKER, doctor, _nn_summary,
+)
 
 
 def _ok(msg, cond, state):
@@ -109,6 +111,29 @@ def main() -> int:
         m = dr["machine"]
         _ok("machine section reports availability + backend list shape",
             "available" in m and (not m["available"] or "uses_local_models" in m), state)
+
+    # Active-learning readiness: observations are visible but only explicit
+    # feedback counts toward training/activation gates.
+    from skills.botte_nn import active_learning as al_mod
+    old_data_dir = al_mod.DATA_DIR
+    with tempfile.TemporaryDirectory() as d:
+        al_mod.DATA_DIR = Path(d) / "active_learning"
+        try:
+            al_mod.record_observation("binary_router", [0.2, 1.0, 1.0], 0,
+                                      "local_returned")
+            al_mod.record_feedback("binary_router", [0.7, 1.0, 1.0], 0, 1)
+            summary = _nn_summary(Path(__file__).resolve().parents[2])
+            learning = summary["learning"]
+            _ok("nn summary separates observations from verified verdicts",
+                learning["observations"] == 1 and learning["verified"] == 1, state)
+            _ok("binary_router stays blocked below the honest data gates",
+                not learning["train_ready"] and not learning["activation_ready"], state)
+            comment = format_pr_comment({"drift": [], "nn": summary,
+                                         "policy_committed": True, "cost": {}})
+            _ok("PR comment exposes verified-ledger readiness",
+                "1/2,000 verified" in comment and "activation blocked" in comment, state)
+        finally:
+            al_mod.DATA_DIR = old_data_dir
 
     passed, failed = state
     print(f"\nRESULT: {passed} passed, {failed} failed")

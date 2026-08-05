@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import os
 import sys
+import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
@@ -90,6 +91,25 @@ def main() -> int:
     payload = json.loads(call["result"]["content"][0]["text"])
     _ok("find_tool works through tools/call and returns matches",
         len(payload["matches"]) > 0, state)
+
+    from skills.botte_nn import active_learning as al_mod
+    old_data_dir = al_mod.DATA_DIR
+    with tempfile.TemporaryDirectory() as temp_dir:
+        al_mod.DATA_DIR = Path(temp_dir) / "active_learning"
+        try:
+            feedback_id = al_mod.record_observation(
+                "binary_router", [0.2, 1.0, 1.0], 0, "local_returned")
+            feedback_call = handle({
+                "jsonrpc": "2.0", "id": 4, "method": "tools/call",
+                "params": {"name": "route_feedback", "arguments": {
+                    "feedback_id": feedback_id, "correct_route": "cloud"}}})
+            feedback_payload = json.loads(
+                feedback_call["result"]["content"][0]["text"])
+            _ok("route_feedback verifies an auto_route observation through MCP",
+                feedback_payload["verified"] is True
+                and feedback_payload["feedback_id"] == feedback_id, state)
+        finally:
+            al_mod.DATA_DIR = old_data_dir
 
     # protocol-level: a NON-core tool is still callable by name even though it
     # isn't in the lazy listing — lazy only hides the catalog, not execution.
