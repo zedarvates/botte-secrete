@@ -17,9 +17,12 @@ Pure stdlib.
 
 from __future__ import annotations
 
+import ipaddress
 import json
+import os
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from dataclasses import dataclass, field, asdict
 from pathlib import Path
@@ -116,26 +119,77 @@ def status(scan_subnet: bool = False) -> dict:
 
 # ── delegation hand-off (Hermes plugs in) ────────────────────────────────────
 
+def _env_suffix(host: str) -> str:
+    return host.replace(".", "_").replace(":", "_").replace("-", "_")
+
+
+def _is_loopback(host: str) -> bool:
+    normalized = host.strip("[]").casefold()
+    if normalized == "localhost":
+        return True
+    try:
+        return ipaddress.ip_address(normalized).is_loopback
+    except ValueError:
+        return False
+
+
+def _resolve_agent_url(host: str, provided: Optional[str]) -> tuple[str, str]:
+    """Resolve and validate the endpoint before it reaches the network sink."""
+    key = "BOTTE_AGENT_" + _env_suffix(host)
+    raw = provided or os.environ.get(key, "")
+    if not raw:
+        return "", f"no agent endpoint for {host} (set {key} or pass agent_url)"
+    try:
+        parsed = urllib.parse.urlsplit(raw)
+        endpoint_port = parsed.port
+    except ValueError as exc:
+        return "", f"invalid agent endpoint: {exc}"
+    if parsed.scheme not in {"http", "https"} or not parsed.hostname:
+        return "", "agent endpoint must use http or https and include a host"
+    if parsed.username or parsed.password or parsed.query or parsed.fragment:
+        return "", "agent endpoint must not contain credentials, query, or fragment"
+    expected = host.strip("[]").casefold()
+    if parsed.hostname.casefold() != expected:
+        return "", "agent endpoint host must match the delegated machine"
+    if parsed.path not in {"", "/task"}:
+        return "", "agent endpoint path must be /task"
+    if not _is_loopback(expected) and parsed.scheme != "https":
+        return "", "non-loopback agent endpoints require https"
+    netloc = f"[{parsed.hostname}]" if ":" in parsed.hostname else parsed.hostname
+    if endpoint_port is not None:
+        netloc += f":{endpoint_port}"
+    return urllib.parse.urlunsplit((parsed.scheme, netloc, "/task", "", "")), ""
+
+
+def _resolve_agent_token(host: str, provided: Optional[str]) -> str:
+    suffix = _env_suffix(host)
+    return (provided or os.environ.get(f"BOTTE_AGENT_TOKEN_{suffix}")
+            or os.environ.get("BOTTE_AGENT_TOKEN", ""))
+
+
 def delegate(host: str, task: str, *, agent_url: Optional[str] = None,
-             timeout: float = 30.0) -> dict:
+             token: Optional[str] = None, timeout: float = 30.0) -> dict:
     """Hand a task to a trusted agent on `host` (does NOT run maintenance itself).
 
     Posts {"task": ...} to the machine's agent endpoint. The endpoint is provided
     explicitly or via env BOTTE_AGENT_<host-with-underscores>. If none is
     configured, returns a no-op result describing how to wire one.
     """
-    import os
-    if not agent_url:
-        key = "BOTTE_AGENT_" + host.replace(".", "_").replace(":", "_")
-        agent_url = os.environ.get(key)
-    if not agent_url:
+    agent_url, error = _resolve_agent_url(host, agent_url)
+    if error:
         return {"delegated": False, "host": host,
-                "reason": f"no agent endpoint for {host} (set {key} or pass agent_url). "
-                          "Wire a trusted agent (e.g. Hermes) to receive {\"task\": ...}."}
+                "reason": error}
+    token = _resolve_agent_token(host, token)
+    if not _is_loopback(host) and not token:
+        return {"delegated": False, "host": host,
+                "reason": "non-loopback agent endpoints require a token"}
     body = json.dumps({"task": task, "from": "botte-cluster",
                        "ts": time.strftime("%Y-%m-%dT%H:%M:%S")}).encode()
+    headers = {"Content-Type": "application/json"}
+    if token:
+        headers["X-Botte-Token"] = token
     req = urllib.request.Request(agent_url, data=body, method="POST",
-                                 headers={"Content-Type": "application/json"})
+                                 headers=headers)
     try:
         with urllib.request.urlopen(req, timeout=timeout) as r:
             return {"delegated": True, "host": host, "agent_url": agent_url,

@@ -13,8 +13,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
+from skills.console_utf8 import force_utf8
 from skills.llm_backends.discovery import Backend
 from skills.cluster import cluster
+
+force_utf8()
 
 
 def _ok(msg, cond, state):
@@ -56,6 +59,18 @@ def main() -> int:
     r = cluster.delegate("testhost", "do a thing")
     _ok("delegate without an endpoint is a safe no-op",
         r["delegated"] is False and "agent endpoint" in r["reason"], state)
+    r = cluster.delegate("10.0.0.8", "ping",
+                         agent_url="http://127.0.0.1:8799/task", token="secret")
+    _ok("delegate rejects endpoint host mismatch",
+        r["delegated"] is False and "host must match" in r["reason"], state)
+    r = cluster.delegate("10.0.0.8", "ping",
+                         agent_url="http://10.0.0.8:8799/task", token="secret")
+    _ok("delegate requires HTTPS away from loopback",
+        r["delegated"] is False and "require https" in r["reason"], state)
+    r = cluster.delegate("agent.local", "ping",
+                         agent_url="https://agent.local/task")
+    _ok("delegate requires a token away from loopback",
+        r["delegated"] is False and "require a token" in r["reason"], state)
 
     # no backends → pick returns None
     cluster._chat_backends = lambda: []
@@ -102,12 +117,13 @@ def main() -> int:
     # live HTTP roundtrip: start the receiver, delegate to it, assert response
     import threading
     from http.server import ThreadingHTTPServer
-    srv = ThreadingHTTPServer(("127.0.0.1", 0), agent._make_handler(""))
+    srv = ThreadingHTTPServer(("127.0.0.1", 0), agent._make_handler("secret"))
     port = srv.server_address[1]
     t = threading.Thread(target=srv.serve_forever, daemon=True); t.start()
     try:
         r = cluster.delegate("127.0.0.1", "ping",
-                             agent_url=f"http://127.0.0.1:{port}/task")
+                             agent_url=f"http://127.0.0.1:{port}/task",
+                             token="secret")
         import json as _json
         _ok("delegate → agent live roundtrip works",
             r["delegated"] is True and _json.loads(r["response"])["ok"] is True, state)
