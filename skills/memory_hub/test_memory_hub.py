@@ -89,6 +89,11 @@ class TestMemoryStoreIsolation:
         store.store(MemoryEntry(key="b", value=2, project_id="p2"))
         assert sorted(store.list_projects()) == ["p1", "p2"]
 
+    @pytest.mark.parametrize("project_id", ["../escape", "a/b", "a\\b", "", "x" * 129])
+    def test_project_id_cannot_escape_storage(self, store: MemoryStore, project_id: str):
+        with pytest.raises(ValueError):
+            store.store(MemoryEntry(key="k", value=1, project_id=project_id))
+
 
 class TestMemoryStoreCRUD:
     def test_store_and_recall(self, store: MemoryStore):
@@ -111,6 +116,12 @@ class TestMemoryStoreCRUD:
         assert store.recall("test", "delme") is None
         assert store.delete("test", "delme") is False
 
+    def test_delete_rejects_non_owner(self, store: MemoryStore):
+        store.store(MemoryEntry(key="private", value="x", project_id="test", agent_id="alice"))
+        with pytest.raises(MemoryAccessError):
+            store.delete("test", "private", actor_id="bob")
+        assert store.delete("test", "private", actor_id="alice") is True
+
     def test_upsert_preserves_created_at_and_increments_version(self, store: MemoryStore):
         e1 = MemoryEntry(key="k", value="v1", project_id="p")
         store.store(e1)
@@ -126,6 +137,12 @@ class TestMemoryStoreCRUD:
         assert updated.created_at == created
         assert updated.version == 2
 
+    def test_upsert_rejects_non_owner(self, store: MemoryStore):
+        store.store(MemoryEntry(key="k", value="alice", project_id="p", agent_id="alice"))
+        with pytest.raises(MemoryAccessError):
+            store.store(MemoryEntry(key="k", value="bob", project_id="p", agent_id="bob"))
+        assert store.recall("p", "k", agent_id="alice") == "alice"
+
 
 class TestMemoryStoreLifecycle:
     def test_proposed_default(self, store: MemoryStore):
@@ -135,17 +152,17 @@ class TestMemoryStoreLifecycle:
         assert entry.status == MemoryStatus.PROPOSED.value
 
     def test_transition_proposal_to_active(self, store: MemoryStore):
-        store.store(MemoryEntry(key="k", value="v", project_id="p"))
+        store.store(MemoryEntry(key="k", value="v", project_id="p", created_by="alice"))
         assert store.transition("p", "k", MemoryStatus.REVIEW_ACTIVE.value, actor_id="reviewer") is True
         entry = store.get("p", "k")
         assert entry is not None
         assert entry.status == MemoryStatus.REVIEW_ACTIVE.value
-        assert entry.created_by == "reviewer"
+        assert entry.created_by == "alice"
 
     def test_transition_full_cycle(self, store: MemoryStore):
         store.store(MemoryEntry(key="k", value="v", project_id="p"))
-        assert store.transition("p", "k", MemoryStatus.REVIEW_ACTIVE.value) is True
-        assert store.transition("p", "k", MemoryStatus.PROMOTED.value) is True
+        assert store.transition("p", "k", MemoryStatus.REVIEW_ACTIVE.value, actor_id="reviewer") is True
+        assert store.transition("p", "k", MemoryStatus.PROMOTED.value, actor_id="reviewer") is True
         entry = store.get("p", "k")
         assert entry is not None
         assert entry.status == MemoryStatus.PROMOTED.value
@@ -153,16 +170,20 @@ class TestMemoryStoreLifecycle:
     def test_illegal_transition_rejected(self, store: MemoryStore):
         store.store(MemoryEntry(key="k", value="v", project_id="p"))
         # proposed → promoted not allowed
-        assert store.transition("p", "k", MemoryStatus.PROMOTED.value) is False
+        assert store.transition("p", "k", MemoryStatus.PROMOTED.value, actor_id="reviewer") is False
 
     def test_frozen_transition_rejected(self, store: MemoryStore):
         store.store(MemoryEntry(key="k", value="v", project_id="p"))
-        assert store.transition("p", "k", MemoryStatus.EXPIRED.value) is True
+        assert store.transition("p", "k", MemoryStatus.EXPIRED.value, actor_id="reviewer") is True
         # expired is frozen
-        assert store.transition("p", "k", MemoryStatus.PROMOTED.value) is False
+        assert store.transition("p", "k", MemoryStatus.PROMOTED.value, actor_id="reviewer") is False
 
     def test_transition_missing(self, store: MemoryStore):
-        assert store.transition("p", "nonexistent", MemoryStatus.PROMOTED.value) is False
+        assert store.transition("p", "nonexistent", MemoryStatus.PROMOTED.value, actor_id="reviewer") is False
+
+    def test_transition_requires_actor(self, store: MemoryStore):
+        store.store(MemoryEntry(key="k", value="v", project_id="p"))
+        assert store.transition("p", "k", MemoryStatus.REVIEW_ACTIVE.value) is False
 
 
 class TestMemoryStoreExpiration:
@@ -238,11 +259,16 @@ class TestContextBundle:
         store.store(MemoryEntry(key="pub", value="public", project_id="p",
                                 status="promoted", visibility="project"))
         store.store(MemoryEntry(key="mine", value="private", project_id="p",
-                                agent_id="alice", status="proposal", visibility="private"))
+                                agent_id="alice", status="promoted", visibility="private"))
         bundle = store.context_bundle("p", agent_id="alice")
         keys = {b["key"] for b in bundle}
         assert "pub" in keys
         assert "mine" in keys
+
+    def test_bundle_excludes_unreviewed_private_proposal(self, store: MemoryStore):
+        store.store(MemoryEntry(key="draft", value="private", project_id="p",
+                                agent_id="alice", status="proposal", visibility="private"))
+        assert store.context_bundle("p", agent_id="alice") == []
 
 
 # ══════════════════════════════════════════════════════════════════════
@@ -259,7 +285,8 @@ class TestMCPDispatch:
         assert "promote_memory" in names
         assert "forget_memory" in names
 
-    def test_propose_returns_status(self):
+    def test_propose_returns_status(self, tmp_path: Path, monkeypatch):
+        monkeypatch.setenv("BOTTE_MEMORY_HUB_DIR", str(tmp_path))
         out = dispatch("propose_memory", {
             "project_id": "test",
             "key": "mcp:prop",
@@ -269,7 +296,8 @@ class TestMCPDispatch:
         assert out["key"] == "mcp:prop"
         assert out["status"] == MemoryStatus.PROPOSED.value
 
-    def test_promote_via_dispatch(self):
+    def test_promote_via_dispatch(self, tmp_path: Path, monkeypatch):
+        monkeypatch.setenv("BOTTE_MEMORY_HUB_DIR", str(tmp_path))
         dispatch("propose_memory", {
             "project_id": "test", "key": "mcp:prom", "value": "x", "agent_id": "alice",
         })
@@ -279,7 +307,8 @@ class TestMCPDispatch:
         })
         assert out["success"] is True
 
-    def test_forget_via_dispatch(self):
+    def test_forget_via_dispatch(self, tmp_path: Path, monkeypatch):
+        monkeypatch.setenv("BOTTE_MEMORY_HUB_DIR", str(tmp_path))
         dispatch("propose_memory", {
             "project_id": "test", "key": "mcp:forget", "value": "x", "agent_id": "alice",
         })
@@ -287,6 +316,14 @@ class TestMCPDispatch:
             "project_id": "test", "key": "mcp:forget", "actor_id": "alice",
         })
         assert out["deleted"] is True
+
+    def test_forget_requires_actor(self, tmp_path: Path, monkeypatch):
+        monkeypatch.setenv("BOTTE_MEMORY_HUB_DIR", str(tmp_path))
+        dispatch("propose_memory", {
+            "project_id": "test", "key": "mcp:no-actor", "value": "x", "agent_id": "alice",
+        })
+        out = dispatch("forget_memory", {"project_id": "test", "key": "mcp:no-actor"})
+        assert out["deleted"] is False
 
     def test_dispatch_unknown_tool(self):
         out = dispatch("nonexistent", {})

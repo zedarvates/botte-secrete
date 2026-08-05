@@ -1,11 +1,12 @@
 """Memory Hub MCP tools."""
 from __future__ import annotations
+import os
 from typing import Any
 from skills.memory_hub.schema import MemoryEntry, AssetType, MemoryStatus, MemoryVisibility
 from skills.memory_hub.store import MemoryStore
 
 def _init_store():
-    return MemoryStore()
+    return MemoryStore(base_dir=os.environ.get("BOTTE_MEMORY_HUB_DIR"))
 
 TOOL_DEFINITIONS = [
     {
@@ -70,13 +71,13 @@ TOOL_DEFINITIONS = [
 HANDLERS = {}
 
 def handle_search_hub(args):
-    store = _init_store()
-    entries = store.search(project_id=args["project_id"], query=args.get("query",""), asset_type=args.get("asset_type"), status=args.get("status"), agent_id=args.get("agent_id"), limit=args.get("limit",50))
+    with _init_store() as store:
+        entries = store.search(project_id=args["project_id"], query=args.get("query",""), asset_type=args.get("asset_type"), status=args.get("status"), agent_id=args.get("agent_id"), limit=args.get("limit",50))
     return {"results": [{"key": e.key, "type": e.asset_type, "status": e.status, "confidence": e.confidence, "visibility": e.visibility, "tags": e.tags} for e in entries], "count": len(entries)}
 
 def handle_context_bundle(args):
-    store = _init_store()
-    bundle = store.context_bundle(project_id=args["project_id"], agent_id=args["agent_id"], max_entries=args.get("max_entries",10))
+    with _init_store() as store:
+        bundle = store.context_bundle(project_id=args["project_id"], agent_id=args["agent_id"], max_entries=args.get("max_entries",10))
     return {"entries": bundle, "count": len(bundle)}
 
 def handle_propose_memory(args):
@@ -85,19 +86,22 @@ def handle_propose_memory(args):
     if args.get("expires_in_days", 0) > 0:
         expires = time.time() + args["expires_in_days"] * 86400
     entry = MemoryEntry(key=args["key"], value=args["value"], asset_type=args.get("asset_type", AssetType.FACT.value), category=args.get("category","fact"), confidence=args.get("confidence",1.0), status=MemoryStatus.PROPOSED.value, visibility=args.get("visibility", MemoryVisibility.PRIVATE.value), project_id=args["project_id"], agent_id=args["agent_id"], source_ref=args.get("source_ref",""), expires_at=expires, created_by=args["agent_id"], tags=args.get("tags",[]))
-    store = _init_store()
-    store.store(entry)
+    with _init_store() as store:
+        store.store(entry)
     return {"key": entry.key, "status": entry.status, "project_id": entry.project_id}
 
 def handle_promote_memory(args):
-    store = _init_store()
-    ok = store.transition(project_id=args["project_id"], key=args["key"], new_status=args["new_status"], actor_id=args.get("actor_id",""))
+    with _init_store() as store:
+        ok = store.transition(project_id=args["project_id"], key=args["key"], new_status=args["new_status"], actor_id=args.get("actor_id",""))
     if ok: return {"success": True, "key": args["key"], "new_status": args["new_status"]}
     return {"success": False, "reason": "Transition not allowed or entry not found"}
 
 def handle_forget_memory(args):
-    store = _init_store()
-    deleted = store.delete(project_id=args["project_id"], key=args["key"])
+    actor_id = args.get("actor_id")
+    if not actor_id:
+        return {"deleted": False, "key": args.get("key", ""), "reason": "actor_id is required"}
+    with _init_store() as store:
+        deleted = store.delete(project_id=args["project_id"], key=args["key"], actor_id=actor_id)
     return {"deleted": deleted, "key": args["key"]}
 
 HANDLERS["search_hub"] = handle_search_hub

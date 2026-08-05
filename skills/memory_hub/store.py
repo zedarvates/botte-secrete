@@ -1,6 +1,10 @@
 """Memory Store - governed memory with SQLite backend."""
 from __future__ import annotations
-import json, sqlite3, time
+
+import json
+import re
+import sqlite3
+import time
 from pathlib import Path
 from typing import Any, Optional
 from skills.memory_hub.schema import FULL_DDL, SCHEMA_VERSION, MemoryEntry, MemoryStatus, MemoryVisibility
@@ -9,6 +13,10 @@ class MemoryAccessError(PermissionError):
     def __init__(self, entry_key, agent_id, action):
         super().__init__(f"agent={agent_id} cannot {action} key={entry_key}")
 
+
+_PROJECT_ID_RE = re.compile(r"\A[A-Za-z0-9_][A-Za-z0-9._-]{0,127}\Z")
+
+
 class MemoryStore:
     def __init__(self, base_dir=None):
         self.base = Path(base_dir) if base_dir else Path.home() / ".botte" / "memory_hub"
@@ -16,7 +24,22 @@ class MemoryStore:
         self._connections = {}
         self._conn("__global__")
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, _exc_type, _exc, _traceback):
+        self.close()
+
+    @staticmethod
+    def _validate_project_id(project_id):
+        if not isinstance(project_id, str) or not _PROJECT_ID_RE.fullmatch(project_id):
+            raise ValueError(
+                "project_id must be 1-128 characters using letters, digits, '.', '_', or '-'"
+            )
+        return project_id
+
     def _db_path(self, project_id):
+        self._validate_project_id(project_id)
         return self.base / f"{project_id}.sqlite"
 
     def _conn(self, project_id):
@@ -52,10 +75,13 @@ class MemoryStore:
         version = entry.version
         created_at = now
         if existing:
+            existing_entry = self._row_to_entry(existing)
+            if existing_entry.agent_id and existing_entry.agent_id != entry.agent_id:
+                raise MemoryAccessError(entry.key, entry.agent_id, "overwrite")
             created_at = existing["created_at"]
             version = existing["version"] + 1
         conn.execute(
-            "INSERT INTO memory_entries (key, value_json, asset_type, category, confidence, status, visibility, sensitivity, project_id, agent_id, source_ref, source_digest, created_by, expires_at, created_at, updated_at, access_count, version, tags_json) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(project_id, key) DO UPDATE SET value_json=excluded.value_json, asset_type=excluded.asset_type, category=excluded.category, confidence=excluded.confidence, status=excluded.status, visibility=excluded.visibility, sensitivity=excluded.sensitivity, updated_at=excluded.updated_at, version=excluded.version, tags_json=excluded.tags_json",
+            "INSERT INTO memory_entries (key, value_json, asset_type, category, confidence, status, visibility, sensitivity, project_id, agent_id, source_ref, source_digest, created_by, expires_at, created_at, updated_at, access_count, version, tags_json) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(project_id, key) DO UPDATE SET value_json=excluded.value_json, asset_type=excluded.asset_type, category=excluded.category, confidence=excluded.confidence, status=excluded.status, visibility=excluded.visibility, sensitivity=excluded.sensitivity, source_ref=excluded.source_ref, source_digest=excluded.source_digest, expires_at=excluded.expires_at, updated_at=excluded.updated_at, version=excluded.version, tags_json=excluded.tags_json",
             (entry.key, val_json, entry.asset_type, entry.category, entry.confidence, entry.status, entry.visibility, entry.sensitivity, entry.project_id, entry.agent_id, entry.source_ref, entry.source_digest, entry.created_by, entry.expires_at, created_at, now, 0, version, tags_json)
         )
         conn.commit()
@@ -74,14 +100,21 @@ class MemoryStore:
         conn.commit()
         return entry
 
-    def delete(self, project_id, key):
+    def delete(self, project_id, key, actor_id=None):
         conn = self._conn(project_id)
+        row = self._get_raw(conn, project_id, key)
+        if not row:
+            return False
+        entry = self._row_to_entry(row)
+        if actor_id is not None and entry.agent_id and entry.agent_id != actor_id:
+            raise MemoryAccessError(key, actor_id, "delete")
         cur = conn.execute("DELETE FROM memory_entries WHERE project_id = ? AND key = ?", (project_id, key))
         conn.commit()
         return cur.rowcount > 0
 
     def search(self, project_id, query="", asset_type=None, status=None, visibility=None, agent_id=None, limit=50):
         conn = self._conn(project_id)
+        limit = max(1, min(int(limit), 100))
         sql = "SELECT * FROM memory_entries WHERE project_id = ?"
         params = [project_id]
         if asset_type: sql += " AND asset_type = ?"; params.append(asset_type)
@@ -107,6 +140,8 @@ class MemoryStore:
         return sorted(rows)
 
     def transition(self, project_id, key, new_status, actor_id=""):
+        if not actor_id:
+            return False
         entry = self.get(project_id, key)
         if not entry: return False
         current = MemoryStatus(entry.status)
@@ -114,7 +149,7 @@ class MemoryStore:
         if current.frozen(): return False
         if target not in current.allowed_transitions(): return False
         conn = self._conn(project_id)
-        conn.execute("UPDATE memory_entries SET status = ?, updated_at = ?, created_by = ? WHERE project_id = ? AND key = ?", (new_status, time.time(), actor_id, project_id, key))
+        conn.execute("UPDATE memory_entries SET status = ?, updated_at = ? WHERE project_id = ? AND key = ?", (new_status, time.time(), project_id, key))
         conn.commit()
         return True
 
@@ -126,10 +161,10 @@ class MemoryStore:
 
     def stats(self, project_id):
         conn = self._conn(project_id)
+        expired_count = self.prune_expired(project_id)
         total = conn.execute("SELECT COUNT(*) FROM memory_entries WHERE project_id = ?", (project_id,)).fetchone()[0]
         by_status = dict(conn.execute("SELECT status, COUNT(*) FROM memory_entries WHERE project_id = ? GROUP BY status", (project_id,)).fetchall())
         by_asset = dict(conn.execute("SELECT asset_type, COUNT(*) FROM memory_entries WHERE project_id = ? GROUP BY asset_type", (project_id,)).fetchall())
-        expired_count = self.prune_expired(project_id)
         return {"project_id": project_id, "total": total, "by_status": by_status, "by_asset": by_asset, "expired_pruned": expired_count, "db_path": str(self._db_path(project_id))}
 
     def _get_raw(self, conn, project_id, key):
@@ -145,11 +180,8 @@ class MemoryStore:
         return True
 
     def context_bundle(self, project_id, agent_id, max_entries=10):
+        max_entries = max(1, min(int(max_entries), 100))
         entries = self.search(project_id=project_id, status="promoted", agent_id=agent_id, limit=max_entries)
-        private_entries = self.search(project_id=project_id, visibility="private", agent_id=agent_id, limit=max_entries)
-        seen = {e.key for e in entries}
-        for pe in private_entries:
-            if pe.key not in seen: entries.append(pe); seen.add(pe.key)
         return [{"key": e.key, "value": e.value, "type": e.asset_type, "confidence": e.confidence, "tags": e.tags} for e in entries[:max_entries]]
 
 __all__ = ["MemoryStore", "MemoryAccessError"]
