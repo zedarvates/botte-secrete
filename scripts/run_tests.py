@@ -17,9 +17,14 @@ import os
 import re
 import subprocess
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
+if str(REPO) not in sys.path:
+    sys.path.insert(0, str(REPO))
+
+from skills.atomic_json import write_json
 
 # (label, command, module_prefix) — the e2e script + every module's test_<module>.
 # module_prefix is the skills/ directory prefix used for --changed matching.
@@ -74,6 +79,7 @@ SUITES = [
 
 _RESULT_RE = re.compile(r"(\d+)\s+passed,\s+(\d+)\s+failed")
 _ANSI_RE = re.compile(r"\x1b\[[0-9;]*m")
+TEST_SUMMARY_PATH = REPO / ".botte-cache" / "test-summary.json"
 
 
 def _git_changed_files(repo: Path) -> list[str]:
@@ -108,6 +114,35 @@ def _suites_for_changes(changed: list[str]) -> set[int]:
         if f.startswith("scripts/"):
             affected.add(0)  # e2e covers script-level behavior
     return affected
+
+
+def _git_sha(repo: Path) -> str | None:
+    try:
+        proc = subprocess.run(
+            ["git", "rev-parse", "HEAD"], cwd=repo,
+            capture_output=True, text=True, encoding="utf-8", errors="replace",
+            timeout=10,
+        )
+        if proc.returncode != 0:
+            return None
+        return proc.stdout.strip() or None
+    except (subprocess.TimeoutExpired, OSError, FileNotFoundError):
+        return None
+
+
+def _write_test_summary(*, passed: int, failed: int, suites: int,
+                        partial: bool) -> None:
+    """Persist the latest observed test result for local/public dashboards."""
+    write_json(TEST_SUMMARY_PATH, {
+        "schema_version": 1,
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "git_sha": _git_sha(REPO),
+        "passed": passed,
+        "failed": failed,
+        "suite_count": suites,
+        "partial": partial,
+        "status": "passed" if failed == 0 else "failed",
+    })
 
 
 def main() -> int:
@@ -194,6 +229,15 @@ def main() -> int:
             print(row)
 
     print(f"\nTOTAL: {total_pass} passed, {total_fail} failed")
+    try:
+        _write_test_summary(
+            passed=total_pass,
+            failed=total_fail,
+            suites=len(rows),
+            partial=args.changed,
+        )
+    except OSError as exc:
+        print(f"warning: could not write dashboard test summary: {exc}", file=sys.stderr)
     return 0 if total_fail == 0 else 1
 
 

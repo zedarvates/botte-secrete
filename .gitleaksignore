@@ -1,0 +1,5 @@
+# Intentional generic-api-key fixtures used to test the repository's own
+# security scanner. Fingerprints are exact so new findings still fail closed.
+9d34333e86299d941d1e70647cba7c3a4c68c2a3:skills/security_scanner/test_security_scanner.py:generic-api-key:18
+b34e229cc9c6a807c4a45618c574d488626ff664:skills/security_scanner/test_security_scanner.py:generic-api-key:57
+b34e229cc9c6a807c4a45618c574d488626ff664:skills/security_scanner/patterns.py:generic-api-key:158

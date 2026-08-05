@@ -57,21 +57,32 @@ under `errored`, not silently dropped or a crash. See `skills/dashboard/fleet.py
 - `cron_hook.py` — Periodic notifications
 
 ```bash
-# Start API server
+# Start the loopback-only API server
 python -m skills.dashboard.api
 
 # View dashboard
-open http://localhost:8765
+open http://127.0.0.1:8765
 
 # CLI stats
 python -c "from skills.dashboard.api import load_metrics; print(load_metrics())"
+
+# Build the sanitized GitHub Pages artifact
+python scripts/generate_public_dashboard.py --output .botte-cache/public-dashboard
 ```
+
+The live server binds to `127.0.0.1` by default and reads local operational
+metrics. The static generator deliberately excludes local Memory Hub and
+Decision Ladder data; CI can publish only the repository test summary. The
+tracked `docs/dashboard.html` is a launcher and never embeds demo values.
 
 ### Metrics served
 
-- `tests_passed` — Total test count
+- `tests_passed` / `tests_failed` — Latest observed `scripts/run_tests.py` result
+- `tests_status` / `tests_partial` / `tests_stale` — Result provenance and freshness
 - `lines_saved` — Lines avoided via decision ladder
 - `avoidable_pct` — % of tasks that didn't need new code
 - `by_rung` — Breakdown by decision ladder rung
 - `compressor` — Compression stats
-- `memory_entries` — AutoMemory entry count
+- `memory_entries` / `memory_projects` — Governed Memory Hub aggregate counts
+- `memory_by_status` / `memory_by_asset` — Aggregate lifecycle/type counts only
+- `legacy_memory_entries` — AutoMemory count during the migration window

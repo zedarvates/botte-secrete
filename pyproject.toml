@@ -54,4 +54,4 @@ include = ["skills*"]
 
 [tool.setuptools.package-data]
 # Trained micro-NN weights, harness specs, and skill docs ship with the code.
-"*" = ["*.json", "*.jsonl", "*.yaml", "*.yml", "*.md", "*.txt"]
+"*" = ["*.html", "*.json", "*.jsonl", "*.yaml", "*.yml", "*.md", "*.txt"]

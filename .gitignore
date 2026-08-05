@@ -53,6 +53,10 @@ reports/
 # Secrets
 *.env.local
 *.secret
+configs/botte-secrete.env
+
+# Local agent knowledge (may contain private project or machine context)
+/MEMORY.md
 
 # Large data files
 *.sqlite
