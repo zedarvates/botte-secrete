@@ -17,6 +17,9 @@
 - Ground `binary_router` on explicit verdicts: automatic local returns/failures are
   unlabelled observations, executed routes expose a `feedback_id`, and the new
   `route_feedback` MCP tool appends the auditable local/cloud verdict.
+- Capture `binary_router` in shadow mode for every comparable non-forced route,
+  including heuristic local/cloud decisions, while preserving decision-source,
+  confidence, and whether the belt actually acted.
 - `/checkup` now separates observations from verified labels and keeps training
   and activation blocked below their 50/2,000 verified-sample gates.
 

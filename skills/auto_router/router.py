@@ -39,8 +39,8 @@ class AutoDecision:
     reason: str = ""
     est_cost: float = 0.0
     _api_key: str = field(default="", repr=False)
-    # binary_router features + predicted class when the NN belt drove this decision,
-    # so telemetry can be linked to a later explicit verdict (None = belt didn't act).
+    # Raw binary_router shadow context for comparable, non-forced decisions.
+    # It may be present even when the belt abstained and the heuristic decided.
     _belt_ctx: Optional[dict] = field(default=None, repr=False)
 
     def to_dict(self) -> dict:
@@ -67,6 +67,23 @@ class AutoRouter:
         local = registry.best_chat_backend()
         local_model = registry.preferred_model(local) if local else None
         allow_local = not (0 < self.latency_budget_s < 2.0)
+        budget_ratio = max(0.0, 1.0 - self.budget.used_today / max(self.budget.daily, 1))
+        belt_prediction = None
+        if allow_local and local and force_tier is None:
+            belt_prediction = nn_belt.binary_router_prediction(
+                eff.score, budget_ratio, has_local=True
+            )
+
+        def belt_context(decision_source: str, *, acted: bool = False) -> Optional[dict]:
+            if belt_prediction is None:
+                return None
+            return {
+                "features": belt_prediction["features"],
+                "predicted_class": belt_prediction["predicted_class"],
+                "confidence": belt_prediction["confidence"],
+                "decision_source": decision_source,
+                "belt_acted": acted,
+            }
 
         # Latency budget: if the user needs a sub-second response, skip local
         # (which can be slow at 35 tok/s) and go straight to cloud
@@ -76,8 +93,7 @@ class AutoRouter:
         # a local backend exists. Hard tasks (STANDARD/PREMIUM) and forced tiers
         # are never touched, so the belt can save tokens but not raise cost/risk.
         if allow_local and local and force_tier is None and Tier.LOCAL < tier <= Tier.CHEAP:
-            budget_ratio = max(0.0, 1.0 - self.budget.used_today / max(self.budget.daily, 1))
-            hint = nn_belt.local_vs_cloud_hint(eff.score, budget_ratio, has_local=True)
+            hint = nn_belt.confident_hint(belt_prediction)
             if hint and hint[0] == "local":
                 return AutoDecision(
                     mode="local", tier=Tier.LOCAL, effort=eff,
@@ -86,9 +102,7 @@ class AutoRouter:
                     base_url=local.base_url, via="local",
                     reason=f"effort {eff.score:.2f}→{tier.name}; NN belt → local "
                            f"(conf {hint[1]:.2f}, 0 cloud tokens)",
-                    _belt_ctx={"features": nn_belt.featurize_binary_router(
-                                   eff.score, budget_ratio, True),
-                               "predicted_class": 0},  # 0 = local
+                    _belt_ctx=belt_context("nn_belt", acted=True),
                 )
             # Belt 2.0 second opinion — cloud_escalation_predictor (3 classes,
             # abstains under nn_belt2.CONFIDENCE). Only consulted when belt 1.0
@@ -105,6 +119,7 @@ class AutoRouter:
                         base_url=local.base_url, via="local",
                         reason=f"effort {eff.score:.2f}→{tier.name}; NN belt2 → "
                                f"{hint2[0]} (conf {hint2[1]:.2f}, 0 cloud tokens)",
+                        _belt_ctx=belt_context("nn_belt2"),
                     )
 
         # Local handles FREE/LOCAL outright, and is the preferred fallback.
@@ -115,6 +130,7 @@ class AutoRouter:
                 label=f"{local.label} {local.host}:{local.port}",
                 base_url=local.base_url, via="local",
                 reason=f"effort {eff.score:.2f}→{tier.name}; local backend covers it",
+                _belt_ctx=belt_context("heuristic_local"),
             )
 
         # Cloud path — cheapest available model at/above the tier, budget-aware.
@@ -132,6 +148,7 @@ class AutoRouter:
                         base_url=cloud.base_url, via=cloud.via,
                         reason=f"effort {eff.score:.2f}→{tier.name}; cloud {cloud.label}{note}",
                         est_cost=cost, _api_key=cloud.api_key,
+                        _belt_ctx=belt_context("heuristic_cloud"),
                     )
             chosen_tier = Tier(chosen_tier - 1)  # try a cheaper tier
 
@@ -143,6 +160,7 @@ class AutoRouter:
                 label=f"{local.label} {local.host}:{local.port}",
                 base_url=local.base_url, via="local",
                 reason=f"effort {eff.score:.2f}→{tier.name}, but no affordable cloud → local fallback",
+                _belt_ctx=belt_context("local_fallback"),
             )
         return AutoDecision(mode="none", tier=tier, effort=eff,
                             reason="No local backend and no cloud key available")
@@ -189,6 +207,7 @@ class AutoRouter:
                 feedback_id = self._log_observation(d, outcome="local_returned")
         else:
             text, usage = _cloud_chat(d, prompt, system, max_tokens)
+            feedback_id = self._log_observation(d, outcome="cloud_returned")
             input_usage = usage // 2
             self.budget.spend(d.tier, input_usage, usage - input_usage)
             # Track escalations for loop detection
@@ -223,7 +242,10 @@ class AutoRouter:
         try:
             from skills.botte_nn.active_learning import record_feedback
             record_feedback("binary_router", ctx["features"],
-                            ctx["predicted_class"], actual_class)
+                            ctx["predicted_class"], actual_class,
+                            decision_source=ctx.get("decision_source", ""),
+                            belt_acted=ctx.get("belt_acted", False),
+                            confidence=ctx.get("confidence", 0.0))
         except Exception:
             pass
 
@@ -236,7 +258,10 @@ class AutoRouter:
         try:
             from skills.botte_nn.active_learning import record_observation
             return record_observation("binary_router", ctx["features"],
-                                      ctx["predicted_class"], outcome)
+                                      ctx["predicted_class"], outcome,
+                                      decision_source=ctx.get("decision_source", ""),
+                                      belt_acted=ctx.get("belt_acted", False),
+                                      confidence=ctx.get("confidence", 0.0))
         except Exception:
             return None
 
@@ -377,11 +402,11 @@ class AutoRouter:
         return trace
 
     def record_override(self, decision: AutoDecision, should_have_been: str) -> bool:
-        """Log explicit feedback that the belt's local/cloud choice was overridden.
+        """Log an explicit verdict for a comparable local/cloud decision.
 
-        `should_have_been` is 'local' or 'cloud'. Returns True iff the belt actually
-        drove the decision (else there is nothing to correct). This is the strong
-        ground-truth signal: a human/agent forcing the other route = a real label.
+        `should_have_been` is 'local' or 'cloud'. Returns True iff a raw binary
+        prediction was captured. The belt may have acted or remained in shadow;
+        only this explicit correction becomes a training label.
         """
         if not decision._belt_ctx:
             return False

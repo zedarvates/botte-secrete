@@ -30,8 +30,10 @@ Effort is scored from prompt signals (length, code, stack traces, reasoning vs
 trivial vocabulary, multi-file scope) → a `Tier`. `Tier ≤ LOCAL` with a local
 backend runs local (0 cloud tokens); higher tiers pick the cheapest available
 cloud model, budget-aware, and **fall back to local** when no cloud key is set.
-When the NN belt drives an executed local route, the result includes a
-`feedback_id`. Verify it with `route_feedback` (or
+When a non-forced route has both local and cloud as meaningful options, the NN
+belt records its raw prediction in shadow mode even if the heuristic remains in
+control. Executed local and cloud routes then include a `feedback_id`. Verify it
+with `route_feedback` (or
 `python -m skills.botte_nn.active_learning verify <id> local|cloud`) only after
 the correct route is known; a backend return/failure is telemetry, not a label.
 

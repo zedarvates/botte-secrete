@@ -57,35 +57,49 @@ def featurize_binary_router(complexity: float, budget_ratio: float,
     )
 
 
-def local_vs_cloud_hint(complexity: float, budget_ratio: float,
-                        has_local: bool) -> Optional[tuple[str, float]]:
-    """('local'|'cloud', confidence) from binary_router, or None if abstaining.
+def binary_router_prediction(complexity: float, budget_ratio: float,
+                             has_local: bool) -> Optional[dict]:
+    """Return the raw calibrated binary_router prediction, without abstention.
 
-    None means: model file unavailable, any error, or confidence below threshold.
-    Pure function with no side effects — safe to call from a routing decision.
+    The result is safe for shadow telemetry: routing can keep using its current
+    policy while every comparable decision receives the model prediction that a
+    later explicit verdict can verify. Missing model / any error -> None.
     """
     features = featurize_binary_router(complexity, budget_ratio, has_local)
     try:
         from skills.botte_nn.cli import _predict_python, _MODELS_DIR
+        from skills.botte_nn import calibration
 
         model_path = _MODELS_DIR / "binary_router.json"
         if not model_path.exists():
             return None
         out = _predict_python(str(model_path), features)  # [P(local), P(cloud)]
+        if not out or len(out) < 2:
+            return None
+        out = calibration.apply_temperature(
+            out, calibration.load_temperature("binary_router")
+        )
+        predicted_class = 0 if out[0] >= out[1] else 1
+        return {
+            "features": features,
+            "predicted_class": predicted_class,
+            "label": "local" if predicted_class == 0 else "cloud",
+            "confidence": float(max(out)),
+        }
     except Exception:  # noqa: BLE001 — the belt must never break routing
         return None
 
-    if not out or len(out) < 2:
-        return None
-    # Calibrate the raw softmax so the CONFIDENCE cutoff is meaningful (Hermes #3).
-    # Identity (T=1.0) until binary_router is actually calibrated, so behaviour is
-    # unchanged by default.
-    from skills.botte_nn import calibration
 
-    out = calibration.apply_temperature(out, calibration.load_temperature("binary_router"))
-    label = "local" if out[0] >= out[1] else "cloud"
-    confidence = float(max(out))
-    threshold = _load_confidence()
-    if confidence < threshold:
+def confident_hint(prediction: Optional[dict]) -> Optional[tuple[str, float]]:
+    """Apply the configured abstention threshold to one raw prediction."""
+    if prediction is None or prediction["confidence"] < _load_confidence():
         return None
-    return label, confidence
+    return prediction["label"], prediction["confidence"]
+
+
+def local_vs_cloud_hint(complexity: float, budget_ratio: float,
+                        has_local: bool) -> Optional[tuple[str, float]]:
+    """('local'|'cloud', confidence) from binary_router, or None if abstaining."""
+    return confident_hint(
+        binary_router_prediction(complexity, budget_ratio, has_local)
+    )

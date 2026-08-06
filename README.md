@@ -237,7 +237,9 @@ The **NN belt** (`auto_router` + `botte_nn`) decides which filter a task needs; 
 **harness** keeps the local model honest (structured output + deterministic verification —
 *escalate, don't hallucinate*); the **active-learning loop** sharpens the belt from
 explicitly verified outcomes. Executed `auto_route` calls return a `feedback_id`;
-`route_feedback` labels it only after a real local/cloud verdict. Trivial work stays local
+`route_feedback` labels it only after a real local/cloud verdict. The belt also
+observes comparable heuristic routes in shadow mode, without changing their
+decision, so real use can build the verified dataset. Trivial work stays local
 at 0 tokens; the expensive model is spent only where it
 earns its keep.
 

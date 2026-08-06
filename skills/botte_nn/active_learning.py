@@ -65,6 +65,9 @@ class InferenceLog:
     outcome: str = ""
     inference_id: str = ""
     source_observation_id: str = ""
+    decision_source: str = ""
+    belt_acted: bool = False
+    confidence: float = 0.0
 
 
 class ActiveLearning:
@@ -282,7 +285,8 @@ class ActiveLearning:
 
 def record_feedback(model_name: str, features: list[float], predicted_class: int,
                     actual_class: int, latency_ms: float = 0.0, *,
-                    source_observation_id: str = "") -> str:
+                    source_observation_id: str = "", decision_source: str = "",
+                    belt_acted: bool = False, confidence: float = 0.0) -> str:
     """Append one *labelled* inference (ground truth known) for the loop to learn from.
 
     O(1) and load-free — the hot path must not read the whole history back. This is
@@ -299,6 +303,8 @@ def record_feedback(model_name: str, features: list[float], predicted_class: int
         timestamp=time.time(), latency_ms=latency_ms, verified=True,
         outcome="explicit_feedback", inference_id=inference_id,
         source_observation_id=source_observation_id,
+        decision_source=str(decision_source), belt_acted=bool(belt_acted),
+        confidence=float(confidence),
     )
     with open(DATA_DIR / "inference_logs.jsonl", "a", encoding="utf-8") as f:
         f.write(json.dumps(asdict(log)) + "\n")
@@ -306,7 +312,9 @@ def record_feedback(model_name: str, features: list[float], predicted_class: int
 
 
 def record_observation(model_name: str, features: list[float], predicted_class: int,
-                       outcome: str, latency_ms: float = 0.0) -> str:
+                       outcome: str, latency_ms: float = 0.0, *,
+                       decision_source: str = "", belt_acted: bool = False,
+                       confidence: float = 0.0) -> str:
     """Append an unverified production observation; never used as a training label."""
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     inference_id = uuid.uuid4().hex
@@ -315,6 +323,8 @@ def record_observation(model_name: str, features: list[float], predicted_class: 
         predicted_class=int(predicted_class), timestamp=time.time(),
         latency_ms=latency_ms, verified=False, outcome=str(outcome),
         inference_id=inference_id,
+        decision_source=str(decision_source), belt_acted=bool(belt_acted),
+        confidence=float(confidence),
     )
     with open(DATA_DIR / "inference_logs.jsonl", "a", encoding="utf-8") as f:
         f.write(json.dumps(asdict(log)) + "\n")
@@ -346,6 +356,8 @@ def record_verdict(observation_id: str, actual_class: int) -> str:
     return record_feedback(
         source.model_name, source.features, source.predicted_class, actual_class,
         latency_ms=source.latency_ms, source_observation_id=observation_id,
+        decision_source=source.decision_source, belt_acted=source.belt_acted,
+        confidence=source.confidence,
     )
 
 
