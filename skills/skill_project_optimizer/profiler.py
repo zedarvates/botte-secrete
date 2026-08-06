@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 import re
 from typing import Optional
+from urllib.parse import urlsplit
 
 
 @dataclass
@@ -24,6 +25,14 @@ class ProjectProfile:
     package_manager: str = ""
     total_files: int = 0
     total_lines: int = 0
+
+
+def _is_github_remote(remote: str) -> bool:
+    """Return whether a Git remote targets github.com exactly."""
+    value = remote.strip()
+    if value.startswith("git@github.com:"):
+        return bool(value.removeprefix("git@github.com:").strip("/"))
+    return urlsplit(value).hostname == "github.com"
 
 
 def profile_project(project_path: str) -> ProjectProfile:
@@ -109,7 +118,12 @@ def profile_project(project_path: str) -> ProjectProfile:
     if git_config.exists():
         try:
             content = git_config.read_text(encoding="utf-8", errors="replace")
-            profile.has_github_remote = "github.com" in content
+            profile.has_github_remote = any(
+                key.strip().lower() == "url" and _is_github_remote(value)
+                for line in content.splitlines()
+                for key, separator, value in [line.partition("=")]
+                if separator
+            )
         except Exception:
             pass
 

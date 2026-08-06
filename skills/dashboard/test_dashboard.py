@@ -43,6 +43,12 @@ def main() -> int:
     _ok("sparkline handles a flat series without dividing by zero",
         len(set(sparkline([3, 3, 3, 3]))) == 1)
 
+    dashboard_html = Path(__file__).with_name("index.html").read_text(encoding="utf-8")
+    _ok("GitHub Pages detection rejects hostname suffix lookalikes",
+        "hostname === 'github.io'" in dashboard_html
+        and "endsWith('.github.io')" in dashboard_html
+        and "endsWith('github.io')" not in dashboard_html)
+
     with tempfile.TemporaryDirectory() as fleet_dir:
         fleet_path = Path(fleet_dir) / "fleet.json"
         with tempfile.TemporaryDirectory() as proj_a, tempfile.TemporaryDirectory() as proj_b:

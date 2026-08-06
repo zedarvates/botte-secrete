@@ -85,16 +85,20 @@ def run_bench(get_output: Callable[[Task], dict]) -> dict:
     """get_output(task) -> the model's JSON reply (real client or mock).
 
     Returns counts for RAW (trust the model) vs HARNESSED (verify-or-escalate)."""
-    raw = {"correct": 0, "hallucinated": 0}
-    harn = {"trusted_correct": 0, "escalated": 0, "abstained": 0, "hallucinated_returned": 0}
+    raw_correct = 0
+    raw_hallucinated = 0
+    trusted_correct = 0
+    escalated = 0
+    abstained = 0
+    hallucinated_returned = 0
 
     for task in BENCH_TASKS:
         out = get_output(task)
         # RAW: you trust whatever the model said.
         if _is_correct(out, task):
-            raw["correct"] += 1
+            raw_correct += 1
         else:
-            raw["hallucinated"] += 1
+            raw_hallucinated += 1
 
         # HARNESSED: same output, but it must pass verification.
         stub = type("_C", (), {"chat_json": lambda self, p, _o=out, **k: _o})()
@@ -103,18 +107,27 @@ def run_bench(get_output: Callable[[Task], dict]) -> dict:
                         escalate_fn=lambda t, tier: "(escalated to cloud)")
         if r.source == "local":
             if _is_correct(r.answer, task):
-                harn["trusted_correct"] += 1
+                trusted_correct += 1
             else:
-                harn["hallucinated_returned"] += 1   # verify let a bad answer through
+                hallucinated_returned += 1   # verify let a bad answer through
         elif r.source == "abstained":
-            harn["abstained"] += 1
+            abstained += 1
         else:
-            harn["escalated"] += 1
+            escalated += 1
 
     n = len(BENCH_TASKS)
-    return {"n": n, "raw": raw, "harnessed": harn,
-            "raw_hallucination_rate": round(raw["hallucinated"] / n, 3),
-            "harnessed_hallucination_rate": round(harn["hallucinated_returned"] / n, 3)}
+    return {
+        "n": n,
+        "raw": {"correct": raw_correct, "hallucinated": raw_hallucinated},
+        "harnessed": {
+            "trusted_correct": trusted_correct,
+            "escalated": escalated,
+            "abstained": abstained,
+            "hallucinated_returned": hallucinated_returned,
+        },
+        "raw_hallucination_rate": round(raw_hallucinated / n, 3),
+        "harnessed_hallucination_rate": round(hallucinated_returned / n, 3),
+    }
 
 
 def format_report(rep: dict) -> str:
