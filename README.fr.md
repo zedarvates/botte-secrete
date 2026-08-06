@@ -150,6 +150,13 @@ Le benchmark fourni teste compression, élagage, sélection de contexte et
 micro-NN sur un corpus synthétique fixe. Il sert à repérer les régressions et ne
 promet pas le même résultat pour chaque dépôt.
 
+L'activation suit la
+[roadmap de grounding](docs/plans/2026-08-06_micro-nn-grounding-roadmap.md) :
+aucun nouveau micro-NN n'est activé tant qu'un modèle existant n'a pas une
+source de labels auditable, des verdicts de production, une calibration et un
+rollback. Utilisez `checkup` ou
+`python -m skills.nn_audit.cli skills/botte_nn --json` pour l'état courant.
+
 ![Réduction mesurée sur les échantillons fournis](docs/assets/benchmark-compression.svg)
 
 Régénérez le graphique et la capture de routage :

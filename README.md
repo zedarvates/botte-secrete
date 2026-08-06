@@ -145,6 +145,12 @@ The bundled benchmark exercises compression, pruning, context selection, and
 the micro-NN belt on a fixed synthetic corpus. It is a regression benchmark,
 not a promise for every repository or workload.
 
+Micro-NN activation follows the
+[grounding roadmap](docs/plans/2026-08-06_micro-nn-grounding-roadmap.md): no new
+model is activated while an existing predictor still lacks an auditable label
+source, production verdicts, calibration, and rollback gate. Run `checkup` or
+`python -m skills.nn_audit.cli skills/botte_nn --json` for the current status.
+
 ![Measured reduction on bundled samples](docs/assets/benchmark-compression.svg)
 
 Reproduce both the benchmark chart and the routing capture:

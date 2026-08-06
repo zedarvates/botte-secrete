@@ -7,6 +7,9 @@
   sensitivity, expiry, versioning, and lazy MCP tools.
 - Live loopback dashboard plus a sanitized, gated GitHub Pages artifact built
   from observed test summaries instead of hard-coded counters.
+- Micro-NN grounding roadmap with G0-G3 maturity levels, per-model label
+  sources and activation gates, plus a freeze on new models until the existing
+  inventory is grounded or removed.
 
 ### Changed
 - PR checkup now marks machine-local MCP wiring as not applicable on the
