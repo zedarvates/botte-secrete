@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.11", "3.12"]
+        python-version: ["3.10", "3.11", "3.12"]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -30,6 +30,10 @@ jobs:
       - name: Run tests (fail-fast)
         run: python scripts/run_tests.py -q
         timeout-minutes: 10
+      - name: Validate GitHub documentation
+        run: |
+          python scripts/test_readme_commands.py
+          python scripts/check_docs_links.py
 
   bench:
     runs-on: ubuntu-latest

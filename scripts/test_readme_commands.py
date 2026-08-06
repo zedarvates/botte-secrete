@@ -14,6 +14,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from skills import __version__  # noqa: E402
 from skills.console_utf8 import force_utf8  # noqa: E402 — avant tout print d'émoji
 
 force_utf8()
@@ -27,11 +28,12 @@ SAFE_BOTTE_COMMANDS = {
 BLOCKED_MODULES = {
     "skills.dashboard.api",
     "skills.hermes_bridge.mcp_server",
-    "skills.llm_backends.cli",
     "skills.universal_compressor.mcp_server",
 }
-BLOCKED_SCRIPTS = {"scripts/run_tests.py"}
-PLACEHOLDER_ARGS = {"file.log", "./blue", "./red"}
+BLOCKED_SCRIPTS = {
+    (REPO / "scripts" / "run_tests.py").resolve(),
+    Path(__file__).resolve(),
+}
 
 
 def extract_commands(readme: Path) -> list[str]:
@@ -59,12 +61,11 @@ def safe_argv(command: str) -> list[str] | None:
     """Return a shell-free argv for explicitly safe local command shapes."""
     if re.search(r"[;&|<>`]", command):
         return None
-    command = re.split(r"\s+#", command, maxsplit=1)[0].strip()
     try:
-        argv = shlex.split(command, comments=True, posix=True)
+        argv = shlex.split(command, comments=True, posix=os.name != "nt")
     except ValueError:
         return None
-    if not argv or any(arg in PLACEHOLDER_ARGS for arg in argv):
+    if not argv:
         return None
 
     executable = Path(argv[0]).name.lower()
@@ -75,21 +76,18 @@ def safe_argv(command: str) -> list[str] | None:
             module = argv[2]
             if not module.startswith("skills.") or module in BLOCKED_MODULES:
                 return None
-            return [sys.executable, *argv[1:]]
+            return argv
         if len(argv) < 2:
-            return [sys.executable]
+            return argv
         script = (REPO / argv[1]).resolve()
         if REPO not in script.parents or script.suffix.lower() != ".py":
             return None
-        relative = script.relative_to(REPO).as_posix()
-        if relative in BLOCKED_SCRIPTS:
+        if script in BLOCKED_SCRIPTS:
             return None
-        return [sys.executable, *argv[1:]]
+        return argv
 
     if executable in {"botte", "botte.exe"}:
-        if len(argv) >= 2 and argv[1] in SAFE_BOTTE_COMMANDS:
-            return [sys.executable, "-m", "skills.cli", *argv[1:]]
-        return None
+        return argv if len(argv) >= 2 and argv[1] in SAFE_BOTTE_COMMANDS else None
     return None
 
 
@@ -99,8 +97,24 @@ def main():
         print("README.md not found")
         return 0
 
-    commands = extract_commands(readme)
     passed = failed = skipped = 0
+    declared_match = re.search(
+        r'^version\s*=\s*"([^"]+)"',
+        (REPO / "pyproject.toml").read_text(encoding="utf-8"),
+        re.MULTILINE,
+    )
+    declared = declared_match.group(1) if declared_match else None
+    public_readmes = [readme, REPO / "README.fr.md"]
+    badge = f"version-{declared}-" if declared else ""
+    if (declared == __version__
+            and all(badge in path.read_text(encoding="utf-8")
+                    for path in public_readmes)):
+        passed += 1
+    else:
+        failed += 1
+        print(f"  FAIL version metadata: package={__version__}, pyproject={declared}")
+
+    commands = extract_commands(readme)
     for cmd in commands:
         if any(marker in cmd for marker in ("/path/", "<host>", "~/", "C:\\project-")):
             skipped += 1
