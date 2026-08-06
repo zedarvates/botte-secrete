@@ -9,6 +9,9 @@
   from observed test summaries instead of hard-coded counters.
 
 ### Changed
+- Security scanner high-signal Python findings now require the regex match to
+  start in executable code, eliminating self-matches in signature catalogs,
+  docstrings, comments, and installation guidance without hiding real calls.
 - Ground `binary_router` on explicit verdicts: automatic local returns/failures are
   unlabelled observations, executed routes expose a `feedback_id`, and the new
   `route_feedback` MCP tool appends the auditable local/cloud verdict.

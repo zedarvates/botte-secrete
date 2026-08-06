@@ -202,6 +202,8 @@ tier, model, score = route("audit code quality")  # → ("medium", "gemma-4-e2b"
 
 ### 🔒 Security Scanner (`skills/security_scanner/`)
 Lightweight vulnerability detection: credential leaks, shell injection, path traversal.
+High-signal Python checks distinguish executable syntax from signatures quoted in
+strings, docstrings, comments, and scanner catalogs to keep CI findings actionable.
 
 ```python
 from skills.security_scanner.scanner import scan

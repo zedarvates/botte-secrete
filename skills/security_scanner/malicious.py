@@ -7,6 +7,8 @@ from __future__ import annotations
 
 import os
 import re
+import io
+import tokenize
 import concurrent.futures
 from pathlib import Path
 from typing import Optional
@@ -43,6 +45,15 @@ _SKIP_DIRS = frozenset({
 # regex-scanned line by line, hanging the scan for minutes on a single file.
 _MAX_SCAN_BYTES = 2 * 1024 * 1024
 
+# These high-signal patterns describe executable syntax. In Python, a regex hit
+# that starts inside a string, docstring, or comment is documentation/test data,
+# not an executed operation. Other patterns keep their historical high-recall
+# behavior because some intentionally inspect string contents (secrets, URLs).
+_PYTHON_CODE_START_PATTERNS = frozenset({
+    "exec_from_string", "pip_install_from_code", "requests_to_ip",
+    "send_environ", "xor_obfuscation", "bytes_decode_obfuscation",
+})
+
 
 def _should_skip(path: Path) -> bool:
     """Skip binary files, hidden dirs, and known nuisances."""
@@ -62,7 +73,30 @@ def _should_skip(path: Path) -> bool:
     return False
 
 
-def _scan_file_regex(source: str, filepath: str, pattern: Pattern) -> list[Finding]:
+def _python_non_code_spans(source: str) -> list[tuple[int, int]]:
+    """Return absolute spans occupied by Python strings and comments."""
+    lines = source.splitlines(keepends=True)
+    offsets = [0]
+    for line in lines:
+        offsets.append(offsets[-1] + len(line))
+
+    spans: list[tuple[int, int]] = []
+    try:
+        tokens = tokenize.generate_tokens(io.StringIO(source).readline)
+        for token in tokens:
+            if token.type not in (tokenize.STRING, tokenize.COMMENT):
+                continue
+            start_row, start_col = token.start
+            end_row, end_col = token.end
+            spans.append((offsets[start_row - 1] + start_col,
+                          offsets[end_row - 1] + end_col))
+    except (IndentationError, tokenize.TokenError):
+        return []
+    return spans
+
+
+def _scan_file_regex(source: str, filepath: str, pattern: Pattern,
+                     non_code_spans: list[tuple[int, int]] | None = None) -> list[Finding]:
     """Scan a single file against one regex pattern."""
     findings: list[Finding] = []
     try:
@@ -70,10 +104,16 @@ def _scan_file_regex(source: str, filepath: str, pattern: Pattern) -> list[Findi
     except re.error:
         return findings
 
-    for i, line in enumerate(source.splitlines(), 1):
-        if regex.search(line):
-            match = regex.search(line)
-            col = match.start() if match else 0
+    absolute_offset = 0
+    for i, line in enumerate(source.splitlines(keepends=True), 1):
+        match = regex.search(line)
+        if match:
+            match_offset = absolute_offset + match.start()
+            if non_code_spans and any(start <= match_offset < end
+                                      for start, end in non_code_spans):
+                absolute_offset += len(line)
+                continue
+            col = match.start()
             findings.append(Finding(
                 file=filepath,
                 line=i,
@@ -82,6 +122,7 @@ def _scan_file_regex(source: str, filepath: str, pattern: Pattern) -> list[Findi
                 severity=pattern.severity.value,
                 snippet=line.strip()[:120],
             ))
+        absolute_offset += len(line)
     return findings
 
 
@@ -97,10 +138,14 @@ def _scan_file_single(filepath: str, do_ast: bool = True) -> list[Finding]:
         return []
 
     all_findings: list[Finding] = []
+    python_non_code = (_python_non_code_spans(source)
+                       if p.suffix == ".py" else [])
 
     # Regex scans (all patterns, all file types)
     for pattern_elem in PATTERNS:
-        findings = _scan_file_regex(source, filepath, pattern_elem)
+        spans = (python_non_code
+                 if pattern_elem.name in _PYTHON_CODE_START_PATTERNS else None)
+        findings = _scan_file_regex(source, filepath, pattern_elem, spans)
         all_findings.extend(findings)
 
     # AST scan (Python only)
