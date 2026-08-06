@@ -134,6 +134,12 @@ def main() -> int:
     hint_easy = nn_belt.local_vs_cloud_hint(0.1, 1.0, has_local=True)
     _ok("hint for easy+local is 'local' or abstain (never cloud)",
         hint_easy is None or hint_easy[0] == "local", state)
+    raw_easy = nn_belt.binary_router_prediction(0.1, 1.0, has_local=True)
+    _ok("raw prediction is available for shadow telemetry before abstention",
+        raw_easy is not None
+        and raw_easy["predicted_class"] in (0, 1)
+        and len(raw_easy["features"]) == 3
+        and 0.0 <= raw_easy["confidence"] <= 1.0, state)
 
     # 11. Router belt-pull: effort forced to a borderline CHEAP tier + a local
     # backend → a confident 'local' hint routes local with 0 cloud tokens, and an
@@ -145,29 +151,45 @@ def main() -> int:
         label, host, port = "LM Studio", "127.0.0.1", 1234
         base_url = "http://127.0.0.1:1234/v1"
 
+    class _FakeCloud:
+        tier, model, label = Tier.CHEAP, "cloud/model", "Cloud"
+        base_url, via, api_key = "https://example.invalid/v1", "native", "test"
+
     fake_eff = effort.EffortEstimate(score=0.43, tier=Tier.CHEAP, reasons=[])
-    o_best, o_pref, o_hint, o_est = (registry.best_chat_backend,
-                                     registry.preferred_model,
-                                     nn_belt.local_vs_cloud_hint,
-                                     router_mod.estimate_effort)
+    o_best, o_pref, o_predict, o_est = (registry.best_chat_backend,
+                                        registry.preferred_model,
+                                        nn_belt.binary_router_prediction,
+                                        router_mod.estimate_effort)
+    o_cloud = providers.cheapest_cloud_at_least
     registry.best_chat_backend = lambda *a, **k: _FakeBackend()
     registry.preferred_model = lambda *a, **k: "local-model"
     router_mod.estimate_effort = lambda *a, **k: fake_eff
+
+    def _prediction(label="local", confidence=0.9):
+        return {
+            "features": [fake_eff.score, 1.0, 1.0],
+            "predicted_class": 0 if label == "local" else 1,
+            "label": label,
+            "confidence": confidence,
+        }
+
     try:
-        nn_belt.local_vs_cloud_hint = lambda *a, **k: ("local", 0.9)
+        nn_belt.binary_router_prediction = lambda *a, **k: _prediction()
         d = AutoRouter().decide("borderline task")
         _ok("confident 'local' hint → mode=local via NN belt",
-            d.mode == "local" and "NN belt" in d.reason, state)
+            d.mode == "local" and "NN belt" in d.reason
+            and d._belt_ctx["belt_acted"] is True, state)
 
         # Belt 1 abstains → Belt 2.0 (cloud_escalation_predictor) gets a say.
         from skills.auto_router import nn_belt2
         o_hint2 = nn_belt2.cloud_escalation_hint
 
-        nn_belt.local_vs_cloud_hint = lambda *a, **k: None  # belt1 abstains
+        nn_belt.binary_router_prediction = lambda *a, **k: _prediction(confidence=0.55)
         nn_belt2.cloud_escalation_hint = lambda *a, **k: ("local_small", 0.8)
         d2b = AutoRouter().decide("borderline task")
         _ok("belt1 abstains → confident belt2 'local_small' routes local",
-            d2b.mode == "local" and "NN belt2" in d2b.reason, state)
+            d2b.mode == "local" and "NN belt2" in d2b.reason
+            and d2b._belt_ctx["decision_source"] == "nn_belt2", state)
 
         nn_belt2.cloud_escalation_hint = lambda *a, **k: ("cloud", 0.9)
         d2c = AutoRouter().decide("borderline task")
@@ -178,12 +200,30 @@ def main() -> int:
         d2 = AutoRouter().decide("borderline task")
         _ok("abstaining belts do not claim the decision",
             "NN belt" not in d2.reason, state)
+
+        nn_belt.binary_router_prediction = lambda *a, **k: _prediction(
+            label="cloud", confidence=0.55)
+        providers.cheapest_cloud_at_least = lambda *_args, **_kwargs: _FakeCloud()
+        d_cloud_shadow = AutoRouter().decide("borderline cloud task")
+        _ok("heuristic cloud route keeps an unacted shadow prediction",
+            d_cloud_shadow.mode == "cloud"
+            and d_cloud_shadow._belt_ctx["decision_source"] == "heuristic_cloud"
+            and d_cloud_shadow._belt_ctx["belt_acted"] is False, state)
+
+        local_eff = effort.EffortEstimate(score=0.2, tier=Tier.LOCAL, reasons=[])
+        router_mod.estimate_effort = lambda *a, **k: local_eff
+        d_shadow = AutoRouter().decide("easy task")
+        _ok("heuristic local route keeps an unacted shadow prediction",
+            d_shadow.mode == "local"
+            and d_shadow._belt_ctx["decision_source"] == "heuristic_local"
+            and d_shadow._belt_ctx["belt_acted"] is False, state)
     finally:
         registry.best_chat_backend = o_best
         registry.preferred_model = o_pref
-        nn_belt.local_vs_cloud_hint = o_hint
+        nn_belt.binary_router_prediction = o_predict
         nn_belt2.cloud_escalation_hint = o_hint2
         router_mod.estimate_effort = o_est
+        providers.cheapest_cloud_at_least = o_cloud
 
     # 12. Belt observations remain unlabelled until an explicit verdict arrives.
     import json as _json
@@ -207,13 +247,16 @@ def main() -> int:
 
         observation_id = al_mod.record_observation(
             "binary_router", [0.3, 1.0, 1.0], predicted_class=0,
-            outcome="local_returned")
+            outcome="local_returned", decision_source="heuristic_local",
+            belt_acted=False, confidence=0.61)
         rows = [_json.loads(x) for x in logf.read_text(encoding="utf-8").splitlines()
                 if x.strip()]
         _ok("automatic observation has no invented ground-truth label",
             len(rows) == 2 and rows[1]["actual_class"] is None
             and rows[1]["correct"] is None and rows[1]["verified"] is False
-            and rows[1]["outcome"] == "local_returned", state)
+            and rows[1]["outcome"] == "local_returned"
+            and rows[1]["decision_source"] == "heuristic_local"
+            and rows[1]["belt_acted"] is False, state)
 
         verdict_id = al_mod.record_verdict(observation_id, actual_class=1)
         rows = [_json.loads(x) for x in logf.read_text(encoding="utf-8").splitlines()
@@ -223,6 +266,9 @@ def main() -> int:
             and rows[2]["source_observation_id"] == observation_id
             and rows[2]["actual_class"] == 1 and rows[2]["verified"] is True,
             state)
+        _ok("verified verdict preserves shadow decision provenance",
+            rows[2]["decision_source"] == "heuristic_local"
+            and rows[2]["confidence"] == 0.61, state)
         try:
             al_mod.record_verdict(observation_id, actual_class=0)
             duplicate_rejected = False
@@ -235,7 +281,11 @@ def main() -> int:
             AutoRouter().record_override(d_no, "cloud") is False, state)
 
         d_belt = AutoDecision(mode="local", tier=Tier.LOCAL, effort=effort.estimate("x"),
-                              _belt_ctx={"features": [0.5, 1.0, 1.0], "predicted_class": 0})
+                              _belt_ctx={"features": [0.5, 1.0, 1.0],
+                                         "predicted_class": 0,
+                                         "decision_source": "heuristic_local",
+                                         "belt_acted": False,
+                                         "confidence": 0.7})
         router_observation_id = AutoRouter._log_observation(d_belt, "local_returned")
         logged = AutoRouter().record_override(d_belt, "cloud")
         rows2 = [_json.loads(x) for x in logf.read_text(encoding="utf-8").splitlines()
@@ -243,13 +293,14 @@ def main() -> int:
         _ok("router observation returns the feedback id exposed to callers",
             isinstance(router_observation_id, str) and len(router_observation_id) == 32,
             state)
-        _ok("record_override logs a correction (local→cloud) when belt drove it",
+        _ok("record_override labels a shadow prediction after explicit review",
             logged and len(rows2) == 5 and rows2[4]["actual_class"] == 1
             and rows2[4]["verified"] is True, state)
 
         from skills import response_cache as cache_mod
         original_decide = AutoRouter.decide
         original_client = router_mod.LocalLLMClient
+        original_cloud_chat = router_mod._cloud_chat
         original_cache_get = cache_mod._cache.get
         original_cache_set = cache_mod._cache.set
 
@@ -275,6 +326,32 @@ def main() -> int:
         _ok("executed belt route includes a verifiable feedback_id",
             run_result.get("text") == "verified later"
             and len(run_result.get("feedback_id", "")) == 32, state)
+
+        d_cloud = AutoDecision(
+            mode="cloud", tier=Tier.CHEAP, effort=effort.estimate("x"),
+            model="cloud-model", label="Cloud", via="native",
+            _belt_ctx={"features": [0.7, 1.0, 1.0], "predicted_class": 1,
+                       "decision_source": "heuristic_cloud",
+                       "belt_acted": False, "confidence": 0.72},
+        )
+        AutoRouter.decide = lambda self, *_args, **_kwargs: d_cloud
+        router_mod._cloud_chat = lambda *_args, **_kwargs: ("cloud answer", 9)
+        cache_mod._cache.get = lambda *_args, **_kwargs: None
+        cache_mod._cache.set = lambda *_args, **_kwargs: None
+        try:
+            cloud_result = AutoRouter().run("unique cloud feedback-id contract test")
+        finally:
+            AutoRouter.decide = original_decide
+            router_mod._cloud_chat = original_cloud_chat
+            cache_mod._cache.get = original_cache_get
+            cache_mod._cache.set = original_cache_set
+        rows3 = [_json.loads(x) for x in logf.read_text(encoding="utf-8").splitlines()
+                 if x.strip()]
+        _ok("executed cloud route also exposes an unverified feedback_id",
+            cloud_result.get("text") == "cloud answer"
+            and len(cloud_result.get("feedback_id", "")) == 32
+            and rows3[-1]["outcome"] == "cloud_returned"
+            and rows3[-1]["verified"] is False, state)
     finally:
         al_mod.DATA_DIR = o_data
 
