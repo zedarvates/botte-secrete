@@ -28,6 +28,7 @@ jobs:
         run: python -m skills.checkup.cli . --pr-comment > /tmp/botte-checkup.md
         env:
           PYTHONPATH: ${{ github.workspace }}
+          BOTTE_CHECKUP_CONTEXT: github-pr
 
       - name: Post / update PR comment
         env:

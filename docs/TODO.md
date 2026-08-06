@@ -285,6 +285,8 @@
 
 ## 8. Tests et CI 🟡
 
+- [x] ✅ Marquer le câblage MCP machine-local comme non applicable dans le
+      runner PR éphémère, sans supprimer l'alerte du checkup local.
 - [ ] 🟡 `run_tests.py` : paralléliser les suites indépendantes (actuellement
       séquentiel — 40+ suites, gain de temps mur significatif possible).
 - [ ] 🟡 Ajouter un mode `--fail-fast` pour le développement itératif.
