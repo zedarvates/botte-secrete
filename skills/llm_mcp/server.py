@@ -596,6 +596,197 @@ TOOLS = [
         "description": "Read local aggregate loop metrics from the append-only ledger. No network.",
         "inputSchema": {"type": "object", "properties": {}},
     },
+    {
+        "name": "search_hub",
+        "description": "Search governed memory hub",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "project_id": {
+                    "type": "string"
+                },
+                "query": {
+                    "type": "string"
+                },
+                "asset_type": {
+                    "type": "string",
+                    "enum": [
+                        "chat_memory",
+                        "skill",
+                        "wiki",
+                        "code_graph",
+                        "fact",
+                        "pattern",
+                        "decision"
+                    ]
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "proposal",
+                        "review_active",
+                        "promoted",
+                        "expired",
+                        "obsoleted"
+                    ]
+                },
+                "agent_id": {
+                    "type": "string"
+                },
+                "limit": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "project_id"
+            ]
+        }
+    },
+    {
+        "name": "context_bundle",
+        "description": "Top-N memory for agent context",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "project_id": {
+                    "type": "string"
+                },
+                "agent_id": {
+                    "type": "string"
+                },
+                "max_entries": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "project_id",
+                "agent_id"
+            ]
+        }
+    },
+    {
+        "name": "propose_memory",
+        "description": "Propose new memory",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "project_id": {
+                    "type": "string"
+                },
+                "key": {
+                    "type": "string"
+                },
+                "value": {
+                    "description": "JSON value"
+                },
+                "asset_type": {
+                    "type": "string",
+                    "enum": [
+                        "chat_memory",
+                        "skill",
+                        "wiki",
+                        "code_graph",
+                        "fact",
+                        "pattern",
+                        "decision"
+                    ]
+                },
+                "category": {
+                    "type": "string"
+                },
+                "confidence": {
+                    "type": "number"
+                },
+                "agent_id": {
+                    "type": "string"
+                },
+                "source_ref": {
+                    "type": "string"
+                },
+                "visibility": {
+                    "type": "string",
+                    "enum": [
+                        "private",
+                        "project",
+                        "team",
+                        "restricted"
+                    ]
+                },
+                "expires_in_days": {
+                    "type": "number"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            },
+            "required": [
+                "project_id",
+                "key",
+                "value",
+                "agent_id"
+            ]
+        }
+    },
+    {
+        "name": "promote_memory",
+        "description": "Promote memory",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "project_id": {
+                    "type": "string"
+                },
+                "key": {
+                    "type": "string"
+                },
+                "new_status": {
+                    "type": "string",
+                    "enum": [
+                        "proposal",
+                        "review_active",
+                        "promoted",
+                        "expired",
+                        "obsoleted"
+                    ]
+                },
+                "actor_id": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "project_id",
+                "key",
+                "new_status",
+                "actor_id"
+            ]
+        }
+    },
+    {
+        "name": "forget_memory",
+        "description": "Delete memory",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "project_id": {
+                    "type": "string"
+                },
+                "key": {
+                    "type": "string"
+                },
+                "actor_id": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "project_id",
+                "key",
+                "actor_id"
+            ]
+        }
+    }
 ]
 
 
@@ -992,6 +1183,32 @@ def _tool_loop_record(args: dict) -> str:
 def _tool_loop_stats(_args: dict) -> str:
     from skills.loop_optimizer.ledger import LoopLedger
     ledger = LoopLedger()
+
+def _tool_search_hub(args: dict) -> str:
+    from skills.memory_hub.mcp import dispatch as _mh
+    import json
+    return json.dumps(_mh("search_hub", args), ensure_ascii=False)
+
+def _tool_context_bundle(args: dict) -> str:
+    from skills.memory_hub.mcp import dispatch as _mh
+    import json
+    return json.dumps(_mh("context_bundle", args), ensure_ascii=False)
+
+def _tool_propose_memory(args: dict) -> str:
+    from skills.memory_hub.mcp import dispatch as _mh
+    import json
+    return json.dumps(_mh("propose_memory", args), ensure_ascii=False)
+
+def _tool_promote_memory(args: dict) -> str:
+    from skills.memory_hub.mcp import dispatch as _mh
+    import json
+    return json.dumps(_mh("promote_memory", args), ensure_ascii=False)
+
+def _tool_forget_memory(args: dict) -> str:
+    from skills.memory_hub.mcp import dispatch as _mh
+    import json
+    return json.dumps(_mh("forget_memory", args), ensure_ascii=False)
+
     return json.dumps(ledger.summarize(ledger.read()), ensure_ascii=False, separators=(",", ":"))
 
 
@@ -1046,6 +1263,11 @@ DISPATCH = {
     "loop_explain": _tool_loop_explain,
     "loop_record": _tool_loop_record,
     "loop_stats": _tool_loop_stats,
+    "search_hub": _tool_search_hub,
+    "context_bundle": _tool_context_bundle,
+    "propose_memory": _tool_propose_memory,
+    "promote_memory": _tool_promote_memory,
+    "forget_memory": _tool_forget_memory,
 }
 
 

@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Added
+- Governed, per-project Memory Hub with provenance, lifecycle, visibility,
+  sensitivity, expiry, versioning, and lazy MCP tools.
+- Live loopback dashboard plus a sanitized, gated GitHub Pages artifact built
+  from observed test summaries instead of hard-coded counters.
+
 ### Changed
 - Ground `binary_router` on explicit verdicts: automatic local returns/failures are
   unlabelled observations, executed routes expose a `feedback_id`, and the new
@@ -9,7 +15,13 @@
 - `/checkup` now separates observations from verified labels and keeps training
   and activation blocked below their 50/2,000 verified-sample gates.
 
-## v1.9.0rc1 (2026-07-14) — Loop Optimizer release candidate
+### Security
+- Require host-matched HTTPS endpoints and tokens for non-loopback cluster
+  delegation; remove shell execution from README command validation.
+- Keep local Memory Hub content and machine configuration out of public
+  dashboard artifacts, with exact-fingerprint Gitleaks fixture exclusions.
+
+## v1.9.0 (2026-07-14) — Loop Optimizer
 
 ### Added
 - Deterministic Loop Optimizer: budgets, stop conditions, progress evaluation,

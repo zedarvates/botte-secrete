@@ -3,7 +3,7 @@
 [![CI](https://github.com/zedarvates/botte-secrete/actions/workflows/ci.yml/badge.svg)](https://github.com/zedarvates/botte-secrete/actions)
 [![Tests](https://img.shields.io/badge/tests-local%20validation-brightgreen)](https://github.com/zedarvates/botte-secrete)
 [![License](https://img.shields.io/badge/license-MIT-blue)](https://github.com/zedarvates/botte-secrete/blob/main/LICENSE)
-[![Release](https://img.shields.io/badge/release-v1.9.0--rc1-blue)](https://github.com/zedarvates/botte-secrete/releases)
+[![Release](https://img.shields.io/badge/release-v1.9.0-blue)](https://github.com/zedarvates/botte-secrete/releases)
 [![Token Savings](https://img.shields.io/badge/token%20savings-81%25-blue)](https://github.com/zedarvates/botte-secrete)
 [![Self-Audit](https://img.shields.io/badge/self--audit-89%2F100%20(B)-green)](https://github.com/zedarvates/botte-secrete)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/)
@@ -647,13 +647,13 @@ Also exposed as MCP tools (`auto_route`, `fusion`). See
 
 ## 📝 Changelog
 
-See [CHANGELOG.md](CHANGELOG.md). Current: **v1.9.0rc1**.
+See [CHANGELOG.md](CHANGELOG.md). Current: **v1.9.0**.
 
 ## 📊 Adoption & Key Facts
 
-- **108** pytest tests + **51** E2E tests, 0 failures in local validation
+- **700+** tests across the canonical runner, 0 failures in the clean publication candidate
 - **50+** independent skills — audit, fixes, routing, MCP, security, and docs
-- **4** distilled micro-NNs — 100% grounded, traceable provenance
+- **11** micro-NNs — 4 grounded; synthetic models remain decision-gated
 - **~65%** token savings across agent workloads
 - **0** heavy ML runtime dependencies — stdlib + NumPy only
 - **GPG-signed** — every commit can be verified

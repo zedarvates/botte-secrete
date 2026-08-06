@@ -42,6 +42,23 @@ def main() -> int:
         _ok("nn audit is skipped when the project ships no botte_nn",
             r["nn"]["available"] is False, state)
 
+        (proj / "help_text.py").write_text(
+            "print('Install with: pip install numpy')\n"
+            "needles = ('exec(', 'shell=True')\n",
+            encoding="utf-8",
+        )
+        rh = run(proj)
+        _ok("help and pattern-catalog text is not treated as malicious",
+            rh["malicious"]["suspicious"] == 0, state)
+        (proj / "runtime_install.py").write_text(
+            "import subprocess\nsubprocess.run(['pip', 'install', 'unknown'])\n",
+            encoding="utf-8",
+        )
+        ri = run(proj)
+        _ok("runtime pip install remains a high-signal finding",
+            ri["malicious"]["suspicious"] >= 1, state)
+        (proj / "runtime_install.py").unlink()
+
         # a project with a real taint flow surfaces in security + drift + comment
         (proj / "vuln.py").write_text(
             "import os, sys\nos.system('echo ' + sys.argv[1])\n", encoding="utf-8")

@@ -1,98 +1,295 @@
-<!DOCTYPE html>
-<html lang="fr">
+<!doctype html>
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Botte Secrète — Dashboard</title>
-<style>
-  *{margin:0;padding:0;box-sizing:border-box}
-  body{font-family:-apple-system,sans-serif;background:#111;color:#eee;min-height:100vh}
-  .container{max-width:1200px;margin:0 auto;padding:20px}
-  h1{color:#00d4ff;margin-bottom:20px}
-  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px}
-  .card{background:#1a1a1a;border-radius:12px;padding:20px}
-  .card h3{color:#888;font-size:14px;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
-  .card .value{font-size:36px;font-weight:bold;color:#00d4ff}
-  .card .trend{color:#888;font-size:12px}
-  .card .good{color:#00ff88}.card .bad{color:#ff4757}
-  .section{margin-top:30px}
-  .section h2{color:#00d4ff;margin-bottom:15px;font-size:18px}
-  table{width:100%;border-collapse:collapse}
-  th,td{padding:12px;text-align:left;border-bottom:1px solid #333}
-  th{color:#888;font-weight:normal}
-  .rung-bar{display:flex;height:24px;background:#333;border-radius:4;overflow:hidden}
-  .rung-bar .segment{height:100%;transition:width 0.3s}
-  .rung-bar .stdlib{background:#00d4ff}.rung-bar .regex{background:#00ff88}.rung-bar .existing{background:#ffa502}.rung-bar .newcode{background:#ff4757}
-  .refresh{color:#888;font-size:12px;margin-top:20px}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Botte Secrète — Control Room</title>
+  <style>
+    :root {
+      --ink: #eef6f1;
+      --muted: #8ea29a;
+      --base: #09100e;
+      --panel: #101a17;
+      --panel-raised: #16231f;
+      --line: #2a3a34;
+      --signal: #65f0ad;
+      --warning: #ffd166;
+      --danger: #ff6b6b;
+      --cyan: #64d8e8;
+      --shadow: 0 22px 70px rgba(0, 0, 0, .32);
+    }
+
+    * { box-sizing: border-box; }
+    html { min-width: 320px; background: var(--base); }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        linear-gradient(rgba(101, 240, 173, .025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(101, 240, 173, .025) 1px, transparent 1px),
+        radial-gradient(circle at 82% 8%, rgba(100, 216, 232, .13), transparent 28rem),
+        var(--base);
+      background-size: 28px 28px, 28px 28px, auto, auto;
+      font-family: "Cascadia Code", "JetBrains Mono", "Fira Code", monospace;
+    }
+
+    a { color: var(--signal); }
+    button { font: inherit; }
+    .shell { width: min(1180px, calc(100% - 32px)); margin: 0 auto; padding: 34px 0 64px; }
+
+    .masthead {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 24px;
+      align-items: end;
+      padding: 0 0 28px;
+      border-bottom: 1px solid var(--line);
+    }
+    .eyebrow { margin: 0 0 9px; color: var(--signal); font-size: .72rem; letter-spacing: .2em; text-transform: uppercase; }
+    h1 { margin: 0; font: 500 clamp(2.1rem, 7vw, 5.8rem)/.9 Georgia, serif; letter-spacing: -.055em; }
+    .lede { max-width: 720px; margin: 18px 0 0; color: var(--muted); line-height: 1.65; }
+
+    .connection {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      min-height: 42px;
+      padding: 9px 13px;
+      border: 1px solid var(--line);
+      background: rgba(16, 26, 23, .82);
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--warning); box-shadow: 0 0 0 4px rgba(255, 209, 102, .09); }
+    .connection[data-state="online"] .dot { background: var(--signal); box-shadow: 0 0 0 4px rgba(101, 240, 173, .1); }
+    .connection[data-state="offline"] .dot { background: var(--danger); box-shadow: 0 0 0 4px rgba(255, 107, 107, .1); }
+
+    .notice {
+      display: none;
+      margin-top: 20px;
+      padding: 14px 16px;
+      border-left: 3px solid var(--warning);
+      background: rgba(255, 209, 102, .08);
+      color: #ffe8ad;
+      line-height: 1.55;
+    }
+    .notice[data-visible="true"] { display: block; }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      margin-top: 28px;
+      border: 1px solid var(--line);
+      background: rgba(16, 26, 23, .75);
+      box-shadow: var(--shadow);
+    }
+    .metric { min-width: 0; padding: 22px; border-right: 1px solid var(--line); }
+    .metric:last-child { border-right: 0; }
+    .metric-label { display: block; min-height: 2.5em; color: var(--muted); font-size: .7rem; line-height: 1.4; letter-spacing: .12em; text-transform: uppercase; }
+    .metric-value { display: block; margin-top: 11px; overflow-wrap: anywhere; font: 500 clamp(1.75rem, 4vw, 3.2rem)/1 Georgia, serif; }
+    .metric-note { display: block; margin-top: 9px; color: var(--muted); font-size: .72rem; line-height: 1.5; }
+
+    .layout { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(300px, .65fr); gap: 20px; margin-top: 20px; }
+    .panel { min-width: 0; padding: 24px; border: 1px solid var(--line); background: rgba(16, 26, 23, .72); }
+    .panel-title { display: flex; justify-content: space-between; gap: 16px; align-items: baseline; margin-bottom: 20px; }
+    h2 { margin: 0; font: 500 1.2rem/1.2 Georgia, serif; }
+    .panel-kicker { color: var(--muted); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; }
+
+    table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+    th, td { padding: 12px 8px; border-bottom: 1px solid var(--line); text-align: left; }
+    th { color: var(--muted); font-weight: 500; }
+    td:last-child, th:last-child { text-align: right; }
+    tr:last-child td { border-bottom: 0; }
+
+    .bar-list { display: grid; gap: 17px; }
+    .bar-head { display: flex; justify-content: space-between; gap: 16px; margin-bottom: 7px; font-size: .78rem; }
+    .bar-track { height: 8px; overflow: hidden; border: 1px solid var(--line); background: var(--base); }
+    .bar-fill { width: 0; height: 100%; background: var(--signal); transition: width .35s ease; }
+
+    .footer { display: flex; justify-content: space-between; gap: 18px; flex-wrap: wrap; margin-top: 22px; color: var(--muted); font-size: .72rem; line-height: 1.6; }
+    .retry { display: none; border: 1px solid var(--danger); background: transparent; color: #ffb1b1; padding: 8px 12px; cursor: pointer; }
+    .retry[data-visible="true"] { display: inline-block; }
+    .retry:focus-visible, a:focus-visible { outline: 3px solid var(--cyan); outline-offset: 3px; }
+
+    @media (max-width: 900px) {
+      .masthead { grid-template-columns: 1fr; align-items: start; }
+      .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .metric { border-bottom: 1px solid var(--line); }
+      .metric:nth-child(2n) { border-right: 0; }
+      .layout { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 560px) {
+      .shell { width: min(100% - 20px, 1180px); padding-top: 22px; }
+      .metrics { grid-template-columns: 1fr; }
+      .metric { border-right: 0; }
+      .panel { padding: 18px; }
+      th, td { padding-inline: 4px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
+    }
+  </style>
 </head>
 <body>
-<div class="container">
-  <h1>📋 Botte Secrète — Dashboard</h1>
-  <div class="grid">
-    <div class="card"><h3>Tests passés</h3><div class="value" id="tests-passed">--</div></div>
-    <div class="card"><h3>Lignes gagnées</h3><div class="value" id="lines-saved">--</div></div>
-    <div class="card"><h3>Avoidable %</h3><div class="value" id="avoidable-pct">--</div></div>
-    <div class="card"><h3>Mémoire actuelle</h3><div class="value" id="memory-entries">--</div></div>
-  </div>
-  <div class="section">
-    <h2>📊 Par rung — Decision Ladder</h2>
-    <div class="rung-bar" id="rung-bar">--</div>
-    <table>
-      <tr><th>Rung</th><th>Count</th><th>Details</th></tr>
-      <tr><td>stdlib</td><td id="rung-stdlib">--</td><td>Modules stdlib utilisés</td></tr>
-      <tr><td>regex</td><td id="rung-regex">--</td><td>One-liners appliqués</td></tr>
-      <tr><td>existing</td><td id="rung-existing">--</td><td>Skills réutilisés</td></tr>
-      <tr><td>new_code</td><td id="rung-newcode">--</td><td>Frais développements</td></tr>
-    </table>
-  </div>
-  <div class="section">
-    <h2>🗜️ Universal Compressor</h2>
-    <table>
-      <tr><th>Type</th><th>Original</th><th>Compressed</th><th>Ratio</th></tr>
-      <tr><td>text</td><td id="comp-text">--</td><td>--</td><td>--</td></tr>
-      <tr><td>json</td><td id="comp-json">--</td><td>--</td><td>--</td></tr>
-      <tr><td>log</td><td id="comp-log">--</td><td>--</td><td>--</td></tr>
-    </table>
-  </div>
-  <div class="section">
-    <h2>💾 AutoMemory</h2>
-    <table>
-      <tr><th>Catégorie</th><th>Count</th></tr>
-      <tr><td>user_pref</td><td id="mem-pref">--</td></tr>
-      <tr><td>pattern</td><td id="mem-pattern">--</td></tr>
-      <tr><td>decision</td><td id="mem-decision">--</td></tr>
-    </table>
-  </div>
-  <p class="refresh">Dernière mise à jour: <span id="last-update">--</span></p>
-</div>
+  <main class="shell">
+    <header class="masthead">
+      <div>
+        <p class="eyebrow">Local-first control plane · zero cloud tokens</p>
+        <h1>Botte Secrète<br>Control Room</h1>
+        <p class="lede">Observed test health, routing efficiency and governed memory. Values come from local test artifacts or a sanitized GitHub Pages snapshot—never invented counters.</p>
+      </div>
+      <div class="connection" id="connection" data-state="loading" role="status" aria-live="polite">
+        <span class="dot" aria-hidden="true"></span>
+        <span id="connection-text">Connecting…</span>
+      </div>
+    </header>
 
-<script>
-async function loadStats() {
-  try {
-    const r = await fetch('/api/stats');
-    const d = await r.json();
-    document.getElementById('tests-passed').textContent = d.tests_passed || '--';
-    document.getElementById('lines-saved').textContent = d.lines_saved || '--';
-    document.getElementById('avoidable-pct').textContent = (d.avoidable_pct || 0) + '%';
-    document.getElementById('memory-entries').textContent = d.memory_entries || '--';
-    // Rungs
-    const rungs = d.by_rung || {};
-    document.getElementById('rung-stdlib').textContent = rungs.stdlib || 0;
-    document.getElementById('rung-regex').textContent = rungs.regex_oneliner || 0;
-    document.getElementById('rung-existing').textContent = rungs.existing_module || 0;
-    document.getElementById('rung-newcode').textContent = rungs.new_code || 0;
-    // Barre
-    const total = d.total_tasks || 1;
-    document.getElementById('rung-bar').innerHTML = `
-      <div class="segment stdlib" style="width:${(rungs.stdlib||0)/total*100}%"></div>
-      <div class="segment regex" style="width:${(rungs.regex_oneliner||0)/total*100}%"></div>
-      <div class="segment existing" style="width:${(rungs.existing_module||0)/total*100}%"></div>
-      <div class="segment newcode" style="width:${(rungs.new_code||0)/total*100}%"></div>`;
-    document.getElementById('last-update').textContent = new Date().toLocaleTimeString();
-  } catch(e) { console.error(e); }
-}
-setInterval(loadStats, 5000);
-loadStats();
-</script>
+    <aside class="notice" id="notice" data-visible="false" aria-live="polite"></aside>
+
+    <section class="metrics" aria-label="System summary">
+      <div class="metric"><span class="metric-label">Verified tests</span><output class="metric-value" id="tests-passed">—</output><span class="metric-note" id="tests-note">Awaiting a test run</span></div>
+      <div class="metric"><span class="metric-label">Test failures</span><output class="metric-value" id="tests-failed">—</output><span class="metric-note" id="tests-status">Unknown</span></div>
+      <div class="metric"><span class="metric-label">Lines avoided</span><output class="metric-value" id="lines-saved">—</output><span class="metric-note">Decision Ladder telemetry</span></div>
+      <div class="metric"><span class="metric-label">Promoted memories</span><output class="metric-value" id="memory-promoted">—</output><span class="metric-note">Reviewed context assets</span></div>
+      <div class="metric"><span class="metric-label">Memory projects</span><output class="metric-value" id="memory-projects">—</output><span class="metric-note">Isolated SQLite scopes</span></div>
+    </section>
+
+    <div class="layout">
+      <section class="panel" aria-labelledby="ladder-title">
+        <div class="panel-title"><h2 id="ladder-title">Decision Ladder</h2><span class="panel-kicker" id="task-count">0 observed tasks</span></div>
+        <div class="bar-list" id="ladder-bars"></div>
+      </section>
+
+      <section class="panel" aria-labelledby="memory-title">
+        <div class="panel-title"><h2 id="memory-title">Memory governance</h2><span class="panel-kicker">Status ledger</span></div>
+        <table>
+          <thead><tr><th scope="col">State</th><th scope="col">Assets</th></tr></thead>
+          <tbody id="memory-status"></tbody>
+        </table>
+      </section>
+    </div>
+
+    <footer class="footer">
+      <span id="last-update">No successful refresh yet.</span>
+      <span><button class="retry" id="retry" data-visible="false" type="button">Retry connection</button></span>
+    </footer>
+  </main>
+
+  <script>
+    const POLL_MS = 5000;
+    const labels = {
+      stdlib: 'Standard library', regex_oneliner: 'Regex / one-liner',
+      existing_module: 'Existing module', new_code: 'New code'
+    };
+    let timer = null;
+
+    const el = id => document.getElementById(id);
+    const number = value => Number.isFinite(Number(value)) ? new Intl.NumberFormat().format(Number(value)) : '—';
+    const endpoints = () => {
+      if (location.protocol === 'file:' || location.hostname.endsWith('github.io')) return ['./dashboard-data.json'];
+      return ['/api/stats', './dashboard-data.json'];
+    };
+
+    async function requestData() {
+      let lastError = null;
+      for (const endpoint of endpoints()) {
+        try {
+          const response = await fetch(endpoint, { cache: 'no-store' });
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          return { data: await response.json(), endpoint };
+        } catch (error) { lastError = error; }
+      }
+      throw lastError || new Error('No dashboard data source is available.');
+    }
+
+    function renderBars(data) {
+      const container = el('ladder-bars');
+      container.replaceChildren();
+      const values = data.by_rung || {};
+      const total = Math.max(1, Number(data.total_tasks) || 0);
+      Object.entries(labels).forEach(([key, label]) => {
+        const value = Number(values[key]) || 0;
+        const row = document.createElement('div');
+        const head = document.createElement('div');
+        head.className = 'bar-head';
+        head.append(Object.assign(document.createElement('span'), { textContent: label }));
+        head.append(Object.assign(document.createElement('strong'), { textContent: number(value) }));
+        const track = document.createElement('div');
+        track.className = 'bar-track';
+        track.setAttribute('role', 'progressbar');
+        track.setAttribute('aria-label', label);
+        track.setAttribute('aria-valuemin', '0');
+        track.setAttribute('aria-valuemax', String(total));
+        track.setAttribute('aria-valuenow', String(value));
+        const fill = document.createElement('div');
+        fill.className = 'bar-fill';
+        fill.style.width = `${Math.min(100, value / total * 100)}%`;
+        track.append(fill);
+        row.append(head, track);
+        container.append(row);
+      });
+      el('task-count').textContent = `${number(data.total_tasks || 0)} observed tasks`;
+    }
+
+    function renderMemory(data) {
+      const statuses = data.memory_by_status || {};
+      const body = el('memory-status');
+      body.replaceChildren();
+      const keys = ['promoted', 'review_active', 'proposal', 'expired', 'obsoleted'];
+      keys.forEach(key => {
+        const row = document.createElement('tr');
+        row.append(Object.assign(document.createElement('td'), { textContent: key.replace('_', ' ') }));
+        row.append(Object.assign(document.createElement('td'), { textContent: number(statuses[key] || 0) }));
+        body.append(row);
+      });
+      el('memory-promoted').textContent = number(statuses.promoted || 0);
+      el('memory-projects').textContent = number(data.memory_projects || 0);
+    }
+
+    function render(data, endpoint) {
+      el('tests-passed').textContent = number(data.tests_passed);
+      el('tests-failed').textContent = number(data.tests_failed);
+      el('lines-saved').textContent = number(data.lines_saved || 0);
+      const state = data.tests_status || 'not_run';
+      el('tests-status').textContent = state.replace('_', ' ');
+      el('tests-note').textContent = data.tests_updated_at
+        ? `Updated ${new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(data.tests_updated_at))}`
+        : 'Run scripts/run_tests.py to measure';
+      renderBars(data);
+      renderMemory(data);
+
+      const notices = [];
+      if (data.tests_partial) notices.push('The displayed test result is partial. Run the complete suite before publication.');
+      if (data.tests_stale) notices.push('The latest test result is more than seven days old.');
+      el('notice').textContent = notices.join(' ');
+      el('notice').dataset.visible = String(notices.length > 0);
+      el('connection').dataset.state = 'online';
+      el('connection-text').textContent = endpoint.includes('api') ? 'Live · local API' : 'Snapshot · public artifact';
+      el('last-update').textContent = `Refreshed ${new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'medium' }).format(new Date())}`;
+      el('retry').dataset.visible = 'false';
+    }
+
+    async function refresh() {
+      try {
+        const result = await requestData();
+        render(result.data, result.endpoint);
+      } catch (error) {
+        el('connection').dataset.state = 'offline';
+        el('connection-text').textContent = 'Data source unavailable';
+        el('notice').textContent = location.protocol === 'file:'
+          ? 'This tracked page no longer embeds demo metrics. Start `python -m skills.dashboard.api`, or generate a sanitized dashboard artifact.'
+          : `Metrics could not be loaded: ${error.message}`;
+        el('notice').dataset.visible = 'true';
+        el('retry').dataset.visible = 'true';
+      }
+    }
+
+    el('retry').addEventListener('click', refresh);
+    refresh();
+    timer = setInterval(refresh, POLL_MS);
+    addEventListener('beforeunload', () => clearInterval(timer), { once: true });
+  </script>
 </body>
 </html>

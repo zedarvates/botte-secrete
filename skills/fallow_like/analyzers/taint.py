@@ -129,8 +129,8 @@ def _scope_nodes(scope):
 
 def _is_dynamic_string(node) -> bool:
     """A SQL string built at runtime (f-string, %-format, +concat, .format)."""
-    if isinstance(node, ast.JoinedStr):  # f-string
-        return True
+    if isinstance(node, ast.JoinedStr):  # f-string with actual interpolation
+        return any(isinstance(value, ast.FormattedValue) for value in node.values)
     if isinstance(node, ast.BinOp) and isinstance(node.op, (ast.Add, ast.Mod)):
         return True
     if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) \
@@ -200,13 +200,19 @@ class TaintAnalyzer:
 
     def _check_call(self, call, tainted, fn_name, path, findings) -> None:
         dotted = _dotted(call.func)
-        args = list(call.args) + [kw.value for kw in call.keywords]
-
         # 1. catalogued dangerous sinks
         if dotted in SINKS:
             cwe, label, sev = SINKS[dotted]
             insecure = self._insecure_default(dotted, call)
-            tainted_arg = next((a for a in args if _expr_tainted(a, tainted)), None)
+            # Only the sink payload is security-sensitive. Treating cwd, env,
+            # timeout, or stdin as the command/URL produced false positives.
+            payloads = list(call.args[:1])
+            if not payloads:
+                keyword = "args" if dotted.startswith("subprocess.") else "url"
+                payloads = [kw.value for kw in call.keywords if kw.arg == keyword]
+            tainted_arg = next(
+                (arg for arg in payloads if _expr_tainted(arg, tainted)), None
+            )
             if insecure:
                 self._add(findings, path, call, fn_name, cwe,
                           f"{label} — insecure by default", dotted,

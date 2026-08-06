@@ -27,13 +27,16 @@ python -m skills.cluster.cli delegate 192.168.1.38 "restart the model server"
 ## Delegation (hand-off only)
 
 `delegate(host, task)` POSTs `{"task": …}` to a machine's agent endpoint
-(`BOTTE_AGENT_<host>` env or `--url`). It **never runs privileged maintenance
+(`BOTTE_AGENT_<host>` env or `--url`). The endpoint host must match `host`;
+non-loopback delegation requires HTTPS and a token from
+`BOTTE_AGENT_TOKEN_<host>` or `BOTTE_AGENT_TOKEN`. It **never runs privileged maintenance
 itself** — wire a trusted agent (e.g. Hermes, which has the rights to do simple
 machine maintenance) on each box to receive and execute tasks. No endpoint
 configured → safe no-op that tells you how to wire one.
 
 > Security: elevated-rights machine maintenance stays in *your* agent on each
-> machine; botte only routes and hands off.
+> machine; botte only routes and hands off. The bundled HTTP receiver is for
+> loopback use; expose it on a LAN only behind a trusted HTTPS reverse proxy.
 
 
 ## Reference machine-agent (deploy on each box)
@@ -45,9 +48,9 @@ loopback by default, token-gated for any non-loopback bind. Privileged
 maintenance handlers are deliberately absent until you scope the policy.
 
 ```bash
-python -m skills.cluster.agent serve --host 0.0.0.0 --token "$BOTTE_AGENT_TOKEN"
+python -m skills.cluster.agent serve --token "$BOTTE_AGENT_TOKEN"
 # then from the cluster:
-python -m skills.cluster.cli delegate <host> machine_status --url http://<host>:8799/task
+python -m skills.cluster.cli delegate 127.0.0.1 machine_status --url http://127.0.0.1:8799/task
 ```
 
 

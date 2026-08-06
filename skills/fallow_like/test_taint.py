@@ -12,8 +12,11 @@ from types import SimpleNamespace
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
+from skills.console_utf8 import force_utf8
 from skills.fallow_like.analyzers.taint import TaintAnalyzer
 from skills.fallow_like.models import TaintFinding
+
+force_utf8()
 
 
 def _ok(msg, cond, state):
@@ -93,6 +96,18 @@ def main() -> int:
              "    cur.execute('SELECT * FROM u WHERE id=?', (uid,))\n")
     _ok("clean code (constant cmd + parameterised query) → no findings",
         len(f) == 0, state)
+
+    # A tainted environment does not make a fixed argv command injectable.
+    f = _run("import os, subprocess\n"
+             "subprocess.run(['python', '-V'], env=os.environ)\n")
+    _ok("fixed subprocess argv with inherited env is not command injection",
+        not _has(f, "CWE-78"), state)
+
+    # An f-prefix without interpolation is still a constant SQL statement.
+    f = _run("def init(cur):\n"
+             "    cur.execute(f'CREATE TABLE cache (id INTEGER)')\n")
+    _ok("constant f-prefixed SQL is not reported as dynamic",
+        not _has(f, "CWE-89"), state)
 
     # 9. non-Python files are skipped (data flow is Python-only for now)
     f = TaintAnalyzer().analyze(_scan("system(userInput);", language="c", path="x.c"))

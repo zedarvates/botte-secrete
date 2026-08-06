@@ -139,6 +139,64 @@ def main() -> int:
         ok = r is not None and not r["result"].get("isError")
         _ok(f"'{name}' tool call succeeds", ok, state)
 
+    # Memory Hub is exercised through the real server dispatch while its
+    # durable state is redirected to a temporary directory. This catches
+    # schema/dispatch drift without writing to ~/.botte during tests.
+    saved_hub_dir = os.environ.get("BOTTE_MEMORY_HUB_DIR")
+    try:
+        with tempfile.TemporaryDirectory() as hub_dir:
+            os.environ["BOTTE_MEMORY_HUB_DIR"] = hub_dir
+
+            def hub_call(name, arguments):
+                response = handle({
+                    "jsonrpc": "2.0", "id": 10, "method": "tools/call",
+                    "params": {"name": name, "arguments": arguments},
+                })
+                text = response["result"]["content"][0]["text"]
+                payload = None if response["result"].get("isError") else json.loads(text)
+                return response, payload
+
+            _, proposed = hub_call("propose_memory", {
+                "project_id": "lazy_test", "key": "decision:one",
+                "value": "keep local", "agent_id": "alice",
+                "visibility": "project",
+            })
+            _ok("'propose_memory' works through tools/call",
+                proposed["status"] == "proposal", state)
+
+            _, review = hub_call("promote_memory", {
+                "project_id": "lazy_test", "key": "decision:one",
+                "new_status": "review_active", "actor_id": "reviewer",
+            })
+            _, promoted = hub_call("promote_memory", {
+                "project_id": "lazy_test", "key": "decision:one",
+                "new_status": "promoted", "actor_id": "reviewer",
+            })
+            _ok("memory lifecycle is dispatchable",
+                review["success"] and promoted["success"], state)
+
+            _, bundle = hub_call("context_bundle", {
+                "project_id": "lazy_test", "agent_id": "builder",
+            })
+            _ok("promoted memory reaches context_bundle",
+                [item["key"] for item in bundle["entries"]] == ["decision:one"], state)
+
+            denied, _ = hub_call("forget_memory", {
+                "project_id": "lazy_test", "key": "decision:one", "actor_id": "bob",
+            })
+            _ok("non-owner cannot forget memory",
+                denied["result"].get("isError") is True, state)
+
+            _, forgotten = hub_call("forget_memory", {
+                "project_id": "lazy_test", "key": "decision:one", "actor_id": "alice",
+            })
+            _ok("owner can forget memory", forgotten["deleted"] is True, state)
+    finally:
+        if saved_hub_dir is None:
+            os.environ.pop("BOTTE_MEMORY_HUB_DIR", None)
+        else:
+            os.environ["BOTTE_MEMORY_HUB_DIR"] = saved_hub_dir
+
     passed, failed = state
     print(f"\nRESULT: {passed} passed, {failed} failed")
     return 0 if failed == 0 else 1

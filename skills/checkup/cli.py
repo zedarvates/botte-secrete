@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from skills.console_utf8 import force_utf8
 from pathlib import Path
@@ -156,6 +157,22 @@ def _suspect_excluded(path: str) -> bool:
     return Path(name).suffix not in _MALICIOUS_CODE_EXTS
 
 
+def _is_suspicious_finding(finding) -> bool:
+    """Require executable syntax for regexes that also match help/catalog text."""
+    if finding.pattern not in _MALICIOUS_HIGH_SIGNAL or _suspect_excluded(finding.file):
+        return False
+    snippet = finding.snippet or ""
+    if finding.pattern == "exec_from_string":
+        return bool(re.search(r"(?<![\"'])\bexec\s*\(\s*[\"']", snippet))
+    if finding.pattern == "pip_install_from_code":
+        return bool(re.search(
+            r"\b(?:subprocess\.\w+|os\.(?:system|popen))\s*\(.*\b(?:pip|install)\b",
+            snippet,
+            flags=re.IGNORECASE,
+        ))
+    return True
+
+
 def _malicious_summary(project: Path) -> dict:
     """Scan the project for dangerous/obfuscated code patterns (0 cloud tokens).
 
@@ -171,8 +188,7 @@ def _malicious_summary(project: Path) -> dict:
     # fail_on='info' returns *all* findings (every severity is at-least-as-severe as info).
     findings = scan_dir(str(project), fail_on="info")
     rep = scan_report(findings)
-    suspicious = [f for f in findings
-                  if f.pattern in _MALICIOUS_HIGH_SIGNAL and not _suspect_excluded(f.file)]
+    suspicious = [f for f in findings if _is_suspicious_finding(f)]
     top = [{"file": f.file, "line": f.line, "pattern": f.pattern,
             "severity": f.severity, "snippet": (f.snippet or "")[:80]}
            for f in suspicious[:5]]

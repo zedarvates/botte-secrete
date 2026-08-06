@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "botte-secrete"
-version = "1.9.0rc1"
+version = "1.9.0"
 description = "Multi-agent token optimization platform — local-first routing, micro-NN belt, code audit, MCP server. 0 cloud tokens by default."
 readme = "README.md"
 license = { file = "LICENSE" }
@@ -54,4 +54,4 @@ include = ["skills*"]
 
 [tool.setuptools.package-data]
 # Trained micro-NN weights, harness specs, and skill docs ship with the code.
-"*" = ["*.json", "*.jsonl", "*.yaml", "*.yml", "*.md", "*.txt"]
+"*" = ["*.html", "*.json", "*.jsonl", "*.yaml", "*.yml", "*.md", "*.txt"]
