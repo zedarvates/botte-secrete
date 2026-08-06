@@ -8,6 +8,9 @@ tags: [security, audit, scan, static-analysis, supply-chain]
 
 Détecte les patterns malveillants dans les skills Python, MCP servers, et pipelines.
 Combinaison de regex pattern-matching et d'analyse AST Python.
+Pour les signaux critiques d'exécution, le scanner vérifie aussi le contexte
+lexical Python : une signature dans une chaîne, docstring ou commentaire ne
+déclenche pas d'alerte d'exécution.
 
 ## Usage
 

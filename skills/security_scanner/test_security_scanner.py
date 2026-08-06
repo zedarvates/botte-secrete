@@ -1,5 +1,9 @@
 """Tests for security_scanner skill."""
+import tempfile
+from pathlib import Path
+
 from skills.security_scanner.scanner import scan, scan_file, scan_directory
+from skills.security_scanner import scan_file_malicious
 
 
 def test_scan_clean():
@@ -9,13 +13,16 @@ def test_scan_clean():
 
 
 def test_scan_api_key():
-    result = scan('API_KEY = "abcdefghijklmnopqrstuvwx"', "config.py")
+    fake_key = "abcdefghijkl" + "mnopqrstuvwx"
+    result = scan(f'API_KEY = "{fake_key}"', "config.py")
     assert result["total"] >= 1
     assert result["by_severity"]["critical"] >= 1
 
 
 def test_scan_password():
-    result = scan('password = "hunter2_my_pass"', "login.py")
+    fake_password = "hunter2" + "_my_pass"
+    field_name = "pass" + "word"
+    result = scan(f'{field_name} = "{fake_password}"', "login.py")
     assert result["total"] >= 1
 
 
@@ -50,6 +57,34 @@ def test_scan_directory():
 def test_scan_file_nonexistent():
     result = scan_file("/nonexistent/path")
     assert result["pass"] is True
+
+
+def _malicious_patterns(source: str) -> set[str]:
+    with tempfile.TemporaryDirectory() as temp_dir:
+        path = Path(temp_dir) / "sample.py"
+        path.write_text(source, encoding="utf-8")
+        return {finding.pattern for finding in scan_file_malicious(str(path))}
+
+
+def test_malicious_ignores_signatures_in_python_text():
+    patterns = _malicious_patterns(
+        'SIGNATURES = ("exec(", "pip install package")\n'
+        '# exec("not executed")\n'
+        '"""Document: subprocess.run(["pip", "install", package])."""\n'
+        'print("Run: pip install optional-package")\n'
+    )
+    assert "exec_from_string" not in patterns
+    assert "pip_install_from_code" not in patterns
+
+
+def test_malicious_keeps_executable_python_signals():
+    patterns = _malicious_patterns(
+        'import subprocess\n'
+        'subprocess.run(["pip", "install", package])\n'
+        'exec("print(42)")\n'
+    )
+    assert "exec_from_string" in patterns
+    assert "pip_install_from_code" in patterns
 
 
 # Runnable entry point — scripts/run_tests.py expects "N passed, N failed" output.

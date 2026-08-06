@@ -259,6 +259,8 @@
 
 ## 7. Sécurité — élargir la couverture 🟡
 
+- [x] ✅ Éliminer les auto-détections des signatures malveillantes citées dans
+      les chaînes, docstrings et commentaires Python sans masquer les appels réels.
 - [ ] 🔴 Étendre `fallow_like` (taint analysis) aux frameworks web courants
       (Flask/FastAPI/Express patterns) au-delà des primitives génériques.
 - [ ] 🟡 `security_scanner` : ajouter la détection de secrets dans les
