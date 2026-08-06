@@ -1,0 +1,581 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-08-06",
+  "review_state": "provisional",
+  "owner": "zedarvates",
+  "policies": {
+    "write": "branch-and-draft-pr",
+    "production_publication": "explicit-owner-confirmation",
+    "memory_import": "proposal-first",
+    "secrets": "never-store",
+    "absolute_local_paths": "never-store"
+  },
+  "governance": {
+    "registry": "github:zedarvates/botte-secrete",
+    "cockpit_ui": "github:zedarvates/kanboard-neo"
+  },
+  "status_values": [
+    "active",
+    "maintenance",
+    "incubation",
+    "publication",
+    "needs-review",
+    "archived"
+  ],
+  "priority_values": [
+    "critical",
+    "high",
+    "medium",
+    "low",
+    "unclassified"
+  ],
+  "programs": {
+    "cockpit": [
+      {
+        "id": "kanboard-neo",
+        "source": "github:zedarvates/kanboard-neo",
+        "visibility": "public",
+        "status": "active",
+        "priority": "high",
+        "confidentiality": "public"
+      },
+      {
+        "id": "github-profile",
+        "source": "github:zedarvates/zedarvates",
+        "visibility": "public",
+        "status": "maintenance",
+        "priority": "low",
+        "confidentiality": "public"
+      }
+    ],
+    "ultimate-odycer": [
+      {
+        "id": "ultimate-odycer-core",
+        "source": "local-private",
+        "visibility": "restricted",
+        "status": "active",
+        "priority": "critical",
+        "confidentiality": "restricted"
+      },
+      {
+        "id": "ultimate-odycer-client-godot",
+        "source": "github:zedarvates/Client-Godot-UltimateOdycer",
+        "visibility": "private",
+        "status": "incubation",
+        "priority": "high",
+        "confidentiality": "confidential"
+      },
+      {
+        "id": "ultimate-odycer-portal",
+        "source": "external",
+        "visibility": "restricted",
+        "status": "active",
+        "priority": "high",
+        "confidentiality": "restricted"
+      }
+    ],
+    "ai-forge": [
+      {
+        "id": "botte-secrete",
+        "source": "github:zedarvates/botte-secrete",
+        "visibility": "private",
+        "status": "active",
+        "priority": "critical",
+        "confidentiality": "restricted"
+      },
+      {
+        "id": "cogniarc",
+        "source": "github:zedarvates/cogniarc",
+        "visibility": "private",
+        "status": "active",
+        "priority": "high",
+        "confidentiality": "confidential"
+      },
+      {
+        "id": "ultra-pipeline-framework",
+        "source": "github:zedarvates/ultra-pipeline-framework",
+        "visibility": "private",
+        "status": "needs-review",
+        "priority": "medium",
+        "confidentiality": "confidential"
+      },
+      {
+        "id": "arc-human-skills",
+        "source": "github:zedarvates/arc-human-skills",
+        "visibility": "private",
+        "status": "needs-review",
+        "priority": "medium",
+        "confidentiality": "confidential"
+      }
+    ],
+    "hermes-local-ai": [
+      {
+        "id": "hermes-agent",
+        "source": "github:zedarvates/hermes-agent",
+        "visibility": "public",
+        "status": "needs-review",
+        "priority": "medium",
+        "confidentiality": "public"
+      },
+      {
+        "id": "hermes-brain",
+        "source": "github:zedarvates/hermes-brain",
+        "visibility": "private",
+        "status": "needs-review",
+        "priority": "medium",
+        "confidentiality": "confidential"
+      },
+      {
+        "id": "hermes-fusion",
+        "source": "github:zedarvates/hermes-fusion",
+        "visibility": "private",
+        "status": "needs-review",
+        "priority": "medium",
+        "confidentiality": "confidential"
+      },
+      {
+        "id": "hermes-skills",
+        "source": "github:zedarvates/hermes-skills",
+        "visibility": "private",
+        "status": "needs-review",
+        "priority": "medium",
+        "confidentiality": "confidential"
+      },
+      {
+        "id": "hermes-rust-backend",
+        "source": "github:zedarvates/hermes-rust-backend",
+        "visibility": "private",
+        "status": "maintenance",
+        "priority": "high",
+        "confidentiality": "confidential"
+      },
+      {
+        "id": "hermes-ai-tester",
+        "source": "github:zedarvates/hermes-ai-tester",
+        "visibility": "private",
+        "status": "needs-review",
+        "priority": "medium",
+        "confidentiality": "confidential"
+      },
+      {
+        "id": "hermes-feedback",
+        "source": "github:zedarvates/hermes-feedback",
+        "visibility": "public",
+        "status": "needs-review",
+        "priority": "medium",
+        "confidentiality": "public"
+      },
+      {
+        "id": "hermes-backup",
+        "source": "github:zedarvates/hermes-backup",
+        "visibility": "private",
+        "status": "needs-review",
+        "priority": "medium",
+        "confidentiality": "confidential"
+      },
+      {
+        "id": "hnoss-voice",
+        "source": "github:zedarvates/hnoss-voice",
+        "visibility": "public",
+        "status": "needs-review",
+        "priority": "medium",
+        "confidentiality": "public"
+      },
+      {
+        "id": "openhnoss-laptops",
+        "source": "github:zedarvates/openhnoss--autonome-laptops-",
+        "visibility": "private",
+        "status": "incubation",
+        "priority": "medium",
+        "confidentiality": "confidential"
+      },
+      {
+        "id": "home-ai-cloud",
+        "source": "local-private",
+        "visibility": "restricted",
+        "status": "active",
+        "priority": "high",
+        "confidentiality": "restricted"
+      }
+    ],
+    "creative-engines": [
+      {
+        "id": "storycore",
+        "source": "github:zedarvates/StoryCore-Engine",
+        "visibility": "public",
+        "status": "maintenance",
+        "priority": "high",
+        "confidentiality": "public"
+      },
+      {
+        "id": "open-comics-crafter",
+        "source": "github:zedarvates/OpenComicsCrafter",
+        "visibility": "private",
+        "status": "incubation",
+        "priority": "medium",
+        "confidentiality": "confidential"
+      },
+      {
+        "id": "aimesher",
+        "source": "github:zedarvates/AIMesher",
+        "visibility": "private",
+        "status": "active",
+        "priority": "high",
+        "confidentiality": "confidential"
+      },
+      {
+        "id": "umodeler",
+        "source": "github:zedarvates/umodeler",
+        "visibility": "private",
+        "status": "incubation",
+        "priority": "low",
+        "confidentiality": "confidential"
+      },
+      {
+        "id": "material-maker",
+        "source": "github:zedarvates/material-maker",
+        "visibility": "public",
+        "status": "needs-review",
+        "priority": "low",
+        "confidentiality": "public"
+      },
+      {
+        "id": "hyperframes",
+        "source": "github:zedarvates/hyperframes",
+        "visibility": "public",
+        "status": "needs-review",
+        "priority": "medium",
+        "confidentiality": "public"
+      },
+      {
+        "id": "monstericor",
+        "source": "external",
+        "visibility": "restricted",
+        "status": "incubation",
+        "priority": "low",
+        "confidentiality": "confidential"
+      },
+      {
+        "id": "storyor",
+        "source": "external",
+        "visibility": "restricted",
+        "status": "incubation",
+        "priority": "low",
+        "confidentiality": "confidential"
+      }
+    ],
+    "rendering-vr": [
+      {
+        "id": "foveacore",
+        "source": "github:zedarvates/FoveaCore",
+        "visibility": "private",
+        "status": "maintenance",
+        "priority": "high",
+        "confidentiality": "confidential"
+      },
+      {
+        "id": "parallel-walker",
+        "source": "external",
+        "visibility": "restricted",
+        "status": "incubation",
+        "priority": "low",
+        "confidentiality": "confidential"
+      }
+    ],
+    "research-publications": [
+      {
+        "id": "shardjepa-publications",
+        "source": "github:zedarvates/shardjepa-publications",
+        "visibility": "public",
+        "status": "publication",
+        "priority": "high",
+        "confidentiality": "public"
+      },
+      {
+        "id": "turboquant",
+        "source": "github:zedarvates/turboquant",
+        "visibility": "public",
+        "status": "needs-review",
+        "priority": "medium",
+        "confidentiality": "public"
+      },
+      {
+        "id": "cuda-graveyard",
+        "source": "github:zedarvates/CUDAgraveyard",
+        "visibility": "public",
+        "status": "needs-review",
+        "priority": "low",
+        "confidentiality": "public"
+      }
+    ],
+    "hardware-systems": [
+      {
+        "id": "realgibberlink",
+        "source": "github:zedarvates/RealGibberLink-secure-directional-comm",
+        "visibility": "public",
+        "status": "maintenance",
+        "priority": "medium",
+        "confidentiality": "public"
+      },
+      {
+        "id": "skystrider",
+        "source": "github:zedarvates/SkyStrider-Open-source-Playmobil-scale-flying-walking-laser-tag-racer",
+        "visibility": "public",
+        "status": "maintenance",
+        "priority": "medium",
+        "confidentiality": "public"
+      },
+      {
+        "id": "electroclaw",
+        "source": "github:zedarvates/ElectroClaw",
+        "visibility": "private",
+        "status": "needs-review",
+        "priority": "medium",
+        "confidentiality": "confidential"
+      },
+      {
+        "id": "connected-pocket-watch",
+        "source": "external",
+        "visibility": "restricted",
+        "status": "incubation",
+        "priority": "low",
+        "confidentiality": "confidential"
+      }
+    ],
+    "services-commercial": [
+      {
+        "id": "gemreward-service",
+        "source": "github:zedarvates/GemReward-Service",
+        "visibility": "public",
+        "status": "needs-review",
+        "priority": "medium",
+        "confidentiality": "public"
+      },
+      {
+        "id": "print-laser-textile",
+        "source": "external",
+        "visibility": "restricted",
+        "status": "active",
+        "priority": "high",
+        "confidentiality": "confidential"
+      }
+    ],
+    "physical-autonomy": [
+      {
+        "id": "aquaponics-trout",
+        "source": "external",
+        "visibility": "restricted",
+        "status": "active",
+        "priority": "high",
+        "confidentiality": "confidential"
+      },
+      {
+        "id": "quail-breeding",
+        "source": "external",
+        "visibility": "restricted",
+        "status": "active",
+        "priority": "high",
+        "confidentiality": "confidential"
+      },
+      {
+        "id": "spirulina",
+        "source": "external",
+        "visibility": "restricted",
+        "status": "incubation",
+        "priority": "medium",
+        "confidentiality": "confidential"
+      },
+      {
+        "id": "mealworms",
+        "source": "external",
+        "visibility": "restricted",
+        "status": "incubation",
+        "priority": "medium",
+        "confidentiality": "confidential"
+      },
+      {
+        "id": "earth-straw-house",
+        "source": "external",
+        "visibility": "restricted",
+        "status": "incubation",
+        "priority": "medium",
+        "confidentiality": "confidential"
+      },
+      {
+        "id": "off-grid-energy",
+        "source": "external",
+        "visibility": "restricted",
+        "status": "incubation",
+        "priority": "medium",
+        "confidentiality": "confidential"
+      }
+    ],
+    "creative-works": [
+      {
+        "id": "book-theories",
+        "source": "external",
+        "visibility": "restricted",
+        "status": "active",
+        "priority": "medium",
+        "confidentiality": "confidential"
+      },
+      {
+        "id": "webtoon-sf-fantasy",
+        "source": "external",
+        "visibility": "restricted",
+        "status": "active",
+        "priority": "medium",
+        "confidentiality": "confidential"
+      },
+      {
+        "id": "zed-giller-musics",
+        "source": "external",
+        "visibility": "restricted",
+        "status": "maintenance",
+        "priority": "low",
+        "confidentiality": "confidential"
+      }
+    ],
+    "discovery": [
+      {
+        "id": "d4aievil",
+        "source": "github:zedarvates/D4AIEvil",
+        "visibility": "private",
+        "status": "needs-review",
+        "priority": "unclassified",
+        "confidentiality": "confidential"
+      },
+      {
+        "id": "my-project-1",
+        "source": "github:zedarvates/My-project-1",
+        "visibility": "private",
+        "status": "needs-review",
+        "priority": "unclassified",
+        "confidentiality": "confidential"
+      },
+      {
+        "id": "gardemanger",
+        "source": "github:zedarvates/gardemanger",
+        "visibility": "private",
+        "status": "needs-review",
+        "priority": "unclassified",
+        "confidentiality": "confidential"
+      },
+      {
+        "id": "kub-map",
+        "source": "github:zedarvates/kub-map",
+        "visibility": "public",
+        "status": "needs-review",
+        "priority": "unclassified",
+        "confidentiality": "public"
+      }
+    ],
+    "archive": [
+      {
+        "id": "kitten-tts",
+        "source": "github:zedarvates/kitten-tts",
+        "visibility": "public",
+        "status": "archived",
+        "priority": "low",
+        "confidentiality": "public"
+      }
+    ]
+  },
+  "action_queue": [
+    {
+      "project": "kanboard-neo",
+      "next": "Auditer l'installation, l'API et le modèle de données avant d'ajouter un import du registre."
+    },
+    {
+      "project": "ultimate-odycer-core",
+      "next": "Ajouter localement AGENTS.md, STATUS.md et DECISIONS.md; lancer l'audit sans publier le cœur."
+    },
+    {
+      "project": "ultimate-odycer-client-godot",
+      "next": "Définir ce qui sera exemple public, SDK, client complet ou miroir privé avant le premier contenu."
+    },
+    {
+      "project": "ultimate-odycer-portal",
+      "next": "Créer un dépôt privé séparé, un staging Hostinger et une API publique minimale."
+    },
+    {
+      "project": "botte-secrete",
+      "next": "Corriger l'issue #53, stabiliser Memory Hub puis ajouter portfolio_sync en lecture seule."
+    },
+    {
+      "project": "cogniarc",
+      "next": "Auditer les modes de raisonnement et définir l'intégration autorisée avec Ultimate Odycer et Botte."
+    },
+    {
+      "project": "hermes-rust-backend",
+      "next": "Documenter le rôle, la source de vérité et les dépendances dans la matrice Hermes."
+    },
+    {
+      "project": "home-ai-cloud",
+      "next": "Établir l'inventaire des services, ports, sauvegardes, GPU et responsabilités sans stocker les secrets."
+    },
+    {
+      "project": "storycore",
+      "next": "Auditer la branche principale, les tests et les modules réutilisables pour Ultimate Odycer."
+    },
+    {
+      "project": "aimesher",
+      "next": "Auditer le grand commit fonctionnel, exécuter les tests et produire une démo minimale fiable."
+    },
+    {
+      "project": "foveacore",
+      "next": "Valider réellement la roadmap annoncée 400/400, les tests, les performances et la compatibilité Godot."
+    },
+    {
+      "project": "shardjepa-publications",
+      "next": "Reproduire depuis une source propre et taguée, puis préparer DOI/archives sans surdéclarer les résultats."
+    }
+  ],
+  "observed_commits": [
+    {
+      "project": "kanboard-neo",
+      "commit": "da43a2a4ebfb88bc8859b7cfdd397f8b0edead73",
+      "at": "2026-07-06T16:31:07Z"
+    },
+    {
+      "project": "github-profile",
+      "commit": "b07ed9cc2cf2553af9a0b789ca867e48b80b3c35",
+      "at": "2026-07-18T14:15:59Z"
+    },
+    {
+      "project": "botte-secrete",
+      "commit": "9cdb964ed8b3dbc14fa64ce6b02ed5eb43ed74a4",
+      "at": "2026-08-06T10:18:40Z"
+    },
+    {
+      "project": "cogniarc",
+      "commit": "61b9f8cee4bfa94bf74b23930b2e501234cdf178",
+      "at": "2026-07-10T15:49:01Z"
+    },
+    {
+      "project": "hermes-rust-backend",
+      "commit": "445c781f4911569f22d4d3edbaa9adf271c8aa57",
+      "at": "2026-07-03T07:26:11Z"
+    },
+    {
+      "project": "storycore",
+      "commit": "5d7179acce4e6052b665f0390302e8b5a8e702b8",
+      "at": "2026-07-14T09:56:06Z"
+    },
+    {
+      "project": "aimesher",
+      "commit": "995e36963045b5b6749d8d351977f4bc3a58da07",
+      "at": "2026-07-18T19:17:02Z"
+    },
+    {
+      "project": "foveacore",
+      "commit": "c2866eda5c646235bd7865dd72dbbbf37b20d2ab",
+      "at": "2026-07-09T17:12:06Z"
+    },
+    {
+      "project": "shardjepa-publications",
+      "commit": "0c0f573c0feb9b5534fcc2e7bdda23cffd7927d7",
+      "at": "2026-08-06T07:30:41Z"
+    }
+  ]
+}
