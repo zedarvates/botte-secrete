@@ -16,9 +16,11 @@ from typing import Optional
 # ── Paths ──
 
 SKILLS_DIR = Path(__file__).parent.parent  # skills/loader/ → skills/
+PROJECT_ROOT = SKILLS_DIR.parent
 CORE_PROMPT = SKILLS_DIR / "core-agent.md"
 MOUSQUETAIRES_PROMPTS = SKILLS_DIR / "mousquetaires" / "prompts"
 CARDINAL_PROMPTS = SKILLS_DIR / "cardinal" / "prompts"
+OUTSIDER_AGENTS = PROJECT_ROOT / "agents"
 
 # ── Registry ──
 
@@ -33,6 +35,8 @@ AGENTS = {
     "milady": CARDINAL_PROMPTS / "milady.md",
     "comte_de_wardes": CARDINAL_PROMPTS / "comte_de_wardes.md",
     "cardinal": CARDINAL_PROMPTS / "cardinal.md",
+    # Independent strategic outsider (neither blue nor red)
+    "monte_cristo": OUTSIDER_AGENTS / "monte-cristo.md",
 }
 
 AGENT_DISPLAY = {
@@ -44,7 +48,13 @@ AGENT_DISPLAY = {
     "milady": "🔪 Milady",
     "comte_de_wardes": "🕯️ Comte de Wardes",
     "cardinal": "👑 Le Cardinal",
+    "monte_cristo": "💎 Comte de Monte-Cristo",
 }
+
+AGENT_TOOLSETS = {
+    "monte_cristo": ["file", "web", "skills"],
+}
+DEFAULT_TOOLSETS = ["terminal", "file", "web", "skills"]
 
 
 def load_core() -> str:
@@ -138,7 +148,7 @@ def load_agents_batch(
         tasks.append({
             "goal": f"{AGENT_DISPLAY.get(name, name)}: {goal}",
             "context": context,
-            "toolsets": ["terminal", "file", "web", "skills"],
+            "toolsets": list(AGENT_TOOLSETS.get(name, DEFAULT_TOOLSETS)),
         })
     return tasks
 
@@ -146,6 +156,41 @@ def load_agents_batch(
 def list_agents() -> list[str]:
     """Liste tous les agents disponibles."""
     return sorted(AGENTS.keys())
+
+
+def suggest_agents(goal: str) -> list[dict]:
+    """Suggest gated special-purpose agents without executing them."""
+    from skills.monte_cristo.routing import evaluate_trigger
+
+    decision = evaluate_trigger(goal)
+    if not decision.invoke:
+        return []
+
+    from skills.monte_cristo.evaluation import (
+        automatic_activation_allowed,
+        benchmark,
+        load_cases,
+    )
+
+    try:
+        evaluation = benchmark(load_cases())
+    except (OSError, ValueError):
+        return []
+    if not automatic_activation_allowed(evaluation):
+        return []
+    return [{
+        "name": "monte_cristo",
+        "display": AGENT_DISPLAY["monte_cristo"],
+        "score": decision.score,
+        "signals": list(decision.signals),
+        "reason": decision.reason,
+        "gate": {
+            "dataset": evaluation.dataset_version,
+            "cases": evaluation.total,
+            "precision": evaluation.precision,
+            "recall": evaluation.recall,
+        },
+    }]
 
 
 def agent_info(agent_name: str) -> dict:

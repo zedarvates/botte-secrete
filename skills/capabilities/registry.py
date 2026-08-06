@@ -28,7 +28,7 @@ LAYER_MAP = {
     "understand-anything": "SENSE",
     # DECIDE — route the work, cheapest capable
     "auto_router": "DECIDE", "tiered_router": "DECIDE", "local_router": "DECIDE",
-    "preflight": "DECIDE",
+    "preflight": "DECIDE", "monte_cristo": "DECIDE",
     # ACT — do the work, local-first
     "llm_mcp": "ACT", "ingest": "ACT", "docgen": "ACT", "app_test": "ACT",
     "prompt_improver": "ACT", "mousquetaires": "ACT", "cardinal": "ACT",
@@ -46,7 +46,10 @@ LAYER_MAP = {
 }
 
 # Capabilities that can reach a cloud model (everything else is local-only).
-_CLOUD_CAPABLE = {"auto_router", "tiered_router", "docgen", "mousquetaires", "cardinal"}
+_CLOUD_CAPABLE = {
+    "auto_router", "tiered_router", "docgen", "mousquetaires", "cardinal",
+    "monte_cristo",
+}
 
 
 @dataclass

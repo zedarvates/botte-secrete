@@ -34,6 +34,10 @@ def main() -> int:
         all(c.layer in LAYERS for c in caps), state)
     _ok("cloud-capable flag set (auto_router escalates)",
         any(c.name == "auto_router" and not c.local_capable for c in caps), state)
+    _ok("Monte Cristo is a DECIDE capability",
+        any(c.name == "monte_cristo" and c.layer == "DECIDE" for c in caps), state)
+    _ok("Monte Cristo may escalate strategic reasoning",
+        any(c.name == "monte_cristo" and not c.local_capable for c in caps), state)
 
     grouped = by_layer(caps)
     _ok("by_layer groups across SENSE/ACT/DEPLOY",
@@ -49,6 +53,9 @@ def main() -> int:
     top2 = curate("write documentation for my module")
     _ok("curator ranks docgen for a docs goal",
         any(c["name"] == "docgen" for c in top2[:3]), state)
+    top3 = curate("strategic outsider reassess inherited architecture assumptions")
+    _ok("curator finds Monte Cristo for a frame-level reset",
+        any(c["name"] == "monte_cristo" for c in top3[:3]), state)
 
     # layer override via frontmatter
     with tempfile.TemporaryDirectory() as d:
