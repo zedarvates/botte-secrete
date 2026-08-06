@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import sys
 from skills.console_utf8 import force_utf8
@@ -68,7 +69,17 @@ def run(project: Path) -> dict:
     if isinstance(d, dict):
         if d.get("score", 100) < 90:
             out["drift"].append(f"Directives health {d.get('score')}/100 — stale/oversized; fix CLAUDE.md/AGENTS.md.")
-    if any("Wire the MCP" in t.get("title", "") for t in out["infra_tips"]):
+    mcp_missing = any("Wire the MCP" in t.get("title", "")
+                      for t in out["infra_tips"])
+    if not mcp_missing:
+        out["mcp_wiring"] = {"status": "wired", "applicable": True}
+    elif os.environ.get("BOTTE_CHECKUP_CONTEXT", "").strip().lower() == "github-pr":
+        out["mcp_wiring"] = {
+            "status": "not_applicable", "applicable": False,
+            "reason": "ephemeral GitHub PR runner; MCP configuration is machine-local",
+        }
+    else:
+        out["mcp_wiring"] = {"status": "missing", "applicable": True}
         out["drift"].append("MCP not wired here — run `python -m skills.bootstrap.cli .`")
     if m.always_on_tokens > 2000:
         out["drift"].append(f"CLAUDE.md ~{m.always_on_tokens} tok (>2000) — trims save tokens every turn.")
@@ -361,6 +372,8 @@ def format_pr_comment(result: dict, *, repo: str | None = None,
         facts.append(f"analysis cost **{cost['analysis_llm_tokens']} LLM tokens**")
     if "always_on_tokens_per_session" in cost:
         facts.append(f"always-on **{cost['always_on_tokens_per_session']:,} tok/session**")
+    if result.get("mcp_wiring", {}).get("status") == "not_applicable":
+        facts.append("MCP wiring **n/a in ephemeral CI**")
     lines.append(" · ".join(facts))
     lines.append("")
 

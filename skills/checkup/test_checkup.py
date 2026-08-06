@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import json
+import os
 import sys
 import tempfile
 from pathlib import Path
@@ -87,6 +88,23 @@ def main() -> int:
             any("policy" in x.lower() for x in r["drift"]), state)
         _ok("flags MCP-not-wired as drift",
             any("MCP" in x for x in r["drift"]), state)
+        _ok("local MCP status remains actionable",
+            r["mcp_wiring"] == {"status": "missing", "applicable": True}, state)
+
+        previous_context = os.environ.get("BOTTE_CHECKUP_CONTEXT")
+        os.environ["BOTTE_CHECKUP_CONTEXT"] = "github-pr"
+        try:
+            r_ci = run(proj)
+        finally:
+            if previous_context is None:
+                os.environ.pop("BOTTE_CHECKUP_CONTEXT", None)
+            else:
+                os.environ["BOTTE_CHECKUP_CONTEXT"] = previous_context
+        _ok("ephemeral PR checkup marks MCP wiring not applicable",
+            r_ci["mcp_wiring"]["status"] == "not_applicable"
+            and not any("MCP not wired" in x for x in r_ci["drift"]), state)
+        _ok("PR comment explains why MCP wiring is not applicable",
+            "MCP wiring **n/a in ephemeral CI**" in format_pr_comment(r_ci), state)
         _ok("result is JSON-serialisable", isinstance(json.dumps(r), str), state)
 
         # after committing a policy, that particular drift item goes away
