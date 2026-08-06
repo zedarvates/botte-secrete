@@ -237,22 +237,26 @@
 
 ## 6. Micro-NN — grounding et qualité 🟡
 
-- [ ] 🔴 Regrounder `binary_router` sur données réelles (actuellement flagué
-      "synthetic + wired" par `nn_audit` selon le dernier `checkup --doctor`).
-      Le ledger distingue désormais observations et verdicts explicites via
-      `feedback_id`/`route_feedback`; toutes les routes comparables alimentent
-      maintenant le mode shadow, sans auto-label. Activation bloquée jusqu'à
-      2 000 verdicts vérifiés.
-- [ ] 🔴 Regrounder `effort_classifier` — même statut à risque.
-- [ ] 🔴 Regrounder ou retirer `anomaly_detector` — vérifier s'il a de vrais
-      consommateurs en production avant de décider grounding vs suppression.
-- [ ] 🟡 Ajouter un pipeline d'entraînement reproductible (`training/`) qui
-      documente la source des données pour chaque micro-NN, pas seulement le
-      format des poids.
+- [x] ✅ Inventorier les 11 modèles et définir les niveaux G0→G3, les oracles,
+      les seuils et l'ordre de travail dans
+      `docs/plans/2026-08-06_micro-nn-grounding-roadmap.md`.
+- [ ] 🔴 Geler tout nouveau micro-NN tant que les 11 modèles existants ne sont
+      pas G2/G3 ou supprimés. Les futurs `harness_risk_predictor`,
+      `local_backend_selector` et `test_scope_predictor` restent documentés,
+      mais non implémentés.
+- [ ] 🔴 Ajouter un manifeste de provenance et des contrats de labels
+      machine-readable pour les 11 modèles; un modèle G0 reste shadow-only.
+- [ ] 🔴 Terminer `binary_router`: poursuivre `feedback_id`/`route_feedback`
+      jusqu'à 2 000 verdicts réels, équilibrés et calibrés, sans auto-label.
+- [ ] 🟡 Grounder d'abord les oracles automatiques: compression (roundtrip +
+      réduction), cache sémantique (hit/miss réel), puis erreurs (type + reprise).
+- [ ] 🟡 Grounder ensuite `effort_classifier`, `anomaly_detector` et
+      `cloud_escalation_predictor`; fusionner/retirer ce dernier s'il n'apporte
+      rien au-dessus de `binary_router`.
+- [ ] 🟡 Grounder par replay apparié ou feedback explicite le pruning de
+      contexte, le skip d'agent, l'appel d'outil et la longueur de réponse.
 - [ ] 🟡 `nn_audit` : ajouter un historique (tendance du % grounded dans le
       temps, via `trends`) plutôt qu'un instantané seul.
-- [ ] ⚪ Étudier la distillation d'un micro-NN à partir des décisions
-      `control-ledger.jsonl` accumulées (apprentissage semi-supervisé local).
 - [ ] 🟡 Documenter dans chaque `SKILL.md` de micro-NN la taille du modèle
       et le budget mémoire (utile pour les machines contraintes, cf. les
       travaux Hailo/edge déjà présents dans le repo).
