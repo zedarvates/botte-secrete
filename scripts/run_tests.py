@@ -35,6 +35,7 @@ SUITES = [
     ("directives_audit", [sys.executable, "-m", "skills.directives_audit.test_directives_audit"], "skills/directives_audit/"),
     ("auto_router", [sys.executable, "-m", "skills.auto_router.test_auto_router"], "skills/auto_router/"),
     ("skill_finder", [sys.executable, "-m", "skills.skill_finder.test_skill_finder"], "skills/skill_finder/"),
+    ("project_profiler", [sys.executable, "-m", "skills.skill_project_optimizer.test_profiler"], "skills/skill_project_optimizer/"),
     ("bootstrap", [sys.executable, "-m", "skills.bootstrap.test_bootstrap"], "skills/bootstrap/"),
     ("infra_advisor", [sys.executable, "-m", "skills.infra_advisor.test_infra_advisor"], "skills/infra_advisor/"),
     ("prompt_improver", [sys.executable, "-m", "skills.prompt_improver.test_prompt_improver"], "skills/prompt_improver/"),

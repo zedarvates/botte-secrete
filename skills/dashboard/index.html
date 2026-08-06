@@ -188,7 +188,9 @@
     const el = id => document.getElementById(id);
     const number = value => Number.isFinite(Number(value)) ? new Intl.NumberFormat().format(Number(value)) : '—';
     const endpoints = () => {
-      if (location.protocol === 'file:' || location.hostname.endsWith('github.io')) return ['./dashboard-data.json'];
+      const isGitHubPages = location.hostname === 'github.io'
+        || location.hostname.endsWith('.github.io');
+      if (location.protocol === 'file:' || isGitHubPages) return ['./dashboard-data.json'];
       return ['/api/stats', './dashboard-data.json'];
     };
 

@@ -13,11 +13,14 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
+from skills.console_utf8 import force_utf8
 from skills.tiered_router import Tier, Budget
 from skills.auto_router import effort, providers
 from skills.auto_router.router import AutoRouter
 from skills.auto_router import fusion
 from skills.llm_backends import registry
+
+force_utf8()
 
 
 def _ok(msg, cond, state):
@@ -54,6 +57,15 @@ def main() -> int:
     _ok("trivial task → low tier (FREE/LOCAL)", trivial.tier <= Tier.LOCAL, state)
     _ok("hard task → high tier (STANDARD/PREMIUM)", hard.tier >= Tier.STANDARD, state)
     _ok("hard effort score > trivial", hard.score > trivial.score, state)
+    trace = effort.estimate("at handler(app.py:42)")
+    paths = effort.estimate("src/router.py docs/design.md tests/router.rs")
+    _ok("bounded trace pattern keeps stack-trace detection",
+        "stack trace / exception" in trace.reasons, state)
+    _ok("bounded path pattern keeps multi-file detection",
+        any(reason.startswith("multi-file scope") for reason in paths.reasons), state)
+    adversarial = "at " * 20_000 + "a(" * 20_000 + "-" * 20_000
+    _ok("adversarial repetition is handled without an exception",
+        effort.estimate(adversarial).score >= 0, state)
 
     # 2. Provider catalog includes the requested models.
     keys = {m.key for m in providers.CATALOG}

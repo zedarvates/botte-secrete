@@ -32,9 +32,12 @@ _TRIVIAL_WORDS = (
     "one word", "in a word", "count",
 )
 _CODE_RE = re.compile(r"```|def |class |function |import |#include|=>|;\s*$", re.M)
-_TRACE_RE = re.compile(r"traceback|stack trace|at .+\(.+:\d+\)|exception", re.I)
+_TRACE_RE = re.compile(
+    r"traceback|stack trace|at [^\n(]{1,200}\([^()\n:]{1,200}:\d{1,10}\)|exception",
+    re.I,
+)
 # crude multi-file signal: several path-like tokens
-_PATH_RE = re.compile(r"[\w./-]+\.[a-zA-Z]{1,5}")
+_PATH_RE = re.compile(r"(?:[\w-]+[./]){1,20}[a-zA-Z]{1,5}")
 
 
 @dataclass
