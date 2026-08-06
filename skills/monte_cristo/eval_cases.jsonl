@@ -1,0 +1,44 @@
+{"id":"mc-fr-pos-01","language":"fr","query":"Active l'agent Monte-Cristo pour remettre en cause ce programme.","expected":true,"kind":"strategic","context":{}}
+{"id":"mc-en-pos-01","language":"en","query":"Invoke the Monte Cristo agent for an independent strategic reset.","expected":true,"kind":"strategic","context":{}}
+{"id":"mc-fr-pos-02","language":"fr","query":"Demande au comte de Monte-Cristo de remettre le projet en question.","expected":true,"kind":"strategic","context":{}}
+{"id":"mc-en-pos-02","language":"en","query":"Ask the Count of Monte Cristo to challenge the inherited plan.","expected":true,"kind":"strategic","context":{}}
+{"id":"mc-fr-pos-03","language":"fr","query":"L'équipe bleue et l'équipe rouge restent dans le même cadre.","expected":true,"kind":"strategic","context":{}}
+{"id":"mc-en-pos-03","language":"en","query":"Blue and red teams share the same frame.","expected":true,"kind":"strategic","context":{}}
+{"id":"mc-fr-pos-04","language":"fr","query":"Faut-il remplacer cette architecture héritée avant une réécriture coûteuse ?","expected":true,"kind":"strategic","context":{}}
+{"id":"mc-en-pos-04","language":"en","query":"Should we retire this inherited platform before the major migration?","expected":true,"kind":"strategic","context":{}}
+{"id":"mc-fr-pos-05","language":"fr","query":"Notre direction de recherche coûteuse repose sur un consensus d'influenceurs.","expected":true,"kind":"strategic","context":{}}
+{"id":"mc-en-pos-05","language":"en","query":"Experts converge on this research direction before a major investment.","expected":true,"kind":"strategic","context":{}}
+{"id":"mc-fr-pos-06","language":"fr","query":"Faut-il conserver cette architecture uniquement à cause des coûts irrécupérables ?","expected":true,"kind":"strategic","context":{}}
+{"id":"mc-en-pos-06","language":"en","query":"This sacred cow needs an architecture reset before the rewrite.","expected":true,"kind":"strategic","context":{}}
+{"id":"mc-fr-pos-07","language":"fr","query":"Réévalue simplement la direction.","expected":true,"kind":"strategic","context":{"blue_red_stalled":true,"inherited_frame":true}}
+{"id":"mc-en-pos-07","language":"en","query":"Reassess the direction before we proceed.","expected":true,"kind":"strategic","context":{"material_consequence":true,"inherited_frame":true}}
+{"id":"mc-fr-pos-08","language":"fr","query":"L'audit et le contre-audit défendent encore le même cadre.","expected":true,"kind":"strategic","context":{}}
+{"id":"mc-en-pos-08","language":"en","query":"Red and blue teams are locally trapped in the same frame.","expected":true,"kind":"strategic","context":{}}
+{"id":"mc-fr-pos-09","language":"fr","query":"Repartir de zéro car nos hypothèses héritées bloquent la migration majeure.","expected":true,"kind":"strategic","context":{}}
+{"id":"mc-en-pos-09","language":"en","query":"Should we replace the product after sunk cost made the next step irreversible?","expected":true,"kind":"strategic","context":{}}
+{"id":"mc-fr-pos-10","language":"fr","query":"Une vache sacrée empêche la remise à plat de l'architecture.","expected":true,"kind":"strategic","context":{}}
+{"id":"mc-en-pos-10","language":"en","query":"Groupthink dominates the research direction before the investment.","expected":true,"kind":"strategic","context":{}}
+{"id":"mc-fr-neg-01","language":"fr","query":"Monte-Cristo, corrige cette faute d'orthographe.","expected":false,"kind":"routine","context":{}}
+{"id":"mc-en-neg-01","language":"en","query":"Monte Cristo, review this small function for a typo.","expected":false,"kind":"routine","context":{}}
+{"id":"mc-fr-neg-02","language":"fr","query":"Résume le roman Le Comte de Monte-Cristo.","expected":false,"kind":"literary","context":{}}
+{"id":"mc-en-neg-02","language":"en","query":"Write a book report about The Count of Monte Cristo.","expected":false,"kind":"literary","context":{}}
+{"id":"mc-fr-neg-03","language":"fr","query":"Donne-moi une recette de sandwich Monte Cristo.","expected":false,"kind":"literary","context":{}}
+{"id":"mc-en-neg-03","language":"en","query":"Summarize the Monte Cristo movie.","expected":false,"kind":"literary","context":{}}
+{"id":"mc-fr-neg-04","language":"fr","query":"Lis la documentation de l'architecture actuelle.","expected":false,"kind":"ambiguous","context":{}}
+{"id":"mc-en-neg-04","language":"en","query":"Review this small Python function.","expected":false,"kind":"routine","context":{}}
+{"id":"mc-fr-neg-05","language":"fr","query":"Corrige ce test unitaire isolé.","expected":false,"kind":"routine","context":{}}
+{"id":"mc-en-neg-05","language":"en","query":"The blue team and red team published their scores.","expected":false,"kind":"ambiguous","context":{}}
+{"id":"mc-fr-neg-06","language":"fr","query":"Compare les résultats de l'audit et du contre-audit.","expected":false,"kind":"ambiguous","context":{}}
+{"id":"mc-en-neg-06","language":"en","query":"Read the research direction meeting notes.","expected":false,"kind":"ambiguous","context":{}}
+{"id":"mc-fr-neg-07","language":"fr","query":"Les influenceurs préfèrent cette couleur CSS.","expected":false,"kind":"ambiguous","context":{}}
+{"id":"mc-en-neg-07","language":"en","query":"Read the inherited architecture document.","expected":false,"kind":"ambiguous","context":{}}
+{"id":"mc-fr-neg-08","language":"fr","query":"Faut-il conserver ce nom de fonction ?","expected":false,"kind":"routine","context":{}}
+{"id":"mc-en-neg-08","language":"en","query":"Fix the typo in the migration guide.","expected":false,"kind":"routine","context":{}}
+{"id":"mc-fr-neg-09","language":"fr","query":"Raconte l'histoire des équipes bleue et rouge.","expected":false,"kind":"ambiguous","context":{}}
+{"id":"mc-en-neg-09","language":"en","query":"Show me examples of outsider art.","expected":false,"kind":"ambiguous","context":{}}
+{"id":"mc-fr-neg-10","language":"fr","query":"Explique la méthode de Monte-Carlo.","expected":false,"kind":"ambiguous","context":{}}
+{"id":"mc-en-neg-10","language":"en","query":"Compare the Cardinal and the Comte de Wardes prompts.","expected":false,"kind":"ambiguous","context":{}}
+{"id":"mc-fr-neg-11","language":"fr","query":"Répare cette petite correction d'architecture.","expected":false,"kind":"routine","context":{"material_consequence":true,"inherited_frame":true,"routine_scope":true}}
+{"id":"mc-en-neg-11","language":"en","query":"Reassess this note.","expected":false,"kind":"ambiguous","context":{"material_consequence":true}}
+{"id":"mc-fr-neg-12","language":"fr","query":"Réévalue cette note.","expected":false,"kind":"ambiguous","context":{"inherited_frame":true}}
+{"id":"mc-en-neg-12","language":"en","query":"Please continue.","expected":false,"kind":"ambiguous","context":{}}

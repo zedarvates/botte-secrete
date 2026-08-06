@@ -103,12 +103,12 @@ def main():
     # ── 2. Loader ──
     section("2. Pre-Prompt Loader")
     agents = list_agents()
-    if len(agents) == 8:
-        ok(f"8 agents found: {agents}")
+    if len(agents) == 9:
+        ok(f"9 agents found: {agents}")
         passed += 1
     else:
         failed += 1
-        fail(f"Expected 8 agents, got {len(agents)}")
+        fail(f"Expected 9 agents, got {len(agents)}")
 
     # Load single agent
     ctx = load_agent("porthos", project_root=project)

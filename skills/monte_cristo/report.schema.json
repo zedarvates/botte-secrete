@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://botte-secrete.dev/schemas/monte-cristo-v1.json",
+  "title": "Monte Cristo Strategic Report v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "scope",
+    "verdict",
+    "confidence",
+    "thesis",
+    "preserve",
+    "premises",
+    "moves",
+    "unknowns",
+    "counter_case",
+    "next_gate"
+  ],
+  "properties": {
+    "schema": {"const": "monte-cristo/v1"},
+    "scope": {"type": "string", "minLength": 1},
+    "verdict": {"$ref": "#/$defs/decision"},
+    "confidence": {"type": "integer", "minimum": 0, "maximum": 100},
+    "thesis": {"type": "string", "minLength": 1},
+    "preserve": {"$ref": "#/$defs/nonEmptyStrings"},
+    "premises": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/premise"}
+    },
+    "moves": {
+      "type": "array",
+      "maxItems": 12,
+      "items": {"$ref": "#/$defs/move"}
+    },
+    "unknowns": {"$ref": "#/$defs/nonEmptyStrings"},
+    "counter_case": {"type": "string", "minLength": 1},
+    "next_gate": {"type": "string", "minLength": 1}
+  },
+  "$defs": {
+    "decision": {
+      "enum": ["KEEP", "REPAIR", "REPLACE", "RETIRE", "INVESTIGATE"]
+    },
+    "nonEmptyStrings": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1}
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "ref", "note"],
+      "properties": {
+        "kind": {"enum": ["OBSERVED", "INFERRED", "PROPOSED", "BLOCKED"]},
+        "ref": {"type": "string", "minLength": 1},
+        "note": {"type": "string", "minLength": 1}
+      }
+    },
+    "premise": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "claim", "status", "evidence"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "claim": {"type": "string", "minLength": 1},
+        "status": {"enum": ["CONFIRMED", "CHALLENGED", "UNKNOWN", "BLOCKED"]},
+        "evidence": {"type": "array", "items": {"$ref": "#/$defs/evidence"}}
+      }
+    },
+    "move": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "priority",
+        "decision",
+        "target",
+        "rationale",
+        "evidence",
+        "blast_radius",
+        "validation",
+        "approval_required"
+      ],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "priority": {"enum": ["P0", "P1", "P2", "P3"]},
+        "decision": {"$ref": "#/$defs/decision"},
+        "target": {"type": "string", "minLength": 1},
+        "rationale": {"type": "string", "minLength": 1},
+        "evidence": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/evidence"}
+        },
+        "blast_radius": {"type": "string", "minLength": 1},
+        "validation": {"type": "string", "minLength": 1},
+        "approval_required": {"type": "boolean"}
+      }
+    }
+  }
+}

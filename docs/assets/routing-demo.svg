@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="458" viewBox="0 0 1120 458">
+<style>text{font-family:Cascadia Mono,Consolas,monospace;font-size:20px;white-space:pre;fill:#d8e3f0}.caption{font-family:Inter,Segoe UI,Arial,sans-serif;font-size:18px;fill:#8fa7bf}</style>
+<rect width="1120" height="458" rx="26" fill="#08111f"/>
+<circle cx="42" cy="38" r="9" fill="#ff6b6b"/><circle cx="70" cy="38" r="9" fill="#ffd166"/><circle cx="98" cy="38" r="9" fill="#55d6be"/>
+<text class="caption" x="132" y="45">botte demo scripted · deterministic · offline</text>
+<text x="52" y="104">┌─ ROUTING ────────────────────────┐  ┌─ SAVINGS (session) ──────────────┐</text>
+<text x="52" y="132">│ CLOUD  design a distributed co...│  │ tokens saved          1210       │</text>
+<text x="52" y="160">│ LOCAL  is this diff a bugfix o...│  │ cloud calls made         1       │</text>
+<text x="52" y="188">│ LOCAL  rename variable &quot;a&quot; to ...│  │ cloud calls saved        2       │</text>
+<text x="52" y="216">└──────────────────────────────────┘  │ cache hits               1       │</text>
+<text x="52" y="244">                                      └──────────────────────────────────┘</text>
+<text x="52" y="272"></text>
+<text x="52" y="300">┌─ MICRO-NN ───────────────────────┐  ┌─ ESCALATIONS ────────────────────┐</text>
+<text x="52" y="328">│ anomaly_detector   [0.04|0.96]...│  │ local → cloud  verification_fa...│</text>
+<text x="52" y="356">│ effort_classifier  conf=0.93     │  └──────────────────────────────────┘</text>
+<text x="52" y="384">└──────────────────────────────────┘</text>
+</svg>
