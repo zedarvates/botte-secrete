@@ -5,7 +5,7 @@
 [![Version](https://img.shields.io/badge/version-1.9.0-55d6be)](pyproject.toml)
 [![Licence MIT](https://img.shields.io/badge/licence-MIT-7b8cff)](LICENSE)
 
-[English](README.md) · [Architecture](docs/ARCHITECTURE.md) · [Développement](docs/DEVELOPMENT.md) · [Contribuer](CONTRIBUTING.md)
+[English](README.md) · [Documentation](docs/README.md) · [Architecture](docs/ARCHITECTURE.md) · [Développement](docs/DEVELOPMENT.md) · [Contribuer](CONTRIBUTING.md)
 
 **Un plan de contrôle local-first pour les agents de développement.** Botte
 Secrète confie les tâches simples aux outils déterministes, aux petits
@@ -210,6 +210,7 @@ Signalez toute vulnérabilité en privé selon [SECURITY.md](SECURITY.md).
 
 | Objectif | Document |
 |---|---|
+| Trouver le bon document | [Index de la documentation](docs/README.md) |
 | Comprendre le système | [Architecture](docs/ARCHITECTURE.md) |
 | Développer ou tester Botte | [Guide de développement](docs/DEVELOPMENT.md) |
 | Intégrer MCP | [Intégration MCP](docs/mcp-integration.md) |

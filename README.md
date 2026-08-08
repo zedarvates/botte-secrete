@@ -5,7 +5,7 @@
 [![Version](https://img.shields.io/badge/version-1.9.0-55d6be)](pyproject.toml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-7b8cff)](LICENSE)
 
-[Français](README.fr.md) · [Architecture](docs/ARCHITECTURE.md) · [Development](docs/DEVELOPMENT.md) · [Contributing](CONTRIBUTING.md)
+[Français](README.fr.md) · [Documentation](docs/README.md) · [Architecture](docs/ARCHITECTURE.md) · [Development](docs/DEVELOPMENT.md) · [Contributing](CONTRIBUTING.md)
 
 **A local-first control plane for AI coding agents.** Botte Secrète routes cheap
 work to deterministic tools, tiny classifiers, or local models; keeps cloud
@@ -209,6 +209,7 @@ Report vulnerabilities privately as described in [SECURITY.md](SECURITY.md).
 
 | Goal | Document |
 |---|---|
+| Find the right document | [Documentation hub](docs/README.md) |
 | Understand the system | [Architecture](docs/ARCHITECTURE.md) |
 | Develop or test Botte | [Development guide](docs/DEVELOPMENT.md) |
 | Integrate MCP | [MCP integration](docs/mcp-integration.md) |

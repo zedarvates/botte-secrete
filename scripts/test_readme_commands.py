@@ -31,6 +31,7 @@ BLOCKED_MODULES = {
     "skills.universal_compressor.mcp_server",
 }
 BLOCKED_SCRIPTS = {
+    (REPO / "scripts" / "generate_docs_visuals.py").resolve(),
     (REPO / "scripts" / "run_tests.py").resolve(),
     Path(__file__).resolve(),
 }

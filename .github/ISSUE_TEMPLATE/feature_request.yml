@@ -1,0 +1,52 @@
+name: Feature request
+description: Propose a bounded improvement or new capability
+title: "feat: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: User goal
+      description: What should a user be able to achieve?
+    validations:
+      required: true
+  - type: textarea
+    id: current
+    attributes:
+      label: Current limitation
+      description: What existing path did you try, and why was it insufficient?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed scope
+      description: Describe the smallest useful increment, including what should stay out of scope.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Validation idea
+      description: Suggest a test, benchmark, fixture, or observable success criterion.
+    validations:
+      required: true
+  - type: dropdown
+    id: execution
+    attributes:
+      label: Expected execution tier
+      options:
+        - Deterministic or standard-library
+        - Local model
+        - Optional cloud model
+        - Unsure
+    validations:
+      required: true
+  - type: checkboxes
+    id: safeguards
+    attributes:
+      label: Safeguards
+      options:
+        - label: The proposal does not require committing credentials or machine-specific configuration.
+          required: true
