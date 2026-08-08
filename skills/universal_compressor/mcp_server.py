@@ -77,6 +77,7 @@ def handle_request(request: dict) -> dict:
                 content=arguments.get("content", ""),
                 content_type=arguments.get("content_type", "auto"),
                 reversible=arguments.get("reversible", False),
+                learn=True,
             )
             return {
                 "jsonrpc": "2.0",
@@ -90,6 +91,7 @@ def handle_request(request: dict) -> dict:
                         "ratio": result.ratio,
                         "reversible_key": result.reversible_key,
                         "strategy": result.strategy,
+                        "grounding_id": result.grounding_id,
                     })}]
                 },
             }

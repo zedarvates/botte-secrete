@@ -12,6 +12,7 @@ Architecture:
 
 import hashlib
 import json
+import os
 import time
 from pathlib import Path
 from typing import Optional
@@ -34,8 +35,9 @@ class CachedResponse:
 class ResponseCache:
     """Two-level cache: exact hash + semantic similarity via Qdrant."""
 
-    def __init__(self, cache_dir: str = ".botte-cache"):
+    def __init__(self, cache_dir: str = ".botte-cache", *, learn: bool = False):
         self.cache_dir = Path(cache_dir)
+        self.learn = bool(learn)
         self.cache_dir.mkdir(exist_ok=True)
         self.cache_file = self.cache_dir / "response_cache.json"
         self.stats_file = self.cache_dir / "response_cache_stats.json"
@@ -130,21 +132,52 @@ class ResponseCache:
     def get(self, query: str, use_semantic: bool = False, *, model: str = "",
             context: str = "") -> Optional[CachedResponse]:
         """Two-level lookup: exact hash → semantic → miss."""
+        grounding_values = self._grounding_values(query) if self.learn else None
         # Level 1: Exact match
         exact = self.get_exact(query, model, context)
         if exact:
+            self._record_grounding(query, grounding_values, hit=True, hit_kind="exact_hit")
             return exact
 
         # Level 2: Semantic similarity (if enabled)
         if use_semantic:
             semantic = self.get_semantic(query, model)
             if semantic:
+                self._record_grounding(
+                    query, grounding_values, hit=True, hit_kind="semantic_hit"
+                )
                 return semantic
 
         # Miss
         self.stats["misses"] += 1
         self._save_stats()
+        self._record_grounding(query, grounding_values, hit=False, hit_kind="miss")
         return None
+
+    def _grounding_values(self, query: str) -> dict[str, float]:
+        """Snapshot pre-lookup features for the cache-hit micro-NN."""
+        from skills.botte_nn.features import semantic_cache_values
+
+        total = self.stats["hits_exact"] + self.stats["hits_semantic"] + self.stats["misses"]
+        hits = self.stats["hits_exact"] + self.stats["hits_semantic"]
+        return semantic_cache_values(
+            cache_density=min(len(self._entries) / 1000.0, 1.0),
+            agent_type="analyze",
+            cache_hit_history=(hits / total if total else 0.0),
+            query_length=max(1, len(query) // 4),
+        )
+
+    @staticmethod
+    def _record_grounding(query: str, values: Optional[dict[str, float]], *,
+                          hit: bool, hit_kind: str) -> None:
+        if values is None:
+            return
+        try:
+            from skills.botte_nn.auto_labels import record_cache_lookup
+
+            record_cache_lookup(query, values, hit=hit, hit_kind=hit_kind)
+        except Exception:  # noqa: BLE001 - telemetry must never break cache lookup
+            pass
 
     def set(self, query: str, response: str, model: str = "",
             tokens_used: int = 0, context: str = ""):
@@ -190,7 +223,7 @@ class ResponseCache:
 
 
 # Singleton
-_cache = ResponseCache()
+_cache = ResponseCache(learn=os.environ.get("BOTTE_NN_AUTO_LABELS", "1") != "0")
 
 def cached(query: str, response_fn, model: str = "", use_semantic: bool = False,
            context: str = "", tokens_used: int = 0) -> tuple[str, bool]:

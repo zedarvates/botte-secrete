@@ -44,8 +44,8 @@ python -m skills.nn_audit.cli skills/botte_nn --json
 | `effort_classifier` | G1 | reviewed task tier plus successful execution | 2,000 verified; macro-F1 beats heuristic baseline | Add shadow outcome collector |
 | `anomaly_detector` | G1 | confirmed incident/anomaly resolution | 1,000 verified windows; bounded false-negative rate | Link alerts to incident verdicts |
 | `error_classifier` | G1 | real exception type and recovery result | 1,000 verified errors; macro-F1 >= 0.90 | Persist provenance in exported weights |
-| `compressibility_predictor` | G0 | exact roundtrip plus measured reduction | 1,000 automatic labels across text, JSON, code, and logs | Replace repeated templates with observed files |
-| `semantic_cache_hit_predictor` | G0 | actual cache hit or miss | 2,000 automatic labels; temporal holdout | Log every lookup before prediction |
+| `compressibility_predictor` | G0, collector active | exact roundtrip plus measured reduction | 1,000 automatic labels across text, JSON, code, and logs | Accumulate diverse reversible calls, then temporal holdout |
+| `semantic_cache_hit_predictor` | G0, collector active | actual cache hit or miss | 2,000 automatic labels; temporal holdout | Accumulate real lookups and monitor class balance |
 | `cloud_escalation_predictor` | G0 | verified local/harness/cloud outcome | 2,000 verified; prove incremental value over `binary_router` | Merge or remove if redundant |
 | `context_pruning_predictor` | G0 | matched full-context versus pruned evaluation | 500 matched pairs; no material quality regression | Build replay evaluator |
 | `skip_agent_predictor` | G0 | matched execute versus skip replay | 500 matched pairs; fail-open to execute | Build no-change oracle and replay |
@@ -74,6 +74,8 @@ Ground models whose outcomes already have exact local oracles:
 3. `error_classifier` from exception classes and recovery results.
 
 These produce honest labels without cloud tokens or subjective review.
+The first two collectors are active: they append calibrated, verified labels,
+deduplicate stable fingerprints, and never persist raw content or queries.
 
 ### Wave 2 - routing and operational verdicts
 

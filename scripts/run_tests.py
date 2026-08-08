@@ -26,6 +26,9 @@ if str(REPO) not in sys.path:
 
 from skills.atomic_json import write_json
 
+# Test traffic must never inflate the user's production grounding ledger.
+os.environ.setdefault("BOTTE_NN_AUTO_LABELS", "0")
+
 # (label, command, module_prefix) — the e2e script + every module's test_<module>.
 # module_prefix is the skills/ directory prefix used for --changed matching.
 SUITES = [
@@ -63,6 +66,7 @@ SUITES = [
     ("cwe_kb", [sys.executable, "-m", "skills.cwe_kb.test_cwe_kb"], "skills/cwe_kb/"),
     ("botte_nn", [sys.executable, "-m", "skills.botte_nn.test_botte_nn"], "skills/botte_nn/"),
     ("features", [sys.executable, "-m", "skills.botte_nn.test_features"], "skills/botte_nn/"),
+    ("auto_labels", [sys.executable, "-m", "skills.botte_nn.test_auto_labels"], "skills/botte_nn/"),
     ("local_harness", [sys.executable, "-m", "skills.local_harness.test_verifier"], "skills/local_harness/"),
     ("harness_executor", [sys.executable, "-m", "skills.local_harness.test_executor"], "skills/local_harness/"),
     ("harness_bench", [sys.executable, "-m", "skills.local_harness.test_bench"], "skills/local_harness/"),

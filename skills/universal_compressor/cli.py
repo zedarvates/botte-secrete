@@ -39,13 +39,17 @@ def cmd_compress(args: list[str]):
     else:
         content = sys.stdin.read()
 
-    result = compress(content, content_type=content_type, reversible=reversible)
+    result = compress(
+        content, content_type=content_type, reversible=reversible, learn=True
+    )
 
     print(f"Type: {result.content_type}")
     print(f"Strategy: {result.strategy}")
     print(f"Size: {result.original_size} → {result.compressed_size} bytes ({result.ratio:.0%})")
     if result.reversible_key:
         print(f"Key: {result.reversible_key}")
+    if result.grounding_id:
+        print(f"Grounding: {result.grounding_id}")
     print()
     print(result.data)
 

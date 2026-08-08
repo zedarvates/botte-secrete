@@ -248,8 +248,9 @@
       machine-readable pour les 11 modèles; un modèle G0 reste shadow-only.
 - [ ] 🔴 Terminer `binary_router`: poursuivre `feedback_id`/`route_feedback`
       jusqu'à 2 000 verdicts réels, équilibrés et calibrés, sans auto-label.
-- [ ] 🟡 Grounder d'abord les oracles automatiques: compression (roundtrip +
-      réduction), cache sémantique (hit/miss réel), puis erreurs (type + reprise).
+- [ ] 🟡 Grounder d'abord les oracles automatiques: les collecteurs compression
+      (roundtrip + réduction) et cache (hit/miss réel) sont actifs, dédupliqués
+      et sans contenu brut; accumuler 1 000/2 000 labels puis traiter les erreurs.
 - [ ] 🟡 Grounder ensuite `effort_classifier`, `anomaly_detector` et
       `cloud_escalation_predictor`; fusionner/retirer ce dernier s'il n'apporte
       rien au-dessus de `binary_router`.

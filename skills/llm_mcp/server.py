@@ -533,7 +533,9 @@ TOOLS = [
         "inputSchema": {"type": "object", "required": ["content"], "properties": {
             "content": {"type": "string", "description": "Content to compress."},
             "content_type": {"type": "string",
-                             "description": "auto|text|json|log|tool_output|code (default auto)."}}},
+                             "description": "auto|text|json|log|tool_output|code (default auto)."},
+            "reversible": {"type": "boolean", "default": False,
+                           "description": "Store the original for exact restoration and verified grounding."}}},
     },
     {
         "name": "shape_query",
@@ -1119,7 +1121,10 @@ def _tool_fleet_status(args: dict) -> str:
 def _tool_compress(args: dict) -> str:
     import dataclasses
     from skills.universal_compressor.compressor import compress as _compress
-    r = _compress(args["content"], args.get("content_type", "auto"))
+    r = _compress(
+        args["content"], args.get("content_type", "auto"),
+        reversible=bool(args.get("reversible", False)), learn=True,
+    )
     return json.dumps(dataclasses.asdict(r), ensure_ascii=False, indent=2)
 
 

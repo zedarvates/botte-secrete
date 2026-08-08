@@ -157,16 +157,31 @@ def main() -> int:
             al_mod.record_observation("binary_router", [0.2, 1.0, 1.0], 0,
                                       "local_returned")
             al_mod.record_feedback("binary_router", [0.7, 1.0, 1.0], 0, 1)
+            al_mod.record_feedback(
+                "compressibility_predictor", [0.1] * 6, 2, 2,
+                outcome="oracle:compression_roundtrip",
+            )
+            al_mod.record_feedback(
+                "semantic_cache_hit_predictor", [0.1] * 7, 0, 1,
+                outcome="oracle:response_cache_exact_hit",
+            )
             summary = _nn_summary(Path(__file__).resolve().parents[2])
             learning = summary["learning"]
             _ok("nn summary separates observations from verified verdicts",
                 learning["observations"] == 1 and learning["verified"] == 1, state)
             _ok("binary_router stays blocked below the honest data gates",
                 not learning["train_ready"] and not learning["activation_ready"], state)
+            _ok("nn summary exposes verified labels for every grounded model",
+                learning["models"]["compressibility_predictor"]["verified"] == 1
+                and learning["models"]["semantic_cache_hit_predictor"]["verified"] == 1,
+                state)
             comment = format_pr_comment({"drift": [], "nn": summary,
                                          "policy_committed": True, "cost": {}})
             _ok("PR comment exposes verified-ledger readiness",
                 "1/2,000 verified" in comment and "activation blocked" in comment, state)
+            _ok("PR comment exposes automatic-oracle grounding progress",
+                "compressibility_predictor=1" in comment
+                and "semantic_cache_hit_predictor=1" in comment, state)
         finally:
             al_mod.DATA_DIR = old_data_dir
 
