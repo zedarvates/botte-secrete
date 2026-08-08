@@ -10,6 +10,8 @@
 - Micro-NN grounding roadmap with G0-G3 maturity levels, per-model label
   sources and activation gates, plus a freeze on new models until the existing
   inventory is grounded or removed.
+- Verified automatic-oracle labels for reversible compression and real response
+  cache hit/miss outcomes, with stable deduplication and no raw content storage.
 
 ### Changed
 - PR checkup now marks machine-local MCP wiring as not applicable on the

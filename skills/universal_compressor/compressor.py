@@ -43,6 +43,7 @@ class CompressedResult:
     reversible_key: str = ""           # key to restore original (empty if irreversible)
     strategy: str = ""                 # which strategy was used
     warnings: list[str] = field(default_factory=list)
+    grounding_id: str = ""              # verified micro-NN oracle label, if recorded
 
 
 # ── Strategy: Text ────────────────────────────────────────────
@@ -329,6 +330,7 @@ def compress(
     content_type: str = "auto",
     *,
     reversible: bool = False,
+    learn: bool = False,
 ) -> CompressedResult:
     """Compress content using the best strategy for its type.
 
@@ -336,6 +338,7 @@ def compress(
         content: The content to compress
         content_type: "auto", "text", "json", "log", "tool_output", or "code"
         reversible: If True, store original for later restoration
+        learn: Record a verified compression label after an exact roundtrip
 
     Returns:
         CompressedResult with compressed data and metrics
@@ -369,6 +372,16 @@ def compress(
     if reversible:
         key = _make_reversible(result, content)
         result.reversible_key = key
+        if learn and content:
+            try:
+                from skills.botte_nn.auto_labels import record_compression_result
+
+                grounding_id = record_compression_result(
+                    content, result.ratio, roundtrip_ok=(restore(key) == content)
+                )
+                result.grounding_id = grounding_id or ""
+            except Exception:  # noqa: BLE001 - telemetry must never break compression
+                pass
 
     return result
 

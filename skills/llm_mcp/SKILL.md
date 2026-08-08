@@ -19,6 +19,7 @@ on its own. Pure stdlib, stdio JSON-RPC 2.0, no dependencies.
 | `local_chat` | Run a prompt on a local model (0 cloud tokens) |
 | `auto_route` | Decide and optionally execute the cheapest capable route |
 | `route_feedback` | Verify an executed route by its `feedback_id` |
+| `compress` | Compress context; reversible calls add deduplicated verified grounding labels |
 
 ## Register in Claude Code
 

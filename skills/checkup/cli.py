@@ -224,7 +224,7 @@ def _nn_summary(project: Path) -> dict:
     learning = {
         "observations": 0, "verified": 0, "train_ready": False,
         "activation_ready": False, "activation_required": 2_000,
-        "verified_pct": 0.0,
+        "verified_pct": 0.0, "models": {},
     }
     try:
         from skills.botte_nn.active_learning import ActiveLearning
@@ -232,6 +232,13 @@ def _nn_summary(project: Path) -> dict:
         binary = status.get("models", {}).get("binary_router", {})
         observations = int(binary.get("observations", 0))
         verified = int(binary.get("with_outcome", 0))
+        model_counts = {
+            name: {
+                "observations": int(values.get("observations", 0)),
+                "verified": int(values.get("with_outcome", 0)),
+            }
+            for name, values in status.get("models", {}).items()
+        }
         learning.update({
             "observations": observations,
             "verified": verified,
@@ -239,6 +246,7 @@ def _nn_summary(project: Path) -> dict:
             "activation_ready": verified >= 2_000,
             "verified_pct": round(100 * verified / 2_000, 1),
             "storage": status.get("storage", ""),
+            "models": model_counts,
         })
     except (ImportError, OSError, ValueError, TypeError):
         pass
@@ -425,6 +433,16 @@ def format_pr_comment(result: dict, *, repo: str | None = None,
                      f"({learning.get('verified_pct', 0)}%); "
                      f"training {'ready' if learning.get('train_ready') else 'blocked (<50)'}, "
                      f"activation {'ready' if learning.get('activation_ready') else 'blocked'}")
+        oracle_models = {
+            name: values.get("verified", 0)
+            for name, values in learning.get("models", {}).items()
+            if name != "binary_router" and values.get("verified", 0)
+        }
+        if oracle_models:
+            summary = ", ".join(
+                f"{name}={count}" for name, count in sorted(oracle_models.items())
+            )
+            lines.append(f"- verified automatic-oracle labels: {summary}")
         lines.append("")
 
     hp = result.get("host_prefix") or {}
@@ -527,6 +545,15 @@ def main(argv=None) -> int:
         print(f"      binary_router ledger: {learning.get('observations', 0)} observations · "
               f"{learning.get('verified', 0)}/2,000 verified · "
               f"activation {'ready' if learning.get('activation_ready') else 'blocked'}")
+        oracle_models = {
+            name: values.get("verified", 0)
+            for name, values in learning.get("models", {}).items()
+            if name != "binary_router" and values.get("verified", 0)
+        }
+        if oracle_models:
+            print("      automatic oracles: " + ", ".join(
+                f"{name}={count}" for name, count in sorted(oracle_models.items())
+            ))
 
     hp = r.get("host_prefix") or {}
     if hp.get("available") and hp.get("host_tokens"):

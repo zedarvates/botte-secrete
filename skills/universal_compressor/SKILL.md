@@ -29,8 +29,14 @@ result = compress(content)
 print(f"{result.original_size} → {result.compressed_size} ({result.ratio:.0%})")
 
 # Compress with type hint + reversibility
-result = compress(big_log, content_type="log", reversible=True)
+result = compress(big_log, content_type="log", reversible=True, learn=True)
 
 # Restore original
 original = restore(result.reversible_key)
 ```
+
+`learn=True` records a verified `compressibility_predictor` label only when
+`reversible=True` restores the exact original. The ledger stores features and a
+fingerprint, never the raw content; repeated samples are deduplicated.
+The canonical test runner sets `BOTTE_NN_AUTO_LABELS=0`, so test traffic cannot
+inflate the production ledger.
