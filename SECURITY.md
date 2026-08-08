@@ -1,43 +1,75 @@
-# Security Policy
+# Security policy
 
-## Reporting a Vulnerability
+## Report a vulnerability privately
 
-If you discover a security vulnerability in Botte Secrète, please report it privately.
+Do **not** open a public GitHub issue for a suspected vulnerability.
 
-**Contact:** `sylvain.galliez@gmail.com`
+Send a private report to `sylvain.galliez@gmail.com` with:
 
-**Do not** open a public GitHub issue for security vulnerabilities.
+- the affected component and version or commit;
+- a clear description of the issue and its impact;
+- minimal reproduction steps or a proof of concept;
+- whether credentials, private data, or remote systems may be affected;
+- a suggested mitigation, if available.
 
-### What to include
-- Description of the vulnerability
-- Steps to reproduce (proof of concept preferred)
-- Potential impact
-- Suggested fix (optional)
+Avoid sending live credentials or unnecessary personal data. Encrypt sensitive
+details before sending when practical.
 
-### Response timeline
-- **48h:** Acknowledgment of receipt
-- **7 days:** Initial assessment and mitigation plan
-- **30 days:** Patch released (depending on severity)
+## Response targets
+
+The project aims to:
+
+- acknowledge a complete report within 48 hours;
+- provide an initial assessment within 7 days;
+- coordinate a fix and disclosure timeline based on severity and complexity.
+
+These are targets for a maintainer-run project, not guaranteed service-level
+agreements. Please allow time for safe reproduction and validation.
 
 ## Scope
 
-This policy covers the `botte-secrete` repository at https://github.com/zedarvates/botte-secrete.
+This policy covers code and repository automation maintained in
+`zedarvates/botte-secrete`, including:
 
-The following are **not** in scope:
-- Third-party dependencies (report to their respective maintainers)
-- Theoretical attacks requiring physical access or social engineering
+- CLI and MCP input handling;
+- bootstrap and configuration merging;
+- local and remote model adapters;
+- token, credential, path, and event-data handling;
+- archive extraction and file-system boundaries;
+- dependency and workflow configuration;
+- dashboard sanitization and public artifacts;
+- remote delegation and cluster communication.
+
+Vulnerabilities in third-party agents, model servers, cloud providers, or
+hardware are outside this repository's direct control, but reports are welcome
+when Botte integrates with those systems unsafely.
 
 ## Supported versions
 
-| Version | Supported |
-|---------|-----------|
-| latest  | ✅ |
-| < latest| ❌ |
+Security fixes target the latest code on the default branch and the most recent
+published release line. Older prereleases and development snapshots may receive
+only upgrade guidance.
 
-## Safe by design
+## Security model
 
-Botte Secrète is designed to:
-- Run fully locally with **zero cloud dependencies** by default
-- Never send data to external servers unless explicitly configured
-- Operate with **no system-level privileges** (no sudo, no daemon, no cron)
-- Be verifiable: all releases are tagged and the test suite is public
+Botte is local-first, but local resources are not implicitly trusted.
+
+- MCP arguments and model output are treated as untrusted input.
+- Deterministic workflows do not require network access.
+- Cloud providers and fresh remote checks are explicit operations.
+- Credentials belong in environment variables or an approved secret store, not
+  repository files.
+- Remote delegation must bind the endpoint to the delegated host, use HTTPS
+  outside loopback, and authenticate with an explicit token.
+- Bootstrap merges existing MCP configuration instead of deleting it.
+- Harvest is read-only and does not store raw file contents or patches.
+- Public dashboard builds exclude local operational and memory metrics.
+
+See [the architecture guide](docs/ARCHITECTURE.md) for trust boundaries and
+[the development guide](docs/DEVELOPMENT.md) for secure contribution practices.
+
+## Disclosure
+
+Please keep vulnerability details private until a fix or mitigation is available
+and a disclosure date has been coordinated. Credit will be offered unless the
+reporter prefers to remain anonymous.
