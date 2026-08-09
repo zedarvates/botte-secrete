@@ -23,6 +23,6 @@
 <rect x="250" y="470" width="820" height="54" rx="14" fill="#132238"/>
 <rect x="250" y="470" width="634.7" height="54" rx="14" fill="#ff8fab"/>
 <text class="value" x="265.0" y="506">77.4%</text>
-<text class="note" x="70" y="590">Bundled synthetic corpus · overall character reduction: 81.5% · 2026-08-06</text>
+<text class="note" x="70" y="590">Bundled synthetic corpus · overall character reduction: 81.5% · 2026-08-09</text>
 <text class="note" x="1130" y="590" text-anchor="end">Results vary by content; code is intentionally conservative.</text>
 </svg>

@@ -80,6 +80,8 @@ or `INVESTIGATE` proposals with evidence and a validation gate. It cannot edit,
 deploy, purchase, publish, or execute its recommendations; consequential moves
 require human approval and a separate implementation agent.
 
+![Monte Cristo route decision emitted by the bundled CLI](docs/assets/monte-cristo-cli.svg)
+
 ```bash
 python -m skills.monte_cristo.cli route "Should we replace this inherited architecture?" --material --pretty
 python -m skills.monte_cristo.cli template "Reassess the platform direction" --pretty

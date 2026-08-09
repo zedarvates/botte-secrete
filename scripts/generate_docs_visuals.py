@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import html
 import io
+import json
 import re
 import sys
 from contextlib import redirect_stdout
@@ -17,6 +18,7 @@ if str(REPO) not in sys.path:
 
 from scripts.benchmark_full import Benchmark
 from skills.demo.demo import run_scripted
+from skills.monte_cristo.routing import TriggerContext, evaluate_trigger
 
 
 DEFAULT_OUTPUT = REPO / "docs" / "assets"
@@ -25,7 +27,7 @@ ANSI_RE = re.compile(r"\x1b\[[0-?]*[ -/]*[@-~]")
 
 def _write(path: Path, content: str) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(content, encoding="utf-8")
+    path.write_text(content, encoding="utf-8", newline="\n")
     return path
 
 
@@ -132,6 +134,40 @@ def _monte_cristo_svg() -> str:
     ])
 
 
+def _monte_cristo_cli_svg() -> str:
+    decision = evaluate_trigger(
+        "Should we replace this inherited architecture after blue and red teams stalled?",
+        TriggerContext(
+            material_consequence=True,
+            blue_red_stalled=True,
+            inherited_frame=True,
+        ),
+    )
+    command = [
+        "$ python -m skills.monte_cristo.cli route \\",
+        '>   "Should we replace this inherited architecture after blue and red teams stalled?" \\',
+        ">   --material --blue-red-stalled --inherited-frame --pretty",
+    ]
+    lines = command + json.dumps(
+        decision.to_dict(), ensure_ascii=False, indent=2
+    ).splitlines()
+    width = 1200
+    height = len(lines) * 29 + 135
+    text_lines = [
+        f'<text x="52" y="{101 + index * 29}">{html.escape(line)}</text>'
+        for index, line in enumerate(lines)
+    ]
+    return "\n".join([
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}">',
+        '<style>text{font-family:Cascadia Mono,Consolas,monospace;font-size:19px;white-space:pre;fill:#d8e3f0}.caption{font-family:Inter,Segoe UI,Arial,sans-serif;font-size:18px;fill:#8fa7bf}</style>',
+        f'<rect width="{width}" height="{height}" rx="26" fill="#08111f"/>',
+        '<circle cx="42" cy="38" r="9" fill="#ff6b6b"/><circle cx="70" cy="38" r="9" fill="#ffd166"/><circle cx="98" cy="38" r="9" fill="#55d6be"/>',
+        '<text class="caption" x="132" y="45">monte_cristo route · actual deterministic output · offline</text>',
+        *text_lines,
+        "</svg>",
+    ])
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
@@ -141,6 +177,7 @@ def main(argv: list[str] | None = None) -> int:
         _write(args.output / "benchmark-compression.svg", _benchmark_svg(data)),
         _write(args.output / "routing-demo.svg", _demo_svg()),
         _write(args.output / "monte-cristo-governance.svg", _monte_cristo_svg()),
+        _write(args.output / "monte-cristo-cli.svg", _monte_cristo_cli_svg()),
     ]
     for path in paths:
         print(path)
