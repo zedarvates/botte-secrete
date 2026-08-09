@@ -84,6 +84,8 @@ modifier, déployer, acheter, publier, ni exécuter ses recommandations : toute
 décision conséquente exige une approbation humaine et un agent d’implémentation
 séparé.
 
+![Décision de routage Monte Cristo produite par la CLI fournie](docs/assets/monte-cristo-cli.svg)
+
 ```bash
 python -m skills.monte_cristo.cli route "Faut-il remplacer cette architecture héritée ?" --material --pretty
 python -m skills.monte_cristo.cli template "Réévaluer la direction de la plateforme" --pretty

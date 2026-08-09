@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="657" viewBox="0 0 1200 657">
+<style>text{font-family:Cascadia Mono,Consolas,monospace;font-size:19px;white-space:pre;fill:#d8e3f0}.caption{font-family:Inter,Segoe UI,Arial,sans-serif;font-size:18px;fill:#8fa7bf}</style>
+<rect width="1200" height="657" rx="26" fill="#08111f"/>
+<circle cx="42" cy="38" r="9" fill="#ff6b6b"/><circle cx="70" cy="38" r="9" fill="#ffd166"/><circle cx="98" cy="38" r="9" fill="#55d6be"/>
+<text class="caption" x="132" y="45">monte_cristo route · actual deterministic output · offline</text>
+<text x="52" y="101">$ python -m skills.monte_cristo.cli route \</text>
+<text x="52" y="130">&gt;   &quot;Should we replace this inherited architecture after blue and red teams stalled?&quot; \</text>
+<text x="52" y="159">&gt;   --material --blue-red-stalled --inherited-frame --pretty</text>
+<text x="52" y="188">{</text>
+<text x="52" y="217">  &quot;invoke&quot;: true,</text>
+<text x="52" y="246">  &quot;score&quot;: 14,</text>
+<text x="52" y="275">  &quot;threshold&quot;: 4,</text>
+<text x="52" y="304">  &quot;signals&quot;: [</text>
+<text x="52" y="333">    &quot;strategic_reset&quot;,</text>
+<text x="52" y="362">    &quot;inherited_frame&quot;,</text>
+<text x="52" y="391">    &quot;blue_red_stalemate&quot;,</text>
+<text x="52" y="420">    &quot;material_consequence&quot;,</text>
+<text x="52" y="449">    &quot;context_material_consequence&quot;,</text>
+<text x="52" y="478">    &quot;context_blue_red_stalled&quot;,</text>
+<text x="52" y="507">    &quot;context_inherited_frame&quot;</text>
+<text x="52" y="536">  ],</text>
+<text x="52" y="565">  &quot;reason&quot;: &quot;Material frame-level challenge warrants an independent outsider pass.&quot;</text>
+<text x="52" y="594">}</text>
+</svg>
