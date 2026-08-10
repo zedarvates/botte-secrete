@@ -1,0 +1,47 @@
+name: Portfolio Stack Validation
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "portfolio/**"
+      - "skills/portfolio_sync/**"
+      - "skills/llm_mcp/**"
+      - ".github/workflows/portfolio_stack_validation.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+      - name: Install project and test runner
+        run: pip install -e . pytest
+      - name: Run focused regression tests
+        run: |
+          python -m pytest -q skills/llm_mcp/test_loop_stats.py
+          python -m pytest -q skills/portfolio_sync/test_portfolio_sync.py
+      - name: Validate the actual portfolio registry
+        run: |
+          python -m skills.portfolio_sync.cli validate --registry portfolio/projects.json --json
+          python -m skills.portfolio_sync.cli summary --registry portfolio/projects.json --json > /tmp/portfolio-summary.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          report = json.loads(Path("/tmp/portfolio-summary.json").read_text(encoding="utf-8"))
+          assert report["valid"] is True
+          assert report["github_projects"] == 36
+          assert report["projects"] == 53
+          assert report["by_visibility"]["restricted"] >= 1
+          print(json.dumps({
+              "valid": report["valid"],
+              "projects": report["projects"],
+              "github_projects": report["github_projects"],
+          }, sort_keys=True))
+          PY
