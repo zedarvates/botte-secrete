@@ -49,6 +49,8 @@ command. The checked-in image is documentation, not a runtime artifact.
 
 - Text is readable at GitHub's normal README width.
 - The image has a useful alt description where embedded.
+- The README includes a visible caption stating whether the visual is measured,
+  synthetic, a deterministic fixture, or a maintained schema.
 - Metrics state whether they are measured, synthetic, partial, or sanitized.
 - The source command still runs from a clean clone.
 - No private or machine-specific data appears in the image metadata or pixels.

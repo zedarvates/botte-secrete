@@ -73,6 +73,9 @@ steps above both when they may share the same inherited assumptions.
 
 ![Monte Cristo strategic governance flow](docs/assets/monte-cristo-governance.svg)
 
+_Maintained governance schema; it explains authority and approval boundaries,
+not a runtime trace._
+
 Use it before an expensive architecture reset, research commitment, migration,
 or decision shaped by sunk cost. Do not use it for routine code review or a
 narrow verified fix. It returns bounded `KEEP`, `REPAIR`, `REPLACE`, `RETIRE`,
@@ -81,6 +84,9 @@ deploy, purchase, publish, or execute its recommendations; consequential moves
 require human approval and a separate implementation agent.
 
 ![Monte Cristo route decision emitted by the bundled CLI](docs/assets/monte-cristo-cli.svg)
+
+_Reproducible CLI capture from the bundled deterministic offline route evaluator;
+it demonstrates activation wiring, not the quality of open-ended verdicts._
 
 ```bash
 python -m skills.monte_cristo.cli route "Should we replace this inherited architecture?" --material --pretty
@@ -137,6 +143,9 @@ python -m skills.demo.cli scripted --speed 0 --no-clear
 
 ![Deterministic routing demo](docs/assets/routing-demo.svg)
 
+_Fixed offline fixture; this is reproducible demo output, not live project
+telemetry._
+
 For a real project, use `python -m skills.demo.cli live /path/to/project` or
 `botte dashboard /path/to/project --tui`. Those views read local event data;
 they do not prove savings unless the underlying measurements are present.
@@ -154,6 +163,9 @@ source, production verdicts, calibration, and rollback gate. Run `checkup` or
 `python -m skills.nn_audit.cli skills/botte_nn --json` for the current status.
 
 ![Measured reduction on bundled samples](docs/assets/benchmark-compression.svg)
+
+_Measured on the bundled synthetic samples; results vary with content. See the
+[visual provenance and regeneration notes](docs/screenshots-plan.md)._
 
 Reproduce both the benchmark chart and the routing capture:
 

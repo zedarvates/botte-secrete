@@ -75,6 +75,9 @@ l’équipe rouge le contestent ; Monte Cristo prend du recul lorsque les deux
 
 ![Flux de gouvernance stratégique de Monte Cristo](docs/assets/monte-cristo-governance.svg)
 
+_Schéma de gouvernance maintenu ; il décrit les limites d’autorité et
+d’approbation, pas une trace d’exécution._
+
 Utilisez-le avant une refonte d’architecture coûteuse, un programme de recherche,
 une migration ou une décision dominée par les coûts déjà engagés. Ne l’utilisez
 pas pour une revue de code ordinaire ou une correction étroite déjà vérifiée. Il
@@ -85,6 +88,9 @@ décision conséquente exige une approbation humaine et un agent d’implémenta
 séparé.
 
 ![Décision de routage Monte Cristo produite par la CLI fournie](docs/assets/monte-cristo-cli.svg)
+
+_Capture CLI reproductible issue de l’évaluateur de routage déterministe hors
+ligne ; elle prouve le câblage d’activation, pas la qualité de verdicts ouverts._
 
 ```bash
 python -m skills.monte_cristo.cli route "Faut-il remplacer cette architecture héritée ?" --material --pretty
@@ -141,6 +147,9 @@ python -m skills.demo.cli scripted --speed 0 --no-clear
 
 ![Démonstration déterministe du routage](docs/assets/routing-demo.svg)
 
+_Fixture hors ligne fixe ; il s’agit d’une sortie de démonstration reproductible,
+pas d’une télémétrie de projet en direct._
+
 Pour un vrai projet, utilisez `python -m skills.demo.cli live /path/to/project`
 ou `botte dashboard /path/to/project --tui`. Ces vues lisent les événements
 locaux ; elles ne prouvent une économie que si les mesures correspondantes sont
@@ -160,6 +169,10 @@ rollback. Utilisez `checkup` ou
 `python -m skills.nn_audit.cli skills/botte_nn --json` pour l'état courant.
 
 ![Réduction mesurée sur les échantillons fournis](docs/assets/benchmark-compression.svg)
+
+_Mesure effectuée sur les échantillons synthétiques fournis ; les résultats
+varient selon le contenu. Consultez les [notes de provenance et de
+régénération](docs/screenshots-plan.md)._
 
 Régénérez le graphique et la capture de routage :
 
