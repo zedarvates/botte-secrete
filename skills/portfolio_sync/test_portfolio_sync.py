@@ -127,6 +127,12 @@ def test_validate_and_summarize_registry() -> None:
             ),
             "absolute local path is forbidden",
         ),
+        (
+            lambda value: value["programs"]["research"][0].update(
+                {"notes": "file:///C:/Users/user/private/project"}
+            ),
+            "absolute local path is forbidden",
+        ),
     ],
 )
 def test_registry_rejects_unsafe_or_ambiguous_data(mutator, message: str) -> None:
@@ -157,6 +163,13 @@ def test_registry_rejects_common_sensitive_key_variants(key: str) -> None:
         validate_registry(registry)
 
 
+def test_registry_rejects_sensitive_container_value() -> None:
+    registry = copy.deepcopy(_registry())
+    registry["secrets"] = {"service": "example", "value": "live-secret-value"}
+    with pytest.raises(PortfolioError, match="sensitive value is forbidden"):
+        validate_registry(registry)
+
+
 @pytest.mark.parametrize("sentinel", ["never-store", "redacted", "env-only"])
 def test_registry_allows_safe_sensitive_sentinels(sentinel: str) -> None:
     registry = copy.deepcopy(_registry())
@@ -167,6 +180,8 @@ def test_registry_allows_safe_sensitive_sentinels(sentinel: str) -> None:
 @pytest.mark.parametrize(
     "source",
     [
+        "github:/repo",
+        "github:owner/",
         "github:-bad/repo",
         "github:bad-/repo",
         "github:owner/..",
@@ -180,10 +195,14 @@ def test_registry_rejects_invalid_github_segments(source: str) -> None:
         validate_registry(registry)
 
 
-def test_observed_inventory_rejects_invalid_github_segments(tmp_path: Path) -> None:
+@pytest.mark.parametrize("full_name", ["/repo", "owner/", "bad-/repo"])
+def test_observed_inventory_rejects_invalid_github_segments(
+    tmp_path: Path,
+    full_name: str,
+) -> None:
     observed_path = tmp_path / "repos.json"
     observed_path.write_text(
-        json.dumps({"repositories": [{"full_name": "bad-/repo"}]}),
+        json.dumps({"repositories": [{"full_name": full_name}]}),
         encoding="utf-8",
     )
     with pytest.raises(PortfolioError, match="valid full_name"):
