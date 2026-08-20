@@ -1,3 +1,5 @@
+[![Botte Secrète](docs/assets/banner.jpg)](https://github.com/zedarvates/botte-secrete)
+
 # Botte Secrète
 
 [![CI](https://github.com/zedarvates/botte-secrete/actions/workflows/ci.yml/badge.svg)](https://github.com/zedarvates/botte-secrete/actions)
