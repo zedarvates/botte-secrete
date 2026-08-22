@@ -129,7 +129,7 @@ def test_validate_and_summarize_registry() -> None:
         ),
         (
             lambda value: value["programs"]["research"][0].update(
-                {"notes": "file:///C:/Users/user/private/project"}
+                {"notes": "file:///C:/private/project"}
             ),
             "absolute local path is forbidden",
         ),
@@ -163,9 +163,9 @@ def test_registry_rejects_common_sensitive_key_variants(key: str) -> None:
         validate_registry(registry)
 
 
-def test_registry_rejects_sensitive_container_value() -> None:
+def test_registry_rejects_object_under_secrets_key() -> None:
     registry = copy.deepcopy(_registry())
-    registry["secrets"] = {"service": "example", "value": "live-secret-value"}
+    registry["secrets"] = {"provider": "github", "value": "live-secret-value"}
     with pytest.raises(PortfolioError, match="sensitive value is forbidden"):
         validate_registry(registry)
 
