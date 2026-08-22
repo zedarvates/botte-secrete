@@ -1,19 +1,19 @@
 ---
 name: portfolio_sync
-description: Validate the private portfolio registry and compare it with a pre-fetched GitHub repository inventory. Strictly read-only, deterministic, standard-library only, no network and no cloud tokens. Use to detect unregistered repositories, stale entries, visibility drift, archive drift, duplicate project IDs, forbidden absolute paths, or accidentally stored credentials before proposing changes to the project cockpit.
+description: Validate a private portfolio registry and compare it with a pre-fetched GitHub repository inventory. Strictly read-only, deterministic, standard-library only, no network and no cloud tokens. Use to detect unregistered repositories, stale entries, visibility drift, archive drift, duplicate project IDs, forbidden absolute paths, or accidentally stored credentials before proposing changes to the project cockpit.
 ---
 
 # portfolio_sync — read-only project cockpit validation
 
-`portfolio_sync` treats `portfolio/projects.json` as an index, never as a source
-of code truth. It validates the registry and produces a JSON drift report from a
-sanitized repository snapshot supplied by the caller.
+`portfolio_sync` validates a registry supplied explicitly by the caller. The
+registry is an index, never a source of code truth, and must live outside this
+public repository when it contains private project metadata.
 
 ```bash
-python -m skills.portfolio_sync.cli validate --registry portfolio/projects.json
-python -m skills.portfolio_sync.cli summary --registry portfolio/projects.json
+python -m skills.portfolio_sync.cli validate --registry /path/to/private/projects.json
+python -m skills.portfolio_sync.cli summary --registry /path/to/private/projects.json
 python -m skills.portfolio_sync.cli diff \
-  --registry portfolio/projects.json \
+  --registry /path/to/private/projects.json \
   --observed /path/to/sanitized-repositories.json \
   --json
 ```
@@ -22,7 +22,8 @@ python -m skills.portfolio_sync.cli diff \
 
 - no network calls;
 - no GitHub, Memory Hub, Kanboard, filesystem, production, or publication writes;
-- reads only the registry and optional observed inventory;
+- reads only the explicitly supplied registry and optional observed inventory;
+- no repository-local default for the private registry;
 - rejects duplicate IDs and duplicate GitHub sources;
 - rejects undeclared statuses and priorities;
 - rejects credentials under common secret-bearing keys;
