@@ -23,13 +23,13 @@ def _emit_json(value: Any) -> None:
 
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Validate or compare the read-only Botte portfolio registry."
+        description="Validate or compare a private read-only Botte portfolio registry."
     )
     common = argparse.ArgumentParser(add_help=False)
     common.add_argument(
         "--registry",
-        default="portfolio/projects.json",
-        help="Registry JSON path (default: portfolio/projects.json).",
+        required=True,
+        help="Path to the private registry JSON. No repository-local default is assumed.",
     )
     common.add_argument(
         "--json",
