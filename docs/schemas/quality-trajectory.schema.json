@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/zedarvates/botte-secrete/blob/main/docs/schemas/quality-trajectory.schema.json",
+  "title": "Botte Secrete verified quality trajectory",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "id",
+    "recorded_at",
+    "timestamp",
+    "verified",
+    "verified_by",
+    "task_fingerprint",
+    "feature_version",
+    "features",
+    "task_type",
+    "tags",
+    "route",
+    "verdict",
+    "quality_score",
+    "risk",
+    "model",
+    "harness",
+    "duration_ms",
+    "cost_usd",
+    "tokens",
+    "evidence_refs",
+    "raw_task_stored"
+  ],
+  "properties": {
+    "schema": {"const": "botte.quality-trajectory/v1"},
+    "id": {"type": "string", "pattern": "^qa_[0-9a-f]{12}$"},
+    "recorded_at": {"type": "string", "format": "date-time"},
+    "timestamp": {"type": "number"},
+    "verified": {"const": true},
+    "verified_by": {"type": "string", "minLength": 1, "maxLength": 128},
+    "task_fingerprint": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "feature_version": {"const": "hash-bow-v1"},
+    "features": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "prefixItems": [
+          {"type": "integer", "minimum": 0, "maximum": 127},
+          {"type": "number", "minimum": -1, "maximum": 1}
+        ],
+        "minItems": 2,
+        "maxItems": 2
+      }
+    },
+    "task_type": {"type": "string", "maxLength": 64},
+    "tags": {"type": "array", "items": {"type": "string", "maxLength": 64}},
+    "route": {"enum": ["deterministic", "local", "cloud", "human"]},
+    "verdict": {"enum": ["FAIL", "UNCERTAIN", "PASS", "PASS_ROBUST"]},
+    "quality_score": {"type": "number", "minimum": 0, "maximum": 1},
+    "risk": {"enum": ["low", "standard", "high", "critical"]},
+    "model": {"type": "string", "maxLength": 128},
+    "harness": {"type": "string", "maxLength": 128},
+    "duration_ms": {"type": ["number", "null"], "minimum": 0},
+    "cost_usd": {"type": ["number", "null"], "minimum": 0},
+    "tokens": {"type": ["integer", "null"], "minimum": 0},
+    "evidence_refs": {
+      "type": "array",
+      "maxItems": 20,
+      "items": {"type": "string", "maxLength": 256}
+    },
+    "raw_task_stored": {"const": false}
+  }
+}

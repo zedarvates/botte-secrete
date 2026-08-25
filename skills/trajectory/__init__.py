@@ -20,6 +20,15 @@ from pathlib import Path
 from collections import Counter
 from typing import Optional
 
+from skills.trajectory.quality import (
+    RouteAdvice,
+    advise_route,
+    embed_task,
+    load_verified,
+    quality_status,
+    record_verified,
+)
+
 TRAJECTORY_DIR = Path(__file__).parent / "store"
 TRAJECTORY_FILE = TRAJECTORY_DIR / "trajectories.jsonl"
 MAX_ENTRIES = 5000
@@ -189,3 +198,17 @@ def get_stats() -> dict:
         "total_tokens_saved": total_tokens,
         "avg_latency_sec": round(avg_latency, 3),
     }
+
+
+__all__ = [
+    "RouteAdvice",
+    "advise_route",
+    "capture",
+    "embed_task",
+    "get_stats",
+    "load",
+    "load_verified",
+    "quality_status",
+    "record_verified",
+    "search",
+]

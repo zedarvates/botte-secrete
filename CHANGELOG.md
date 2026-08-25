@@ -3,6 +3,10 @@
 ## Unreleased
 
 ### Added
+- Shadow-only Quality Compass: a project-local verified-outcome ledger, duplicate-
+  resistant hashed task features, explainable k-NN advice, `botte qa`, and lazy
+  MCP tools (`qa_status`, `qa_advise`, `qa_record`). Raw task text is not stored,
+  model self-reports are rejected as labels, and high-risk work keeps a human gate.
 - Governed, per-project Memory Hub with provenance, lifecycle, visibility,
   sensitivity, expiry, versioning, and lazy MCP tools.
 - Live loopback dashboard plus a sanitized, gated GitHub Pages artifact built

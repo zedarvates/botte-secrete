@@ -77,6 +77,7 @@ SUITES = [
     ("context_profiler", [sys.executable, "-m", "skills.context_profiler.test_context_profiler"], "skills/context_profiler/"),
     ("lazy_tools", [sys.executable, "-m", "skills.llm_mcp.test_lazy"], "skills/llm_mcp/"),
     ("events", [sys.executable, "-m", "skills.events.test_events"], "skills/events/"),
+    ("quality_compass", [sys.executable, "-m", "skills.trajectory.test_quality"], "skills/trajectory/"),
     ("demo", [sys.executable, "-m", "skills.demo.test_demo"], "skills/demo/"),
     ("bench", [sys.executable, "-m", "skills.bench.test_bench"], "skills/bench/"),
     ("hermes_bridge", [sys.executable, "-m", "skills.hermes_bridge.test_hermes_bridge"], "skills/hermes_bridge/"),

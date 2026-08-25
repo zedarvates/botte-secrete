@@ -56,6 +56,7 @@ contrôles structurés, des preuves ou une escalade explicite.
 | Domaine | Fonction | Point d’entrée |
 |---|---|---|
 | Routage | Choisit une exécution déterministe, locale ou cloud | `botte route` |
+| Mémoire qualité | Apprend des résultats vérifiés et explique les conseils k-NN en observation | `botte qa` |
 | Diagnostic | Vérifie politique, directives, métriques, sécurité et dérive | `botte doctor` |
 | Réduction du contexte | Compresse journaux, JSON, sorties d’outils et contexte sélectionné | `universal_compressor`, `context_budget` |
 | Ceinture micro-NN | Fournit des indices de routage avec de petits classifieurs, pas des LLM | `botte belt` |

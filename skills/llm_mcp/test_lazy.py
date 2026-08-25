@@ -66,6 +66,9 @@ def main() -> int:
     _ok("find_tool is deterministic",
         find_tool("route a task locally", TOOLS) == find_tool("route a task locally", TOOLS),
         state)
+    qa_matches = [item["name"] for item in find_tool("quality knn advice", TOOLS)["matches"]]
+    _ok("quality-language discovery surfaces qa_advise",
+        "qa_advise" in qa_matches, state)
 
     # protocol-level: tools/list is lazy by default
     saved = os.environ.pop("BOTTE_MCP_LAZY_TOOLS", None)
@@ -110,6 +113,43 @@ def main() -> int:
                 and feedback_payload["feedback_id"] == feedback_id, state)
         finally:
             al_mod.DATA_DIR = old_data_dir
+
+    with tempfile.TemporaryDirectory() as qa_project:
+        qa_record_call = handle({
+            "jsonrpc": "2.0", "id": 5, "method": "tools/call",
+            "params": {"name": "qa_record", "arguments": {
+                "task": "summarize a verified parser test",
+                "project": qa_project,
+                "route": "local",
+                "verdict": "PASS",
+                "verified_by": "tests:pytest",
+            }},
+        })
+        qa_record = json.loads(qa_record_call["result"]["content"][0]["text"])
+        _ok("qa_record persists a verified outcome through MCP",
+            qa_record["verified"] is True and qa_record["raw_task_stored"] is False,
+            state)
+
+        qa_advice_call = handle({
+            "jsonrpc": "2.0", "id": 6, "method": "tools/call",
+            "params": {"name": "qa_advise", "arguments": {
+                "task": "deploy the parser fix", "project": qa_project,
+                "risk": "high",
+            }},
+        })
+        qa_advice = json.loads(qa_advice_call["result"]["content"][0]["text"])
+        _ok("qa_advise preserves the human gate through MCP",
+            qa_advice["status"] == "gated" and qa_advice["acted"] is False,
+            state)
+
+        qa_status_call = handle({
+            "jsonrpc": "2.0", "id": 7, "method": "tools/call",
+            "params": {"name": "qa_status", "arguments": {"project": qa_project}},
+        })
+        qa_status = json.loads(qa_status_call["result"]["content"][0]["text"])
+        _ok("qa_status exposes maturity through MCP",
+            qa_status["verified_samples"] == 1 and qa_status["mode"] == "shadow",
+            state)
 
     # protocol-level: a NON-core tool is still callable by name even though it
     # isn't in the lazy listing — lazy only hides the catalog, not execution.
