@@ -50,6 +50,38 @@ print(advice.to_dict())
 print(quality_status("."))
 ```
 
+Execution paths should use the bounded envelope adapter instead of calling the
+verified ledger directly:
+
+```python
+from skills.trajectory import emit_outcome
+
+emit_outcome(
+    "summarize parser failures",
+    project_root=".",
+    execution_id="ci-run-42/job-3",  # hashed, never stored verbatim
+    source="ci",
+    route="local",
+    status="PASS",
+    verified_by="ci:pytest",
+    evidence_refs=("pytest:test_parser",),
+    harness="local-extract-v1",
+)
+```
+
+The envelope accepts partial facts and lifecycle states (`PARTIAL`, `FAIL`,
+`UNCERTAIN`, `PASS`, `PASS_ROBUST`, `ABSTAINED`, `ESCALATED`, and
+`APPROVAL_REQUIRED`). It writes a private, idempotent status row. A verdict is
+promoted to the k-NN support ledger only when both an allowed external verifier
+and at least one evidence reference are present. Replaying the same execution
+and outcome returns the existing row and cannot add another label.
+
+The local harness is the first live adapter. Deterministic schema, grounding,
+and citation checks can produce verified `PASS`, `FAIL`, or `UNCERTAIN` labels;
+gates, abstentions, and escalation remain explicit without treating the final
+unverified model answer as evidence. Router, Codex/Hermes, CI, and Kanboard
+adapters remain follow-up integration points.
+
 ## Quality contract
 
 - Valid verdicts: `FAIL`, `UNCERTAIN`, `PASS`, `PASS_ROBUST`.
@@ -84,7 +116,8 @@ abstains and leaves the deterministic router in control.
 | Path | Content |
 |---|---|
 | `<project>/.botte/quality-trajectories.jsonl` | Private verified support set |
-| `<project>/.botte/events.jsonl` | Compact `qa_trajectory` and `qa_shadow_advice` events |
+| `<project>/.botte/quality-outcomes.jsonl` | Private bounded execution/status envelopes |
+| `<project>/.botte/events.jsonl` | Compact `qa_outcome`, `qa_trajectory`, and `qa_shadow_advice` events |
 | `skills/trajectory/store/trajectories.jsonl` | Legacy solver fixtures/history |
 
 Project-local `.botte/` data is operational state and must not be committed.

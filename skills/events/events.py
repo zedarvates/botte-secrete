@@ -27,7 +27,7 @@ KEEP_FRACTION = 0.5            # keep the newest half on rotation
 
 KNOWN_KINDS = {"route", "cache", "escalate", "nn_out", "fusion",
                "loop_start", "loop_decision", "loop_stop", "loop_saving",
-               "qa_trajectory", "qa_shadow_advice"}
+               "qa_outcome", "qa_trajectory", "qa_shadow_advice"}
 
 
 def _events_path(project_root: str | Path) -> Path:

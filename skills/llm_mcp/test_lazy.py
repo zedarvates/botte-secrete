@@ -123,6 +123,7 @@ def main() -> int:
                 "route": "local",
                 "verdict": "PASS",
                 "verified_by": "tests:pytest",
+                "evidence_refs": ["pytest:test_parser"],
             }},
         })
         qa_record = json.loads(qa_record_call["result"]["content"][0]["text"])

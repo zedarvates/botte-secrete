@@ -187,7 +187,8 @@ TOOLS = [
         "name": "qa_record",
         "description": "Record one externally verified quality outcome in the project's "
                        "private support set. Raw task text is hashed into local features; "
-                       "model self-reports are rejected as labels.",
+                       "model self-reports are rejected as labels; at least one "
+                       "external evidence reference is required.",
         "inputSchema": {
             "type": "object",
             "properties": {
@@ -210,9 +211,10 @@ TOOLS = [
                 "duration_ms": {"type": "number", "minimum": 0},
                 "cost_usd": {"type": "number", "minimum": 0},
                 "tokens": {"type": "integer", "minimum": 0},
-                "evidence_refs": {"type": "array", "items": {"type": "string"}},
+                "evidence_refs": {"type": "array", "minItems": 1, "maxItems": 20,
+                                  "items": {"type": "string"}},
             },
-            "required": ["task", "route", "verdict", "verified_by"],
+            "required": ["task", "route", "verdict", "verified_by", "evidence_refs"],
         },
     },
     {

@@ -59,6 +59,7 @@ _VERIFIER_FAMILIES = {
 _WORD = re.compile(r"[\w+#./-]+", re.UNICODE)
 _FINGERPRINT = re.compile(r"^[0-9a-f]{64}$")
 _TRAJECTORY_ID = re.compile(r"^qa_[0-9a-f]{12}$")
+_OUTCOME_ID = re.compile(r"^qo_[0-9a-f]{16}$")
 
 
 @dataclass(frozen=True)
@@ -131,6 +132,23 @@ def _normalise_tags(tags: Iterable[str]) -> tuple[str, ...]:
 def _task_material(task: str, task_type: str, tags: Sequence[str]) -> str:
     normal = unicodedata.normalize("NFKC", task).casefold()
     return "\n".join((normal, task_type.casefold(), "|".join(tags)))
+
+
+def fingerprint_task(task: str, task_type: str = "", tags: Iterable[str] = ()) -> str:
+    """Return the privacy-safe fingerprint used by quality records."""
+    task = _clean_text(task, field="task", maximum=20_000)
+    task_type = _optional_text(task_type, field="task_type", maximum=64)
+    normal_tags = _normalise_tags(tags)
+    material = _task_material(task, task_type, normal_tags)
+    return hashlib.sha256(material.encode("utf-8")).hexdigest()
+
+
+def trusted_verifier(value: object) -> bool:
+    """Whether ``value`` names a verifier family allowed to create labels."""
+    if not isinstance(value, str) or not value.strip():
+        return False
+    family = value.strip().casefold().split(":", 1)[0].replace("-", "_")
+    return family in _VERIFIER_FAMILIES
 
 
 def _feature_names(task: str, task_type: str, tags: Sequence[str]) -> list[str]:
@@ -245,6 +263,11 @@ def _valid_loaded_record(item: object) -> bool:
         isinstance(tokens, bool) or not isinstance(tokens, int) or tokens < 0
     ):
         return False
+    outcome_id = item.get("outcome_id")
+    if outcome_id is not None and (
+        not isinstance(outcome_id, str) or not _OUTCOME_ID.fullmatch(outcome_id)
+    ):
+        return False
     return True
 
 
@@ -284,6 +307,7 @@ def record_verified(
     cost_usd: float | None = None,
     tokens: int | None = None,
     evidence_refs: Iterable[str] = (),
+    outcome_id: str = "",
 ) -> dict:
     """Persist one externally verified outcome and return its compact record."""
     task = _clean_text(task, field="task", maximum=20_000)
@@ -298,8 +322,7 @@ def record_verified(
         raise ValueError(f"risk must be one of: {', '.join(RISKS)}")
 
     verifier = _clean_text(verified_by, field="verified_by", maximum=128)
-    family = verifier.casefold().split(":", 1)[0].replace("-", "_")
-    if family not in _VERIFIER_FAMILIES:
+    if not trusted_verifier(verifier):
         allowed = ", ".join(sorted(_VERIFIER_FAMILIES))
         raise ValueError(
             "verified_by must name an external verifier family "
@@ -332,6 +355,19 @@ def record_verified(
         raise ValueError("evidence_refs must contain at most 20 items")
     evidence = [_clean_text(ref, field="evidence_ref", maximum=256)
                 for ref in evidence_values]
+    if not evidence:
+        raise ValueError("evidence_refs must contain at least one external evidence reference")
+    outcome_id = _optional_text(outcome_id, field="outcome_id", maximum=19)
+    if outcome_id and not _OUTCOME_ID.fullmatch(outcome_id):
+        raise ValueError("outcome_id must match qo_<16 lowercase hex characters>")
+    if outcome_id:
+        existing = next(
+            (item for item in load_verified(project_root)
+             if item.get("outcome_id") == outcome_id),
+            None,
+        )
+        if existing is not None:
+            return existing
     now = time.time()
     record = {
         "schema": SCHEMA,
@@ -357,6 +393,8 @@ def record_verified(
         "evidence_refs": evidence,
         "raw_task_stored": False,
     }
+    if outcome_id:
+        record["outcome_id"] = outcome_id
     _append(_quality_path(project_root), record)
     log_event(
         EVENT_KIND,
@@ -625,6 +663,6 @@ def quality_status(project_root: str | Path = ".") -> dict:
 
 
 __all__ = [
-    "RouteAdvice", "advise_route", "embed_task", "load_verified",
-    "quality_status", "record_verified",
+    "RouteAdvice", "advise_route", "embed_task", "fingerprint_task",
+    "load_verified", "quality_status", "record_verified", "trusted_verifier",
 ]

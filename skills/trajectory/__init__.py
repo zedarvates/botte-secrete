@@ -28,6 +28,7 @@ from skills.trajectory.quality import (
     quality_status,
     record_verified,
 )
+from skills.trajectory.outcome import emit_outcome, load_outcomes
 
 TRAJECTORY_DIR = Path(__file__).parent / "store"
 TRAJECTORY_FILE = TRAJECTORY_DIR / "trajectories.jsonl"
@@ -205,9 +206,11 @@ __all__ = [
     "advise_route",
     "capture",
     "embed_task",
+    "emit_outcome",
     "get_stats",
     "load",
     "load_verified",
+    "load_outcomes",
     "quality_status",
     "record_verified",
     "search",

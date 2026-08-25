@@ -3,6 +3,9 @@
 ## Unreleased
 
 ### Added
+- Idempotent `botte.quality-outcome/v1` envelopes for partial and verified
+  execution results, with the local harness as the first live adapter. Only
+  externally evidenced verdicts enter the shadow Quality Compass ledger.
 - Shadow-only Quality Compass: a project-local verified-outcome ledger, duplicate-
   resistant hashed task features, explainable k-NN advice, `botte qa`, and lazy
   MCP tools (`qa_status`, `qa_advise`, `qa_record`). Raw task text is not stored,
