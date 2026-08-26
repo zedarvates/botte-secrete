@@ -73,7 +73,7 @@ The routing utility is evaluated in this order:
 |---|---|---|---|
 | 0 | Project-local verified ledger, privacy-preserving features, duplicate resistance | Focused tests and schema | Implemented in this change |
 | 1 | Explainable k-NN baseline via Python, `botte qa`, MCP, and events | Shadow-only; never acts | Implemented in this change |
-| 2 | Automatic outcome envelopes from harness, router, Codex runs, and CI | External evidence required; no backend-success labels | Harness, auto-router, and Codex/Hermes manifests implemented; CI/Kanboard next |
+| 2 | Automatic outcome envelopes from harness, router, Codex runs, and CI | External evidence required; no backend-success labels | Harness, auto-router, Codex/Hermes manifests, and CI implemented; Kanboard next |
 | 3 | Dashboard card: quality, coverage, abstentions, route comparison, next step | Public snapshots contain no local task data | Implemented in PR for #75 |
 | 4 | Temporal benchmark: deterministic vs k-NN vs current micro-NN | Leakage-resistant harness implemented; verified replay data still required | Collecting evidence |
 | 5 | Specialized micro-NN or micro-LLM workers | Existing micro-NN inventory reaches G2 or is retired | Gated |
@@ -115,12 +115,17 @@ This envelope becomes the shared contract for Codex, Hermes, local workers,
 Kanboard, CI, and the dashboard. Each integration may emit a partial envelope,
 but it cannot invent missing evidence.
 
-The Wave 2 contract is `botte.quality-outcome/v1`, emitted by the local harness
-and auto-router into private project state. It represents partial, failure, uncertainty,
+The Wave 2 contract is `botte.quality-outcome/v1`, emitted by the local harness,
+auto-router, bounded agent manifests, and primary CI into private project state.
+It represents partial, failure, uncertainty,
 abstention, escalation, and approval states without persisting task text or raw
 execution IDs. A replay-stable outcome ID prevents duplicate status rows and
 duplicate quality labels. Only envelopes with an allowed external verifier and
 an evidence reference are promoted into `botte.quality-trajectory/v1`.
+
+CI uploads only `botte.ci-outcome-public/v1`, a separate sanitized summary. The
+private ledger remains ephemeral to the job and is never published as an
+artifact. Kanboard consumption is the remaining Wave 2 adapter.
 
 ## Acceptance criteria
 

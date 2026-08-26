@@ -83,6 +83,7 @@ SUITES = [
     ("quality_compass", [sys.executable, "-m", "skills.trajectory.test_quality"], "skills/trajectory/"),
     ("quality_outcomes", [sys.executable, "-m", "skills.trajectory.test_outcome"], "skills/trajectory/"),
     ("agent_run_manifests", [sys.executable, "-m", "skills.trajectory.test_agent_run"], "skills/trajectory/"),
+    ("ci_outcomes", [sys.executable, "-m", "skills.trajectory.test_ci"], "skills/trajectory/"),
     ("quality_routing_benchmark", [sys.executable, "-m", "skills.trajectory.test_benchmark"], "skills/trajectory/"),
     ("asset_quality", [sys.executable, "-m", "skills.asset_quality.test_asset_quality"], "skills/asset_quality/"),
     ("demo", [sys.executable, "-m", "skills.demo.test_demo"], "skills/demo/"),

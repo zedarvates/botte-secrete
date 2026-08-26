@@ -76,12 +76,14 @@ promoted to the k-NN support ledger only when both an allowed external verifier
 and at least one evidence reference are present. Replaying the same execution
 and outcome returns the existing row and cannot add another label.
 
-The local harness, auto-router, and bounded Codex/Hermes run manifests are live
-adapters. Deterministic schema, grounding,
+The local harness, auto-router, bounded Codex/Hermes run manifests, and primary
+GitHub CI matrix are live adapters. Deterministic schema, grounding,
 and citation checks can produce verified `PASS`, `FAIL`, or `UNCERTAIN` labels;
 gates, abstentions, and escalation remain explicit without treating the final
-unverified model answer as evidence. CI and Kanboard adapters remain follow-up
-integration points.
+unverified model answer as evidence. CI writes the private envelope only inside
+the ephemeral job workspace and uploads a separate sanitized three-line summary;
+run IDs, fingerprints, paths, and evidence details are not published. Kanboard
+status consumption remains the follow-up integration point.
 
 Codex can call the MCP tool `qa_agent_run`; Hermes can use the same MCP tool or
 the `botte_qa_agent_run` function bridge. Both accept the strict

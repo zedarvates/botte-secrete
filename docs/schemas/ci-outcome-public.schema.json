@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/zedarvates/botte-secrete/blob/main/docs/schemas/ci-outcome-public.schema.json",
+  "title": "Botte Secrete sanitized CI outcome",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "outcome_id", "state", "reason", "next_safe_action",
+    "status", "verified", "evidence_count", "shadow_only",
+    "activation_allowed", "privacy"
+  ],
+  "properties": {
+    "schema": {"const": "botte.ci-outcome-public/v1"},
+    "outcome_id": {"type": "string", "pattern": "^qo_[0-9a-f]{16}$"},
+    "state": {"enum": ["grounded", "failing", "uncertain", "collecting"]},
+    "reason": {"type": "string", "minLength": 1, "maxLength": 256},
+    "next_safe_action": {"type": "string", "minLength": 1, "maxLength": 256},
+    "status": {"enum": ["PARTIAL", "FAIL", "UNCERTAIN", "PASS_ROBUST"]},
+    "verified": {"type": "boolean"},
+    "evidence_count": {"type": "integer", "minimum": 0, "maximum": 20},
+    "shadow_only": {"const": true},
+    "activation_allowed": {"const": false},
+    "privacy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["raw_task", "execution_fingerprint", "local_path", "evidence_detail"],
+      "properties": {
+        "raw_task": {"const": false},
+        "execution_fingerprint": {"const": false},
+        "local_path": {"const": false},
+        "evidence_detail": {"const": false}
+      }
+    }
+  }
+}
