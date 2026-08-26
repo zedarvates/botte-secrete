@@ -75,6 +75,7 @@ SUITES = [
     ("harness_executor", [sys.executable, "-m", "skills.local_harness.test_executor"], "skills/local_harness/"),
     ("harness_bench", [sys.executable, "-m", "skills.local_harness.test_bench"], "skills/local_harness/"),
     ("migration_audit", [sys.executable, "-m", "skills.migration_audit.test_migration_audit"], "skills/migration_audit/"),
+    ("memory_quarantine", [sys.executable, "-m", "skills.memory_hub.test_quarantine"], "skills/memory_hub/"),
     ("calibration", [sys.executable, "-m", "skills.botte_nn.test_calibration"], "skills/botte_nn/"),
     ("audit_dag", [sys.executable, "-m", "skills.audit_dag.test_audit_dag"], "skills/audit_dag/"),
     ("nn_audit", [sys.executable, "-m", "skills.nn_audit.test_nn_audit"], "skills/nn_audit/"),

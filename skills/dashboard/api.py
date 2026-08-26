@@ -69,7 +69,8 @@ def load_memory_hub_metrics(base_dir: str | Path | None = None) -> dict:
     root = Path(base_dir) if base_dir is not None else Path(
         os.environ.get("BOTTE_MEMORY_HUB_DIR", Path.home() / ".botte" / "memory_hub")
     )
-    result = {"entries": 0, "projects": 0, "by_status": {}, "by_asset": {}}
+    result = {"entries": 0, "quarantined": 0, "projects": 0,
+              "by_status": {}, "by_asset": {}}
     if not root.is_dir():
         return result
     try:
@@ -81,6 +82,7 @@ def load_memory_hub_metrics(base_dir: str | Path | None = None) -> dict:
             for project_id in projects:
                 stats = store.stats(project_id)
                 result["entries"] += int(stats["total"])
+                result["quarantined"] += int(stats.get("quarantined", 0))
                 for key, value in stats["by_status"].items():
                     result["by_status"][key] = result["by_status"].get(key, 0) + value
                 for key, value in stats["by_asset"].items():
@@ -120,6 +122,7 @@ def load_metrics(*, test_summary_path: str | Path | None = None,
     hub = load_memory_hub_metrics(memory_hub_dir)
     legacy = memory_stats()
     dl_dict["memory_entries"] = hub["entries"]
+    dl_dict["memory_quarantined"] = hub["quarantined"]
     dl_dict["memory_projects"] = hub["projects"]
     dl_dict["memory_by_status"] = hub["by_status"]
     dl_dict["memory_by_asset"] = hub["by_asset"]

@@ -98,6 +98,11 @@ def main() -> int:
             with MemoryStore(base_dir=memory_root) as store:
                 store.store(MemoryEntry(key="fixture", value="MEMORY_CONTENT_CANARY",
                                         project_id="dashboard_test"))
+                store.store(MemoryEntry(
+                    key="quarantined", value="QUARANTINE_CONTENT_CANARY",
+                    project_id="dashboard_test", source_type="web",
+                    source_uri="https://example.invalid", run_id="dashboard-run",
+                ))
 
             m = load_metrics(test_summary_path=summary, memory_hub_dir=memory_root,
                              quality_project_root=api_root)
@@ -105,8 +110,10 @@ def main() -> int:
                 m["tests_passed"] == 711 and m["tests_failed"] == 0
                 and m["test_suites"] == 46)
             _ok("api exposes Memory Hub aggregates without entry contents",
-                m["memory_entries"] == 1 and m["memory_projects"] == 1
-                and "MEMORY_CONTENT_CANARY" not in json.dumps(m))
+                m["memory_entries"] == 2 and m["memory_quarantined"] == 1
+                and m["memory_projects"] == 1
+                and "MEMORY_CONTENT_CANARY" not in json.dumps(m)
+                and "QUARANTINE_CONTENT_CANARY" not in json.dumps(m))
             _ok("api exposes the local Quality Compass contract",
                 m["quality_compass"]["schema"] == "botte.quality-compass-card/v1"
                 and m["quality_compass"]["state"] == "empty")
