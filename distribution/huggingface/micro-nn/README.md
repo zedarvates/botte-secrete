@@ -1,32 +1,34 @@
 ---
 license: mit
-library_name: botte-secrete
+library_name: generic
 tags:
 - tiny-neural-network
+- micro-ml
+- rust
+- numpy
 - local-first
-- routing
-- edge-ai
-- cpu
+- botte-secrete
+- agent-routing
+- edge-inference
 ---
 
-# Botte Secrète Micro-NN Belt
+# Botte Nano-NN — tiny classifiers for agent routing
 
-Eleven tiny feed-forward classifiers used as **advisory routing hints** inside
-[Botte Secrète](https://github.com/zedarvates/botte-secrete). They are not
-language models and do not generate content.
+MIT-licensed feed-forward classifiers used as **advisory hints** by
+[Botte Secrète](https://github.com/zedarvates/botte-secrete), a local-first
+control plane for AI coding agents. These are classifiers, not language models:
+they do not generate text and a prediction is never proof that a task succeeded.
 
-## Grounding status
+## Current status
 
-- Four models have reproducible distillation/training paths and guards.
-- Seven predictors remain observation-only while their label provenance,
-  temporal evaluation, calibration, drift, and rollback gates are completed.
-- Low-confidence output abstains. A prediction is never proof that a task
-  succeeded.
+The authoritative source currently wires **11 micro-NN predictors**. Four have
+reproducible training or distillation paths and guards; seven remain
+observation-only until label provenance, temporal evaluation, calibration,
+drift detection, and rollback are complete.
 
-The authoritative, model-by-model maturity table is the
-[Micro-NN Grounding Roadmap](https://github.com/zedarvates/botte-secrete/blob/main/docs/plans/2026-08-06_micro-nn-grounding-roadmap.md).
-
-## Use from the source repository
+The model-by-model status is maintained in the
+[grounding roadmap](https://github.com/zedarvates/botte-secrete/blob/main/docs/plans/2026-08-06_micro-nn-grounding-roadmap.md).
+Run the audit instead of inferring maturity from the presence of a weight file:
 
 ```bash
 git clone https://github.com/zedarvates/botte-secrete.git
@@ -36,21 +38,38 @@ python -m skills.nn_audit.cli skills/botte_nn --json
 python -m skills.botte_nn.cli list
 ```
 
-Weights are JSON files under `skills/botte_nn/models/`; Python inference is
-available without compiling Rust. The optional Rust implementation reads the
-same format.
+## Where it is used
+
+- [Botte Secrète micro-NN belt](https://github.com/zedarvates/botte-secrete/tree/main/skills/botte_nn)
+- [Botte Secrète router integration](https://github.com/zedarvates/botte-secrete/tree/main/skills/auto_router)
+- [MCP gateway](https://github.com/zedarvates/botte-secrete/tree/main/skills/mcp_gateway)
+
+## Inference
+
+Python inference reads the JSON weights directly. The optional Rust binary uses
+the same format.
+
+```bash
+python -m skills.botte_nn.cli predict \
+  skills/botte_nn/models/effort_classifier.json \
+  --input 0.1 0.2 0.8 0.0
+```
+
+Feature order and normalization are part of each model's contract. Do not pass
+anonymous vectors copied from an unrelated task; use the named extractors in
+[`features.py`](https://github.com/zedarvates/botte-secrete/blob/main/skills/botte_nn/features.py).
 
 ## Intended use and limits
 
-Use these classifiers to compare cheap local routing hypotheses in shadow mode.
-Do not use them as safety, legal, licensing, publishing, or deployment gates.
-Metrics from the bundled synthetic corpus are regression checks, not general
-production-quality claims.
+Use the models for cheap local comparisons and shadow routing experiments.
+Low-confidence predictions must abstain or escalate. Do not use them as safety,
+legal, licensing, publishing, or deployment gates. Bundled fixtures test
+regressions; they do not prove production generalization or a universal token
+saving percentage.
 
-Source and issue tracker:
+## Reproducibility and licence
+
+Source, training code, feature contracts, tests, and issues:
 [zedarvates/botte-secrete](https://github.com/zedarvates/botte-secrete).
 
-## Licence
-
-MIT. See the source repository's
-[LICENSE](https://github.com/zedarvates/botte-secrete/blob/main/LICENSE).
+Released under the [MIT License](https://github.com/zedarvates/botte-secrete/blob/main/LICENSE).

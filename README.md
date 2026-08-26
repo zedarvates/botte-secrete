@@ -172,11 +172,12 @@ explainable k-NN baseline advises in shadow mode. The bundled
 [mesh report](examples/asset-quality/mesh-report.json) is a complete input
 example. No raw asset bytes or local paths enter its verified memory.
 
-Hugging Face cards for the [micro-NN belt](distribution/huggingface/micro-nn/README.md)
-and [Asset Quality Memory k-NN](distribution/huggingface/asset-quality-knn/README.md)
-are staged with MIT metadata. Their final Hub URLs will be added here after the
-owner namespace and existing repositories are verified; see the
-[publication checklist](docs/huggingface-publication.md).
+The existing MIT-licensed
+[Botte Nano-NN repository on Hugging Face](https://huggingface.co/zedgamer/botte-nano-nn)
+hosts a portable snapshot of the micro-NN format. Its source, feature contracts,
+tests, and maturity status remain authoritative here. A separate
+[Asset Quality Memory k-NN card](distribution/huggingface/asset-quality-knn/README.md)
+is staged but not yet published; see the [publication checklist](docs/huggingface-publication.md).
 
 ![Measured reduction on bundled samples](docs/assets/benchmark-compression.svg)
 

@@ -178,10 +178,12 @@ k-NN explicable et isolé par famille conseille en mode observation. Un
 [rapport de maillage complet](examples/asset-quality/mesh-report.json) est
 fourni. Aucun octet d'asset ni chemin local n'entre dans la mémoire vérifiée.
 
-Les cartes Hugging Face de la [ceinture micro-NN](distribution/huggingface/micro-nn/README.md)
-et de la [mémoire k-NN des assets](distribution/huggingface/asset-quality-knn/README.md)
-sont préparées avec les métadonnées MIT. Les URL finales seront ajoutées ici
-après vérification du compte propriétaire et des deux dépôts existants ; voir la
+Le dépôt MIT existant
+[Botte Nano-NN sur Hugging Face](https://huggingface.co/zedgamer/botte-nano-nn)
+héberge un instantané portable du format micro-NN. Le code source, les contrats
+de caractéristiques, les tests et l'état de maturité restent autoritaires ici.
+Une carte séparée pour la [mémoire k-NN des assets](distribution/huggingface/asset-quality-knn/README.md)
+est préparée mais pas encore publiée ; voir la
 [check-list de publication](docs/huggingface-publication.md).
 
 ![Réduction mesurée sur les échantillons fournis](docs/assets/benchmark-compression.svg)
