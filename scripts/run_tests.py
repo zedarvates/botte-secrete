@@ -75,6 +75,7 @@ SUITES = [
     ("calibration", [sys.executable, "-m", "skills.botte_nn.test_calibration"], "skills/botte_nn/"),
     ("audit_dag", [sys.executable, "-m", "skills.audit_dag.test_audit_dag"], "skills/audit_dag/"),
     ("nn_audit", [sys.executable, "-m", "skills.nn_audit.test_nn_audit"], "skills/nn_audit/"),
+    ("hf_provenance", [sys.executable, "-m", "skills.hf_provenance.test_hf_provenance"], "skills/hf_provenance/"),
     ("security_scanner", [sys.executable, "-m", "skills.security_scanner.test_security_scanner"], "skills/security_scanner/"),
     ("context_profiler", [sys.executable, "-m", "skills.context_profiler.test_context_profiler"], "skills/context_profiler/"),
     ("lazy_tools", [sys.executable, "-m", "skills.llm_mcp.test_lazy"], "skills/llm_mcp/"),
