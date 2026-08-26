@@ -3,6 +3,9 @@
 ## Unreleased
 
 ### Added
+- Deterministic `MIGRATION_AUDIT` stage between builder and validator, detecting
+  legacy markers, stale paths, duplicate old/new entry points, and missing
+  migration acceptance markers without executing project code.
 - Idempotent `botte.quality-outcome/v1` envelopes for partial and verified
   execution results, with the local harness as the first live adapter. Only
   externally evidenced verdicts enter the shadow Quality Compass ledger.

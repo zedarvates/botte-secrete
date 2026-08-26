@@ -66,6 +66,13 @@ _AGENT_CATALOG: dict[str, dict] = {
         "description": "Exploration repo",
         "requires": [],
     },
+    "migration_audit": {
+        "name": "migration_audit",
+        "skill": "migration_audit",
+        "command": [sys.executable, "-m", "skills.migration_audit.cli"],
+        "description": "Gate deterministic entre BUILDER et VALIDATOR",
+        "requires": [],
+    },
     "test": {
         "name": "test",
         "skill": None,  # shell command
@@ -118,6 +125,7 @@ _BUILTIN_PLANS: dict[str, list[str]] = {
     "full": ["fast_context", "porthos", "rochefort", "dartagnan", "security", "test"],
     "security": ["fast_context", "security"],
     "test-only": ["test"],
+    "migration-gate": ["migration_audit"],
 }
 
 
@@ -147,6 +155,13 @@ class MetaHarness:
         Validates dependencies and orders steps correctly.
         Falls back to command execution if a Botte skill is not found.
         """
+        normalized = {
+            name.lower().replace("-", "_").replace(" ", "_") for name in agents
+        }
+        if {"builder", "validator"} <= normalized:
+            from skills.migration_audit.stage import insert_migration_audit_stage
+            agents = insert_migration_audit_stage(agents)
+
         plan = PipelinePlan(
             name="-".join(agents),
             created_at=time.time(),
