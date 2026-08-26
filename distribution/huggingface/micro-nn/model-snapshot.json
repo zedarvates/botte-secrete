@@ -1,0 +1,232 @@
+{
+  "block_reasons": [
+    "Hub snapshot does not contain the complete source inventory",
+    "Hub snapshot contains files absent from the authoritative source",
+    "shared Hub files do not match authoritative SHA-256 digests",
+    "authoritative source models are missing provenance metadata",
+    "authoritative source models are not grounded by nn_audit"
+  ],
+  "comparison": {
+    "exact_matches": [],
+    "hash_mismatches": [
+      "anomaly_detector.json",
+      "binary_router.json",
+      "effort_classifier.json",
+      "error_classifier.json"
+    ],
+    "hub_model_count": 6,
+    "hub_only": [
+      "priority_estimator.json",
+      "token_estimator.json"
+    ],
+    "invalid_source_json": [],
+    "missing_on_hub": [
+      "cloud_escalation_predictor.json",
+      "compressibility_predictor.json",
+      "context_pruning_predictor.json",
+      "response_length_predictor.json",
+      "semantic_cache_hit_predictor.json",
+      "skip_agent_predictor.json",
+      "tool_call_predictor.json"
+    ],
+    "shared": [
+      "anomaly_detector.json",
+      "binary_router.json",
+      "effort_classifier.json",
+      "error_classifier.json"
+    ],
+    "source_missing_provenance": [
+      "error_classifier.json"
+    ],
+    "source_model_count": 11,
+    "source_not_grounded": [
+      "cloud_escalation_predictor.json",
+      "compressibility_predictor.json",
+      "context_pruning_predictor.json",
+      "error_classifier.json",
+      "response_length_predictor.json",
+      "semantic_cache_hit_predictor.json",
+      "skip_agent_predictor.json",
+      "tool_call_predictor.json"
+    ]
+  },
+  "hub_models": [
+    {
+      "file": "anomaly_detector.json",
+      "json_valid": true,
+      "provenance_keys": [],
+      "sha256": "231ed71ff05b4a5caf555369a9bee69d87a3c9c5d7d875e6952c5779d71d4253",
+      "size_bytes": 2391
+    },
+    {
+      "file": "binary_router.json",
+      "json_valid": true,
+      "provenance_keys": [],
+      "sha256": "aaac8e4f3041260c072d682f13b16d74e21b3dc5bcb4e09c3ee752882707d427",
+      "size_bytes": 1482
+    },
+    {
+      "file": "effort_classifier.json",
+      "json_valid": true,
+      "provenance_keys": [],
+      "sha256": "1e5e803b2b97a9dde3846166a7bd3d2792bbceb4496d268ec84a6dba64f3c30b",
+      "size_bytes": 2815
+    },
+    {
+      "file": "error_classifier.json",
+      "json_valid": true,
+      "provenance_keys": [],
+      "sha256": "fb7bac1fd3e3b92a4664a7e1547f2fea797fcfb1b0dc4f63f74f8e312e13d88b",
+      "size_bytes": 8583
+    },
+    {
+      "file": "priority_estimator.json",
+      "json_valid": true,
+      "provenance_keys": [],
+      "sha256": "45b9620bd5d7719d5875703c5f7e79e99d538e6c505da994c4996596e25de4d5",
+      "size_bytes": 5455
+    },
+    {
+      "file": "token_estimator.json",
+      "json_valid": true,
+      "provenance_keys": [],
+      "sha256": "0a503a2007101376abfaec6aaee85c0219b2d95236826e80e7e248e2a989a937",
+      "size_bytes": 6107
+    }
+  ],
+  "hub_repo": "zedgamer/botte-nano-nn",
+  "hub_revision": "7775a8aedc1f21c4e9a82929de9cd8a0aa348f35",
+  "publish_weights_allowed": false,
+  "schema_version": 1,
+  "source_models": [
+    {
+      "file": "anomaly_detector.json",
+      "grounded": true,
+      "grounding_verdict": "grounded",
+      "json_valid": true,
+      "provenance_keys": [
+        "eval_accuracy",
+        "samples",
+        "trained_at",
+        "trained_on"
+      ],
+      "sha256": "c46cec267d1fb3310c0c6b7b260c8a6078febd90aa76a366806adc432b7a70b8",
+      "size_bytes": 2477
+    },
+    {
+      "file": "binary_router.json",
+      "grounded": true,
+      "grounding_verdict": "grounded",
+      "json_valid": true,
+      "provenance_keys": [
+        "eval_accuracy",
+        "samples",
+        "trained_at",
+        "trained_on"
+      ],
+      "sha256": "ea41e7c40032c19cfaebe93235facd56487d7d11bd7c747e2a8b064300241799",
+      "size_bytes": 1628
+    },
+    {
+      "file": "cloud_escalation_predictor.json",
+      "grounded": false,
+      "grounding_verdict": "unknown",
+      "json_valid": true,
+      "provenance_keys": [
+        "trained_on"
+      ],
+      "sha256": "939b56e20454e4187dc6abdfdbc234bd4ed09dcb78b6bd62d19152e99ad9f0b0",
+      "size_bytes": 10059
+    },
+    {
+      "file": "compressibility_predictor.json",
+      "grounded": false,
+      "grounding_verdict": "unknown",
+      "json_valid": true,
+      "provenance_keys": [
+        "trained_on"
+      ],
+      "sha256": "ca8eae72280eb520fd47d752deed349512c6815fdae87c8f2225fa0f950f1d71",
+      "size_bytes": 8095
+    },
+    {
+      "file": "context_pruning_predictor.json",
+      "grounded": false,
+      "grounding_verdict": "unknown",
+      "json_valid": true,
+      "provenance_keys": [
+        "trained_on"
+      ],
+      "sha256": "21dd269155afa15302de85c33403e9ad3547001230957fcdd754f08b01092a05",
+      "size_bytes": 7258
+    },
+    {
+      "file": "effort_classifier.json",
+      "grounded": true,
+      "grounding_verdict": "grounded",
+      "json_valid": true,
+      "provenance_keys": [
+        "eval_accuracy",
+        "samples",
+        "trained_at",
+        "trained_on"
+      ],
+      "sha256": "1087cf79a7503bcc35c051b14f678692a0454af15ca706242c813fda8c357bd3",
+      "size_bytes": 2964
+    },
+    {
+      "file": "error_classifier.json",
+      "grounded": false,
+      "grounding_verdict": "grounded (add provenance)",
+      "json_valid": true,
+      "provenance_keys": [],
+      "sha256": "433abf6eb73df794e10dba69aafc083f80bf2fa482280bfa72139619547e0122",
+      "size_bytes": 8517
+    },
+    {
+      "file": "response_length_predictor.json",
+      "grounded": false,
+      "grounding_verdict": "unknown",
+      "json_valid": true,
+      "provenance_keys": [
+        "trained_on"
+      ],
+      "sha256": "94a837842bf7cd0e1dd6f25b186eb9c2d7187d1f0f46cf4c4b321e29df9c57cd",
+      "size_bytes": 8070
+    },
+    {
+      "file": "semantic_cache_hit_predictor.json",
+      "grounded": false,
+      "grounding_verdict": "unknown",
+      "json_valid": true,
+      "provenance_keys": [
+        "trained_on"
+      ],
+      "sha256": "a39f59f56122a01db378da02230aa59031ce356e59b29c4f36124c7af4948be2",
+      "size_bytes": 9167
+    },
+    {
+      "file": "skip_agent_predictor.json",
+      "grounded": false,
+      "grounding_verdict": "unknown",
+      "json_valid": true,
+      "provenance_keys": [
+        "trained_on"
+      ],
+      "sha256": "7abc190830db28eaf159016dc906fb055dfe95e679e292021d71b9a5600f1108",
+      "size_bytes": 9207
+    },
+    {
+      "file": "tool_call_predictor.json",
+      "grounded": false,
+      "grounding_verdict": "unknown",
+      "json_valid": true,
+      "provenance_keys": [
+        "trained_on"
+      ],
+      "sha256": "a5e11b05b266e0cb0fb91037997a5f5f886ce56286c120f157d517a3d34e9711",
+      "size_bytes": 9207
+    }
+  ],
+  "source_revision": "8e081126223646b7649fbb71ab435a79e6da78e1"
+}

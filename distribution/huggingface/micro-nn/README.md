@@ -38,6 +38,10 @@ python -m skills.nn_audit.cli skills/botte_nn --json
 python -m skills.botte_nn.cli list
 ```
 
+The checked-in [Hub snapshot manifest](https://github.com/zedarvates/botte-secrete/blob/main/distribution/huggingface/micro-nn/model-snapshot.json)
+is the publication gate. A `false` `publish_weights_allowed` value means the
+Hub JSON weights must not be treated as the authoritative Botte inventory.
+
 ## Where it is used
 
 - [Botte Secrète micro-NN belt](https://github.com/zedarvates/botte-secrete/tree/main/skills/botte_nn)
