@@ -129,6 +129,8 @@ TOOLS = [
                 "task_type": {"type": "string", "description": "Optional hint, e.g. code_review."},
                 "execute": {"type": "boolean", "description": "Run it (true) or just decide (false)."},
                 "max_tokens": {"type": "integer", "default": 512},
+                "project": {"type": "string", "description": "Project root for the private QA ledger."},
+                "execution_id": {"type": "string", "description": "Stable replay id; persisted only as a hash."},
             },
             "required": ["prompt"],
         },
@@ -923,7 +925,9 @@ def _tool_auto_route(args: dict) -> str:
     from skills.auto_router import auto_route, auto_run
     if args.get("execute"):
         return json.dumps(auto_run(args["prompt"], task_type=args.get("task_type", ""),
-                                   max_tokens=int(args.get("max_tokens", 512))),
+                                   max_tokens=int(args.get("max_tokens", 512)),
+                                   project_root=args.get("project", "."),
+                                   execution_id=args.get("execution_id", "")),
                           ensure_ascii=False, indent=2)
     return json.dumps(auto_route(args["prompt"], args.get("task_type", "")),
                       ensure_ascii=False, indent=2)

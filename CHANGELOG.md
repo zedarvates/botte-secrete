@@ -6,6 +6,8 @@
 - Idempotent `botte.quality-outcome/v1` envelopes for partial and verified
   execution results, with the local harness as the first live adapter. Only
   externally evidenced verdicts enter the shadow Quality Compass ledger.
+- Auto-router outcome adapter for private, replay-safe `PARTIAL`, `FAIL`, and
+  `ABSTAINED` facts; backend returns remain unverified and cannot promote labels.
 - Accessible Quality Compass dashboard card with a fluid state/reason/next-action
   view, progressive local evidence, route comparison, freshness and human-gate
   states; public snapshots disclose no local task or evidence material.

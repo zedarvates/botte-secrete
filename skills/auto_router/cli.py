@@ -32,6 +32,8 @@ def main(argv=None) -> int:
     s = sub.add_parser("run", help="decide + execute")
     s.add_argument("prompt"); s.add_argument("--task-type", default="")
     s.add_argument("--max-tokens", type=int, default=512)
+    s.add_argument("--project", default=".", help="Project root for the private QA ledger")
+    s.add_argument("--execution-id", default="", help="Stable replay id (stored only as a hash)")
 
     sub.add_parser("providers", help="list cloud models + availability")
 
@@ -50,7 +52,8 @@ def main(argv=None) -> int:
             print(json.dumps(auto_route(args.prompt, args.task_type), ensure_ascii=False, indent=2))
     elif args.cmd == "run":
         print(json.dumps(auto_run(args.prompt, task_type=args.task_type,
-                                  max_tokens=args.max_tokens), ensure_ascii=False, indent=2))
+                                  max_tokens=args.max_tokens, project_root=args.project,
+                                  execution_id=args.execution_id), ensure_ascii=False, indent=2))
     elif args.cmd == "providers":
         print(json.dumps(providers.catalog_overview(), ensure_ascii=False, indent=2))
     elif args.cmd == "fusion":
