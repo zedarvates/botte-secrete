@@ -5,11 +5,12 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from pathlib import Path
 
 from skills.console_utf8 import force_utf8
 from skills.trajectory.quality import advise_route, quality_status, record_verified
 
-_COMMANDS = {"status", "advise", "record"}
+_COMMANDS = {"status", "advise", "record", "benchmark"}
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -58,6 +59,17 @@ def _parser() -> argparse.ArgumentParser:
     record.add_argument("--evidence", action="append", default=[], required=True,
                         help="external evidence reference; repeat for multiple references")
     record.add_argument("--json", action="store_true")
+
+    benchmark = sub.add_parser(
+        "benchmark",
+        help="compare deterministic, k-NN and micro-NN routing on a temporal holdout",
+    )
+    benchmark.add_argument("--project", default=".")
+    benchmark.add_argument("--missions", help="sanitized verified mission JSONL")
+    benchmark.add_argument("--holdout-fraction", type=float, default=0.25)
+    benchmark.add_argument("--code-ref", default="")
+    benchmark.add_argument("--output", type=Path)
+    benchmark.add_argument("--json", action="store_true")
     return parser
 
 
@@ -92,6 +104,14 @@ def _print_advice(data: dict) -> None:
         print(f"🧭 No suggestion — {data['status']}")
     print(f"   Why: {data['reason']}")
     print("   Action: none; the current deterministic router remains in control.")
+
+
+def _print_benchmark(data: dict) -> None:
+    print(f"🧪 Routing benchmark — {data['benchmark_status']}")
+    print(f"   Conclusion: {data['conclusion']}")
+    if data["gaps"]:
+        print("   Gaps: " + ", ".join(item["code"] for item in data["gaps"]))
+    print("   Safety: SHADOW only; no model run, training, routing change, or activation.")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -129,6 +149,29 @@ def main(argv: list[str] | None = None) -> int:
             else:
                 _print_advice(data)
             return 0
+
+        if args.command == "benchmark":
+            from skills.trajectory.benchmark import BenchmarkConfig, benchmark_report
+
+            data = benchmark_report(
+                args.project,
+                args.missions,
+                config=BenchmarkConfig(holdout_fraction=args.holdout_fraction),
+                code_ref=args.code_ref,
+            )
+            if args.output:
+                args.output.parent.mkdir(parents=True, exist_ok=True)
+                args.output.write_text(
+                    json.dumps(data, ensure_ascii=False, indent=2) + "\n",
+                    encoding="utf-8",
+                )
+            if args.json:
+                print(json.dumps(data, ensure_ascii=False, indent=2))
+            else:
+                _print_benchmark(data)
+                if args.output:
+                    print(f"   Report: {args.output}")
+            return 2 if data["benchmark_status"] == "invalid_dataset" else 0
 
         record = record_verified(
             args.task,

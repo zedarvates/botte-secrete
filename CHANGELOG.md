@@ -9,6 +9,11 @@
 - Accessible Quality Compass dashboard card with a fluid state/reason/next-action
   view, progressive local evidence, route comparison, freshness and human-gate
   states; public snapshots disclose no local task or evidence material.
+- Leakage-resistant shadow routing benchmark for deterministic, k-NN, and the
+  existing `binary_router` micro-NN. It uses a shared temporal holdout, rejects
+  exact-task and family leakage, separates routing/model/harness quality, and
+  emits an explicit `collect_more_data` report when verified evidence is
+  insufficient; fixtures cannot manufacture a winner or grant `ACT` authority.
 - Shadow-only Quality Compass: a project-local verified-outcome ledger, duplicate-
   resistant hashed task features, explainable k-NN advice, `botte qa`, and lazy
   MCP tools (`qa_status`, `qa_advise`, `qa_record`). Raw task text is not stored,

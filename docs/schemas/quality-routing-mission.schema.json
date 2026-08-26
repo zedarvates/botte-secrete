@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/zedarvates/botte-secrete/blob/main/docs/schemas/quality-routing-mission.schema.json",
+  "title": "Botte Secrete sanitized routing benchmark mission",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "id", "family_id", "observed_at", "task", "task_type",
+    "expected_route", "verdict", "verified_by", "evidence_refs",
+    "dataset_class", "sanitized", "contains_private_data"
+  ],
+  "properties": {
+    "schema": {"const": "botte.quality-routing-mission/v1"},
+    "id": {"type": "string", "pattern": "^qm_[0-9a-f]{12}$"},
+    "family_id": {"type": "string", "pattern": "^qf_[0-9a-f]{12}$"},
+    "observed_at": {"type": "string", "format": "date-time", "maxLength": 64},
+    "task": {"type": "string", "minLength": 1, "maxLength": 2000},
+    "task_type": {"type": "string", "maxLength": 64},
+    "expected_route": {"enum": ["local", "cloud"]},
+    "verdict": {"enum": ["PASS", "PASS_ROBUST"]},
+    "verified_by": {"type": "string", "minLength": 1, "maxLength": 128},
+    "evidence_refs": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 20,
+      "items": {"type": "string", "minLength": 1, "maxLength": 256}
+    },
+    "dataset_class": {"enum": ["verified", "fixture"]},
+    "sanitized": {"const": true},
+    "contains_private_data": {"const": false}
+  }
+}

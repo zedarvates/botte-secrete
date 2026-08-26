@@ -75,7 +75,7 @@ The routing utility is evaluated in this order:
 | 1 | Explainable k-NN baseline via Python, `botte qa`, MCP, and events | Shadow-only; never acts | Implemented in this change |
 | 2 | Automatic outcome envelopes from harness, router, Codex runs, and CI | External evidence required; no backend-success labels | Local harness vertical slice implemented; other adapters next |
 | 3 | Dashboard card: quality, coverage, abstentions, route comparison, next step | Public snapshots contain no local task data | Implemented in PR for #75 |
-| 4 | Temporal benchmark: deterministic vs k-NN vs current micro-NN | No success loss; measured cost/latency benefit | Planned |
+| 4 | Temporal benchmark: deterministic vs k-NN vs current micro-NN | Leakage-resistant harness implemented; verified replay data still required | Collecting evidence |
 | 5 | Specialized micro-NN or micro-LLM workers | Existing micro-NN inventory reaches G2 or is retired | Gated |
 | 6 | Staged authority | Simulate → shadow → 10% → 50% → 100%, with rollback | Gated |
 
@@ -91,6 +91,13 @@ The routing utility is evaluated in this order:
 
 Do not train a model merely because data exists. Promote a learned component
 only when it beats the simpler baseline on representative, time-separated data.
+
+Wave 4 deliberately produces no winner today. The private Quality Compass
+ledger contains fingerprints rather than replayable task text, and the current
+micro-NN feedback ledger does not provide a sufficient independently verified,
+time-separated mission set. The benchmark therefore emits a reproducible gap
+report and recommends collecting sanitized verified missions. Synthetic or
+fixture labels may validate the harness but cannot support a keep/retire choice.
 
 ## Outcome envelope for Wave 2
 
