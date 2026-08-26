@@ -18,6 +18,7 @@ from urllib.parse import urlsplit
 from skills.decision_ladder.metrics import LadderMetrics
 from skills.universal_compressor.compressor import stats as compressor_stats
 from skills.auto_memory.hook import memory_stats
+from skills.dashboard.quality_compass import quality_compass_card
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -90,7 +91,8 @@ def load_memory_hub_metrics(base_dir: str | Path | None = None) -> dict:
 
 
 def load_metrics(*, test_summary_path: str | Path | None = None,
-                 memory_hub_dir: str | Path | None = None) -> dict:
+                 memory_hub_dir: str | Path | None = None,
+                 quality_project_root: str | Path | None = None) -> dict:
     """Load metrics from all sources."""
     # Load decision ladder metrics
     dl = LadderMetrics.load()
@@ -122,6 +124,9 @@ def load_metrics(*, test_summary_path: str | Path | None = None,
     dl_dict["memory_by_status"] = hub["by_status"]
     dl_dict["memory_by_asset"] = hub["by_asset"]
     dl_dict["legacy_memory_entries"] = legacy.get("total_entries", 0)
+    dl_dict["quality_compass"] = quality_compass_card(
+        quality_project_root if quality_project_root is not None else REPO_ROOT
+    )
     dl_dict["generated_at"] = time.time()
 
     return dl_dict

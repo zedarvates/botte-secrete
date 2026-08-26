@@ -56,6 +56,7 @@ SUITES = [
     ("cost_estimator", [sys.executable, "-m", "skills.cost_estimator.test_cost_estimator"], "skills/cost_estimator/"),
     ("trends", [sys.executable, "-m", "skills.trends.test_trends"], "skills/trends/"),
     ("dashboard", [sys.executable, "-m", "skills.dashboard.test_dashboard"], "skills/dashboard/"),
+    ("quality_dashboard", [sys.executable, "-m", "skills.dashboard.test_quality_compass"], "skills/dashboard/"),
     ("fallow_scanner", [sys.executable, "-m", "skills.fallow_like.test_scanner"], "skills/fallow_like/"),
     ("dead_code", [sys.executable, "-m", "skills.fallow_like.test_dead_code"], "skills/fallow_like/"),
     ("taint", [sys.executable, "-m", "skills.fallow_like.test_taint"], "skills/fallow_like/"),

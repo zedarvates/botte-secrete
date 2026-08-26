@@ -77,6 +77,39 @@
     }
     .notice[data-visible="true"] { display: block; }
 
+    .quality-card {
+      margin-top: 28px;
+      padding: clamp(20px, 4vw, 32px);
+      border: 1px solid var(--line);
+      border-left: 4px solid var(--warning);
+      background: linear-gradient(120deg, rgba(22, 35, 31, .96), rgba(16, 26, 23, .78));
+      box-shadow: var(--shadow);
+    }
+    .quality-card[data-state="grounded"] { border-left-color: var(--signal); }
+    .quality-card[data-state="conflicting"],
+    .quality-card[data-state="human_gated"] { border-left-color: var(--danger); }
+    .quality-card[data-state="private"] { border-left-color: var(--cyan); }
+    .quality-head { display: flex; justify-content: space-between; gap: 18px; align-items: center; }
+    .mode-badge { padding: 6px 9px; border: 1px solid var(--line); color: var(--cyan); font-size: .68rem; letter-spacing: .12em; text-transform: uppercase; }
+    .quality-lines { display: grid; gap: 10px; margin: 22px 0 0; }
+    .quality-line { display: grid; grid-template-columns: 7.5rem minmax(0, 1fr); gap: 16px; margin: 0; line-height: 1.55; }
+    .quality-label { color: var(--muted); font-size: .7rem; letter-spacing: .12em; text-transform: uppercase; }
+    .quality-line strong { font: 500 clamp(1.15rem, 3vw, 1.7rem)/1.25 Georgia, serif; }
+    .quality-next { color: var(--signal); }
+    .quality-card[data-state="human_gated"] .quality-next { color: #ffb1b1; }
+    .quality-details { margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--line); }
+    .quality-details summary { width: fit-content; cursor: pointer; color: var(--cyan); line-height: 1.5; }
+    .quality-details summary:focus-visible { outline: 3px solid var(--cyan); outline-offset: 4px; }
+    .quality-detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; margin-top: 22px; }
+    .quality-detail { min-width: 0; padding: 18px; border: 1px solid var(--line); background: rgba(9, 16, 14, .45); }
+    .quality-detail h3 { margin: 0 0 14px; font: 500 1rem/1.3 Georgia, serif; }
+    .quality-facts { display: grid; grid-template-columns: minmax(8rem, 1fr) auto; gap: 9px 16px; margin: 0; font-size: .76rem; }
+    .quality-facts dt { color: var(--muted); }
+    .quality-facts dd { margin: 0; text-align: right; overflow-wrap: anywhere; }
+    .quality-table-wrap { overflow-x: auto; }
+    .quality-evidence { margin: 0; padding-left: 1.2rem; color: var(--muted); font-size: .76rem; line-height: 1.65; }
+    .quality-evidence li + li { margin-top: 7px; }
+
     .metrics {
       display: grid;
       grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -119,6 +152,7 @@
       .metric { border-bottom: 1px solid var(--line); }
       .metric:nth-child(2n) { border-right: 0; }
       .layout { grid-template-columns: 1fr; }
+      .quality-detail-grid { grid-template-columns: 1fr; }
     }
     @media (max-width: 560px) {
       .shell { width: min(100% - 20px, 1180px); padding-top: 22px; }
@@ -126,6 +160,10 @@
       .metric { border-right: 0; }
       .panel { padding: 18px; }
       th, td { padding-inline: 4px; }
+      .quality-head { align-items: flex-start; }
+      .quality-line { grid-template-columns: 1fr; gap: 3px; }
+      .quality-facts { grid-template-columns: 1fr; gap: 3px; }
+      .quality-facts dd { margin-bottom: 9px; text-align: left; }
     }
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
@@ -147,6 +185,44 @@
     </header>
 
     <aside class="notice" id="notice" data-visible="false" aria-live="polite"></aside>
+
+    <section class="quality-card" id="quality-card" data-state="loading" aria-labelledby="quality-title">
+      <div class="quality-head">
+        <h2 id="quality-title">Quality Compass</h2>
+        <span class="mode-badge" id="quality-mode">SHADOW · ACT disabled</span>
+      </div>
+      <div class="quality-lines" role="status" aria-live="polite" aria-atomic="true">
+        <p class="quality-line"><span class="quality-label">State</span><strong id="quality-state">Awaiting quality data</strong></p>
+        <p class="quality-line"><span class="quality-label">Reason</span><span id="quality-reason">No quality source has responded yet.</span></p>
+        <p class="quality-line"><span class="quality-label">Next safe action</span><span class="quality-next" id="quality-next">Keep deterministic routing in control.</span></p>
+      </div>
+      <details class="quality-details" id="quality-details">
+        <summary>Inspect evidence and route comparison</summary>
+        <div class="quality-detail-grid">
+          <section class="quality-detail" aria-labelledby="quality-summary-title">
+            <h3 id="quality-summary-title">Coverage and freshness</h3>
+            <dl class="quality-facts" id="quality-facts"></dl>
+          </section>
+          <section class="quality-detail" aria-labelledby="quality-routes-title">
+            <h3 id="quality-routes-title">Verified route comparison</h3>
+            <div class="quality-table-wrap">
+              <table>
+                <thead><tr><th scope="col">Route</th><th scope="col">Samples</th><th scope="col">Pass rate</th><th scope="col">Latency</th></tr></thead>
+                <tbody id="quality-routes"></tbody>
+              </table>
+            </div>
+          </section>
+          <section class="quality-detail" aria-labelledby="quality-evidence-title">
+            <h3 id="quality-evidence-title">Supporting evidence</h3>
+            <ol class="quality-evidence" id="quality-evidence"></ol>
+          </section>
+          <section class="quality-detail" aria-labelledby="quality-runtime-title">
+            <h3 id="quality-runtime-title">Runtime and drift</h3>
+            <dl class="quality-facts" id="quality-runtime"></dl>
+          </section>
+        </div>
+      </details>
+    </section>
 
     <section class="metrics" aria-label="System summary">
       <div class="metric"><span class="metric-label">Verified tests</span><output class="metric-value" id="tests-passed">—</output><span class="metric-note" id="tests-note">Awaiting a test run</span></div>
@@ -250,6 +326,85 @@
       el('memory-projects').textContent = number(data.memory_projects || 0);
     }
 
+    function appendFact(container, label, value) {
+      container.append(Object.assign(document.createElement('dt'), { textContent: label }));
+      container.append(Object.assign(document.createElement('dd'), { textContent: value }));
+    }
+
+    function percent(value) {
+      return Number.isFinite(Number(value))
+        ? new Intl.NumberFormat(undefined, { style: 'percent', maximumFractionDigits: 1 }).format(Number(value))
+        : 'Not observed';
+    }
+
+    function renderQuality(card) {
+      const safe = card || {};
+      el('quality-card').dataset.state = safe.state || 'empty';
+      el('quality-state').textContent = safe.label || 'Quality state unavailable';
+      el('quality-reason').textContent = safe.reason || 'No verified reason is available.';
+      el('quality-next').textContent = safe.next_action || 'Keep deterministic routing in control.';
+      el('quality-mode').textContent = safe.human_gate
+        ? 'HUMAN GATE · ACT disabled'
+        : `${String(safe.mode || 'shadow').toUpperCase()} · ACT disabled`;
+
+      const summary = safe.summary || {};
+      const facts = el('quality-facts');
+      facts.replaceChildren();
+      appendFact(facts, 'Verified coverage', summary.grounding_target
+        ? `${number(summary.verified_samples)} / ${number(summary.grounding_target)} (${percent(summary.grounding_coverage)})`
+        : 'Local only');
+      appendFact(facts, 'Abstention rate', percent(summary.abstention_rate));
+      appendFact(facts, 'Freshness', summary.freshness || 'Private');
+      appendFact(facts, 'Latest evidence', summary.latest_recorded_at
+        ? new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(summary.latest_recorded_at))
+        : 'Not published');
+
+      const routes = el('quality-routes');
+      routes.replaceChildren();
+      const comparisons = Array.isArray(safe.route_comparison) ? safe.route_comparison : [];
+      if (!comparisons.length) {
+        const row = document.createElement('tr');
+        const cell = document.createElement('td');
+        cell.colSpan = 4;
+        cell.textContent = 'No verified route comparison available.';
+        row.append(cell);
+        routes.append(row);
+      } else comparisons.forEach(item => {
+        const row = document.createElement('tr');
+        [item.route, number(item.verified), percent(item.pass_rate),
+          item.mean_duration_ms == null ? '—' : `${number(item.mean_duration_ms)} ms`]
+          .forEach(value => row.append(Object.assign(document.createElement('td'), { textContent: value })));
+        routes.append(row);
+      });
+
+      const evidence = el('quality-evidence');
+      evidence.replaceChildren();
+      const support = Array.isArray(safe.supporting_evidence) ? safe.supporting_evidence : [];
+      if (!support.length) {
+        evidence.append(Object.assign(document.createElement('li'), {
+          textContent: safe.public_snapshot ? 'Evidence is private in public snapshots.' : 'No independently verified evidence recorded.'
+        }));
+      } else support.forEach(item => {
+        const refs = Array.isArray(item.evidence_refs) && item.evidence_refs.length
+          ? ` · ${item.evidence_refs.join(', ')}` : '';
+        evidence.append(Object.assign(document.createElement('li'), {
+          textContent: `${item.verdict || 'UNCERTAIN'} · ${item.route || 'unknown'} · ${item.verified_by || 'unverified'}${refs}`
+        }));
+      });
+
+      const resources = safe.resources || {};
+      const versions = safe.versions || {};
+      const drift = safe.drift || {};
+      const runtime = el('quality-runtime');
+      runtime.replaceChildren();
+      appendFact(runtime, 'Drift', drift.status || 'Not published');
+      appendFact(runtime, 'Conflicting tasks', number(drift.conflicting_tasks));
+      appendFact(runtime, 'Mean cost', resources.mean_cost_usd == null ? '—' : `$${resources.mean_cost_usd}`);
+      appendFact(runtime, 'Mean tokens', number(resources.mean_tokens));
+      appendFact(runtime, 'Models', Array.isArray(versions.models) && versions.models.length ? versions.models.join(', ') : 'Not recorded');
+      appendFact(runtime, 'Harnesses', Array.isArray(versions.harnesses) && versions.harnesses.length ? versions.harnesses.join(', ') : 'Not recorded');
+    }
+
     function render(data, endpoint) {
       el('tests-passed').textContent = number(data.tests_passed);
       el('tests-failed').textContent = number(data.tests_failed);
@@ -261,6 +416,7 @@
         : 'Run scripts/run_tests.py to measure';
       renderBars(data);
       renderMemory(data);
+      renderQuality(data.quality_compass);
 
       const notices = [];
       if (data.tests_partial) notices.push('The displayed test result is partial. Run the complete suite before publication.');
