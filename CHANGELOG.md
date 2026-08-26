@@ -13,6 +13,9 @@
 - Primary GitHub CI matrix outcome adapter with replay-safe verified envelopes
   and a separate sanitized artifact that exposes state, reason, and the next
   safe action without run IDs, fingerprints, paths, or evidence details.
+- Passive `botte.task-quality-status/v1` export for Kanboard/Odin and other task
+  planes, exposing only opaque correlation, bounded status, safe next action,
+  and independently verified evidence references without transition authority.
 - Accessible Quality Compass dashboard card with a fluid state/reason/next-action
   view, progressive local evidence, route comparison, freshness and human-gate
   states; public snapshots disclose no local task or evidence material.

@@ -278,6 +278,22 @@ TOOLS = [
         },
     },
     {
+        "name": "qa_task_status",
+        "description": "Export a passive Quality Compass status packet for Kanboard, "
+                       "Odin, or another authenticated task plane. It contains no raw "
+                       "task or private fingerprint and never authorizes a transition.",
+        "inputSchema": {
+            "type": "object",
+            "additionalProperties": False,
+            "properties": {
+                "project": {"type": "string", "description": "Project dir (default: cwd)."},
+                "task_ref": {"type": "string", "minLength": 1, "maxLength": 128},
+                "outcome_id": {"type": "string", "pattern": "^qo_[0-9a-f]{16}$"},
+            },
+            "required": ["task_ref"],
+        },
+    },
+    {
         "name": "find_skills",
         "description": "Find the skills/tools relevant to a task by searching SKILL.md "
                        "files locally — 0 cloud tokens (lexical match; optional local-LLM "
@@ -1041,6 +1057,19 @@ def _tool_qa_agent_run(args: dict) -> str:
     )
 
 
+def _tool_qa_task_status(args: dict) -> str:
+    from skills.trajectory.task_status import task_quality_status
+    return json.dumps(
+        task_quality_status(
+            task_ref=args["task_ref"],
+            project_root=args.get("project", "."),
+            outcome_id=args.get("outcome_id"),
+        ),
+        ensure_ascii=False,
+        indent=2,
+    )
+
+
 def _tool_fusion(args: dict) -> str:
     from skills.auto_router import fusion
     fn = {"cascade": fusion.cascade, "draft_refine": fusion.draft_refine,
@@ -1418,6 +1447,7 @@ DISPATCH = {
     "qa_record": _tool_qa_record,
     "qa_status": _tool_qa_status,
     "qa_agent_run": _tool_qa_agent_run,
+    "qa_task_status": _tool_qa_task_status,
     "fusion": _tool_fusion,
     "find_skills": _tool_find_skills,
     "infra_tips": _tool_infra_tips,

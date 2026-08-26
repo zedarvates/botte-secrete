@@ -20,6 +20,7 @@ on its own. Pure stdlib, stdio JSON-RPC 2.0, no dependencies.
 | `auto_route` | Decide and optionally execute the cheapest capable route |
 | `route_feedback` | Verify an executed route by its `feedback_id` |
 | `qa_status` | Show verified quality-memory maturity and its next step |
+| `qa_task_status` | Export a passive, non-terminal status observation for a task plane |
 | `qa_advise` | Explain a shadow-only k-NN route suggestion or abstention |
 | `qa_record` | Add an externally verified outcome without raw task storage |
 | `compress` | Compress context; reversible calls add deduplicated verified grounding labels |

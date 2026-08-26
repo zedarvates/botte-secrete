@@ -152,6 +152,18 @@ def main() -> int:
             qa_status["verified_samples"] == 1 and qa_status["mode"] == "shadow",
             state)
 
+        qa_task_call = handle({
+            "jsonrpc": "2.0", "id": 8, "method": "tools/call",
+            "params": {"name": "qa_task_status", "arguments": {
+                "project": qa_project, "task_ref": "kanboard:task:8",
+            }},
+        })
+        qa_task = json.loads(qa_task_call["result"]["content"][0]["text"])
+        _ok("qa_task_status exposes only a passive task-plane observation",
+            qa_task["schema"] == "botte.task-quality-status/v1"
+            and qa_task["task_transition_allowed"] is False
+            and qa_task["terminal"] is False, state)
+
     # protocol-level: a NON-core tool is still callable by name even though it
     # isn't in the lazy listing — lazy only hides the catalog, not execution.
     non_core = next(n for n in DISPATCH if n not in CORE_TOOL_NAMES and n != "find_tool")

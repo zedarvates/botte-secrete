@@ -31,6 +31,7 @@ from skills.trajectory.quality import (
 from skills.trajectory.outcome import emit_outcome, load_outcomes
 from skills.trajectory.agent_run import emit_agent_run
 from skills.trajectory.ci import emit_ci_outcome
+from skills.trajectory.task_status import task_quality_status
 
 TRAJECTORY_DIR = Path(__file__).parent / "store"
 TRAJECTORY_FILE = TRAJECTORY_DIR / "trajectories.jsonl"
@@ -211,6 +212,7 @@ __all__ = [
     "emit_outcome",
     "emit_agent_run",
     "emit_ci_outcome",
+    "task_quality_status",
     "get_stats",
     "load",
     "load_verified",
