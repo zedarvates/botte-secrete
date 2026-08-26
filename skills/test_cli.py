@@ -39,6 +39,9 @@ def main() -> int:
         check("asset-qa routes to family-isolated quality memory",
               cli.main(["asset-qa", "status", ".", "--json"]) == 0
               and captured[-1] == ["status", ".", "--json"])
+        check("migration-audit routes to deterministic gate",
+              cli.main(["migration-audit", "spec.json", "--json"]) == 0
+              and captured[-1] == ["spec.json", "--json"])
 
     print(f"\nRESULT: {state[0]} passed, {state[1]} failed")
     return 0 if state[1] == 0 else 1
