@@ -13,6 +13,7 @@ A single unified client calls either side (both speak OpenAI /v1/chat).
 from __future__ import annotations
 
 import json
+import time
 import urllib.error
 import urllib.request
 from dataclasses import dataclass, field
@@ -167,11 +168,20 @@ class AutoRouter:
 
     # ── execution (unified client) ──
     def run(self, prompt: str, *, task_type: str = "", system: Optional[str] = None,
-            max_tokens: int = 1024, force_tier: Optional[Tier] = None) -> dict:
+            max_tokens: int = 1024, force_tier: Optional[Tier] = None,
+            project_root: str = ".", execution_id: str = "") -> dict:
+        started = time.monotonic()
         d = self.decide(prompt, task_type=task_type, force_tier=force_tier)
         _log_route(d)
         if d.mode == "none":
-            return {"decision": d.to_dict(), "error": d.reason}
+            result = {"decision": d.to_dict(), "error": d.reason}
+            _attach_outcome(
+                result, prompt, d, status="ABSTAINED", task_type=task_type,
+                project_root=project_root, execution_id=execution_id,
+                duration_ms=(time.monotonic() - started) * 1000,
+                abstained=True,
+            )
+            return result
         cache = None
         cache_context = json.dumps({
             "system": system or "", "task_type": task_type,
@@ -184,8 +194,14 @@ class AutoRouter:
         except (OSError, ValueError, TypeError):
             hit = None
         if hit is not None:
-            return {"decision": d.to_dict(), "text": hit.response, "tokens": 0,
-                    "cached": True}
+            result = {"decision": d.to_dict(), "text": hit.response, "tokens": 0,
+                      "cached": True}
+            _attach_outcome(
+                result, prompt, d, status="PARTIAL", task_type=task_type,
+                project_root=project_root, execution_id=execution_id,
+                duration_ms=(time.monotonic() - started) * 1000,
+            )
+            return result
         feedback_id = None
         if d.mode == "local":
             try:
@@ -201,12 +217,28 @@ class AutoRouter:
                 result = {"decision": d.to_dict(), "error": str(e)}
                 if feedback_id:
                     result["feedback_id"] = feedback_id
+                _attach_outcome(
+                    result, prompt, d, status="FAIL", task_type=task_type,
+                    project_root=project_root,
+                    execution_id=execution_id or feedback_id or "",
+                    duration_ms=(time.monotonic() - started) * 1000,
+                    acted=True,
+                )
                 return result
             else:
                 # Non-empty local output is still not a correctness verdict.
                 feedback_id = self._log_observation(d, outcome="local_returned")
         else:
-            text, usage = _cloud_chat(d, prompt, system, max_tokens)
+            try:
+                text, usage = _cloud_chat(d, prompt, system, max_tokens)
+            except Exception:
+                _attach_outcome(
+                    {}, prompt, d, status="FAIL", task_type=task_type,
+                    project_root=project_root, execution_id=execution_id,
+                    duration_ms=(time.monotonic() - started) * 1000,
+                    acted=True,
+                )
+                raise
             feedback_id = self._log_observation(d, outcome="cloud_returned")
             input_usage = usage // 2
             self.budget.spend(d.tier, input_usage, usage - input_usage)
@@ -231,6 +263,13 @@ class AutoRouter:
         result = {"decision": d.to_dict(), "text": text, "tokens": usage}
         if feedback_id:
             result["feedback_id"] = feedback_id
+        _attach_outcome(
+            result, prompt, d, status="PARTIAL", task_type=task_type,
+            project_root=project_root,
+            execution_id=execution_id or feedback_id or "",
+            duration_ms=(time.monotonic() - started) * 1000,
+            tokens=usage, acted=True,
+        )
         return result
 
     @staticmethod
@@ -429,6 +468,40 @@ def _log_escalate(from_mode: str, to_mode: str, reason: str) -> None:
     try:
         from skills.events import log_event
         log_event("escalate", **{"from": from_mode, "to": to_mode, "reason": reason})
+    except Exception:
+        pass
+
+
+def _attach_outcome(result: dict, task: str, decision: AutoDecision, *,
+                    status: str, task_type: str, project_root: str,
+                    execution_id: str, duration_ms: float,
+                    tokens: Optional[int] = None, acted: bool = False,
+                    abstained: bool = False) -> None:
+    """Attach a private QA fact without trusting a backend self-report.
+
+    Persistence is best-effort and cannot change routing behavior. Returned text
+    is only ``PARTIAL`` until a separate verifier supplies independent evidence.
+    """
+    try:
+        from skills.trajectory.outcome import emit_outcome
+        emitted = emit_outcome(
+            task,
+            project_root=project_root,
+            execution_id=execution_id,
+            source="auto_router",
+            route=decision.mode if decision.mode in ("local", "cloud") else "human",
+            status=status,
+            task_type=task_type,
+            model=decision.model,
+            harness="auto_router",
+            duration_ms=duration_ms,
+            cost_usd=decision.est_cost if decision.mode == "cloud" else 0.0,
+            tokens=tokens,
+            acted=acted,
+            abstained=abstained,
+        )
+        result["outcome_id"] = emitted["envelope"]["id"]
+        result["outcome_deduplicated"] = emitted["deduplicated"]
     except Exception:
         pass
 

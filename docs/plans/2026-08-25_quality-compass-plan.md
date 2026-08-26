@@ -73,7 +73,7 @@ The routing utility is evaluated in this order:
 |---|---|---|---|
 | 0 | Project-local verified ledger, privacy-preserving features, duplicate resistance | Focused tests and schema | Implemented in this change |
 | 1 | Explainable k-NN baseline via Python, `botte qa`, MCP, and events | Shadow-only; never acts | Implemented in this change |
-| 2 | Automatic outcome envelopes from harness, router, Codex runs, and CI | External evidence required; no backend-success labels | Local harness vertical slice implemented; other adapters next |
+| 2 | Automatic outcome envelopes from harness, router, Codex runs, and CI | External evidence required; no backend-success labels | Local harness and auto-router adapters implemented; other adapters next |
 | 3 | Dashboard card: quality, coverage, abstentions, route comparison, next step | Public snapshots contain no local task data | Implemented in PR for #75 |
 | 4 | Temporal benchmark: deterministic vs k-NN vs current micro-NN | Leakage-resistant harness implemented; verified replay data still required | Collecting evidence |
 | 5 | Specialized micro-NN or micro-LLM workers | Existing micro-NN inventory reaches G2 or is retired | Gated |
@@ -115,8 +115,8 @@ This envelope becomes the shared contract for Codex, Hermes, local workers,
 Kanboard, CI, and the dashboard. Each integration may emit a partial envelope,
 but it cannot invent missing evidence.
 
-The first Wave 2 slice is `botte.quality-outcome/v1`, emitted by the local
-harness into private project state. It represents partial, failure, uncertainty,
+The Wave 2 contract is `botte.quality-outcome/v1`, emitted by the local harness
+and auto-router into private project state. It represents partial, failure, uncertainty,
 abstention, escalation, and approval states without persisting task text or raw
 execution IDs. A replay-stable outcome ID prevents duplicate status rows and
 duplicate quality labels. Only envelopes with an allowed external verifier and
