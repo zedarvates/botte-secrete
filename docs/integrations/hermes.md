@@ -52,10 +52,17 @@ from skills.hermes_bridge import TOOL_SCHEMAS, dispatch
 result = dispatch(tool_name, tool_args)   # returns a JSON string
 ```
 
-`TOOL_SCHEMAS` covers the 5 tools that matter for a routing/second-brain
+`TOOL_SCHEMAS` covers the focused tools that matter for a routing/second-brain
 integration: `botte_auto_route`, `botte_local_chat`, `botte_fusion`,
-`botte_find_skills`, `botte_infra_tips`. See [[hermes_bridge]] for the full
-schema and per-tool description.
+`botte_find_skills`, `botte_infra_tips`, and `botte_qa_agent_run`. The final
+tool accepts a strict `botte.agent-run/v1` manifest and emits the same private,
+idempotent outcome contract used by Codex through MCP. See [[hermes_bridge]]
+for the full schema and per-tool description.
+
+An agent return is only a partial fact. Do not send raw answers, stdout, stderr,
+or local paths in a manifest; unsupported fields are rejected. A `PASS` becomes
+a verified Quality Compass label only when an allowed external verifier and at
+least one evidence reference are supplied.
 
 ## Where to put the filter in Hermes' pipeline
 

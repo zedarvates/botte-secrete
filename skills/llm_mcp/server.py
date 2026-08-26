@@ -231,6 +231,53 @@ TOOLS = [
         },
     },
     {
+        "name": "qa_agent_run",
+        "description": "Emit a bounded Codex or Hermes run manifest into the private "
+                       "quality-outcome ledger. Raw task text is fingerprinted, unknown "
+                       "payload fields are rejected, and only external evidence can "
+                       "promote a verified label.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "project": {"type": "string", "description": "Project dir (default: cwd)."},
+                "manifest": {
+                    "type": "object",
+                    "additionalProperties": False,
+                    "properties": {
+                        "schema": {"const": "botte.agent-run/v1"},
+                        "agent": {"type": "string", "enum": ["codex", "hermes"]},
+                        "execution_id": {"type": "string", "minLength": 1, "maxLength": 256},
+                        "task": {"type": "string", "minLength": 1, "maxLength": 20000},
+                        "route": {"type": "string", "enum": ["deterministic", "local", "cloud", "human"]},
+                        "status": {"type": "string", "enum": ["PARTIAL", "FAIL", "UNCERTAIN", "PASS", "PASS_ROBUST", "ABSTAINED", "ESCALATED", "APPROVAL_REQUIRED"]},
+                        "task_type": {"type": "string"},
+                        "tags": {"type": "array", "items": {"type": "string"}},
+                        "verdict": {"type": ["string", "null"]},
+                        "verified_by": {"type": "string"},
+                        "evidence_refs": {"type": "array", "items": {"type": "string"}},
+                        "quality_score": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+                        "risk": {"type": "string", "enum": ["low", "standard", "high", "critical"]},
+                        "permission_profile": {"type": "string"},
+                        "model": {"type": "string"},
+                        "harness": {"type": "string"},
+                        "tool_versions": {"type": "object", "additionalProperties": {"type": "string"}},
+                        "duration_ms": {"type": ["number", "null"], "minimum": 0},
+                        "cost_usd": {"type": ["number", "null"], "minimum": 0},
+                        "tokens": {"type": ["integer", "null"], "minimum": 0},
+                        "memory_mb": {"type": ["number", "null"], "minimum": 0},
+                        "energy_wh": {"type": ["number", "null"], "minimum": 0},
+                        "acted": {"type": "boolean"},
+                        "abstained": {"type": "boolean"},
+                        "escalated": {"type": "boolean"},
+                        "approval_required": {"type": "boolean"},
+                    },
+                    "required": ["schema", "agent", "execution_id", "task", "route", "status"],
+                },
+            },
+            "required": ["manifest"],
+        },
+    },
+    {
         "name": "find_skills",
         "description": "Find the skills/tools relevant to a task by searching SKILL.md "
                        "files locally — 0 cloud tokens (lexical match; optional local-LLM "
@@ -985,6 +1032,15 @@ def _tool_qa_status(args: dict) -> str:
                       ensure_ascii=False, indent=2)
 
 
+def _tool_qa_agent_run(args: dict) -> str:
+    from skills.trajectory.agent_run import emit_agent_run
+    return json.dumps(
+        emit_agent_run(args["manifest"], project_root=args.get("project", ".")),
+        ensure_ascii=False,
+        indent=2,
+    )
+
+
 def _tool_fusion(args: dict) -> str:
     from skills.auto_router import fusion
     fn = {"cascade": fusion.cascade, "draft_refine": fusion.draft_refine,
@@ -1361,6 +1417,7 @@ DISPATCH = {
     "qa_advise": _tool_qa_advise,
     "qa_record": _tool_qa_record,
     "qa_status": _tool_qa_status,
+    "qa_agent_run": _tool_qa_agent_run,
     "fusion": _tool_fusion,
     "find_skills": _tool_find_skills,
     "infra_tips": _tool_infra_tips,

@@ -76,11 +76,18 @@ promoted to the k-NN support ledger only when both an allowed external verifier
 and at least one evidence reference are present. Replaying the same execution
 and outcome returns the existing row and cannot add another label.
 
-The local harness is the first live adapter. Deterministic schema, grounding,
+The local harness, auto-router, and bounded Codex/Hermes run manifests are live
+adapters. Deterministic schema, grounding,
 and citation checks can produce verified `PASS`, `FAIL`, or `UNCERTAIN` labels;
 gates, abstentions, and escalation remain explicit without treating the final
-unverified model answer as evidence. Router, Codex/Hermes, CI, and Kanboard
-adapters remain follow-up integration points.
+unverified model answer as evidence. CI and Kanboard adapters remain follow-up
+integration points.
+
+Codex can call the MCP tool `qa_agent_run`; Hermes can use the same MCP tool or
+the `botte_qa_agent_run` function bridge. Both accept the strict
+`botte.agent-run/v1` contract in
+`docs/schemas/agent-run-manifest.schema.json`. Unknown fields such as raw
+responses or stdout are rejected instead of being persisted.
 
 ## Quality contract
 
@@ -136,6 +143,7 @@ changes a route, or grants `ACT` authority.
 | `qa_status` | Show maturity, support coverage, privacy posture, and next step |
 | `qa_advise` | Return an explainable shadow recommendation or abstention |
 | `qa_record` | Add one externally verified outcome without storing raw task text |
+| `qa_agent_run` | Convert a strict Codex/Hermes run manifest into a private outcome |
 
 ## Local state
 
