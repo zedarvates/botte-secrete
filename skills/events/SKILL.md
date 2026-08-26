@@ -34,6 +34,8 @@ for rec in follow_events("."):   # blocking generator, for --live tools
 | `escalate` | from, to, reason | `auto_router.AutoRouter.run` |
 | `nn_out` | model, probs/class | `botte_nn` predictors |
 | `fusion` | strategy, models | `auto_router.fusion` |
+| `qa_trajectory` | route, verdict, quality_score, verified_by | `trajectory.quality` |
+| `qa_shadow_advice` | status, recommendation, evidence_strength, acted=false | `trajectory.quality` |
 
 `kind` is free-form — any skill can log its own label; the table above is
 just what the showcase tools (demo mode, dashboard `--watch`, replay) render

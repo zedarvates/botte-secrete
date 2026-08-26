@@ -32,6 +32,10 @@ def main() -> int:
         check("discover keeps an explicit tips subcommand",
               cli.main(["discover", "tips", "--json"]) == 0
               and captured[-1] == ["tips", "--json"])
+        check("qa routes to the quality compass",
+              cli.main(["qa", "summarize logs", "--json"]) == 0)
+        check("qa preserves the intuitive bare-task shortcut",
+              captured[-1] == ["summarize logs", "--json"])
 
     print(f"\nRESULT: {state[0]} passed, {state[1]} failed")
     return 0 if state[1] == 0 else 1

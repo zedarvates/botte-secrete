@@ -1,83 +1,100 @@
 ---
 name: trajectory
-description: "Trajectory Learning for Botte Secrète — stores solver trajectories and searches similar past optimizations to inform future decisions"
-version: 1.0.0
-author: Hermes Agent
+description: Store solver history and maintain a project-local Quality Compass that learns only from externally verified outcomes. Use when a task needs explainable k-NN recall, qualitative QA labels, a shadow routing baseline, or evidence collection before training a micro-NN.
 license: MIT
-metadata:
-  hermes:
-    tags: [botte, trajectory, memory, learning]
-    related_skills: [solvers, trajectory-memory]
 ---
 
-# Trajectory Learning for Botte Secrète
+# trajectory — verified memory and Quality Compass
 
-## Overview
+This skill has two deliberately separate lanes:
 
-Stocke les trajectoires d'optimisation des solveurs déterministes.
-Permet de retrouver des solutions similaires déjà calculées → 0 token, 0 latence.
+| Lane | Purpose | Authority |
+|---|---|---|
+| Legacy solver history | Recall prior deterministic solver results | Informational |
+| Quality Compass | Compare a task with externally verified outcomes | Shadow-only advisory |
 
-Compatible avec `~/.hermes/scripts/trajectory_search.py` (Hermes Trajectory Memory).
+The Quality Compass is the default path for new QA and routing work. It gives a
+simple k-nearest-neighbor baseline before another micro-NN is considered.
 
-## Files
+## One-command flow
 
-| Fichier | Rôle |
-|---------|------|
-| `skills/trajectory/__init__.py` | capture(), search(), load(), stats() |
-| `skills/trajectory/store/trajectories.jsonl` | Stockage JSON Lines |
+```bash
+botte qa                                      # status + one next step
+botte qa "summarize this failing test log"   # shadow advice shortcut
+botte qa advise "summarize this log" --task-type summary --json
+botte qa record "summarize this log" \
+  --route local --verdict pass --verified-by tests:pytest \
+  --duration-ms 180 --tokens 140 --evidence pytest:test_logs
+```
 
-## Usage
+`botte qa <task>` is intentionally equivalent to `botte qa advise <task>`.
+Advice always says why it suggested, abstained, or invoked a human gate. It
+never executes the route.
+
+## Python API
 
 ```python
-from skills.trajectory import capture, search, get_stats
+from skills.trajectory import advise_route, quality_status, record_verified
 
-# Capturer une trajectoire
-tid = capture(
-    solver="bin_pack",
-    task="pack 3 database backups into 10GB capacity",
-    parameters={"items": [("db1", 4), ("db2", 7), ("db3", 3)], "capacity": 10},
-    result={"bins": [...], "bin_count": 2},
-    latency=0.002,
-    tokens_saved=500,
+record_verified(
+    "summarize parser failures",
+    project_root=".",
+    route="local",
+    verdict="PASS",
+    verified_by="tests:pytest",
+    evidence_refs=("pytest:test_parser",),
 )
 
-# Rechercher des trajectoires similaires
-hits = search("pack items into capacity")
-for h in hits:
-    print(f"[{h['score']:.2f}] {h['trajectory']['task']}")
-
-# Statistiques
-stats = get_stats()
-print(f"Total: {stats['total']}, Tokens saved: {stats['total_tokens_saved']}")
+advice = advise_route("summarize another parser failure", project_root=".")
+print(advice.to_dict())
+print(quality_status("."))
 ```
 
-## Integration with solvers
+## Quality contract
 
-Dans `skills/solvers/solvers.py`, chaque fonction peut capturer sa trajectoire:
+- Valid verdicts: `FAIL`, `UNCERTAIN`, `PASS`, `PASS_ROBUST`.
+- Valid routes: `deterministic`, `local`, `cloud`, `human`.
+- Labels require an external verifier such as tests, schema validation,
+  deterministic roundtrip, replay, human review, independent review, or a
+  benchmark. A model/backend self-report is rejected.
+- Raw task text is never written to the quality ledger. Botte stores a SHA-256
+  fingerprint and a normalized 128-dimensional sparse hashed feature vector.
+- Repeated copies of the same task/route do not inflate grounding progress or
+  k-NN support.
+- High/critical risk bypasses k-NN and retains a human approval gate.
+- The baseline is uncalibrated and shadow-only. It cannot activate routing.
+- At 2,000 non-duplicated verified outcomes, the next step is evaluation:
+  temporal holdout, calibration, ablation, drift, and rollback — not automatic
+  deployment.
 
-```python
-from skills.trajectory import capture
+The k-NN chooser selects the least expensive observed route whose similar
+support clears the quality floor. If evidence is sparse or conflicting, it
+abstains and leaves the deterministic router in control.
 
-def assign_balanced(tasks, workers):
-    result = ...  # existing logic
-    capture("assign_balanced", f"assign {len(tasks)} tasks to {len(workers)} workers",
-            {"tasks": tasks, "workers": workers}, result, latency=latency())
-    return result
-```
+## MCP tools
 
-## Integration with Hermes
+| Tool | Purpose |
+|---|---|
+| `qa_status` | Show maturity, support coverage, privacy posture, and next step |
+| `qa_advise` | Return an explainable shadow recommendation or abstention |
+| `qa_record` | Add one externally verified outcome without storing raw task text |
 
-Les fichiers sont compatibles: Botte peut lire les trajectoires Hermes et vice-versa:
+## Local state
 
-```python
-# Lire les trajectoires Hermes
-from skills.trajectory import load
-hermes_trajs = load("/home/redgamer/.hermes/trajectory_store/trajectories.jsonl")
-```
+| Path | Content |
+|---|---|
+| `<project>/.botte/quality-trajectories.jsonl` | Private verified support set |
+| `<project>/.botte/events.jsonl` | Compact `qa_trajectory` and `qa_shadow_advice` events |
+| `skills/trajectory/store/trajectories.jsonl` | Legacy solver fixtures/history |
 
-## Pitfalls
+Project-local `.botte/` data is operational state and must not be committed.
+The legacy `capture`, `search`, `load`, and `get_stats` API remains available for
+existing deterministic solver integrations; do not put secrets in that legacy
+store.
 
-- **Rotation automatique** à 5000 entrées
-- **TF-IDF** uniquement — pas de sémantique profonde
-- **Latence** de capture < 1ms (append-only)
-- **Thread-safe** pour usage concurrent
+## Why k-NN comes before another micro-NN
+
+k-NN updates immediately when a verified example arrives, has no training job,
+and can show the exact neighboring outcome IDs behind a suggestion. A compact
+micro-NN becomes a candidate only when the support set is large, diverse, and
+stable enough to beat this baseline on a temporal holdout without quality loss.

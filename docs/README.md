@@ -38,6 +38,8 @@ the code in `skills/<name>/SKILL.md`.
 
 - [Local model benchmark note](local-model-benchmarks.md) — historical evidence
   with explicit reproducibility limits.
+- [Quality Compass plan](plans/2026-08-25_quality-compass-plan.md) — active plan
+  for verified QA memory, k-NN baselines, and specialized local workers.
 - [`plans/`](plans/) — proposed work and design explorations.
 
 ## Document status

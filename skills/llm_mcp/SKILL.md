@@ -19,6 +19,9 @@ on its own. Pure stdlib, stdio JSON-RPC 2.0, no dependencies.
 | `local_chat` | Run a prompt on a local model (0 cloud tokens) |
 | `auto_route` | Decide and optionally execute the cheapest capable route |
 | `route_feedback` | Verify an executed route by its `feedback_id` |
+| `qa_status` | Show verified quality-memory maturity and its next step |
+| `qa_advise` | Explain a shadow-only k-NN route suggestion or abstention |
+| `qa_record` | Add an externally verified outcome without raw task storage |
 | `compress` | Compress context; reversible calls add deduplicated verified grounding labels |
 
 ## Register in Claude Code
@@ -43,8 +46,8 @@ locally"*, *"is local routing active?"* — the agent calls the tools directly.
 
 ## Lazy tool loading (default on)
 
-The server has grown to ~39 tools; injecting every full JSON Schema into an
-agent's context costs ~3.9k tokens **on every turn**, whether or not that turn
+The server has grown to dozens of tools; injecting every full JSON Schema into
+an agent's context costs thousands of tokens **on every turn**, whether or not that turn
 uses them — [[context_profiler]] measured it as the single biggest slice of
 always-on prefix on this repo. So `tools/list` returns only a small core
 (`local_chat`, `auto_route`, `find_skills`, `conduct`) plus a `find_tool(query)`

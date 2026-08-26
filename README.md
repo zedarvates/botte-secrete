@@ -55,6 +55,7 @@ structured checks, evidence checks, or an explicit escalation path.
 | Area | What it does | Entry point |
 |---|---|---|
 | Routing | Chooses deterministic, local, or cloud execution | `botte route` |
+| Quality memory | Learns from verified outcomes and explains shadow k-NN advice | `botte qa` |
 | Project checkup | Audits policy, directives, metrics, security, and drift | `botte doctor` |
 | Context reduction | Compresses logs, JSON, tool output, and selected context | `universal_compressor`, `context_budget` |
 | Micro-NN belt | Runs tiny classifiers for routing hints; these are not LLMs | `botte belt` |

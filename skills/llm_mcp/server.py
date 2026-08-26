@@ -164,6 +164,69 @@ TOOLS = [
         },
     },
     {
+        "name": "qa_advise",
+        "description": "Return explainable quality advice: a shadow-only kNN route "
+                       "suggestion from externally verified project outcomes. It never executes or changes "
+                       "the active router, and high-risk work keeps a human gate.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "task": {"type": "string"},
+                "project": {"type": "string", "description": "Project dir (default: cwd)."},
+                "task_type": {"type": "string"},
+                "tags": {"type": "array", "items": {"type": "string"}},
+                "risk": {"type": "string",
+                         "enum": ["low", "standard", "high", "critical"],
+                         "default": "standard"},
+                "k": {"type": "integer", "minimum": 1, "maximum": 50, "default": 7},
+            },
+            "required": ["task"],
+        },
+    },
+    {
+        "name": "qa_record",
+        "description": "Record one externally verified quality outcome in the project's "
+                       "private support set. Raw task text is hashed into local features; "
+                       "model self-reports are rejected as labels.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "task": {"type": "string"},
+                "project": {"type": "string", "description": "Project dir (default: cwd)."},
+                "route": {"type": "string",
+                          "enum": ["deterministic", "local", "cloud", "human"]},
+                "verdict": {"type": "string",
+                            "enum": ["FAIL", "UNCERTAIN", "PASS", "PASS_ROBUST"]},
+                "verified_by": {"type": "string",
+                                "description": "External verifier, e.g. tests:pytest or human:review."},
+                "quality_score": {"type": "number", "minimum": 0, "maximum": 1},
+                "risk": {"type": "string",
+                         "enum": ["low", "standard", "high", "critical"],
+                         "default": "standard"},
+                "task_type": {"type": "string"},
+                "tags": {"type": "array", "items": {"type": "string"}},
+                "model": {"type": "string"},
+                "harness": {"type": "string"},
+                "duration_ms": {"type": "number", "minimum": 0},
+                "cost_usd": {"type": "number", "minimum": 0},
+                "tokens": {"type": "integer", "minimum": 0},
+                "evidence_refs": {"type": "array", "items": {"type": "string"}},
+            },
+            "required": ["task", "route", "verdict", "verified_by"],
+        },
+    },
+    {
+        "name": "qa_status",
+        "description": "Show verified support, maturity, privacy posture, and the single "
+                       "next step for the project's shadow quality compass.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "project": {"type": "string", "description": "Project dir (default: cwd)."},
+            },
+        },
+    },
+    {
         "name": "find_skills",
         "description": "Find the skills/tools relevant to a task by searching SKILL.md "
                        "files locally — 0 cloud tokens (lexical match; optional local-LLM "
@@ -875,6 +938,47 @@ def _tool_route_feedback(args: dict) -> str:
                       ensure_ascii=False, indent=2)
 
 
+def _tool_qa_advise(args: dict) -> str:
+    from skills.trajectory.quality import advise_route
+    advice = advise_route(
+        args["task"],
+        project_root=args.get("project", "."),
+        task_type=args.get("task_type", ""),
+        tags=args.get("tags", []),
+        risk=args.get("risk", "standard"),
+        k=int(args.get("k", 7)),
+    )
+    return json.dumps(advice.to_dict(), ensure_ascii=False, indent=2)
+
+
+def _tool_qa_record(args: dict) -> str:
+    from skills.trajectory.quality import record_verified
+    record = record_verified(
+        args["task"],
+        project_root=args.get("project", "."),
+        route=args["route"],
+        verdict=args["verdict"],
+        verified_by=args["verified_by"],
+        quality_score=args.get("quality_score"),
+        risk=args.get("risk", "standard"),
+        task_type=args.get("task_type", ""),
+        tags=args.get("tags", []),
+        model=args.get("model", ""),
+        harness=args.get("harness", ""),
+        duration_ms=args.get("duration_ms"),
+        cost_usd=args.get("cost_usd"),
+        tokens=args.get("tokens"),
+        evidence_refs=args.get("evidence_refs", []),
+    )
+    return json.dumps(record, ensure_ascii=False, indent=2)
+
+
+def _tool_qa_status(args: dict) -> str:
+    from skills.trajectory.quality import quality_status
+    return json.dumps(quality_status(args.get("project", ".")),
+                      ensure_ascii=False, indent=2)
+
+
 def _tool_fusion(args: dict) -> str:
     from skills.auto_router import fusion
     fn = {"cascade": fusion.cascade, "draft_refine": fusion.draft_refine,
@@ -1248,6 +1352,9 @@ DISPATCH = {
     "local_chat": _tool_local_chat,
     "auto_route": _tool_auto_route,
     "route_feedback": _tool_route_feedback,
+    "qa_advise": _tool_qa_advise,
+    "qa_record": _tool_qa_record,
+    "qa_status": _tool_qa_status,
     "fusion": _tool_fusion,
     "find_skills": _tool_find_skills,
     "infra_tips": _tool_infra_tips,
