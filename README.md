@@ -175,9 +175,10 @@ example. No raw asset bytes or local paths enter its verified memory.
 The existing MIT-licensed
 [Botte Nano-NN repository on Hugging Face](https://huggingface.co/zedgamer/botte-nano-nn)
 hosts a portable snapshot of the micro-NN format. Its source, feature contracts,
-tests, and maturity status remain authoritative here. A separate
-[Asset Quality Memory k-NN card](distribution/huggingface/asset-quality-knn/README.md)
-is staged but not yet published; see the [publication checklist](docs/huggingface-publication.md).
+tests, and maturity status remain authoritative here. The separate
+[Asset Quality Memory k-NN repository on Hugging Face](https://huggingface.co/zedgamer/asset-quality-memory-knn)
+documents the shadow-only baseline; private neighbor ledgers stay local. See the
+[publication checklist](docs/huggingface-publication.md).
 
 ![Measured reduction on bundled samples](docs/assets/benchmark-compression.svg)
 
