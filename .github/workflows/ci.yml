@@ -28,12 +28,35 @@ jobs:
       - name: Install project dependencies
         run: pip install -e .
       - name: Run tests (fail-fast)
+        id: tests
         run: python scripts/run_tests.py -q
         timeout-minutes: 10
       - name: Validate GitHub documentation
+        id: docs
         run: |
           python scripts/test_readme_commands.py
           python scripts/check_docs_links.py
+      - name: Emit sanitized CI outcome
+        if: always() && steps.tests.outcome != ''
+        run: |
+          python -m skills.trajectory.ci \
+            --tests "${{ steps.tests.outcome }}" \
+            --docs "${{ steps.docs.outcome }}" \
+            --run-id "${{ github.run_id }}" \
+            --run-attempt "${{ github.run_attempt }}" \
+            --job "test" \
+            --python-version "${{ matrix.python-version }}" \
+            --project . \
+            --public-output .botte-cache/ci-outcome-public.json \
+            --json
+      - name: Upload sanitized CI outcome
+        if: always() && steps.tests.outcome != ''
+        uses: actions/upload-artifact@v6
+        with:
+          name: quality-ci-${{ matrix.python-version }}
+          path: .botte-cache/ci-outcome-public.json
+          if-no-files-found: error
+          retention-days: 14
 
   bench:
     runs-on: ubuntu-latest
