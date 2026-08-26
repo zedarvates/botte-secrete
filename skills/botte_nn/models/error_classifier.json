@@ -329,5 +329,78 @@
   "activations": [
     "relu",
     "softmax"
-  ]
+  ],
+  "provenance": {
+    "maturity": "G1",
+    "source_commit": "8a22992bdec939446ee261ad883fd4a9eccc23ef",
+    "trainer": "skills/botte_nn/training/distill_error_classifier.py",
+    "label_contract": {
+      "classes": [
+        "syntax",
+        "runtime",
+        "network",
+        "permission",
+        "timeout",
+        "resource"
+      ],
+      "source": "curated real-world exception message templates with explicit labels",
+      "production_observations": false
+    },
+    "corpus": {
+      "kind": "embedded_curated_templates",
+      "template_count": 29,
+      "sha256": "63f7004e9b0b6c74be4771404913c2c323529fd5bf13a8c0d0d79c9544bfe79b"
+    },
+    "dataset": {
+      "samples": 174,
+      "class_counts": [
+        30,
+        36,
+        30,
+        24,
+        30,
+        24
+      ],
+      "sha256": "3d220a96451a61156dfaa9a98443a2ea21a863a25e75381525b2845c6bb08309",
+      "expansion": "template x exit_code(1,2,137) x bare_or_traceback"
+    },
+    "split": {
+      "method": "numpy.default_rng permutation",
+      "seed": 42,
+      "train_samples": 140,
+      "held_out_samples": 34,
+      "held_out_class_counts": [
+        7,
+        7,
+        5,
+        4,
+        5,
+        6
+      ]
+    },
+    "training": {
+      "initialization_seed": 0,
+      "layers": [
+        12,
+        16,
+        6
+      ],
+      "activations": [
+        "relu",
+        "softmax"
+      ],
+      "epochs": 1500,
+      "learning_rate": 0.05
+    },
+    "evaluation": {
+      "metric": "held_out_accuracy",
+      "value": 0.9411764705882353,
+      "correct": 32,
+      "total": 34
+    },
+    "weights": {
+      "core_sha256": "212f2b36e1684c1bd4013943b5a47af2666b6dca4832cf18d64565f1d12c1e15",
+      "reproduction_tolerance_atol": 1e-12
+    }
+  }
 }
