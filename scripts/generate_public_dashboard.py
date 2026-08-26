@@ -14,6 +14,7 @@ if str(REPO) not in sys.path:
 
 from skills.atomic_json import write_json
 from skills.dashboard.api import load_test_summary
+from skills.dashboard.quality_compass import public_quality_compass_card
 
 
 DEFAULT_OUTPUT = REPO / ".botte-cache" / "public-dashboard"
@@ -44,6 +45,7 @@ def public_metrics(test_summary_path: str | Path | None = None) -> dict:
         "memory_by_status": {},
         "memory_by_asset": {},
         "legacy_memory_entries": 0,
+        "quality_compass": public_quality_compass_card(),
         "local_metrics_included": False,
     }
 

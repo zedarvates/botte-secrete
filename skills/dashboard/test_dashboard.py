@@ -96,16 +96,20 @@ def main() -> int:
             }), encoding="utf-8")
             memory_root = api_root / "memory"
             with MemoryStore(base_dir=memory_root) as store:
-                store.store(MemoryEntry(key="fixture", value="private",
+                store.store(MemoryEntry(key="fixture", value="MEMORY_CONTENT_CANARY",
                                         project_id="dashboard_test"))
 
-            m = load_metrics(test_summary_path=summary, memory_hub_dir=memory_root)
+            m = load_metrics(test_summary_path=summary, memory_hub_dir=memory_root,
+                             quality_project_root=api_root)
             _ok("api.load_metrics uses the observed test summary",
                 m["tests_passed"] == 711 and m["tests_failed"] == 0
                 and m["test_suites"] == 46)
             _ok("api exposes Memory Hub aggregates without entry contents",
                 m["memory_entries"] == 1 and m["memory_projects"] == 1
-                and "private" not in json.dumps(m))
+                and "MEMORY_CONTENT_CANARY" not in json.dumps(m))
+            _ok("api exposes the local Quality Compass contract",
+                m["quality_compass"]["schema"] == "botte.quality-compass-card/v1"
+                and m["quality_compass"]["state"] == "empty")
 
         _ok("api.DashboardHandler exists and load_metrics is callable",
             DashboardHandler is not None and callable(load_metrics))
@@ -126,7 +130,8 @@ def main() -> int:
             with urllib.request.urlopen(base + "/api/stats", timeout=5) as response:
                 live = json.loads(response.read().decode("utf-8"))
                 _ok("api serves live JSON metrics", response.status == 200
-                    and "tests_status" in live and "memory_by_status" in live)
+                    and "tests_status" in live and "memory_by_status" in live
+                    and "quality_compass" in live)
         finally:
             server.shutdown()
             server.server_close()
@@ -152,7 +157,8 @@ def main() -> int:
             _ok("public dashboard excludes machine-private metrics",
                 payload["snapshot_scope"] == "public_repository"
                 and payload["local_metrics_included"] is False
-                and payload["memory_entries"] == 0)
+                and payload["memory_entries"] == 0
+                and payload["quality_compass"]["state"] == "private")
     except ImportError:
         _ok("public dashboard generator importable", False)
 
