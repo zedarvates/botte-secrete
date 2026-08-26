@@ -68,6 +68,7 @@ SUITES = [
     ("cwe_kb", [sys.executable, "-m", "skills.cwe_kb.test_cwe_kb"], "skills/cwe_kb/"),
     ("botte_nn", [sys.executable, "-m", "skills.botte_nn.test_botte_nn"], "skills/botte_nn/"),
     ("features", [sys.executable, "-m", "skills.botte_nn.test_features"], "skills/botte_nn/"),
+    ("error_provenance", [sys.executable, "-m", "skills.botte_nn.test_error_classifier_provenance"], "skills/botte_nn/"),
     ("auto_labels", [sys.executable, "-m", "skills.botte_nn.test_auto_labels"], "skills/botte_nn/"),
     ("local_harness", [sys.executable, "-m", "skills.local_harness.test_verifier"], "skills/local_harness/"),
     ("harness_executor", [sys.executable, "-m", "skills.local_harness.test_executor"], "skills/local_harness/"),
