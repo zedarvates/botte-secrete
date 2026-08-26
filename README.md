@@ -56,6 +56,7 @@ structured checks, evidence checks, or an explicit escalation path.
 |---|---|---|
 | Routing | Chooses deterministic, local, or cloud execution | `botte route` |
 | Quality memory | Learns from verified outcomes and explains shadow k-NN advice | `botte qa` |
+| Asset quality | Gates and compares images, textures, meshes, animations, and Godot packages | `botte asset-qa` |
 | Project checkup | Audits policy, directives, metrics, security, and drift | `botte doctor` |
 | Context reduction | Compresses logs, JSON, tool output, and selected context | `universal_compressor`, `context_budget` |
 | Micro-NN belt | Runs tiny classifiers for routing hints; these are not LLMs | `botte belt` |
@@ -164,6 +165,18 @@ Micro-NN activation follows the
 model is activated while an existing predictor still lacks an auditable label
 source, production verdicts, calibration, and rollback gate. Run `checkup` or
 `python -m skills.nn_audit.cli skills/botte_nn --json` for the current status.
+
+Asset Factory integrations can use the separate [Asset Quality Memory](skills/asset_quality/SKILL.md):
+deterministic integrity and licence gates run first, then a family-isolated,
+explainable k-NN baseline advises in shadow mode. The bundled
+[mesh report](examples/asset-quality/mesh-report.json) is a complete input
+example. No raw asset bytes or local paths enter its verified memory.
+
+Hugging Face cards for the [micro-NN belt](distribution/huggingface/micro-nn/README.md)
+and [Asset Quality Memory k-NN](distribution/huggingface/asset-quality-knn/README.md)
+are staged with MIT metadata. Their final Hub URLs will be added here after the
+owner namespace and existing repositories are verified; see the
+[publication checklist](docs/huggingface-publication.md).
 
 ![Measured reduction on bundled samples](docs/assets/benchmark-compression.svg)
 

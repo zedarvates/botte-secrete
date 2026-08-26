@@ -57,6 +57,7 @@ contrôles structurés, des preuves ou une escalade explicite.
 |---|---|---|
 | Routage | Choisit une exécution déterministe, locale ou cloud | `botte route` |
 | Mémoire qualité | Apprend des résultats vérifiés et explique les conseils k-NN en observation | `botte qa` |
+| Qualité des assets | Contrôle et compare images, textures, maillages, animations et paquets Godot | `botte asset-qa` |
 | Diagnostic | Vérifie politique, directives, métriques, sécurité et dérive | `botte doctor` |
 | Réduction du contexte | Compresse journaux, JSON, sorties d’outils et contexte sélectionné | `universal_compressor`, `context_budget` |
 | Ceinture micro-NN | Fournit des indices de routage avec de petits classifieurs, pas des LLM | `botte belt` |
@@ -170,6 +171,18 @@ aucun nouveau micro-NN n'est activé tant qu'un modèle existant n'a pas une
 source de labels auditable, des verdicts de production, une calibration et un
 rollback. Utilisez `checkup` ou
 `python -m skills.nn_audit.cli skills/botte_nn --json` pour l'état courant.
+
+Les Asset Factories peuvent utiliser la [mémoire qualité des assets](skills/asset_quality/SKILL.md) :
+les contrôles déterministes d'intégrité et de licence passent d'abord, puis un
+k-NN explicable et isolé par famille conseille en mode observation. Un
+[rapport de maillage complet](examples/asset-quality/mesh-report.json) est
+fourni. Aucun octet d'asset ni chemin local n'entre dans la mémoire vérifiée.
+
+Les cartes Hugging Face de la [ceinture micro-NN](distribution/huggingface/micro-nn/README.md)
+et de la [mémoire k-NN des assets](distribution/huggingface/asset-quality-knn/README.md)
+sont préparées avec les métadonnées MIT. Les URL finales seront ajoutées ici
+après vérification du compte propriétaire et des deux dépôts existants ; voir la
+[check-list de publication](docs/huggingface-publication.md).
 
 ![Réduction mesurée sur les échantillons fournis](docs/assets/benchmark-compression.svg)
 
