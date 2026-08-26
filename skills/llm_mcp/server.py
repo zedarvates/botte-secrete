@@ -767,6 +767,10 @@ TOOLS = [
                 },
                 "limit": {
                     "type": "integer"
+                },
+                "storage_area": {
+                    "type": "string",
+                    "enum": ["all", "trusted", "quarantine"]
                 }
             },
             "required": [
@@ -794,6 +798,20 @@ TOOLS = [
                 "project_id",
                 "agent_id"
             ]
+        }
+    },
+    {
+        "name": "review_quarantine",
+        "description": "Review quarantined memory as non-executable data with provenance",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "project_id": {"type": "string"},
+                "agent_id": {"type": "string"},
+                "query": {"type": "string"},
+                "limit": {"type": "integer"}
+            },
+            "required": ["project_id", "agent_id"]
         }
     },
     {
@@ -835,6 +853,19 @@ TOOLS = [
                 "source_ref": {
                     "type": "string"
                 },
+                "source_type": {
+                    "type": "string",
+                    "enum": ["user", "repo", "web", "tool", "agent", "generated"]
+                },
+                "source_uri": {"type": "string"},
+                "source_id": {"type": "string"},
+                "run_id": {"type": "string"},
+                "timestamp": {"type": "number"},
+                "trust_class": {
+                    "type": "string",
+                    "enum": ["trusted_user", "external_observation", "generated_untrusted"]
+                },
+                "executable_instruction": {"type": "boolean", "enum": [False]},
                 "visibility": {
                     "type": "string",
                     "enum": [
@@ -858,7 +889,12 @@ TOOLS = [
                 "project_id",
                 "key",
                 "value",
-                "agent_id"
+                "agent_id",
+                "source_type",
+                "run_id",
+                "timestamp",
+                "trust_class",
+                "executable_instruction"
             ]
         }
     },
@@ -1394,6 +1430,11 @@ def _tool_context_bundle(args: dict) -> str:
     import json
     return json.dumps(_mh("context_bundle", args), ensure_ascii=False)
 
+def _tool_review_quarantine(args: dict) -> str:
+    from skills.memory_hub.mcp import dispatch as _mh
+    import json
+    return json.dumps(_mh("review_quarantine", args), ensure_ascii=False)
+
 def _tool_propose_memory(args: dict) -> str:
     from skills.memory_hub.mcp import dispatch as _mh
     import json
@@ -1470,6 +1511,7 @@ DISPATCH = {
     "loop_stats": _tool_loop_stats,
     "search_hub": _tool_search_hub,
     "context_bundle": _tool_context_bundle,
+    "review_quarantine": _tool_review_quarantine,
     "propose_memory": _tool_propose_memory,
     "promote_memory": _tool_promote_memory,
     "forget_memory": _tool_forget_memory,

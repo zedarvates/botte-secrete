@@ -213,6 +213,9 @@ def main() -> int:
                 "project_id": "lazy_test", "key": "decision:one",
                 "value": "keep local", "agent_id": "alice",
                 "visibility": "project",
+                "source_type": "user", "source_id": "lazy-fixture",
+                "run_id": "lazy-memory-run", "timestamp": 1_800_000_000.0,
+                "trust_class": "trusted_user", "executable_instruction": False,
             })
             _ok("'propose_memory' works through tools/call",
                 proposed["status"] == "proposal", state)

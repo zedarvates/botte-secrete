@@ -3,6 +3,9 @@
 ## Unreleased
 
 ### Added
+- Fail-closed Memory Hub quarantine with mandatory MCP provenance, separate
+  storage for external/generated observations, explicit review envelopes, and
+  a poisoning fixture that cannot enter context or gain promotion authority.
 - Deterministic `MIGRATION_AUDIT` stage between builder and validator, detecting
   legacy markers, stale paths, duplicate old/new entry points, and missing
   migration acceptance markers without executing project code.
