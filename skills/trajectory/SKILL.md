@@ -82,8 +82,14 @@ and citation checks can produce verified `PASS`, `FAIL`, or `UNCERTAIN` labels;
 gates, abstentions, and escalation remain explicit without treating the final
 unverified model answer as evidence. CI writes the private envelope only inside
 the ephemeral job workspace and uploads a separate sanitized three-line summary;
-run IDs, fingerprints, paths, and evidence details are not published. Kanboard
-status consumption remains the follow-up integration point.
+run IDs, fingerprints, paths, and evidence details are not published.
+
+Kanboard/Odin and other authenticated task planes can consume the passive
+`botte.task-quality-status/v1` contract with `botte qa task-status` or MCP tool
+`qa_task_status`. It exports an opaque task reference, status, next safe action,
+and references from independently verified evidence only. It never sends task
+text or fingerprints, never marks work terminal, and never authorizes a task
+transition. See `docs/integrations/kanboard-quality-status.md`.
 
 Codex can call the MCP tool `qa_agent_run`; Hermes can use the same MCP tool or
 the `botte_qa_agent_run` function bridge. Both accept the strict
@@ -146,6 +152,7 @@ changes a route, or grants `ACT` authority.
 | `qa_advise` | Return an explainable shadow recommendation or abstention |
 | `qa_record` | Add one externally verified outcome without storing raw task text |
 | `qa_agent_run` | Convert a strict Codex/Hermes run manifest into a private outcome |
+| `qa_task_status` | Export a passive, non-terminal status packet for Kanboard/Odin |
 
 ## Local state
 

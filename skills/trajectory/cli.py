@@ -9,8 +9,9 @@ from pathlib import Path
 
 from skills.console_utf8 import force_utf8
 from skills.trajectory.quality import advise_route, quality_status, record_verified
+from skills.trajectory.task_status import task_quality_status
 
-_COMMANDS = {"status", "advise", "record", "benchmark"}
+_COMMANDS = {"status", "advise", "record", "benchmark", "task-status"}
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -70,6 +71,15 @@ def _parser() -> argparse.ArgumentParser:
     benchmark.add_argument("--code-ref", default="")
     benchmark.add_argument("--output", type=Path)
     benchmark.add_argument("--json", action="store_true")
+
+    task_status = sub.add_parser(
+        "task-status",
+        help="export a passive status packet for Kanboard or another task plane",
+    )
+    task_status.add_argument("--project", default=".")
+    task_status.add_argument("--task-ref", required=True)
+    task_status.add_argument("--outcome-id")
+    task_status.add_argument("--json", action="store_true")
     return parser
 
 
@@ -172,6 +182,20 @@ def main(argv: list[str] | None = None) -> int:
                 if args.output:
                     print(f"   Report: {args.output}")
             return 2 if data["benchmark_status"] == "invalid_dataset" else 0
+
+        if args.command == "task-status":
+            data = task_quality_status(
+                task_ref=args.task_ref,
+                project_root=args.project,
+                outcome_id=args.outcome_id,
+            )
+            if args.json:
+                print(json.dumps(data, ensure_ascii=False, indent=2))
+            else:
+                print(f"Task QA: {data['state']} · {data['reason_code']}")
+                print(f"Next: {data['next_safe_action']}")
+                print("Safety: observation only; no task transition is authorized.")
+            return 0
 
         record = record_verified(
             args.task,
