@@ -77,6 +77,20 @@ def main() -> int:
             blocked = True
         _ok("model self-report cannot become a quality label", blocked, state)
 
+        try:
+            record_verified(
+                "classify with no evidence",
+                project_root=project,
+                route="local",
+                verdict="pass",
+                verified_by="tests:pytest",
+            )
+            missing_evidence_blocked = False
+        except ValueError:
+            missing_evidence_blocked = True
+        _ok("a verifier identity without evidence cannot create a label",
+            missing_evidence_blocked, state)
+
         invalid_inputs = 0
         for bad in (
             {"task": None, "tags": ()},
@@ -117,6 +131,7 @@ def main() -> int:
                 task_type="summary",
                 duration_ms=120,
                 tokens=140,
+                evidence_refs=("pytest:summary_route",),
             )
         for task in (
             "summarize complex authentication incident evidence",
@@ -132,6 +147,7 @@ def main() -> int:
                 duration_ms=900,
                 cost_usd=0.02,
                 tokens=600,
+                evidence_refs=("independent:summary_review",),
             )
 
         suggestion = advise_route(
@@ -163,6 +179,7 @@ def main() -> int:
                 route="deterministic",
                 verdict=verdict,
                 verified_by="deterministic:roundtrip",
+                evidence_refs=("deterministic:roundtrip",),
             )
         status = quality_status(project)
         _ok("duplicate task/route rows do not inflate grounding progress",

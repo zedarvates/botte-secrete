@@ -34,6 +34,7 @@ for rec in follow_events("."):   # blocking generator, for --live tools
 | `escalate` | from, to, reason | `auto_router.AutoRouter.run` |
 | `nn_out` | model, probs/class | `botte_nn` predictors |
 | `fusion` | strategy, models | `auto_router.fusion` |
+| `qa_outcome` | source, route, status, verification_state, evidence_count | execution adapters via `trajectory.outcome` |
 | `qa_trajectory` | route, verdict, quality_score, verified_by | `trajectory.quality` |
 | `qa_shadow_advice` | status, recommendation, evidence_strength, acted=false | `trajectory.quality` |
 

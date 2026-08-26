@@ -55,7 +55,8 @@ def _parser() -> argparse.ArgumentParser:
     record.add_argument("--duration-ms", type=float)
     record.add_argument("--cost-usd", type=float)
     record.add_argument("--tokens", type=int)
-    record.add_argument("--evidence", action="append", default=[])
+    record.add_argument("--evidence", action="append", default=[], required=True,
+                        help="external evidence reference; repeat for multiple references")
     record.add_argument("--json", action="store_true")
     return parser
 
