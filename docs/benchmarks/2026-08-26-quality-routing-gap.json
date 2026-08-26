@@ -1,0 +1,133 @@
+{
+  "schema": "botte.quality-routing-benchmark/v1",
+  "generated_at": "2026-08-26T02:32:03.507734+00:00",
+  "mode": "shadow",
+  "benchmark_status": "insufficient_evidence",
+  "conclusion": "Collect more independently verified, replayable missions; no mechanism can be ranked honestly yet.",
+  "comparative_winner": null,
+  "dataset": {
+    "provided": false,
+    "dataset_class": null,
+    "missions": 0,
+    "train": 0,
+    "holdout": 0,
+    "train_families": 0,
+    "holdout_families": 0,
+    "temporal_order": "oldest_train_newest_holdout",
+    "exact_task_leakage": null,
+    "task_family_leakage": null,
+    "eligible_for_conclusions": false,
+    "raw_tasks_in_report": false
+  },
+  "evidence_inventory": {
+    "verified_quality_rows": 0,
+    "replayable_quality_missions": 0,
+    "verified_binary_router_feedback": 0,
+    "micro_nn_inventory": {
+      "total": 11,
+      "grounded": 4,
+      "synthetic": 0,
+      "unknown": 7,
+      "orphan": 0,
+      "at_risk": 0,
+      "grounded_pct": 36
+    },
+    "binary_router_candidate": {
+      "present": true,
+      "audit_verdict": "grounded",
+      "wired": true,
+      "benchmark_eligible": false
+    }
+  },
+  "routing_quality": {
+    "deterministic": {
+      "mechanism": "deterministic",
+      "status": "not_run",
+      "recommendation": "collect_more_data",
+      "activation_allowed": false
+    },
+    "knn": {
+      "mechanism": "knn",
+      "status": "not_run",
+      "recommendation": "collect_more_data",
+      "activation_allowed": false
+    },
+    "micro_nn": {
+      "mechanism": "micro_nn",
+      "status": "not_run",
+      "recommendation": "collect_more_data",
+      "activation_allowed": false
+    }
+  },
+  "model_quality": {
+    "status": "not_observed",
+    "reason": "The routing harness does not execute or judge model answers."
+  },
+  "harness_quality": {
+    "status": "not_observed",
+    "reason": "No independently verified harness outcomes are replayable in this environment."
+  },
+  "disagreement": {
+    "status": "not_observed",
+    "pairwise_rates": {}
+  },
+  "missing_metrics": [
+    {
+      "metric": "model_answer_quality",
+      "reason": "No verified answer outputs are in the mission contract."
+    },
+    {
+      "metric": "harness_recovery_quality",
+      "reason": "No verified harness replay outcomes are available."
+    },
+    {
+      "metric": "execution_tokens_and_cost",
+      "reason": "This run evaluates decision functions only and executes no model."
+    },
+    {
+      "metric": "ram_rss",
+      "reason": "Only Python allocation peak is observable with the dependency-free harness."
+    },
+    {
+      "metric": "vram_peak",
+      "reason": "No model is executed and no portable VRAM sampler is available."
+    },
+    {
+      "metric": "energy",
+      "reason": "No portable process-level energy meter is available in this environment."
+    }
+  ],
+  "gaps": [
+    {
+      "code": "no_replayable_missions",
+      "detail": "The private QA ledger stores fingerprints, not sanitized task text, so it cannot be replayed."
+    },
+    {
+      "code": "temporal_holdout_unavailable",
+      "detail": "A dated sanitized mission set was not provided."
+    },
+    {
+      "code": "verified_routing_feedback_below_minimum",
+      "observed": 0,
+      "required": 70
+    }
+  ],
+  "reproducibility": {
+    "code_ref": "2726a9c93fee6c858c18840ee611056f02c8983e",
+    "mission_set_sha256": null,
+    "benchmark_harness_sha256": "047d523bc3ed7a5003c6863ee650072ffe4b5fc5d7cd0e9b6a98e33a9421acc5",
+    "quality_module_sha256": "fda3915227af2ca74017b62fa9a7b4fb762676f7a196d049366c37deb03d31a9",
+    "micro_nn_model": "binary_router",
+    "micro_nn_model_sha256": "ea41e7c40032c19cfaebe93235facd56487d7d11bd7c747e2a8b064300241799",
+    "deterministic_policy": "effort-tier-v1",
+    "knn_feature_version": "hash-bow-v1",
+    "budget_ratio": 1.0,
+    "has_local_surface": true
+  },
+  "authority": {
+    "shadow_only": true,
+    "acted": false,
+    "trained": false,
+    "activation_allowed": false
+  }
+}

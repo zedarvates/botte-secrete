@@ -103,6 +103,32 @@ The k-NN chooser selects the least expensive observed route whose similar
 support clears the quality floor. If evidence is sparse or conflicting, it
 abstains and leaves the deterministic router in control.
 
+## Leakage-resistant routing benchmark
+
+Compare the deterministic rule, Quality Compass k-NN, and the existing
+`binary_router` micro-NN on one oldest-train/newest-holdout split:
+
+```bash
+python -m skills.trajectory.cli benchmark --project . --json
+python -m skills.trajectory.cli benchmark \
+  --missions private/sanitized-routing-missions.jsonl \
+  --code-ref "$(git rev-parse HEAD)" --output benchmark.json --json
+```
+
+Without a mission file, the command inventories observable evidence and emits
+a machine-readable `collect_more_data` gap report. A mission set must conform
+to `docs/schemas/quality-routing-mission.schema.json`, use independent evidence,
+contain only sanitized task text, and keep task families disjoint across the
+temporal boundary. Fixtures exercise the harness but can never rank candidates.
+The output contract is `docs/schemas/quality-routing-benchmark.schema.json`.
+
+The benchmark measures routing-oracle accuracy, coverage, abstention,
+disagreement, confidence intervals, decision latency, Python allocation peak,
+and calibration where confidence exists. Model-answer and harness-execution
+quality remain separate and explicitly unobserved unless independently
+verifiable outcomes are supplied. It never executes a model, trains weights,
+changes a route, or grants `ACT` authority.
+
 ## MCP tools
 
 | Tool | Purpose |
