@@ -8,6 +8,8 @@
   externally evidenced verdicts enter the shadow Quality Compass ledger.
 - Auto-router outcome adapter for private, replay-safe `PARTIAL`, `FAIL`, and
   `ABSTAINED` facts; backend returns remain unverified and cannot promote labels.
+- Strict `botte.agent-run/v1` manifests shared by Codex MCP and the Hermes
+  function bridge, rejecting raw-output fields and agent self-labels.
 - Accessible Quality Compass dashboard card with a fluid state/reason/next-action
   view, progressive local evidence, route comparison, freshness and human-gate
   states; public snapshots disclose no local task or evidence material.
