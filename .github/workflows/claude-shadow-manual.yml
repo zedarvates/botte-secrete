@@ -34,8 +34,6 @@ jobs:
     name: Read-only Claude diagnostic
     runs-on: self-hosted
     timeout-minutes: 20
-    env:
-      SHADOW_DIR: ${{ runner.temp }}/botte-shadow/${{ github.run_id }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
@@ -46,6 +44,7 @@ jobs:
       - name: Prepare bounded evidence outside checkout
         shell: bash
         env:
+          SHADOW_DIR: ${{ runner.temp }}/botte-shadow/${{ github.run_id }}
           GH_TOKEN: ${{ github.token }}
           MODE: ${{ inputs.mode }}
           PR_NUMBER: ${{ inputs.pr_number }}
@@ -89,6 +88,8 @@ jobs:
       - name: Run Claude in SHADOW mode
         id: claude
         uses: anthropics/claude-code-action@v1
+        env:
+          SHADOW_DIR: ${{ runner.temp }}/botte-shadow/${{ github.run_id }}
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           track_progress: false
@@ -119,6 +120,7 @@ jobs:
         if: always()
         shell: bash
         env:
+          SHADOW_DIR: ${{ runner.temp }}/botte-shadow/${{ github.run_id }}
           CLAUDE_CONCLUSION: ${{ steps.claude.outputs.conclusion }}
         run: |
           python - <<'PY'
@@ -142,6 +144,8 @@ jobs:
       - name: Upload sanitized shadow status
         if: always()
         uses: actions/upload-artifact@v6
+        env:
+          SHADOW_DIR: ${{ runner.temp }}/botte-shadow/${{ github.run_id }}
         with:
           name: claude-shadow-status-${{ github.run_id }}
           path: ${{ env.SHADOW_DIR }}/status.json
