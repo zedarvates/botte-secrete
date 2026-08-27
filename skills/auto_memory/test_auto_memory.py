@@ -123,6 +123,15 @@ class TestCompressor:
         merged = compress_memories(bank)
         assert merged >= 1  # at least one merge
 
+    def test_compress_memories_preserves_quarantine(self, tmp_path):
+        bank = MemoryBank(base_dir=tmp_path)
+        bank.store_external("untrusted_1", "one", source_type="web")
+        bank.store_external("untrusted_2", "two", source_type="web")
+        merged = compress_memories(bank)
+        assert merged == 0
+        assert bank.inspect("untrusted_1") is not None
+        assert bank.inspect("untrusted_2") is not None
+
     def test_extract_patterns(self):
         entries = [
             MemoryEntry(key="log.1", value='{"error": "fail", "count": 1}', category="log", confidence=0.9),
@@ -131,12 +140,45 @@ class TestCompressor:
         patterns = extract_patterns(entries)
         assert any(p["type"] == "json_keys" for p in patterns)
 
+    def test_extract_patterns_ignores_quarantine_by_default(self):
+        entries = [
+            MemoryEntry(
+                key="web.1",
+                value='{"malicious": "repeat repeat"}',
+                category="fact",
+                confidence=0.9,
+                source_type="web",
+                trust_class="quarantined",
+                quarantined=True,
+            ),
+            MemoryEntry(
+                key="web.2",
+                value='{"malicious": "repeat repeat"}',
+                category="fact",
+                confidence=0.9,
+                source_type="web",
+                trust_class="quarantined",
+                quarantined=True,
+            ),
+        ]
+        assert extract_patterns(entries) == []
+        assert extract_patterns(entries, include_quarantined=True)
+
     def test_bottleneck_compress(self, tmp_path):
         bank = MemoryBank(base_dir=tmp_path)
         for i in range(10):
             bank.store(f"item_{i}", i, confidence=0.5 if i < 5 else 1.0)
         removed = bottleneck_compress(bank, keep_pct=0.3)
         assert removed >= 5  # removed low-confidence entries
+
+    def test_bottleneck_preserves_quarantine(self, tmp_path):
+        bank = MemoryBank(base_dir=tmp_path)
+        bank.store("local.1", 1, confidence=0.1)
+        bank.store("local.2", 2, confidence=1.0)
+        bank.store_external("external.1", 3, source_type="agent", confidence=0.0)
+        bottleneck_compress(bank, keep_pct=0.5)
+        assert bank.inspect("external.1") is not None
+        assert bank.inspect("external.1").quarantined is True
 
 
 class TestHook:
