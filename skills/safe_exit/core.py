@@ -3,11 +3,11 @@ from __future__ import annotations
 import time
 from collections import deque
 from dataclasses import dataclass
-from enum import IntEnum, str as _unused  # type: ignore[attr-defined]
+from enum import Enum, IntEnum
 from typing import Deque
 
 
-class RunDecision(str):
+class RunDecision(str, Enum):
     CONTINUE = "CONTINUE"
     UNCERTAIN = "UNCERTAIN"
 
@@ -44,7 +44,7 @@ class SafeExitConfig:
 
 @dataclass(frozen=True)
 class RunGuardResult:
-    decision: str
+    decision: RunDecision
     reason: str | None
     iterations: int
     tool_calls: int
@@ -56,7 +56,7 @@ class SafeExitGuard:
     """Deterministic budget/stagnation guard for agent loops.
 
     The guard does not execute tools and does not retry work. It only records
-    progress and returns `UNCERTAIN` when a configured safety budget is
+    progress and returns ``UNCERTAIN`` when a configured safety budget is
     exhausted or the run is demonstrably stagnating.
     """
 
@@ -105,7 +105,7 @@ class SafeExitGuard:
             self._failure_signatures.clear()
 
         current_time = time.monotonic() if now is None else now
-        elapsed = current_time - self.started_at
+        elapsed = max(0.0, current_time - self.started_at)
 
         reason: str | None = None
         if self.iterations >= self.config.max_iterations:
