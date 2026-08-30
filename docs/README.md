@@ -37,6 +37,7 @@ the code in `skills/<name>/SKILL.md`.
 ## Explanations and evidence
 
 - [Local model benchmark note](local-model-benchmarks.md) — historical evidence
+- [Local worker benchmark](local-worker-benchmark.md) — comparable Granite 4.2 evidence
   with explicit reproducibility limits.
 - [Quality Compass plan](plans/2026-08-25_quality-compass-plan.md) — active plan
   for verified QA memory, k-NN baselines, and specialized local workers.
