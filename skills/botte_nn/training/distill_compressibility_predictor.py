@@ -30,6 +30,7 @@ from skills.universal_compressor.compressor import compress, flush_store, restor
 _LABELS = ["none", "delta", "heavy"]
 _SOURCE_COMMIT = "8a22992bdec939446ee261ad883fd4a9eccc23ef"
 _TRAINER = "skills/botte_nn/training/distill_compressibility_predictor.py"
+_FEATURE_DECIMALS = 12
 
 
 def _stable_sha256(value) -> str:
@@ -109,9 +110,14 @@ def build_dataset():
             if not result.reversible_key or restore(result.reversible_key) != content:
                 raise RuntimeError("compression corpus failed exact roundtrip")
             label = compression_label(result.ratio)
-            X.append(features.featurize(
+            feature_vector = features.featurize(
                 "compressibility_predictor", features.compressibility_values(content)
-            ))
+            )
+            # Entropy uses libm.log2; quantize away platform-specific final bits
+            # before hashing or training so provenance is stable across CPUs.
+            X.append([
+                round(float(value), _FEATURE_DECIMALS) for value in feature_vector
+            ])
             y.append(_LABELS.index(label))
             evidence.append({
                 "content_sha256": hashlib.sha256(content.encode("utf-8")).hexdigest(),
@@ -232,6 +238,7 @@ def build_provenance(model_data: dict, X, y, evidence, train_idx, test_idx,
             "samples": int(len(y)),
             "class_counts": np.bincount(y, minlength=3).tolist(),
             "sha256": _stable_sha256({"features": X.tolist(), "labels": y.tolist()}),
+            "feature_decimals": _FEATURE_DECIMALS,
         },
         "split": {
             "method": "stratified numpy.default_rng permutation",
