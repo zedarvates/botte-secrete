@@ -31,6 +31,7 @@ _LABELS = ["none", "delta", "heavy"]
 _SOURCE_COMMIT = "8a22992bdec939446ee261ad883fd4a9eccc23ef"
 _TRAINER = "skills/botte_nn/training/distill_compressibility_predictor.py"
 _FEATURE_DECIMALS = 12
+_TRAINING_DECIMALS = 12
 
 
 def _stable_sha256(value) -> str:
@@ -182,9 +183,14 @@ def train_model(X, y, *, seed: int = 0, epochs: int = 2500, lr: float = 0.01):
             m_hat = moments[index] / (1 - 0.9 ** epoch)
             v_hat = variances[index] / (1 - 0.999 ** epoch)
             parameter -= lr * m_hat / (np.sqrt(v_hat) + 1e-8)
+            # BLAS reduction order varies by CPU. Quantizing all optimizer
+            # state each step prevents final-bit drift from accumulating.
+            parameter[:] = np.round(parameter, _TRAINING_DECIMALS)
+            moments[index][:] = np.round(moments[index], _TRAINING_DECIMALS)
+            variances[index][:] = np.round(variances[index], _TRAINING_DECIMALS)
     # Fold z = ((x - mean) / scale) @ w1 + b1 into raw-input weights.
-    raw_w1 = w1 / scale[:, None]
-    raw_b1 = b1 - (mean / scale) @ w1
+    raw_w1 = np.round(w1 / scale[:, None], _TRAINING_DECIMALS)
+    raw_b1 = np.round(b1 - (mean / scale) @ w1, _TRAINING_DECIMALS)
     return raw_w1, raw_b1, w2, b2
 
 
@@ -252,6 +258,7 @@ def build_provenance(model_data: dict, X, y, evidence, train_idx, test_idx,
             "layers": [6, 12, 3],
             "activations": ["relu", "softmax"],
             "optimizer": "adam",
+            "optimizer_state_decimals": _TRAINING_DECIMALS,
             "feature_standardization": "folded_into_first_layer",
             "epochs": 2500,
             "learning_rate": 0.01,

@@ -21,7 +21,7 @@ from .training.distill_compressibility_predictor import (
 )
 
 MODEL_PATH = Path(__file__).parent / "models" / "compressibility_predictor.json"
-EXPECTED_CORE_SHA256 = "374b449fade9f84c79ea8bf66dec2d091c55644d776d4c611d546b032b26a916"
+EXPECTED_CORE_SHA256 = "1e38a8ded800b582251bce6fb1349fbf6a840daa1934922f110ff21f6b7a7ee7"
 
 
 def _ok(message: str, condition: bool, state: list[int]) -> None:
