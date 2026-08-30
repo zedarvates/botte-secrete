@@ -7,8 +7,8 @@ an auditable label source and a production validation gate.
 
 ## Why this roadmap exists
 
-`nn_audit` currently finds eleven wired micro-NN models. Four have reproducible
-curated-corpus trainers and test guards. Seven Belt 2.0 predictors have weights
+`nn_audit` currently finds eleven wired micro-NN models. Five have reproducible
+curated-corpus trainers and test guards. Six Belt 2.0 predictors have weights
 and call sites, but no trainer discovered by the audit, no test guard, and model
 metadata that reports `accuracy: 0.0`. Repeated rule-generated feature vectors
 or a `trained_on` string are not real grounding evidence.
@@ -44,7 +44,7 @@ python -m skills.nn_audit.cli skills/botte_nn --json
 | `effort_classifier` | G1 | reviewed task tier plus successful execution | 2,000 verified; macro-F1 beats heuristic baseline | Add shadow outcome collector |
 | `anomaly_detector` | G1 | confirmed incident/anomaly resolution | 1,000 verified windows; bounded false-negative rate | Link alerts to incident verdicts |
 | `error_classifier` | G1, reproducible provenance embedded | real exception type and recovery result | 1,000 verified errors; macro-F1 >= 0.90 | Replace the curated-template holdout with verified production outcomes |
-| `compressibility_predictor` | G0, collector active | exact roundtrip plus measured reduction | 1,000 automatic labels across text, JSON, code, and logs | Accumulate diverse reversible calls, then temporal holdout |
+| `compressibility_predictor` | G1, reproducible roundtrip corpus + collector active | exact roundtrip plus measured reduction | 1,000 automatic labels across text, JSON, code, and logs | Accumulate diverse reversible calls, then temporal holdout |
 | `semantic_cache_hit_predictor` | G0, collector active | actual cache hit or miss | 2,000 automatic labels; temporal holdout | Accumulate real lookups and monitor class balance |
 | `cloud_escalation_predictor` | G0 | verified local/harness/cloud outcome | 2,000 verified; prove incremental value over `binary_router` | Merge or remove if redundant |
 | `context_pruning_predictor` | G0 | matched full-context versus pruned evaluation | 500 matched pairs; no material quality regression | Build replay evaluator |
