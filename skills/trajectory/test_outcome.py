@@ -17,6 +17,14 @@ def _ok(message: str, condition: bool, state: list[int]) -> None:
     state[0 if condition else 1] += 1
 
 
+def _raises(callable_) -> bool:
+    try:
+        callable_()
+    except ValueError:
+        return True
+    return False
+
+
 def main() -> int:
     state = [0, 0]
     print("== quality outcome envelope tests ==")
@@ -139,6 +147,76 @@ def main() -> int:
         _ok("all lifecycle envelopes remain shadow-only and non-activating",
             all(row["shadow_only"] and not row["activation_allowed"]
                 for row in load_outcomes(project)), state)
+
+    with tempfile.TemporaryDirectory() as project:
+        lease = {
+            "lease_id": "wl_test",
+            "worker_id": "phaseone-1",
+            "state": "ACTIVE",
+            "base_sha": "a" * 40,
+            "head_sha": "b" * 40,
+            "expires_at": "2026-09-02T00:00:00+00:00",
+            "workspace_fingerprint": "c" * 64,
+        }
+        bound = emit_outcome(
+            "verify a bounded revision",
+            project_root=project,
+            execution_id="mission-1/attempt-1/review",
+            source="gauntlet",
+            route="deterministic",
+            status="pass",
+            verified_by="independent:gauntlet",
+            evidence_refs=("tests:project",),
+            mission_id="mission-1",
+            attempt_id="attempt-1",
+            worker_id="phaseone-1",
+            workspace_lease=lease,
+            repository_ref="zedarvates/botte-secrete",
+            base_sha="a" * 40,
+            head_sha="b" * 40,
+            dirty_tree_sha256="d" * 64,
+            check_command_sha256="e" * 64,
+            checks=({
+                "name": "project-tests",
+                "status": "PASS",
+                "evidence_ref": "tests:project",
+            },),
+            artifacts=({
+                "kind": "test-report",
+                "ref": ".botte-cache/test-summary.json",
+                "sha256": "f" * 64,
+            },),
+            review_verdict="ACCEPT",
+            next_safe_action="Await owner-only transition.",
+        )["envelope"]
+        raw = (Path(project) / ".botte" / "quality-outcomes.jsonl").read_text(
+            encoding="utf-8"
+        )
+        _ok("outcome binds evidence to mission, lease and exact Git state",
+            bound["mission_id"] == "mission-1"
+            and bound["workspace_lease"]["head_sha"] == "b" * 40
+            and bound["dirty_tree_sha256"] == "d" * 64
+            and bound["review_verdict"] == "ACCEPT", state)
+        _ok("bound envelope stores no absolute workspace path",
+            "workspace_path" not in raw and str(Path(project).resolve()) not in raw, state)
+        _ok("review verdict rejects model self-review",
+            _raises(lambda: emit_outcome(
+                "self review",
+                project_root=project,
+                route="local",
+                status="pass",
+                verified_by="model:self-report",
+                evidence_refs=("model:claim",),
+                review_verdict="ACCEPT",
+            )), state)
+        _ok("artifact references reject absolute machine paths",
+            _raises(lambda: emit_outcome(
+                "unsafe artifact",
+                project_root=project,
+                route="local",
+                status="partial",
+                artifacts=({"kind": "log", "ref": "/tmp/private.log", "sha256": ""},),
+            )), state)
 
     print(f"\nRESULT: {state[0]} passed, {state[1]} failed")
     return 0 if state[1] == 0 else 1

@@ -29,6 +29,8 @@ reviewer returns `ACCEPT`, `REWORK` or `BLOCKED`.
 botte contract validate mission.json
 botte contract context mission.json --project . --output context-manifest.json
 botte contract fingerprint mission.json
+botte run mission.json --project . --plan audit
+botte run mission.json --resume prior-handoff.json --address-failure test:red
 ```
 
 The context compiler stores only relative repository paths. It never persists

@@ -23,7 +23,7 @@ REPO = Path(__file__).resolve().parent.parent
 TIMEOUT = 30
 SAFE_BOTTE_COMMANDS = {
     "--help", "belt", "checkup", "contract", "discover", "doctor", "gain", "harvest",
-    "upstreams",
+    "lease", "review", "run", "upstreams",
 }
 BLOCKED_MODULES = {
     "skills.dashboard.api",

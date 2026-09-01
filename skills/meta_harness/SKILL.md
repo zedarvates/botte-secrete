@@ -6,11 +6,11 @@ tags: [orchestration, pipeline, governance, sandbox, multi-agent, safe-exit]
 
 # meta_harness — orchestration multi-agent
 
-Un meta-harness qui orchestre les skills Botte (audit, fix, counter-audit, optimize, test)
-dans un pipeline gouverné. Chaque étape tourne dans son propre sandbox
-(subprocess, workdir isolé). Governance = approval gates; SAFE-EXIT = budgets,
-stagnation et sortie `UNCERTAIN`; rollback/snapshots restent des responsabilités
-explicites du tool plane et des workflows mutatifs.
+Un meta-harness qui orchestre les skills Botte (audit, fix, counter-audit,
+optimize, test) dans un pipeline gouverné. Une mission contractuelle reçoit un
+**bail Git worktree expirant** : les workers ne partagent jamais leur répertoire
+d'écriture. Governance = approval gates; SAFE-EXIT = budgets, stagnation et
+sortie `UNCERTAIN`; les preuves restent liées à l'état Git exact.
 
 ## Concept
 
@@ -65,6 +65,14 @@ python -m skills.meta_harness.cli status <session_id>
 
 # Rollback
 python -m skills.meta_harness.cli rollback <session_id>
+
+# Mission contractuelle (audit SHADOW par défaut)
+botte run mission.json --project . --plan audit
+botte review mission.json handoff.json --project . --plan test-only
+
+# Nettoyage explicite; un worktree sale est conservé en quarantaine
+botte lease --project . list
+botte lease --project . release <lease_id>
 ```
 
 ## API Python
@@ -105,10 +113,27 @@ if session.termination_decision == "UNCERTAIN":
 ```
 meta_harness/
 ├── orchestrator.py   — Planification + dispatch + SAFE-EXIT enforcement
-├── runner.py         — Sandbox subprocess + timeout + workdir isolé
+├── runner.py         — Subprocess + timeout dans le worktree loué
+├── lease.py          — Baux expirants, empreintes Git, quarantaine
+├── review.py         — Gauntlet indépendant + best-known-green
 ├── governance.py     — Approval gates
-├── session.py        — Persistance + historique + termination state
+├── session.py        — Persistance + historique + handoff typé
 ├── cli.py            — argparse CLI
 ├── test_meta_harness.py
+├── test_reliable_run.py
 └── test_safe_exit_integration.py
 ```
+
+## Frontières de fiabilité
+
+- `SIMULATE` et `SHADOW` refusent les agents mutateurs avant la création du
+  bail. `ACT` exige la référence d'approbation propriétaire et un snapshot.
+- Une libération ne supprime jamais un worktree sale : elle le conserve en
+  `QUARANTINED`.
+- Un handoff ne peut annoncer que `READY_FOR_REVIEW`; `SUCCEEDED` n'existe pas.
+- Le reviewer doit utiliser un autre `worker_id` et un autre worktree, puis
+  rejouer les contrôles. Son verdict est `ACCEPT`, `REWORK` ou `BLOCKED`.
+- Seul `ACCEPT` peut remplacer le checkpoint best-known-green. Une révision
+  nomme le contrôle qu'elle corrige et respecte `max_revisions`.
+- Les contrats publics ne contiennent aucun chemin machine absolu; les chemins
+  de récupération restent dans `.botte-cache/` local et privé.

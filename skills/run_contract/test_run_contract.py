@@ -67,7 +67,7 @@ def _mission(**overrides) -> dict:
 
 def _lease(worker_id: str = "worker-1", *, head_sha: str = "b" * 64) -> dict:
     return {
-        "lease_id": "lease-1",
+        "lease_id": "wl_1111111111111111",
         "worker_id": worker_id,
         "state": "ACTIVE",
         "base_sha": "a" * 40,
