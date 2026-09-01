@@ -8,6 +8,7 @@ from .contracts import (
     compile_context_manifest,
     contract_fingerprint,
     load_mission,
+    resume_base_ref,
     validate_handoff,
     validate_mission,
 )
@@ -20,6 +21,7 @@ __all__ = [
     "compile_context_manifest",
     "contract_fingerprint",
     "load_mission",
+    "resume_base_ref",
     "validate_handoff",
     "validate_mission",
 ]

@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/zedarvates/botte-secrete/blob/main/docs/schemas/workspace-lease.schema.json",
+  "title": "Botte Secrete privacy-safe workspace lease",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "lease_id", "worker_id", "state", "base_sha", "head_sha",
+    "expires_at", "workspace_fingerprint"
+  ],
+  "properties": {
+    "lease_id": {"type": "string", "pattern": "^wl_[0-9a-f]{16}$"},
+    "worker_id": {"type": "string", "minLength": 1, "maxLength": 128},
+    "state": {"enum": ["ACTIVE", "RELEASED", "QUARANTINED", "EXPIRED"]},
+    "base_sha": {"type": "string", "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"},
+    "head_sha": {"type": "string", "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"},
+    "expires_at": {"type": "string", "format": "date-time"},
+    "workspace_fingerprint": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  }
+}
