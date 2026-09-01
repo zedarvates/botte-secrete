@@ -116,7 +116,16 @@ def record_compression_result(content: str, ratio: float, *,
 
 def record_cache_lookup(query: str, values: dict[str, float], *,
                         hit: bool, hit_kind: str) -> Optional[str]:
-    """Label a response-cache lookup from its observed hit or miss result."""
+    """Label one real semantic attempt after an exact-cache miss.
+
+    Exact hits and lookups where semantic matching was disabled are outside the
+    predictor's target and are rejected instead of silently contaminating it.
+    """
+    semantic_outcomes = {"semantic_hit": True, "semantic_miss": False}
+    if hit_kind not in semantic_outcomes:
+        raise ValueError(f"unsupported semantic cache outcome: {hit_kind}")
+    if bool(hit) != semantic_outcomes[hit_kind]:
+        raise ValueError(f"inconsistent semantic cache outcome: {hit_kind}")
     sample_key = hashlib.sha256(query.encode("utf-8")).hexdigest()
     return record_oracle_verdict(
         "semantic_cache_hit_predictor", values, "hit" if hit else "miss",

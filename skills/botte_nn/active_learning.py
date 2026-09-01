@@ -71,6 +71,37 @@ class InferenceLog:
     sample_fingerprint: str = ""
 
 
+def feature_label_collision_report(logs: list[InferenceLog], *,
+                                   precision: int = 8) -> dict[str, int | float]:
+    """Report identical feature vectors carrying contradictory verified labels.
+
+    The report is privacy-preserving: it returns counts only and never exposes
+    feature vectors, sample fingerprints, or source content.
+    """
+    groups: dict[tuple[float, ...], dict[int, int]] = defaultdict(
+        lambda: defaultdict(int)
+    )
+    verified_rows = 0
+    for log in logs:
+        if not log.verified or log.actual_class is None:
+            continue
+        key = tuple(round(float(value), precision) for value in log.features)
+        groups[key][int(log.actual_class)] += 1
+        verified_rows += 1
+
+    contradictory = [counts for counts in groups.values() if len(counts) > 1]
+    contradictory_rows = sum(sum(counts.values()) for counts in contradictory)
+    return {
+        "verified_rows": verified_rows,
+        "feature_groups": len(groups),
+        "contradictory_groups": len(contradictory),
+        "contradictory_rows": contradictory_rows,
+        "contradictory_rate": round(
+            contradictory_rows / verified_rows if verified_rows else 0.0, 6
+        ),
+    }
+
+
 class ActiveLearning:
     """Boucle d'apprentissage actif pour les micro-NN."""
 
@@ -141,17 +172,26 @@ class ActiveLearning:
             observations = sum(1 for log in logs_list if not log.verified)
             with_outcome = sum(1 for l in logs_list if l.verified and l.correct is not None)
             correct = sum(1 for l in logs_list if l.correct is True)
+            collisions = feature_label_collision_report(logs_list)
             stats[model_name] = {
                 "total": total,
                 "observations": observations,
                 "with_outcome": with_outcome,
                 "correct": correct,
                 "accuracy": round(correct / max(with_outcome, 1), 3),
+                "contradictory_feature_groups": collisions["contradictory_groups"],
+                "contradictory_feature_rate": collisions["contradictory_rate"],
             }
             if verbose:
                 print(f"  {model_name:<20} {observations:>4} observations, "
                       f"{with_outcome} validés, {correct} corrects "
                       f"({correct/max(with_outcome,1):.0%})")
+                if collisions["contradictory_groups"]:
+                    print(
+                        "    ⚠ "
+                        f"{collisions['contradictory_groups']} groupe(s) "
+                        "de features avec labels contradictoires"
+                    )
         return stats
 
     # ── Entraînement ──
@@ -197,6 +237,20 @@ class ActiveLearning:
             if verbose:
                 print(f"  ⏳ {model_name}: {len(valid_logs)} logs avec la bonne dimension")
             return None
+
+        # The current semantic-cache feature schema is partly constant.  Refuse
+        # to turn non-identifiable evidence into new weights: if the exact same
+        # inputs carry both labels, the features must be fixed first.
+        if model_name == "semantic_cache_hit_predictor":
+            collisions = feature_label_collision_report(valid_logs)
+            if collisions["contradictory_groups"]:
+                if verbose:
+                    print(
+                        "  ⛔ semantic_cache_hit_predictor: entraînement refusé; "
+                        f"{collisions['contradictory_groups']} groupe(s) de features "
+                        "portent des labels contradictoires"
+                    )
+                return None
 
         # ── Split déterministe train/val (80/20) pour une évaluation honnête ──
         # Sans set de validation tenu à l'écart, on mesurerait l'accuracy sur les
@@ -397,6 +451,12 @@ def main(argv=None) -> int:
             print(f"  {model:<20} {stats['observations']:>4} observations, "
                   f"{stats['with_outcome']} validés, "
                   f"{stats['accuracy']:.0%} accuracy")
+            if stats["contradictory_feature_groups"]:
+                print(
+                    "    ⚠ "
+                    f"{stats['contradictory_feature_groups']} groupe(s) "
+                    "de features avec labels contradictoires"
+                )
         return 0
 
     elif args.cmd == "collect":
