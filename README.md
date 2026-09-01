@@ -57,6 +57,9 @@ structured checks, evidence checks, or an explicit escalation path.
 | Routing | Chooses deterministic, local, or cloud execution | `botte route` |
 | Quality memory | Learns from verified outcomes and explains shadow k-NN advice | `botte qa` |
 | Asset quality | Gates and compares images, textures, meshes, animations, and Godot packages | `botte asset-qa` |
+| Reliable missions | Runs typed missions in leased Git worktrees and resumes from exact handoffs | `botte run`, `botte lease` |
+| Independent review | Replays evidence in a distinct workspace; only accepted SHAs become green | `botte review` |
+| Rule contract | Audits exact policy, guards, bidirectional probes, conflicts, and drift | `botte rules audit` |
 | Project checkup | Audits policy, directives, metrics, security, and drift | `botte doctor` |
 | Context reduction | Compresses logs, JSON, tool output, and selected context | `universal_compressor`, `context_budget` |
 | Micro-NN belt | Runs tiny classifiers for routing hints; these are not LLMs | `botte belt` |

@@ -7,11 +7,12 @@ standard sequence in the right order and prints a single verdict.
 
 Sequence (cheap → deeper, all local / 0 cloud tokens):
     1. policy        ensure .botte/policy.md exists (the shared rules)
-    2. directives    CLAUDE.md/AGENTS.md health + stale refs
-    3. metrics       LOC per component + always-on cost + savings framing
-    4. infra         hardware/software/MCP cluster tips
-    5. duplication   stdlib AST duplicate-function scan
-    6. drift         is the MCP wired? are directives stale/oversized?
+    2. rules         committed semantics + guards + bidirectional probes
+    3. directives    CLAUDE.md/AGENTS.md health + stale refs
+    4. metrics       LOC per component + always-on cost + savings framing
+    5. infra         hardware/software/MCP cluster tips
+    6. duplication   stdlib AST duplicate-function scan
+    7. drift         is the MCP wired? are directives/rules stale?
 Then points at the deep code audit (secrets/dead-code) for when you want it.
 """
 
@@ -37,7 +38,21 @@ def run(project: Path) -> dict:
     if not out["policy_committed"]:
         out["drift"].append("No .botte/policy.md — run the deployer to commit shared rules.")
 
-    # 2-5. reuse the auto audit (directives + infra + duplication) and metrics.
+    # 2. optional committed rule contract. Projects not using the contract stay
+    # compatible; once present it is fail-closed and contributes to drift.
+    from skills.directives_audit.rules import audit_rules
+    out["rules"] = audit_rules(project)
+    if out["rules"]["manifest_present"]:
+        rule_summary = out["rules"]["summary"]
+        if rule_summary["errors"] or rule_summary["warnings"]:
+            out["drift"].append(
+                "Rule contract drift: "
+                f"{rule_summary['errors']} error(s), "
+                f"{rule_summary['warnings']} warning(s) — "
+                "run `botte rules audit .`."
+            )
+
+    # 3-6. reuse the auto audit (directives + infra + duplication) and metrics.
     from skills.infra_advisor import auto_audit
     aa = auto_audit(str(project))
     out["headline"] = aa["headline"]
@@ -382,6 +397,12 @@ def format_pr_comment(result: dict, *, repo: str | None = None,
         facts.append(f"always-on **{cost['always_on_tokens_per_session']:,} tok/session**")
     if result.get("mcp_wiring", {}).get("status") == "not_applicable":
         facts.append("MCP wiring **n/a in ephemeral CI**")
+    rules = result.get("rules") or {}
+    if rules.get("manifest_present"):
+        rs = rules.get("summary", {})
+        facts.append(
+            f"rules **{rs.get('rules', 0)} · {rules.get('score', 0)}/100**"
+        )
     lines.append(" · ".join(facts))
     lines.append("")
 
@@ -389,6 +410,18 @@ def format_pr_comment(result: dict, *, repo: str | None = None,
         lines.append("### Drift to fix")
         for x in drift:
             lines.append(f"- {x}")
+        lines.append("")
+
+    if rules.get("manifest_present"):
+        rs = rules.get("summary", {})
+        lines.append(
+            f"### 📜 Rule contract — {rs.get('rules', 0)} rule(s), "
+            f"{rs.get('errors', 0)} error(s), {rs.get('warnings', 0)} warning(s)"
+        )
+        for finding in rules.get("findings", [])[:5]:
+            lines.append(
+                f"- `{finding['rule_id']}` [{finding['code']}] {finding['message']}"
+            )
         lines.append("")
 
     sec = result.get("security") or {}
@@ -536,6 +569,13 @@ def main(argv=None) -> int:
               f"(obfuscation/exfiltration) of {mal['count']} total")
     elif mal.get("available"):
         print(f"\n   🦠 Malicious patterns: clean ({mal.get('count', 0)} reviewed)")
+    rules = r.get("rules") or {}
+    if rules.get("manifest_present"):
+        summary = rules["summary"]
+        print(
+            f"\n   📜 Rules: {summary['rules']} · score {rules['score']}/100 · "
+            f"{summary['errors']} errors · {summary['warnings']} warnings"
+        )
     nn = r.get("nn") or {}
     if nn.get("available"):
         extra = (f" · at-risk: {', '.join(nn['at_risk_models'])}"

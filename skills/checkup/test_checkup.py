@@ -35,7 +35,9 @@ def main() -> int:
         _ok("returns the canonical sections",
             all(k in r for k in ("directives", "infra_tips", "duplication",
                                  "cost", "by_component", "drift", "headline",
-                                 "security", "malicious", "nn")), state)
+                                 "security", "malicious", "nn", "rules")), state)
+        _ok("projects without a rule registry remain explicitly compatible",
+            not r["rules"]["manifest_present"], state)
         _ok("clean project has no security findings",
             r["security"]["count"] == 0 and r["security"]["available"], state)
         _ok("clean project has a malicious-scan section, nothing suspicious",
@@ -114,6 +116,15 @@ def main() -> int:
         _ok("policy drift clears once committed",
             r2["policy_committed"] and not any("No .botte/policy" in x for x in r2["drift"]),
             state)
+
+        (proj / ".botte" / "rules.json").write_text("{broken", encoding="utf-8")
+        rules_broken = run(proj)
+        _ok("malformed committed rule registry becomes actionable drift",
+            rules_broken["rules"]["summary"]["errors"] == 1
+            and any("Rule contract drift" in x for x in rules_broken["drift"]), state)
+        _ok("rule failures are visible in the PR comment",
+            "📜 Rule contract" in format_pr_comment(rules_broken)
+            and "manifest_invalid_json" in format_pr_comment(rules_broken), state)
 
         # PR comment formatting (for the GitHub Action)
         md = format_pr_comment(r)  # r has drift (no policy / no MCP)

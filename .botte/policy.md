@@ -40,6 +40,15 @@ Shared rules for all agents and developers on this project. Keep cheap, keep loc
 - After a component update or before a checkup, run `/checkup` (or
   `python -m skills.checkup.cli .`) — directives + metrics + infra + drift.
 - Keep `CLAUDE.md`/`AGENTS.md` under ~2000 tokens and free of stale path refs.
+- Audit the committed semantic contract with `botte rules audit .`; reconcile
+  sources, guards and tests before updating a verification receipt.
+
+## Agent execution governance
+- Mission workers must not merge, deploy, release, access secrets, or initiate payments; those external transitions remain owner-only.
+- Agents must not promote themselves: authority can only progress from SIMULATE to SHADOW to ACT through an authorized transition.
+- A worktree with uncommitted state must be quarantined and must never be force-cleaned.
+- Only an independent reviewer in a distinct workspace may return ACCEPT; missing proof or approval must return BLOCKED.
+- A mission without Git-bound evidence and passing checks must not be reported as successful.
 
 ## Budget
 - Daily token budget: 50000 (auto_router downgrades when exceeded).
