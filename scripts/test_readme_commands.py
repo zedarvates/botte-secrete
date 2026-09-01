@@ -22,7 +22,7 @@ force_utf8()
 REPO = Path(__file__).resolve().parent.parent
 TIMEOUT = 30
 SAFE_BOTTE_COMMANDS = {
-    "--help", "belt", "checkup", "discover", "doctor", "gain", "harvest",
+    "--help", "belt", "checkup", "contract", "discover", "doctor", "gain", "harvest",
     "upstreams",
 }
 BLOCKED_MODULES = {
