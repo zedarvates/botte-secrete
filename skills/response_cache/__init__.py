@@ -170,7 +170,10 @@ class ResponseCache:
             # The micro-NN target is conditional on a real semantic attempt.
             # Exact hits and lookups that skip this level are different events
             # and must not pollute its training ledger.
-            grounding_values = self._grounding_values(query) if self.learn else None
+            grounding_values = (
+                self._grounding_values(query, model, context)
+                if self.learn else None
+            )
             semantic = self.get_semantic(query, model, context)
             if semantic:
                 self._record_grounding(
@@ -180,7 +183,7 @@ class ResponseCache:
         elif self.learn and self.semantic_shadow:
             # Observation only: inspect the candidate but never serve it or
             # increment its hit_count/tokens_saved counters.
-            grounding_values = self._grounding_values(query)
+            grounding_values = self._grounding_values(query, model, context)
             shadow_hit = self._find_semantic(query, model, context) is not None
             self._record_semantic_shadow(shadow_hit)
             self._record_grounding(
@@ -200,10 +203,31 @@ class ResponseCache:
             )
         return None
 
-    def _grounding_values(self, query: str) -> dict[str, float]:
+    def _grounding_values(self, query: str, model: str = "",
+                          context: str = "") -> dict[str, float]:
         """Snapshot pre-lookup features for the cache-hit micro-NN."""
         from skills.botte_nn.features import semantic_cache_values
 
+        context_hash = self._context_hash(context)
+        eligible = [
+            entry for entry in self._entries.values()
+            if entry.model == model and entry.context_hash == context_hash
+        ]
+        query_tokens = query.lower().split()
+        query_words = set(query_tokens)
+        eligible_vocabulary = {
+            word for entry in eligible for word in entry.query.lower().split()
+        }
+        vocabulary_coverage = (
+            len(query_words & eligible_vocabulary) / len(query_words)
+            if query_words else 0.0
+        )
+        query_length = len(query_tokens)
+        length_tolerance = max(2, round(query_length * 0.2))
+        length_neighbors = sum(
+            abs(len(entry.query.split()) - query_length) <= length_tolerance
+            for entry in eligible
+        )
         semantic_attempts = (
             self.stats["semantic_attempt_hits"]
             + self.stats["semantic_attempt_misses"]
@@ -215,13 +239,17 @@ class ResponseCache:
             + self.stats["semantic_shadow_hits"]
         )
         return semantic_cache_values(
+            query,
             cache_density=min(len(self._entries) / 1000.0, 1.0),
-            agent_type="analyze",
+            eligible_cache_density=min(len(eligible) / 1000.0, 1.0),
+            eligible_vocabulary_coverage=vocabulary_coverage,
+            length_neighbor_ratio=(
+                length_neighbors / len(eligible) if eligible else 0.0
+            ),
             cache_hit_history=(
                 semantic_hits / semantic_attempts
                 if semantic_attempts else 0.0
             ),
-            query_length=max(1, len(query) // 4),
         )
 
     @staticmethod
