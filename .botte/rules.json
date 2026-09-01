@@ -1,0 +1,175 @@
+{
+  "schema": "botte.rules-manifest/v1",
+  "rules": [
+    {
+      "id": "authority.owner-external-transitions",
+      "action": "external-transition",
+      "effect": "DENY",
+      "scope": [
+        "mission-worker"
+      ],
+      "statement": "Mission workers must not merge, deploy, release, access secrets, or initiate payments; those external transitions remain owner-only.",
+      "source_ref": ".botte/policy.md#Mission workers must not merge",
+      "owner_only": true,
+      "enforced": true,
+      "enforcement_refs": [
+        "skills/run_contract/contracts.py#CORE_FORBIDDEN_ACTIONS",
+        "skills/run_contract/contracts.py#forbidden_actions must retain v1 owner-only actions"
+      ],
+      "probes": [
+        {
+          "id": "authority.owner-external-transitions.allow-owner-act",
+          "polarity": "allow",
+          "evidence_ref": "skills/run_contract/test_run_contract.py#ACT with approval and snapshot validates"
+        },
+        {
+          "id": "authority.owner-external-transitions.deny-missing-boundary",
+          "polarity": "deny",
+          "evidence_ref": "skills/run_contract/test_run_contract.py#owner-only external actions fail closed"
+        }
+      ],
+      "supersedes": [],
+      "last_verified": {
+        "at": "2026-09-01T00:00:00+00:00",
+        "content_sha256": "b3f2803315c2c5cff4519429f0b67e5c28b48e00bcdd1be50665c737323fd3e5",
+        "evidence_ref": "skills/run_contract/test_run_contract.py#owner-only external actions fail closed"
+      }
+    },
+    {
+      "id": "authority.no-self-promotion",
+      "action": "authority-transition",
+      "effect": "DENY",
+      "scope": [
+        "agent-self-promotion"
+      ],
+      "statement": "Agents must not promote themselves: authority can only progress from SIMULATE to SHADOW to ACT through an authorized transition.",
+      "source_ref": ".botte/policy.md#Agents must not promote themselves",
+      "owner_only": true,
+      "enforced": true,
+      "enforcement_refs": [
+        "skills/safe_exit/core.py#def validate_action",
+        "skills/run_contract/contracts.py#AUTHORITY_TIERS"
+      ],
+      "probes": [
+        {
+          "id": "authority.no-self-promotion.allow-same-tier",
+          "polarity": "allow",
+          "evidence_ref": "skills/safe_exit/test_safe_exit.py#def test_non_destructive_shadow_action_is_allowed"
+        },
+        {
+          "id": "authority.no-self-promotion.deny-escalation",
+          "polarity": "deny",
+          "evidence_ref": "skills/safe_exit/test_safe_exit.py#def test_implicit_privilege_escalation_is_blocked"
+        }
+      ],
+      "supersedes": [],
+      "last_verified": {
+        "at": "2026-09-01T00:00:00+00:00",
+        "content_sha256": "593ca16d70f5418f17576dcbe5160815002bd2f587a3c15d3bc03a05d1d7d165",
+        "evidence_ref": "skills/safe_exit/test_safe_exit.py#def test_implicit_privilege_escalation_is_blocked"
+      }
+    },
+    {
+      "id": "workspace.quarantine-dirty",
+      "action": "workspace-release",
+      "effect": "REQUIRE",
+      "scope": [
+        "dirty-worktree"
+      ],
+      "statement": "A worktree with uncommitted state must be quarantined and must never be force-cleaned.",
+      "source_ref": ".botte/policy.md#A worktree with uncommitted state",
+      "owner_only": false,
+      "enforced": true,
+      "enforcement_refs": [
+        "skills/meta_harness/lease.py#def release",
+        "skills/meta_harness/lease.py#current.state = \"QUARANTINED\""
+      ],
+      "probes": [
+        {
+          "id": "workspace.quarantine-dirty.allow-clean-release",
+          "polarity": "allow",
+          "evidence_ref": "skills/meta_harness/test_reliable_run.py#explicit clean release succeeds"
+        },
+        {
+          "id": "workspace.quarantine-dirty.deny-force-delete",
+          "polarity": "deny",
+          "evidence_ref": "skills/meta_harness/test_reliable_run.py#dirty release is quarantined instead of deleted"
+        }
+      ],
+      "supersedes": [],
+      "last_verified": {
+        "at": "2026-09-01T00:00:00+00:00",
+        "content_sha256": "adf9ebac88ffe7126bb90fbee30e0ece0ca991751c0faef282ba4ea91f1b371f",
+        "evidence_ref": "skills/meta_harness/test_reliable_run.py#dirty release is quarantined instead of deleted"
+      }
+    },
+    {
+      "id": "review.independent-only",
+      "action": "review-acceptance",
+      "effect": "REQUIRE",
+      "scope": [
+        "mission-handoff"
+      ],
+      "statement": "Only an independent reviewer in a distinct workspace may return ACCEPT; missing proof or approval must return BLOCKED.",
+      "source_ref": ".botte/policy.md#Only an independent reviewer",
+      "owner_only": false,
+      "enforced": true,
+      "enforcement_refs": [
+        "skills/meta_harness/review.py#def review_handoff",
+        "skills/meta_harness/review.py#author and independent reviewer must be different workers"
+      ],
+      "probes": [
+        {
+          "id": "review.independent-only.allow-independent",
+          "polarity": "allow",
+          "evidence_ref": "skills/meta_harness/test_reliable_run.py#fresh independent workspace can ACCEPT verified evidence"
+        },
+        {
+          "id": "review.independent-only.deny-author",
+          "polarity": "deny",
+          "evidence_ref": "skills/meta_harness/test_reliable_run.py#author cannot review its own handoff"
+        }
+      ],
+      "supersedes": [],
+      "last_verified": {
+        "at": "2026-09-01T00:00:00+00:00",
+        "content_sha256": "992da8a1c889ac1cebbdc7aee4ab43be675554b913e95886447d86a3e3ba4804",
+        "evidence_ref": "skills/meta_harness/test_reliable_run.py#author cannot review its own handoff"
+      }
+    },
+    {
+      "id": "evidence.no-success-without-proof",
+      "action": "mission-success",
+      "effect": "DENY",
+      "scope": [
+        "unverified-handoff"
+      ],
+      "statement": "A mission without Git-bound evidence and passing checks must not be reported as successful.",
+      "source_ref": ".botte/policy.md#A mission without Git-bound evidence",
+      "owner_only": false,
+      "enforced": true,
+      "enforcement_refs": [
+        "skills/run_contract/contracts.py#HANDOFF_STATUSES = (",
+        "skills/run_contract/contracts.py#READY_FOR_REVIEW requires evidence_refs"
+      ],
+      "probes": [
+        {
+          "id": "evidence.no-success-without-proof.allow-proven-handoff",
+          "polarity": "allow",
+          "evidence_ref": "skills/run_contract/test_run_contract.py#evidence-bearing handoff validates"
+        },
+        {
+          "id": "evidence.no-success-without-proof.deny-succeeded-status",
+          "polarity": "deny",
+          "evidence_ref": "skills/run_contract/test_run_contract.py#SUCCEEDED is not a representable handoff status"
+        }
+      ],
+      "supersedes": [],
+      "last_verified": {
+        "at": "2026-09-01T00:00:00+00:00",
+        "content_sha256": "01bb357421ba9a49d6def7b92acc7f58e99d700214ff95447473c3d141946113",
+        "evidence_ref": "skills/run_contract/test_run_contract.py#SUCCEEDED is not a representable handoff status"
+      }
+    }
+  ]
+}
