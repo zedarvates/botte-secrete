@@ -7,19 +7,16 @@ L'orchestrateur dispatche vers le runner, collecte les résultats.
 
 from __future__ import annotations
 
-import json
-import os
-import subprocess
 import sys
-import tempfile
 import time
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
 
-from skills.meta_harness.runner import Sandbox, SandboxResult
+from skills.meta_harness.runner import Sandbox
 from skills.meta_harness.governance import Governance
 from skills.meta_harness.session import Session
+from skills.safe_exit import RunDecision, SafeExitConfig, SafeExitGuard
 
 
 # ── Agents catalogue ──
@@ -132,10 +129,17 @@ _BUILTIN_PLANS: dict[str, list[str]] = {
 class MetaHarness:
     """The meta-harness orchestrator."""
 
-    def __init__(self, workdir: str = ".", approval: bool = False):
+    def __init__(
+        self,
+        workdir: str = ".",
+        approval: bool = False,
+        *,
+        safe_exit_config: SafeExitConfig | None = None,
+    ):
         self.workdir = str(Path(workdir).resolve())
         self.governance = Governance(require_approval=approval)
         self.session = Session(name=f"pipeline_{int(time.time())}")
+        self.safe_exit_config = safe_exit_config or SafeExitConfig()
 
     def list_agents(self) -> list[dict]:
         """List available agents with metadata."""
@@ -174,7 +178,6 @@ class MetaHarness:
         for name in agents:
             agent_info = self._resolve_agent(name)
             if agent_info is None:
-                # Fallback: try as a raw CLI command
                 resolved.append(Step(
                     agent=name,
                     command=[sys.executable, "-m", name] if name == "test" else [name],
@@ -184,7 +187,6 @@ class MetaHarness:
                 ))
                 continue
 
-            # Add dependencies recursively
             for dep in agent_info.get("requires", []):
                 if dep not in seen:
                     dep_info = self._resolve_agent(dep)
@@ -220,11 +222,11 @@ class MetaHarness:
         return plan
 
     def execute(self, plan: PipelinePlan) -> Session:
-        """Execute a plan step by step, respecting governance."""
+        """Execute a plan step by step, respecting governance and SAFE-EXIT."""
         self.session.plan = plan
+        guard = SafeExitGuard(self.safe_exit_config)
 
         for i, step in enumerate(plan.steps):
-            # Check dependencies
             deps_met = all(
                 any(s.agent == dep and s.status == "passed" for s in plan.steps[:i])
                 for dep in step.requires
@@ -235,7 +237,6 @@ class MetaHarness:
                 self.session.add_result(step)
                 continue
 
-            # Governance check
             if plan.approval_required:
                 gate = self.governance.check(step)
                 if gate.blocked:
@@ -244,7 +245,6 @@ class MetaHarness:
                     self.session.add_result(step)
                     continue
 
-            # Execute in sandbox
             step.status = "running"
             sandbox = Sandbox(workdir=step.workdir, sandbox_dir=f".botte-sandbox/{step.agent}")
 
@@ -257,11 +257,36 @@ class MetaHarness:
             step.exit_code = result.exit_code
             step.duration = round(t1 - t0, 2)
             step.sandbox_path = sandbox.sandbox_dir
-
             self.session.add_result(step)
 
+            failure_signature = None
+            if not result.success:
+                # Stable, bounded signature: enough to identify repeating failures
+                # without persisting the full stderr in the guard state.
+                first_line = (result.stderr or "").strip().splitlines()[:1]
+                failure_signature = f"{step.agent}:{result.exit_code}:{first_line[0] if first_line else ''}"[:512]
+
+            guard_result = guard.observe(
+                failure_signature=failure_signature,
+                tool_calls_delta=1,
+            )
+            if guard_result.decision == RunDecision.UNCERTAIN:
+                self.session.terminate_uncertain(guard_result.reason or "safe_exit")
+                self._skip_remaining_after_safe_exit(plan, i + 1, guard_result.reason or "safe_exit")
+                break
+
         self.session.completed_at = time.time()
+        self.session._save()
         return self.session
+
+    def _skip_remaining_after_safe_exit(self, plan: PipelinePlan, start: int, reason: str) -> None:
+        """Record unexecuted steps after a bounded-run stop."""
+        for step in plan.steps[start:]:
+            if step.status != "pending":
+                continue
+            step.status = "skipped"
+            step.output = f"SAFE-EXIT: {reason}"
+            self.session.add_result(step)
 
     def _resolve_agent(self, name: str) -> Optional[dict]:
         """Resolve an agent name to its catalog entry."""
