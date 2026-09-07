@@ -13,7 +13,6 @@ anything itself. Pure stdlib + the local capability/effort modules (0 tokens).
 from __future__ import annotations
 
 from dataclasses import dataclass, asdict
-from collections import Counter
 from typing import Optional
 
 from skills.capabilities.registry import LAYERS, REPO_ROOT, load as load_caps, curate
@@ -57,26 +56,24 @@ def plan(goal: str, *, top_k: int = 6, include_effects: bool = False) -> dict:
     if not goal:
         return {"error": "empty goal"}
 
-    caps = load_caps(preserve_paths=True) if include_effects else load_caps()
-    picked = curate(goal, caps, top_k=top_k)
-    if include_effects:
-        names = Counter(c.name for c in caps)
-        ambiguous = sorted({c["name"] for c in picked if names[c["name"]] != 1})
-        if ambiguous:
-            return {"error": "Ambiguous selected capability name(s): " + ", ".join(ambiguous)
-                    + ". Resolve unique names/paths before planning commands."}
-    cap_layer = {c.name: c.layer for c in caps}
-    cap_local = {c.name: c.local_capable for c in caps}
+    caps = load_caps(preserve_paths=True)
+    by_path = {c.path: c for c in caps}
+    picked = [(by_path[c["path"]], c) for c in
+              curate(goal, caps, top_k=top_k, include_paths=True)]
 
     # order by layer (the system's natural flow), then by relevance
-    picked.sort(key=lambda c: (LAYERS.index(cap_layer.get(c["name"], "ACT")), -c["score"]))
+    picked.sort(key=lambda pair: (LAYERS.index(pair[0].layer), -pair[1]["score"]))
     steps = []
-    for i, c in enumerate(picked, 1):
-        name = c["name"]
+    for i, (cap, c) in enumerate(picked, 1):
+        name = cap.name
+        command = f"see {cap.path}"
+        # A matching display name in another collection does not identify a
+        # built-in command. Keep that entry as a non-runnable source pointer.
+        if REPO_ROOT / cap.path == REPO_ROOT / "skills" / name / "SKILL.md":
+            command = CAP_COMMAND.get(name, command)
         steps.append(Step(
-            order=i, layer=cap_layer.get(name, "ACT"), capability=name,
-            local=cap_local.get(name, True),
-            command=CAP_COMMAND.get(name, f"see skills/{name}/SKILL.md"),
+            order=i, layer=cap.layer, capability=name,
+            local=cap.local_capable, command=command,
             why=c["why"],
         ))
 
@@ -91,11 +88,10 @@ def plan(goal: str, *, top_k: int = 6, include_effects: bool = False) -> dict:
     serialized_steps = [s.to_dict() for s in steps]
     if include_effects:
         from skills.capabilities.effects import inspect_effects
-        cap_paths = {c.name: c.path for c in caps}
-        for step in serialized_steps:
+        for step, (cap, _) in zip(serialized_steps, picked):
             # Inspect only selected capabilities, using the registry's actual
             # path rather than assuming the frontmatter name is a folder name.
-            skill_path = REPO_ROOT / cap_paths[step["capability"]]
+            skill_path = REPO_ROOT / cap.path
             step["effects"] = inspect_effects(skill_path.parent)
 
     cloud_steps = [s.capability for s in steps if not s.local]

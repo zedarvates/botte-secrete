@@ -86,9 +86,12 @@ Use `inspect_effects(path, expected_id="owner/repo:skills/worker")` for one skil
 or `load(skills_root, include_effects=True, capability_namespace="owner/repo:skills")`
 for a tree. Never derive the expected identity from the sidecar being checked.
 Effects-aware discovery retains separate paths with identical folder basenames.
-Effects-aware planning rejects an ambiguous selected name before building
-commands; unselected collisions do not block an otherwise unambiguous plan.
-Legacy discovery retains its historical basename deduplication.
+Use `load(..., preserve_paths=True)` to retain every path without inspecting
+sidecars, then `curate(..., include_paths=True)` to carry the selected path.
+The Conductor uses these paths to associate metadata in both planning modes;
+matching names in different locations remain distinct. Legacy discovery retains
+its historical basename deduplication. Paths identify catalog entries in this
+snapshot, not immutable global identities.
 
 The repository test discovers every present `effects.json`, including new and
 nested declarations, and checks its identity and freshness. Missing declarations
@@ -110,6 +113,9 @@ python -m skills.conductor.cli "inspect verified outcome history" --effects --ex
 ```
 
 `plan(..., include_effects=True)` inspects only the selected capabilities.
+The Conductor associates layers, local flags and effects by selected source path.
+It uses built-in command hints only for their canonical skill paths; an entry
+with the same display name elsewhere gets a non-runnable pointer to its source.
 The MCP tools `conduct` and `execute_plan` accept the same optional
 `include_effects: true`; omitted or false preserves their previous output.
 `run_goal(..., include_effects=True)` and `execute()` retain supplied declarations
@@ -163,3 +169,23 @@ state after interruption. Such a report can be referenced through existing
 check inter-step requirements, or stop dependent work automatically. A future
 machine-readable operation/bilan companion needs an explicit version and tests
 before consumers use it to govern workflows; do not add unsupported fields to v1.
+
+## Initial rollout
+
+The following declarations cover the first eleven capabilities. This is coverage
+of reviewed source descriptions, not validation of every execution or reuse.
+Run `list --json --effects` to see current coverage and source freshness.
+
+| Capability | Effects distinguished in its declaration |
+|---|---|
+| `capabilities` | Discovery, inspection, output disclosure and downstream selection. |
+| `conductor` | Planning, report saving, command execution and partial failures. |
+| `events` | Append, rotation, export, clearing and best-effort logging. |
+| `trajectory` | Advisory reads, outcome/support writes, legacy capture and partial persistence. |
+| `bootstrap` | Backend probes, project configuration, hooks and later agent behavior. |
+| `cache` | Freshness checks, eviction, cache writes, scan callbacks and approximate matches. |
+| `checkup` | Project/host diagnostics, conditional probes, report saving and incomplete scan coverage. |
+| `llm_backends` | Registry reads, discovery/probes, registry replacement and model requests. |
+| `cluster` | Status/LRU writes, backend discovery and delegation. |
+| `infra_advisor` | Host/project diagnostics and inherited discovery writes. |
+| `preflight` | Prompt guidance, policy writes and effects on later agent sessions. |

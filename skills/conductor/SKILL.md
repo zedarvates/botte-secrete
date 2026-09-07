@@ -33,6 +33,11 @@ python -m skills.conductor.cli "..." --execute --confirm      # also run gated s
 4. **Estimate** — the goal's effort tier ([[auto_router]]) tells you whether any
    step's reasoning will escalate to the cloud.
 
+Selection and metadata association use the registry path, so homonymous skills
+keep their own layer, local flag and effects. Built-in command hints apply only
+to their canonical `skills/<name>/SKILL.md` entry. Other entries retain a
+`see <actual path>` pointer, which the executor skips even with `--confirm`.
+
 Output: an ordered list of steps, **0 cloud tokens** to produce. It composes the
 module collection into a coherent plan per goal — the conductor of the system.
 
@@ -59,8 +64,8 @@ commands whose effects depend on their capability and arguments. An allowlisted
 
 Use `--effects` or `plan(..., include_effects=True)` to attach declarations only
 for selected capabilities. MCP `conduct` and `execute_plan` expose
-`include_effects: true` too. Selected duplicate names produce an explicit plan
-error; resolve their paths/names before composing executable commands.
+`include_effects: true` too. Selected paths preserve the association even when
+names repeat; only canonical paths receive built-in command hints.
 Match their scope to the actual command and current task
 authorization. The executor carries the original snapshot as `effects_before`
 for comparison with results; it never uses a declaration to unlock a command.

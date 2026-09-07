@@ -12,7 +12,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from skills.capabilities import load
+from skills.capabilities import curate, load
 from skills.capabilities.cli import main as cli
 from skills.capabilities.effects import (
     MAX_CONTRACT_BYTES, contract_template, inspect_effects, validate_contract,
@@ -63,6 +63,40 @@ class EffectsTests(unittest.TestCase):
         report = self.discover()[0].to_dict()["effects"]
         self.assertEqual(report["status"], "declared")
         self.assertEqual(report["contract"], self.contract)
+
+    def test_duplicate_folders_and_names_keep_distinct_declarations(self):
+        expected = {}
+        for folder in ("first/export", "second/export", "third/alias"):
+            skill = self.root / folder
+            skill.mkdir(parents=True)
+            (skill / "SKILL.md").write_text(
+                "---\nname: export\ndescription: export records\n---\n", encoding="utf-8")
+            contract = contract_template(skill, f"example/repo:skills/{folder}")
+            (skill / "effects.json").write_text(json.dumps(contract), encoding="utf-8")
+            expected[str(skill / "SKILL.md")] = contract["capability_id"]
+        caps = self.discover()
+        actual = {c.path: c.effects["contract"]["capability_id"]
+                  for c in caps if c.name == "export"}
+        self.assertEqual(actual, expected)
+
+    def test_curator_paths_are_opt_in_and_preserve_same_name_candidates(self):
+        from skills.capabilities import Capability
+        caps = [Capability("export", "ACT", "export records", path, True)
+                for path in ("skills/first/SKILL.md", "skills/second/SKILL.md")]
+        ordinary = curate("export", caps)
+        identified = curate("export", caps, include_paths=True)
+        self.assertEqual([c.pop("path") for c in identified], [c.path for c in caps])
+        self.assertEqual(identified, ordinary)
+        self.assertTrue(all("path" not in c for c in ordinary))
+
+    def test_curator_import_fallback_keeps_path_and_planning_fields(self):
+        caps = load(self.root)
+        with patch.dict("sys.modules", {"skills.skill_finder.finder": None}):
+            selected = curate("example", caps, include_paths=True)
+        self.assertEqual(selected[0]["path"], caps[0].path)
+        self.assertEqual(selected[0]["why"], "example")
+        self.assertEqual(selected[0]["score"], 0.0)
+        self.assertTrue(selected[0]["local_capable"])
 
     def test_bound_implementation_changes_or_disappears_are_stale(self):
         source = self.skill / "worker.py"

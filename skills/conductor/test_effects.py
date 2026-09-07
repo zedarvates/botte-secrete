@@ -11,7 +11,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from skills.capabilities import Capability
+from skills.capabilities import Capability, curate, load
 from skills.capabilities.effects import contract_template
 from skills.conductor import execute, plan, run_goal
 from skills.conductor.cli import main as cli
@@ -34,9 +34,11 @@ class PlanningEffectsTests(unittest.TestCase):
         ]
         self.addCleanup(patch.stopall)
         patch("skills.capabilities.registry.REPO_ROOT", self.root).start()
+        patch("skills.conductor.conductor.REPO_ROOT", self.root).start()
         patch("skills.conductor.conductor.load_caps", return_value=self.caps).start()
         patch("skills.conductor.conductor.curate", return_value=[
-            {"name": "selected", "score": 1.0, "why": "fixture"}
+            {"name": "selected", "score": 1.0, "why": "fixture",
+             "path": str(self.skill / "SKILL.md")}
         ]).start()
 
     def test_default_plan_does_not_inspect_sidecars_or_add_fields(self):
@@ -56,6 +58,43 @@ class PlanningEffectsTests(unittest.TestCase):
         self.assertEqual(details["status"], "declared")
         self.assertEqual(details["contract"], self.contract)
         self.assertEqual(after, before)
+
+    def test_duplicate_names_keep_their_layer_command_and_effects(self):
+        expected = []
+        for folder, layer in (("one/metrics", "SENSE"), ("two/metrics", "GOVERN"),
+                              ("three/alias", "DEPLOY")):
+            skill = self.root / "skills" / folder
+            skill.mkdir(parents=True)
+            (skill / "SKILL.md").write_text(
+                f"---\nname: metrics\nlayer: {layer}\ndescription: metrics\n---\n",
+                encoding="utf-8")
+            contract = contract_template(skill, f"zedarvates/botte-secrete:skills/{folder}")
+            (skill / "effects.json").write_text(json.dumps(contract), encoding="utf-8")
+            expected.append((layer, f"see skills/{folder}/SKILL.md", contract["capability_id"]))
+        caps = load(self.root, preserve_paths=True)
+        # Exercise real discovery and curation, bypassing the single-step fixture.
+        with patch("skills.conductor.conductor.load_caps", return_value=caps), \
+             patch("skills.conductor.conductor.curate", wraps=curate):
+            result = plan("metrics", include_effects=True)
+        self.assertEqual([
+            (s["layer"], s["command"], s["effects"]["contract"]["capability_id"])
+            for s in result["steps"]], expected)
+        with patch("skills.conductor.executor._default_runner") as runner:
+            report = execute(result, confirm=True)
+        runner.assert_not_called()
+        self.assertEqual(report["summary"]["skipped"], 3)
+
+    def test_same_name_candidates_keep_local_flags_and_canonical_command(self):
+        caps = [
+            Capability("metrics", "SENSE", "metrics", "skills/metrics/SKILL.md", True),
+            Capability("metrics", "ACT", "metrics", "skills/vendor/metrics/SKILL.md", False),
+        ]
+        with patch("skills.conductor.conductor.load_caps", return_value=caps), \
+             patch("skills.conductor.conductor.curate", wraps=curate):
+            steps = plan("metrics")["steps"]
+        self.assertEqual([s["local"] for s in steps], [True, False])
+        self.assertEqual(steps[0]["command"], "python -m skills.metrics.cli .")
+        self.assertEqual(steps[1]["command"], "see skills/vendor/metrics/SKILL.md")
 
     def test_stale_missing_and_invalid_declarations_remain_explicit(self):
         (self.skill / "SKILL.md").write_text("changed", encoding="utf-8")
@@ -125,14 +164,16 @@ class PlanningEffectsTests(unittest.TestCase):
         self.assertEqual(result["results"][0]["effects_before"]["status"], "declared")
         self.assertEqual(result["summary"]["ran"], 0)
 
-    def test_selected_name_collision_stops_before_inspection_or_execution(self):
+    def test_selected_name_collision_inspects_only_the_curated_path(self):
         self.caps.append(Capability("selected", "ACT", "second fixture",
                                     str(self.root / "other" / "SKILL.md"), True))
-        with patch("skills.capabilities.effects.inspect_effects") as inspect:
+        from skills.capabilities.effects import inspect_effects
+        with patch("skills.capabilities.effects.inspect_effects", wraps=inspect_effects) as inspect:
             with patch("skills.conductor.executor._default_runner") as runner:
                 result = run_goal("fixture", include_effects=True, confirm=True)
-        self.assertIn("Ambiguous selected capability", result["error"])
-        inspect.assert_not_called()
+        self.assertEqual(result["results"][0]["effects_before"]["contract"], self.contract)
+        self.assertEqual(result["summary"]["skipped"], 1)
+        inspect.assert_called_once_with(self.skill)
         runner.assert_not_called()
 
     def test_unselected_name_collision_does_not_block_selected_capability(self):

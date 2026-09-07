@@ -99,7 +99,7 @@ def load(skills_root: Optional[Path] = None, *,
     For external trees, supply a trusted namespace such as owner/repo:skills.
     preserve_paths keeps collisions visible without reading any sidecars.
     """
-    root = Path(skills_root or (REPO_ROOT / "skills"))
+    root = Path(skills_root or (REPO_ROOT / "skills")).resolve()
     caps: dict[str, Capability] = {}
     for md in sorted(root.rglob("SKILL.md")):
         folder = md.parent.name
@@ -130,7 +130,7 @@ def load(skills_root: Optional[Path] = None, *,
             path=rel, local_capable=folder not in _CLOUD_CAPABLE,
             effects=effects,
         )
-    return sorted(caps.values(), key=lambda c: (LAYERS.index(c.layer), c.name))
+    return sorted(caps.values(), key=lambda c: (LAYERS.index(c.layer), c.name, c.path))
 
 
 def by_layer(caps: Optional[list[Capability]] = None) -> dict[str, list[Capability]]:
@@ -169,21 +169,24 @@ def ascii_map(caps: Optional[list[Capability]] = None) -> str:
     return "\n".join(lines)
 
 
-def curate(goal: str, caps: Optional[list[Capability]] = None, top_k: int = 5) -> list[dict]:
-    """The curator: pick the capabilities most relevant to a goal (local, 0 tokens)."""
+def curate(goal: str, caps: Optional[list[Capability]] = None, top_k: int = 5,
+           *, include_paths: bool = False) -> list[dict]:
+    """Pick relevant capabilities; opt into paths for unambiguous association."""
     caps = caps if caps is not None else load()
     try:
         from skills.skill_finder.finder import _tokens, _fuzzy_hit
     except ImportError:
-        return [{"name": c.name, "layer": c.layer, "score": 0.0} for c in caps[:top_k]]
-    q = _tokens(goal)
-    scored = []
-    for c in caps:
-        words = _tokens(c.name + " " + c.description)
-        s = sum(_fuzzy_hit(w, words) for w in q) / (len(q) or 1)
-        if s > 0:
-            scored.append((s, c))
-    scored.sort(key=lambda x: -x[0])
+        scored = [(0.0, c) for c in caps]
+    else:
+        q = _tokens(goal)
+        scored = []
+        for c in caps:
+            words = _tokens(c.name + " " + c.description)
+            s = sum(_fuzzy_hit(w, words) for w in q) / (len(q) or 1)
+            if s > 0:
+                scored.append((s, c))
+        scored.sort(key=lambda x: -x[0])
     return [{"name": c.name, "layer": c.layer, "score": round(s, 3),
-             "local_capable": c.local_capable, "why": c.description[:120]}
+             "local_capable": c.local_capable, "why": c.description[:120],
+             **({"path": c.path} if include_paths else {})}
             for s, c in scored[:top_k]]

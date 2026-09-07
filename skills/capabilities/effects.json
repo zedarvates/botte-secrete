@@ -1,11 +1,11 @@
 {
   "schema": "botte.capability-effects/v1",
   "capability_id": "zedarvates/botte-secrete:skills/capabilities",
-  "contract_version": "0.2.0",
+  "contract_version": "0.2.1",
   "source_hashes": {
-    "SKILL.md": "2aa696f2d10bb366a4c4508686a43babf9d0e127e43c20fa15d2c42f1fe49256",
+    "SKILL.md": "7437b6fd683612a3859f9fb09d92bfe40e326b6419b8510d01b582921db7381f",
     "__init__.py": "7d4d3e1854faec18d12335c4a1632b9fd59e5b22f774a8a9fc69467d1ddb75c5",
-    "registry.py": "ca66b89f5fb7f3b311c7bb4a2b9d2e68194a59a834c682774c8205ae979c77a7",
+    "registry.py": "920b2e3ba35760ffa77b6f3bf6b4b043a98a4d6141d4fb4dd3b682b994eec204",
     "cli.py": "7624a0ef72921a285ba3a69bf4965ffa086b27628df362499d2093c00f1e7976",
     "effects.py": "3965c5d1f84f1ca1b932f12944493ffc14e3458062db54f098b5ccbb2741be47"
   },
@@ -20,7 +20,7 @@
       "effect": "Read SKILL.md files and return or print a capability listing, ranked candidates, effects inspection or draft JSON.",
       "scope": "The selected local skill tree and the caller/output consumer.",
       "likelihood": "conditional",
-      "basis": "registry.load, registry.curate and cli.main read local declarations; they do not execute the listed capabilities.",
+      "basis": "registry.load retains every SKILL.md path when include_effects or preserve_paths is requested; curate can include selected paths. cli.main does not execute listed capabilities.",
       "impact": "Enables discovery and consequence assessment; consumes local CPU, memory and file I/O, and can reveal descriptions and source paths.",
       "verification": "Compare the output to a controlled fixture tree; confirm default JSON keys remain unchanged and no fixture files change."
     },
@@ -39,7 +39,7 @@
       "scope": "Subsequent planning and execution performed by the caller, outside this registry.",
       "likelihood": "plausible",
       "basis": "The Conductor consumes the capability registry; callers decide how to use its output.",
-      "impact": "Can improve selection or propagate incomplete metadata. Effects-aware planning rejects ambiguous selected names; legacy consumers retain basename assumptions.",
+      "impact": "Can improve selection, or propagate an incomplete declaration if callers ignore context or join metadata by display name instead of path.",
       "verification": "Inspect the caller plan and validate the selected capability against the actual task, identity and existing authorization."
     },
     {
@@ -84,7 +84,7 @@
       "target": "Inventory coverage of effects declarations in another compatible skill tree.",
       "rationale": "SKILL.md discovery and skill-local sidecar inspection already accept a supplied root; the mechanism can report migration gaps.",
       "adaptations": [
-        "Supply the target tree namespace from its trusted installation mapping and resolve ambiguous names before planning executable commands.",
+        "Supply the target namespace from its trusted installation mapping and use selected paths to associate metadata and commands.",
         "Bind each declaration to that tree and review private metadata before sharing results."
       ],
       "validation": "Use a target fixture tree with declared, missing, malformed, changed-source, mismatched-identity and duplicate-basename cases; compare coverage to an independent file listing.",

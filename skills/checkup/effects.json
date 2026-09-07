@@ -1,41 +1,43 @@
 {
   "schema": "botte.capability-effects/v1",
   "capability_id": "zedarvates/botte-secrete:skills/checkup",
-  "contract_version": "0.1.0",
+  "contract_version": "0.1.1",
   "source_hashes": {
-    "SKILL.md": "81df1dc8ff8abdcf8833314d6659ee3cfbd8449f57129ba3e2a291fdf66813d0",
+    "SKILL.md": "36de63508a244feaf69f40e756f5d26e12ba6a9e51bdfd8ec382466760178a48",
     "__init__.py": "ef6b9260d322843b5bdbba8d0af39c54a1e572cc4c0275a6ffd0e9805154bf58",
     "cli.py": "5334396c4706b004fc84dcc30876b7416ae9e4e63893accd0aea6448ffe94764"
   },
   "preconditions": [
-    "Select base checkup, doctor, fresh machine audit, save or PR-comment formatting; these paths differ.",
-    "Resolve the project, host metadata scope, discovery permissions and report audience for the current task.",
+    "A readable target project and installed dependencies for the intended diagnostics; unavailable scanners must remain explicit in interpretation.",
+    "Existing task scope covers project/host metadata, any conditional loopback probes and local registry/state writes.",
+    "Distinguish report production, --doctor, --fresh, --save and downstream CI publication; --pr-comment only prints.",
+    "Review output recipients because reports can contain paths, source snippets, machine metadata and heuristic estimates.",
     "Read the infra_advisor and llm_backends declarations when an audit can refresh the shared registry. Parent-local hashes do not bind those modules."
   ],
   "expected_effects": [
     {
-      "effect": "run assembles project directives, metrics, static scans, runtime prefix facts and drift findings.",
-      "scope": "Selected project source/configuration, local catalogs and host/runtime metadata; caller memory/stdout.",
+      "effect": "Read project files and host metadata, run available diagnostics and return findings, availability indicators and estimates.",
+      "scope": "Target project, toolkit metadata and host information used by imported diagnostics.",
       "likelihood": "conditional",
-      "basis": "run calls auto_audit, metrics.collect and bounded summary helpers. policy_committed tests file existence rather than Git tracking.",
-      "impact": "Uses CPU/I/O and can reveal paths, snippets and setup details. Unavailable analyses and CI wiring exemptions limit what an empty findings list establishes.",
-      "verification": "Run against a fixture project with a policy file that is not Git-tracked; check existence reporting, unavailable sections and selected evidence scope."
+      "basis": "run composes policy presence, infra/directive/metric analysis, security candidates, NN status and host-prefix estimates; doctor adds machine assessment and ranked actions.",
+      "impact": "Consumes CPU/memory/I/O and reveals diagnostic data. It does not apply fixes; missing diagnostics and heuristic estimates limit coverage.",
+      "verification": "Inspect each section's available/error fields and verify important findings against source or controlled defective fixtures. policy_committed checks existence, not Git tracking."
     },
     {
-      "effect": "Base checkup may refresh discovery through infra_advisor; doctor may also refresh via its machine audit.",
-      "scope": "llm_backends discovery targets and its toolkit-local registry, plus host hardware profiling.",
+      "effect": "Conditionally probe loopback services, replace the toolkit backend registry and create imported-component state directories.",
+      "scope": "Loopback backend endpoints, toolkit configs/llm-endpoints.json and local state directories used by optional components.",
       "likelihood": "conditional",
-      "basis": "run calls auto_audit; gather refreshes on empty registry. doctor calls audit(fresh=machine_fresh), which also refreshes an empty registry.",
-      "impact": "An audit can probe endpoints and overwrite shared registry entries. With no discovered backends, multiple parents can independently repeat discovery.",
-      "verification": "Run fixture checkup with mocked discovery and a temporary empty registry; inspect saved entries and verify later cached reads avoid discovery."
+      "basis": "infra_advisor and llm_backends.audit refresh when registry.load is empty; --doctor --fresh explicitly refreshes. ActiveLearning construction creates its data directory when that diagnostic runs.",
+      "impact": "Even a regular checkup can have network/cache effects. Registry changes can influence subsequent routing; model inference is not requested by this CLI. With an empty discovery result, multiple parent audits can repeat the probes.",
+      "verification": "With mocked discovery, compare populated/empty registry cases and --doctor --fresh; inspect resulting registry and state paths in a disposable environment."
     },
     {
-      "effect": "--save persists the report; --pr-comment formats Markdown for stdout and returns before the save path.",
-      "scope": "The selected project .botte/reports or the stdout recipient, including configured CI consumers.",
+      "effect": "Print a report or Markdown comment; with --save, write Markdown/HTML files in the target report directory.",
+      "scope": "Stdout and target .botte/reports/ plus any consumer that retains or publishes them.",
       "likelihood": "conditional",
-      "basis": "main calls report.save only after the early pr_comment return. format_pr_comment is a formatter; posting belongs to the GitHub workflow.",
-      "impact": "Retains analysis details and consumes storage. A zero CLI exit or a formatted no-drift headline alone does not certify all checks or installation health.",
-      "verification": "Mock a report with drift, request PR-comment plus save and assert no report write; inspect output and exit status independently."
+      "basis": "main prints diagnostic data and calls report.save when selected; --pr-comment returns before --save and performs no GitHub API call.",
+      "impact": "Preserves observations but can retain sensitive project details. The CLI returns zero after report production even when drift is present.",
+      "verification": "Compare parsed JSON with findings and scanner availability; inspect saved destinations and exit status. Test any external CI gate against report fields rather than exit zero alone."
     }
   ],
   "downstream_effects": [
@@ -48,46 +50,71 @@
       "verification": "Compare the registry before and after an isolated parent audit and identify the dependency that performed the write."
     },
     {
-      "effect": "CI or another caller may publish the report or use drift/recommendations to decide follow-up actions.",
-      "scope": "PR readers, saved report recipients and any subsequent task resources.",
+      "effect": "A person or agent may use a healthy verdict, incomplete scan or estimated cost to prioritize later changes.",
+      "scope": "Subsequent project work and decisions based on the report.",
       "likelihood": "plausible",
-      "basis": "The workflow posts formatted output; main returns reports and recommended commands without executing repairs.",
-      "impact": "Incomplete findings can be overinterpreted and metadata disclosed. CI-specific wiring exemptions do not transfer to a local installation.",
-      "verification": "Review actual analyzer availability, checkout identity, runtime context and output audience before publication or a downstream decision."
+      "basis": "Verdicts summarize available fields; some diagnostics degrade to unavailable, and machine unavailability can still produce a healthy-looking verdict.",
+      "impact": "Useful triage can become false assurance if omitted checks or heuristic estimates are treated as verified outcomes.",
+      "verification": "Record coverage, errors, source context and independent checks in the task report; do not equate zero drift with complete correctness."
+    },
+    {
+      "effect": "A separate repository workflow may publish the formatted report to a pull request.",
+      "scope": "Repository comments and their audience, under that workflow's permissions.",
+      "likelihood": "conditional",
+      "basis": "The repository's botte-pr-checkup workflow consumes --pr-comment output; publication is outside cli.main and format_pr_comment.",
+      "impact": "Diagnostic paths and snippets may become visible to repository readers and persist after the run.",
+      "verification": "Review the workflow's publication scope and report content; do not treat comment formatting as authorization to send it."
     }
   ],
   "reversibility": {
     "status": "partial",
-    "strategy": "Reconcile inherited registry writes and saved reports separately. The checkup supplies findings, not an automatic code repair or rollback; published copies follow the publishing system.",
+    "strategy": "Source code is not fixed by checkup. Remove or restore generated reports/registry changes only within the task's scope; handle any separately published report through its owning workflow.",
     "residual_effects": [
-      "Probe traffic and report disclosures can persist after local report removal.",
-      "Changes made by a consumer of the findings need their own recovery evidence."
+      "Probe logs, captured output and published copies may remain.",
+      "Subsequent decisions made from the report require separate reassessment."
     ]
   },
   "retry": {
     "semantics": "conditional",
-    "check_before_retry": "Check partial analyzer results, registry state and saved outputs. Cached and fresh reruns can observe different environments and repeat discovery or report writes.",
-    "stop_condition": "Stop repeated probing or persistence on an unresolved failure. Resolve unavailable evidence proportionally rather than executing suggested fixes to make a headline green."
+    "check_before_retry": "Recheck source changes, prior scanner availability, registry freshness and report destinations; reruns consume resources and may repeat probes or output.",
+    "stop_condition": "Resolve missing dependencies or a recurring diagnostic failure instead of treating repeated zero-exit reports as validation; reuse a recent unchanged checkup according to project policy."
   },
-  "required_scope": "Existing task authorization for the project and host metadata, inherited discovery range and report persistence. Publishing a PR comment is a separate caller action using its existing authorization.",
+  "required_scope": "Existing authorization to inspect the target project and relevant host state, write selected reports and conditional local caches, and probe the selected local services. Any publication or suggested fix needs its own applicable task scope.",
   "analysis": {
-    "summary": "The checkup composes useful local diagnostics but also inherits discovery and optional persistence effects. Its availability flags, context exemptions and output mode matter when interpreting the verdict.",
+    "summary": "Checkup assembles diagnostic candidates and coverage signals. Report production and a friendly verdict are not task verification, complete security coverage, measured savings or evidence that policy is tracked in Git.",
     "uncertainties": [
-      "infra_advisor, llm_backends, metrics, context_profiler, scanners, fix and report are not covered by this skill-local hash set.",
-      "Some optional analyses can be unavailable; a successful process exit does not authenticate findings or prove task completion.",
+      "Only skill-local entry points are bound; imported analyzers, discovery, host profiling and report code are outside these source hashes.",
+      "Scanner availability, false positives/negatives, runtime metadata and heuristic cost estimates vary by environment.",
+      "The CLI supplies no automatic fix, outcome verifier or failure gate for drift findings.",
       "policy_committed indicates file presence only, and BOTTE_CHECKUP_CONTEXT=github-pr changes wiring applicability."
     ],
     "evidence_refs": [
       "cli.py:run",
       "cli.py:doctor",
-      "cli.py:_machine_summary",
-      "cli.py:format_pr_comment",
+      "cli.py:_verdict",
       "cli.py:main",
+      "cli.py:format_pr_comment",
+      "skills/infra_advisor/advisor.py:gather (repository dependency)",
+      "skills/llm_backends/audit.py:audit (repository dependency)",
       "../infra_advisor/effects.json",
       "../llm_backends/effects.json"
     ]
   },
   "reuse": [
+    {
+      "target": "Use the diagnostic report in another project's CI review or handoff.",
+      "rationale": "Structured findings and availability fields can support repeatable review with a compact Markdown presentation.",
+      "adaptations": [
+        "Define project-specific thresholds and explicit handling of unavailable scanners; do not rely on CLI exit zero as a quality gate.",
+        "Separate host-specific assumptions from ephemeral CI checks and review report publication scope."
+      ],
+      "validation": "Run target defective fixtures, clean fixtures and missing-dependency cases; assert gate behavior and inspect the report for unintended disclosure before publication.",
+      "status": "adaptation_to_test",
+      "validated_context": null,
+      "evidence_refs": [
+        "cli.py:format_pr_comment"
+      ]
+    },
     {
       "target": "Use a scoped checkup snapshot as one input to integration review.",
       "rationale": "Common diagnostics and explicit availability/context fields help compare changes while keeping operational conclusions separate.",

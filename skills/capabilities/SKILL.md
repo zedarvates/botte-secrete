@@ -37,6 +37,11 @@ a built-in map, else ACT. Generated snapshot: [`docs/system-map.txt`](../../docs
 match, **0 tokens**) — the librarian that hands the Conductor (and you) the right
 branches of the tree to use. Built on [[skill_finder]].
 
+Use `load(..., preserve_paths=True)` to retain every `SKILL.md` path even when
+folders or names repeat. Use `curate(..., include_paths=True)` to associate candidates
+with metadata; display names alone are not identities. This opt-in adds `path`
+without reading effects declarations or changing the default curation fields.
+
 This registry is the foundation for the Conductor (goal → decision tree → ordered
 plan of capabilities, executed local-first) and the control loop (measure → adapt).
 Related: [[skill_finder]], [[auto_router]], [[bootstrap]].
@@ -50,7 +55,7 @@ trees, pass the trusted expected `--id` / `expected_id` or a registry
 `capability_namespace`; do not reuse the sidecar's claim as its own identity
 proof. Effects-aware discovery retains colliding folder paths for inspection.
 Distinguish `missing`, `invalid`, `stale` and `declared`; the last only confirms
-structure and listed source hashes, including for drafts. It does not verify
+structure, resolved identity and listed source hashes, including for drafts. It does not verify
 behavior or grant authority. Ordinary registry output remains unchanged.
 
 Relate expected effects to the current task and its existing authorization.

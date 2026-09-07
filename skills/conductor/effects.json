@@ -1,11 +1,11 @@
 {
   "schema": "botte.capability-effects/v1",
   "capability_id": "zedarvates/botte-secrete:skills/conductor",
-  "contract_version": "0.2.0",
+  "contract_version": "0.2.1",
   "source_hashes": {
-    "SKILL.md": "ff82bd2c31d1e27691040f1b2957e00511db71e96938d96a058b16d8cbab2ffa",
+    "SKILL.md": "4924cafd236a4ab2030f3a00bf4d7fd2cd0506453e858f9727245edd8f954894",
     "__init__.py": "a47ff74d33ed7ea19ac4ab5781e7967deb4a4d022bb46811edf9cd46cf77e839",
-    "conductor.py": "bd8f5b4ae5d84f2abff28d2b4451a842ab8b8604a837a800dca82ffde6a3ef64",
+    "conductor.py": "d7d8ec22e19d8b53adeeb3e3954e0c3fb11971505b3edf3aaec29d0604a3f8c1",
     "executor.py": "aa4b5ce063ccef1da70e8b1e1e6a6e669f1da76102674dcc452f624e766f095c",
     "cli.py": "6b61b58e3f80bc3f07f3782f11e01b1154414cb468735bc28d2b2163e65724de"
   },
@@ -13,16 +13,16 @@
     "Distinguish planning, saving, dry-run and execution; their effects differ.",
     "Execution expects a trusted plan and current authorization for each resolved command, project and network scope.",
     "Inspect placeholders and dependencies; a failed step does not stop later steps.",
-    "Use --effects or MCP include_effects for optional declarations; resolve ambiguous selected names. Matching source hashes are a planning snapshot, not an execution lock."
+    "Use --effects or MCP include_effects for optional declarations. Selection uses source paths; matching hashes are a planning snapshot, not an execution lock."
   ],
   "expected_effects": [
     {
       "effect": "Read the registry, rank capabilities and return an ordered plan; optionally inspect selected effects declarations.",
       "scope": "Local skill metadata, caller memory and stdout.",
       "likelihood": "conditional",
-      "basis": "conductor.plan preserves paths without reading sidecars, rejects ambiguous selected names, and inspects selected paths only; MCP handlers forward include_effects.",
+      "basis": "conductor.plan associates curated entries by source path, uses built-in command hints only for canonical paths, and optionally inspects selected declarations. MCP handlers forward include_effects.",
       "impact": "Makes task selection and consequences inspectable; reads metadata, consumes CPU/I/O and can expose descriptions.",
-      "verification": "Compare default and opt-in fixture plans after removing effects; verify only selected directories are inspected."
+      "verification": "Compare default and opt-in fixture plans after removing effects; verify selected-only inspection and distinct metadata/commands for homonymous entries."
     },
     {
       "effect": "Write Markdown/HTML plan reports with --save; --effects adds a complete JSON companion.",
@@ -82,7 +82,7 @@
   },
   "required_scope": "Planning needs read access to selected metadata; saving and execution need the current task authorization for the actual output and child-command resources. --confirm and declarations do not supply that authorization.",
   "analysis": {
-    "summary": "Planning, persistence and execution have distinct consequences. The optional snapshot supports handoff analysis while classification remains independent of metadata. Child output and declared effects still need evidence-based interpretation.",
+    "summary": "Planning, persistence and execution have distinct consequences. Path-based association preserves each selected entry and its metadata; a matching display name elsewhere does not acquire a built-in command. Optional effects snapshots remain independent of classification and outcome verification.",
     "uncertainties": [
       "Child-command effects and total costs are not measured by the orchestration cloud_tokens field.",
       "Source hashes cover listed files only; imported modules, live services and runtime state may differ.",
@@ -101,7 +101,7 @@
       "target": "Carry consequence expectations into another task planner and its result report.",
       "rationale": "The plan/result separation provides a reusable place to compare an earlier declaration with later process observations.",
       "adaptations": [
-        "Map target capability identities and commands explicitly.",
+        "Map target capability paths and commands explicitly; do not associate metadata by display name.",
         "Preserve target authorization and report privacy rules; revalidate source bindings in the new environment."
       ],
       "validation": "Replay selected, missing, stale, blocked, failed and dry-run fixture cases through the target planner without launching real mutations.",
