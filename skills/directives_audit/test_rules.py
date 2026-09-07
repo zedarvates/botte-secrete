@@ -80,7 +80,8 @@ def main() -> int:
     print("== rules drift tests ==")
 
     with tempfile.TemporaryDirectory() as directory:
-        root = Path(directory)
+        root = Path(directory) / "checkout-a"
+        root.mkdir()
         missing = audit_rules(root)
         _ok("missing optional manifest is explicit and non-fabricated",
             not missing["manifest_present"] and missing["summary"]["rules"] == 0,
@@ -90,6 +91,17 @@ def main() -> int:
         _write_project(root, [canonical])
         clean = audit_rules(root)
         clean_again = audit_rules(root)
+        clone = Path(directory) / "checkout-b"
+        clone.mkdir()
+        _write_project(clone, [canonical])
+        clean_clone = audit_rules(clone)
+        variant = _rule()
+        variant["scope"] = ["different-worker"]
+        variant["last_verified"]["content_sha256"] = rule_semantic_sha256(variant)
+        variant_root = Path(directory) / "checkout-c"
+        variant_root.mkdir()
+        _write_project(variant_root, [variant])
+        clean_variant = audit_rules(variant_root)
         _ok("valid source, guard and bidirectional probes audit cleanly",
             clean["manifest_present"] and clean["summary"] == {
                 "rules": 1,
@@ -99,8 +111,11 @@ def main() -> int:
                 "unenforced": 0,
                 "stale": 0,
             }, state)
-        _ok("audit fingerprint is deterministic and privacy-safe",
+        _ok("audit fingerprint ignores checkout metadata and is privacy-safe",
             clean["fingerprint"] == clean_again["fingerprint"]
+            and clean["fingerprint"] == clean_clone["fingerprint"]
+            and clean["fingerprint"] != clean_variant["fingerprint"]
+            and clean["project_ref"] != clean_clone["project_ref"]
             and str(root) not in json.dumps(clean), state)
 
         (root / "policy.md").write_text(

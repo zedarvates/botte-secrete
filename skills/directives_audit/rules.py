@@ -386,7 +386,13 @@ def _report(*, root: Path, manifest_ref: str, present: bool,
         },
         "findings": [item.to_dict() for item in sorted_findings],
     }
-    payload["fingerprint"] = _canonical_sha256(payload)
+    fingerprint_payload = {
+        key: value for key, value in payload.items() if key != "project_ref"
+    }
+    payload["fingerprint"] = _canonical_sha256({
+        "report": fingerprint_payload,
+        "rules": sorted(rules, key=lambda rule: rule["id"]),
+    })
     return payload
 
 
