@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/zedarvates/botte-secrete/blob/main/docs/schemas/capability-effects.schema.json",
   "title": "Capability effects declaration v1",
-  "$comment": "The inspector additionally checks relative local source paths, size limits, duplicate keys and matching SHA-256 digests. Schema validity does not validate effects or grant authority.",
+  "$comment": "The inspector additionally checks the caller-resolved capability identity, relative local source paths, size limits, duplicate keys and matching SHA-256 digests. Schema validity does not validate effects or grant authority.",
   "type": "object",
   "required": [
     "schema",

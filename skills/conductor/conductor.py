@@ -13,6 +13,7 @@ anything itself. Pure stdlib + the local capability/effort modules (0 tokens).
 from __future__ import annotations
 
 from dataclasses import dataclass, asdict
+from collections import Counter
 from typing import Optional
 
 from skills.capabilities.registry import LAYERS, REPO_ROOT, load as load_caps, curate
@@ -56,8 +57,14 @@ def plan(goal: str, *, top_k: int = 6, include_effects: bool = False) -> dict:
     if not goal:
         return {"error": "empty goal"}
 
-    caps = load_caps()
+    caps = load_caps(preserve_paths=True) if include_effects else load_caps()
     picked = curate(goal, caps, top_k=top_k)
+    if include_effects:
+        names = Counter(c.name for c in caps)
+        ambiguous = sorted({c["name"] for c in picked if names[c["name"]] != 1})
+        if ambiguous:
+            return {"error": "Ambiguous selected capability name(s): " + ", ".join(ambiguous)
+                    + ". Resolve unique names/paths before planning commands."}
     cap_layer = {c.name: c.layer for c in caps}
     cap_local = {c.name: c.local_capable for c in caps}
 

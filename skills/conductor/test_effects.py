@@ -22,17 +22,18 @@ class PlanningEffectsTests(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
         self.root = Path(self.tmp.name)
-        self.skill = self.root / "different_folder"
-        self.skill.mkdir()
+        self.skill = self.root / "skills" / "different_folder"
+        self.skill.mkdir(parents=True)
         (self.skill / "SKILL.md").write_text(
             "---\nname: selected\ndescription: fixture\n---\n", encoding="utf-8")
-        self.contract = contract_template(self.skill, "example/repo:skills/different_folder")
+        self.contract = contract_template(self.skill, "zedarvates/botte-secrete:skills/different_folder")
         (self.skill / "effects.json").write_text(json.dumps(self.contract), encoding="utf-8")
         self.caps = [
             Capability("selected", "ACT", "fixture", str(self.skill / "SKILL.md"), True),
             Capability("unselected", "ACT", "fixture", str(self.root / "other" / "SKILL.md"), True),
         ]
         self.addCleanup(patch.stopall)
+        patch("skills.capabilities.registry.REPO_ROOT", self.root).start()
         patch("skills.conductor.conductor.load_caps", return_value=self.caps).start()
         patch("skills.conductor.conductor.curate", return_value=[
             {"name": "selected", "score": 1.0, "why": "fixture"}
@@ -123,6 +124,47 @@ class PlanningEffectsTests(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertEqual(result["results"][0]["effects_before"]["status"], "declared")
         self.assertEqual(result["summary"]["ran"], 0)
+
+    def test_selected_name_collision_stops_before_inspection_or_execution(self):
+        self.caps.append(Capability("selected", "ACT", "second fixture",
+                                    str(self.root / "other" / "SKILL.md"), True))
+        with patch("skills.capabilities.effects.inspect_effects") as inspect:
+            with patch("skills.conductor.executor._default_runner") as runner:
+                result = run_goal("fixture", include_effects=True, confirm=True)
+        self.assertIn("Ambiguous selected capability", result["error"])
+        inspect.assert_not_called()
+        runner.assert_not_called()
+
+    def test_unselected_name_collision_does_not_block_selected_capability(self):
+        self.caps.append(Capability("unselected", "ACT", "second fixture",
+                                    str(self.root / "other2" / "SKILL.md"), True))
+        self.assertEqual(plan("fixture", include_effects=True)["steps"][0]["effects"]["status"],
+                         "declared")
+
+    def test_mcp_round_trip_preserves_effects_only_when_requested(self):
+        from skills.llm_mcp.server import handle, TOOLS
+        for tool_name in ("conduct", "execute_plan"):
+            definition = next(t for t in TOOLS if t["name"] == tool_name)
+            self.assertEqual(definition["inputSchema"]["properties"]["include_effects"]["type"],
+                             "boolean")
+            for include in (None, False, True):
+                with self.subTest(tool=tool_name, include_effects=include):
+                    arguments = {"goal": "fixture"}
+                    if tool_name == "execute_plan":
+                        arguments["dry_run"] = True
+                    if include is not None:
+                        arguments["include_effects"] = include
+                    with patch("skills.conductor.executor._default_runner") as runner:
+                        response = handle({"jsonrpc": "2.0", "id": 1, "method": "tools/call",
+                                           "params": {"name": tool_name, "arguments": arguments}})
+                    runner.assert_not_called()
+                    payload = json.loads(response["result"]["content"][0]["text"])
+                    steps_key, effects_key = (("steps", "effects") if tool_name == "conduct"
+                                              else ("results", "effects_before"))
+                    step = payload[steps_key][0]
+                    self.assertEqual(effects_key in step, include is True)
+                    if include:
+                        self.assertEqual(step[effects_key]["contract"], self.contract)
 
 
 def main() -> int:

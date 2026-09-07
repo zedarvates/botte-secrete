@@ -72,5 +72,22 @@ python -m skills.cluster.agent serve --host 0.0.0.0 --token "$BOTTE_AGENT_TOKEN"
 Defaults are safe: with no `--commands` file, **no** maintenance is possible —
 only the read-only actions. Maintenance on a non-loopback bind requires a token.
 
+## Consequences, analysis and reuse
+
+Read [effects.json](effects.json) for `status`, `pick`, delegation or receiver
+maintenance. `status --subnet` refreshes the backend registry over the network;
+ordinary status may refresh an empty registry too. When chat backends exist,
+`status` calls `pick("lru")` and writes the last-used state, changing a future
+selection before any task runs. Consult the [backend declaration](../llm_backends/effects.json)
+for inherited discovery effects.
+
+Delegation sends task text to the configured receiver. `delegated: true` records
+an HTTP response, not verified completion of the remote task. After timeout,
+reconcile receiver state before repeating a possible mutation; no request
+deduplication or distributed rollback is supplied. Receiver maintenance follows
+the operator's named commands and existing task authority. Saved status reports
+and receiver output may retain machine details and task data.
+See the [common contract](../../docs/capability-effects.md).
+
 Exposed via [[llm_mcp]] as `cluster_status`. Related: [[llm_backends]]
 (discovery), [[infra_advisor]] (per-machine tips), [[auto_router]].

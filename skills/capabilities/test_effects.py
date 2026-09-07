@@ -34,6 +34,12 @@ class EffectsTests(unittest.TestCase):
         (self.skill / "effects.json").write_text(
             json.dumps(self.contract if contract is None else contract), encoding="utf-8")
 
+    def inspect(self):
+        return inspect_effects(self.skill, expected_id="example/repo:skills/sample")
+
+    def discover(self):
+        return load(self.root, include_effects=True, capability_namespace="example/repo:skills")
+
     def test_template_preserves_unknowns_and_does_not_write(self):
         self.assertEqual(validate_contract(self.contract), [])
         self.assertEqual(self.contract["expected_effects"][0]["likelihood"], "unknown")
@@ -52,9 +58,9 @@ class EffectsTests(unittest.TestCase):
         self.assertEqual(result["name"], "sample")
 
     def test_missing_and_declared_are_distinct_in_opt_in_discovery(self):
-        self.assertEqual(load(self.root, include_effects=True)[0].effects["status"], "missing")
+        self.assertEqual(self.discover()[0].effects["status"], "missing")
         self.save()
-        report = load(self.root, include_effects=True)[0].to_dict()["effects"]
+        report = self.discover()[0].to_dict()["effects"]
         self.assertEqual(report["status"], "declared")
         self.assertEqual(report["contract"], self.contract)
 
@@ -63,16 +69,16 @@ class EffectsTests(unittest.TestCase):
         source.write_text("print('first')\n", encoding="utf-8")
         self.contract["source_hashes"]["worker.py"] = hashlib.sha256(source.read_bytes()).hexdigest()
         self.save()
-        self.assertEqual(inspect_effects(self.skill)["status"], "declared")
+        self.assertEqual(self.inspect()["status"], "declared")
         source.write_text("print('second')\n", encoding="utf-8")
-        self.assertEqual(inspect_effects(self.skill)["status"], "stale")
+        self.assertEqual(self.inspect()["status"], "stale")
         source.unlink()
-        self.assertEqual(inspect_effects(self.skill)["status"], "stale")
+        self.assertEqual(self.inspect()["status"], "stale")
 
     def test_changed_skill_is_stale_without_hiding_the_declaration(self):
         self.save()
         (self.skill / "SKILL.md").write_text("changed", encoding="utf-8")
-        result = inspect_effects(self.skill)
+        result = self.inspect()
         self.assertEqual(result["status"], "stale")
         self.assertTrue(result["errors"])
         self.assertEqual(result["contract"], self.contract)
@@ -82,7 +88,7 @@ class EffectsTests(unittest.TestCase):
                         "[" * 1500 + "]" * 1500, " " * (MAX_CONTRACT_BYTES + 1)):
             with self.subTest(content=content[:40]):
                 (self.skill / "effects.json").write_text(content, encoding="utf-8")
-                result = load(self.root, include_effects=True)[0].effects
+                result = self.discover()[0].effects
                 self.assertEqual(result["status"], "invalid")
                 self.assertNotIn("contract", result)
 
@@ -112,7 +118,7 @@ class EffectsTests(unittest.TestCase):
         self.assertEqual(validate_contract(self.contract), [])
         # This only validates the declaration, not the evidence's truth.
         self.save()
-        self.assertEqual(inspect_effects(self.skill)["status"], "declared")
+        self.assertEqual(self.inspect()["status"], "declared")
 
     def test_escape_paths_are_invalid(self):
         for name in ("../other", "/etc/hosts", "C:\\other", "a/../other", "a//other"):
@@ -131,14 +137,14 @@ class EffectsTests(unittest.TestCase):
             self.skipTest("symlinks unavailable")
         self.contract["source_hashes"]["linked.json"] = hashlib.sha256(outside.read_bytes()).hexdigest()
         self.save()
-        self.assertEqual(inspect_effects(self.skill)["status"], "stale")
+        self.assertEqual(self.inspect()["status"], "stale")
         (self.skill / "effects.json").unlink()
         (self.skill / "effects.json").symlink_to(outside)
         self.assertEqual(inspect_effects(self.skill)["status"], "invalid")
 
     def test_cli_reports_status_and_template_without_writing(self):
         with contextlib.redirect_stdout(io.StringIO()) as output:
-            code = cli(["effects", str(self.skill)])
+            code = cli(["effects", str(self.skill), "--id", "example/repo:skills/sample"])
         self.assertEqual(code, 1)
         self.assertEqual(json.loads(output.getvalue())["status"], "missing")
         with contextlib.redirect_stdout(io.StringIO()) as output:
@@ -148,16 +154,62 @@ class EffectsTests(unittest.TestCase):
         self.assertFalse((self.skill / "effects.json").exists())
         self.save()
         with contextlib.redirect_stdout(io.StringIO()) as output:
-            code = cli(["effects", str(self.skill)])
+            code = cli(["effects", str(self.skill), "--id", "example/repo:skills/sample"])
         self.assertEqual(code, 0)
         self.assertEqual(json.loads(output.getvalue())["status"], "declared")
 
     def test_repository_declarations_match_their_sources(self):
         skills_root = Path(__file__).parents[1]
-        for name in ("capabilities", "conductor", "events", "trajectory"):
-            with self.subTest(capability=name):
-                result = inspect_effects(skills_root / name)
+        sidecars = sorted(skills_root.rglob("effects.json"))
+        self.assertTrue(sidecars, "expected at least one pilot declaration")
+        for sidecar in sidecars:
+            with self.subTest(capability=sidecar.parent.relative_to(skills_root)):
+                result = inspect_effects(sidecar.parent)
                 self.assertEqual(result["status"], "declared", result.get("errors"))
+
+    def test_identity_mismatch_is_invalid_even_with_matching_hashes(self):
+        self.contract["capability_id"] = "another/repo:skills/unrelated"
+        self.save()
+        result = self.inspect()
+        self.assertEqual(result["status"], "invalid")
+        self.assertIn("capability_id", result["errors"][0])
+        self.assertNotIn("contract", result)
+        self.assertEqual(self.discover()[0].effects["status"], "invalid")
+
+    def test_external_identity_must_come_from_the_caller(self):
+        self.save()
+        self.assertEqual(inspect_effects(self.skill)["status"], "invalid")
+        self.assertEqual(self.inspect()["status"], "declared")
+
+    def test_bundled_identity_is_resolved_from_the_path(self):
+        leaf = self.root / "skills" / "sample"
+        leaf.mkdir(parents=True)
+        (leaf / "SKILL.md").write_bytes((self.skill / "SKILL.md").read_bytes())
+        contract = contract_template(leaf, "zedarvates/botte-secrete:skills/sample")
+        sidecar = leaf / "effects.json"
+        sidecar.write_text(json.dumps(contract), encoding="utf-8")
+        with patch("skills.capabilities.registry.REPO_ROOT", self.root):
+            self.assertEqual(inspect_effects(leaf)["status"], "declared")
+            contract["capability_id"] = "another/repo:skills/sample"
+            sidecar.write_text(json.dumps(contract), encoding="utf-8")
+            self.assertEqual(inspect_effects(leaf)["status"], "invalid")
+
+    def test_effects_discovery_keeps_duplicate_basenames_without_extra_reads(self):
+        for folder in ("a/worker", "b/worker"):
+            leaf = self.root / folder
+            leaf.mkdir(parents=True)
+            (leaf / "SKILL.md").write_text("---\nname: worker\ndescription: fixture\n---\n",
+                                           encoding="utf-8")
+            contract = contract_template(leaf, "example/repo:skills/" + folder)
+            (leaf / "effects.json").write_text(json.dumps(contract), encoding="utf-8")
+        self.assertEqual(len(load(self.root)), 2)  # legacy basename deduplication
+        with patch("skills.capabilities.effects.inspect_effects") as inspect:
+            self.assertEqual(len(load(self.root, preserve_paths=True)), 3)
+        inspect.assert_not_called()
+        workers = [c for c in self.discover() if c.name == "worker"]
+        self.assertEqual(len(workers), 2)
+        self.assertEqual({c.effects["contract"]["capability_id"] for c in workers},
+                         {"example/repo:skills/a/worker", "example/repo:skills/b/worker"})
 
 
 def main() -> int:

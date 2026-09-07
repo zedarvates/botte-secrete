@@ -487,7 +487,10 @@ TOOLS = [
         "description": "Route a high-level goal to an ordered, local-first plan of "
                        "botte-secrète capabilities (which tools, in what order, what stays "
                        "local). The generalised router. 0 cloud tokens.",
-        "inputSchema": {"type": "object", "properties": {"goal": {"type": "string"}},
+        "inputSchema": {"type": "object", "properties": {
+            "goal": {"type": "string"},
+            "include_effects": {"type": "boolean", "default": False,
+                                "description": "Inspect selected declarations; grants no authority."}},
                         "required": ["goal"]},
     },
     {
@@ -500,7 +503,9 @@ TOOLS = [
         "inputSchema": {"type": "object", "properties": {
             "goal": {"type": "string"},
             "confirm": {"type": "boolean"},
-            "dry_run": {"type": "boolean"}},
+            "dry_run": {"type": "boolean"},
+            "include_effects": {"type": "boolean", "default": False,
+                                "description": "Retain planning declarations as effects_before; not observations."}},
             "required": ["goal"]},
     },
     {
@@ -1218,13 +1223,15 @@ def _tool_routing_stats(_args: dict) -> str:
 
 def _tool_conduct(args: dict) -> str:
     from skills.conductor import plan
-    return json.dumps(plan(args["goal"]), ensure_ascii=False, indent=2)
+    return json.dumps(plan(args["goal"], include_effects=bool(args.get("include_effects", False))),
+                      ensure_ascii=False, indent=2)
 
 
 def _tool_execute_plan(args: dict) -> str:
     from skills.conductor import run_goal
     r = run_goal(args["goal"], confirm=bool(args.get("confirm", False)),
-                 dry_run=bool(args.get("dry_run", False)))
+                 dry_run=bool(args.get("dry_run", False)),
+                 include_effects=bool(args.get("include_effects", False)))
     return json.dumps(r, ensure_ascii=False, indent=2)
 
 

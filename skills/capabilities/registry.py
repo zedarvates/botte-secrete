@@ -92,12 +92,19 @@ def _summary(name: str, fm: dict, body: str) -> str:
 
 
 def load(skills_root: Optional[Path] = None, *,
-         include_effects: bool = False) -> list[Capability]:
+         include_effects: bool = False, preserve_paths: bool = False,
+         capability_namespace: Optional[str] = None) -> list[Capability]:
+    """Discover skills; effects-aware callers retain every path.
+
+    For external trees, supply a trusted namespace such as owner/repo:skills.
+    preserve_paths keeps collisions visible without reading any sidecars.
+    """
     root = Path(skills_root or (REPO_ROOT / "skills"))
     caps: dict[str, Capability] = {}
     for md in sorted(root.rglob("SKILL.md")):
         folder = md.parent.name
-        if folder in caps:
+        key = md.as_posix() if include_effects or preserve_paths else folder
+        if key in caps:
             continue
         try:
             text = md.read_text(encoding="utf-8", errors="replace")
@@ -115,8 +122,10 @@ def load(skills_root: Optional[Path] = None, *,
         effects = None
         if include_effects:
             from skills.capabilities.effects import inspect_effects
-            effects = inspect_effects(md.parent)
-        caps[folder] = Capability(
+            expected_id = (capability_namespace + "/" + md.parent.relative_to(root).as_posix()
+                           if capability_namespace is not None else None)
+            effects = inspect_effects(md.parent, expected_id=expected_id)
+        caps[key] = Capability(
             name=name, layer=layer, description=_summary(name, fm, body),
             path=rel, local_capable=folder not in _CLOUD_CAPABLE,
             effects=effects,

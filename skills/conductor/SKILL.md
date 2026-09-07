@@ -58,7 +58,10 @@ commands whose effects depend on their capability and arguments. An allowlisted
 "safe" classification is not proof of no network access or cache writes.
 
 Use `--effects` or `plan(..., include_effects=True)` to attach declarations only
-for selected steps. Match their scope to the actual command and current task
+for selected capabilities. MCP `conduct` and `execute_plan` expose
+`include_effects: true` too. Selected duplicate names produce an explicit plan
+error; resolve their paths/names before composing executable commands.
+Match their scope to the actual command and current task
 authorization. The executor carries the original snapshot as `effects_before`
 for comparison with results; it never uses a declaration to unlock a command.
 The snapshot is not revalidated at execution time. Review source or context

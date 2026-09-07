@@ -31,6 +31,7 @@ def main(argv=None) -> int:
     s.add_argument("goal")
     s = sub.add_parser("effects", help="inspect one skill's effects declaration (read-only)")
     s.add_argument("skill_dir", type=Path)
+    s.add_argument("--id", help="expected qualified identity; required for an external tree")
     s = sub.add_parser("template", help="print a draft effects declaration; does not write files")
     s.add_argument("skill_dir", type=Path)
     s.add_argument("--id", required=True, help="qualified identity, e.g. owner/repo:skills/name")
@@ -47,7 +48,7 @@ def main(argv=None) -> int:
                 suffix = f" [effects: {c.effects['status']}]" if c.effects else ""
                 print(f"  [{c.layer:8}] {c.name:24} {c.description[:64]}{suffix}")
     elif args.cmd == "effects":
-        report = inspect_effects(args.skill_dir)
+        report = inspect_effects(args.skill_dir, expected_id=args.id)
         print(json.dumps(report, ensure_ascii=False, indent=2))
         return 0 if report["status"] == "declared" else 1
     elif args.cmd == "template":

@@ -147,11 +147,12 @@ def _unique_object(pairs: list[tuple[str, object]]) -> dict:
     return result
 
 
-def inspect_effects(skill_dir: Path) -> dict:
+def inspect_effects(skill_dir: Path, *, expected_id: str | None = None) -> dict:
     """Load effects.json and check only its explicitly bound local sources.
 
     Missing, invalid and stale declarations are distinct from 'declared'. The
-    latter means well-formed and source hashes match, never behavior verified.
+    latter means identity and bound sources match, never behavior verified.
+    External trees need an expected_id supplied by the caller, not the sidecar.
     """
     root = Path(skill_dir).resolve()
     sidecar = root / "effects.json"
@@ -167,6 +168,16 @@ def inspect_effects(skill_dir: Path) -> dict:
         return {"status": "invalid", "errors": ["effects.json: unreadable, oversized or invalid JSON"]}
     if errors:
         return {"status": "invalid", "errors": errors}
+    if expected_id is None:
+        from skills.capabilities.registry import REPO_ROOT
+        if root.is_relative_to(REPO_ROOT / "skills"):
+            expected_id = "zedarvates/botte-secrete:" + root.relative_to(REPO_ROOT).as_posix()
+    if not isinstance(expected_id, str) or not expected_id.strip():
+        return {"status": "invalid", "errors": [
+            "capability_id: supply expected_id for a skill outside the bundled tree"]}
+    if contract["capability_id"] != expected_id:
+        return {"status": "invalid", "errors": [
+            "capability_id: does not match the identity resolved by the caller"]}
     stale = []
     for name, expected in contract["source_hashes"].items():
         try:

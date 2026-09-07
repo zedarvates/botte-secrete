@@ -65,14 +65,34 @@ reading sidecars. Opt-in discovery adds an `effects` object:
 | Status | Interpretation |
 |---|---|
 | `missing` | No declaration exists; effects are not assessed here. |
-| `invalid` | The JSON, version or structure is invalid or cannot be read. |
+| `invalid` | The JSON, version, structure or identity is invalid, cannot be read, or cannot be resolved independently. |
 | `stale` | At least one bound source changed, is unavailable or leaves the skill directory. |
-| `declared` | The structure is valid and the listed hashes match. This includes well-formed drafts and does not mean safe, complete or behaviorally validated. |
+| `declared` | The structure, resolved identity and listed hashes match. This includes well-formed drafts and does not mean safe, complete or behaviorally validated. |
 
 The single-skill `effects` command returns exit code 0 only for `declared`,
 otherwise 1. Discovery continues when individual declarations are unavailable.
 Malformed contracts are excluded from the output; stale ones remain visible
 with errors so an agent can review what changed.
+
+Bundled identities are resolved from the actual path under this repository's
+`skills/` tree, using `zedarvates/botte-secrete:<path>`. External trees require
+the caller to supply the expected identity from its own trusted mapping:
+
+```bash
+python -m skills.capabilities.cli effects /path/to/other/skills/worker --id owner/repo:skills/worker
+```
+
+Use `inspect_effects(path, expected_id="owner/repo:skills/worker")` for one skill,
+or `load(skills_root, include_effects=True, capability_namespace="owner/repo:skills")`
+for a tree. Never derive the expected identity from the sidecar being checked.
+Effects-aware discovery retains separate paths with identical folder basenames.
+Effects-aware planning rejects an ambiguous selected name before building
+commands; unselected collisions do not block an otherwise unambiguous plan.
+Legacy discovery retains its historical basename deduplication.
+
+The repository test discovers every present `effects.json`, including new and
+nested declarations, and checks its identity and freshness. Missing declarations
+remain a migration count, not a requirement to declare every capability at once.
 
 Only explicitly listed source files are checked. Dependency versions, runtime
 state, unlisted code and changed evidence are not tracked automatically. Source
@@ -90,6 +110,8 @@ python -m skills.conductor.cli "inspect verified outcome history" --effects --ex
 ```
 
 `plan(..., include_effects=True)` inspects only the selected capabilities.
+The MCP tools `conduct` and `execute_plan` accept the same optional
+`include_effects: true`; omitted or false preserves their previous output.
 `run_goal(..., include_effects=True)` and `execute()` retain supplied declarations
 as `effects_before` in each result, including skipped, blocked and failed steps.
 These are planning snapshots, not observations or renewed source checks.
@@ -117,3 +139,27 @@ planning/execution-report context. It does not change command classification,
 permissions, scoring or learning. Do not
 insert these fields into strict mission/handoff v1 objects: attach a reference
 where their schema permits it, or introduce an explicit schema migration.
+
+## Operation and dependency boundaries
+
+In each effect, name the actual operation and flags in `effect`/`basis` and
+the concrete resources in `scope`. A capability-wide `partial` reversibility
+or `conditional` retry summary does not make every operation interchangeable.
+For example, backend `list` reads, `audit --fresh` probes and overwrites the
+registry, and `chat` discloses a prompt to the selected endpoint. Cluster
+`status` may also update LRU state before any delegation occurs.
+
+Record dependency conditions in `downstream_effects` and link relevant
+declarations in the skill guidance. `checkup` calls `infra_advisor`, which may
+refresh `llm_backends` on an empty registry. The parent source hashes do not
+track those external implementations: inspect the dependency version used by
+the target operation when this matters. References are not automatically
+resolved, aggregated, or executed by the declaration inspector.
+
+For a run report, distinguish the operation/context and planning snapshot from
+observed effects, evidence, deviations, completed/ongoing steps and recoverable
+state after interruption. Such a report can be referenced through existing
+`evidence_refs`. The current executor does not generate this full effect bilan,
+check inter-step requirements, or stop dependent work automatically. A future
+machine-readable operation/bilan companion needs an explicit version and tests
+before consumers use it to govern workflows; do not add unsupported fields to v1.

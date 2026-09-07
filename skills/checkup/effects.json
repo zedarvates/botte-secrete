@@ -1,0 +1,105 @@
+{
+  "schema": "botte.capability-effects/v1",
+  "capability_id": "zedarvates/botte-secrete:skills/checkup",
+  "contract_version": "0.1.0",
+  "source_hashes": {
+    "SKILL.md": "81df1dc8ff8abdcf8833314d6659ee3cfbd8449f57129ba3e2a291fdf66813d0",
+    "__init__.py": "ef6b9260d322843b5bdbba8d0af39c54a1e572cc4c0275a6ffd0e9805154bf58",
+    "cli.py": "5334396c4706b004fc84dcc30876b7416ae9e4e63893accd0aea6448ffe94764"
+  },
+  "preconditions": [
+    "Select base checkup, doctor, fresh machine audit, save or PR-comment formatting; these paths differ.",
+    "Resolve the project, host metadata scope, discovery permissions and report audience for the current task.",
+    "Read the infra_advisor and llm_backends declarations when an audit can refresh the shared registry. Parent-local hashes do not bind those modules."
+  ],
+  "expected_effects": [
+    {
+      "effect": "run assembles project directives, metrics, static scans, runtime prefix facts and drift findings.",
+      "scope": "Selected project source/configuration, local catalogs and host/runtime metadata; caller memory/stdout.",
+      "likelihood": "conditional",
+      "basis": "run calls auto_audit, metrics.collect and bounded summary helpers. policy_committed tests file existence rather than Git tracking.",
+      "impact": "Uses CPU/I/O and can reveal paths, snippets and setup details. Unavailable analyses and CI wiring exemptions limit what an empty findings list establishes.",
+      "verification": "Run against a fixture project with a policy file that is not Git-tracked; check existence reporting, unavailable sections and selected evidence scope."
+    },
+    {
+      "effect": "Base checkup may refresh discovery through infra_advisor; doctor may also refresh via its machine audit.",
+      "scope": "llm_backends discovery targets and its toolkit-local registry, plus host hardware profiling.",
+      "likelihood": "conditional",
+      "basis": "run calls auto_audit; gather refreshes on empty registry. doctor calls audit(fresh=machine_fresh), which also refreshes an empty registry.",
+      "impact": "An audit can probe endpoints and overwrite shared registry entries. With no discovered backends, multiple parents can independently repeat discovery.",
+      "verification": "Run fixture checkup with mocked discovery and a temporary empty registry; inspect saved entries and verify later cached reads avoid discovery."
+    },
+    {
+      "effect": "--save persists the report; --pr-comment formats Markdown for stdout and returns before the save path.",
+      "scope": "The selected project .botte/reports or the stdout recipient, including configured CI consumers.",
+      "likelihood": "conditional",
+      "basis": "main calls report.save only after the early pr_comment return. format_pr_comment is a formatter; posting belongs to the GitHub workflow.",
+      "impact": "Retains analysis details and consumes storage. A zero CLI exit or a formatted no-drift headline alone does not certify all checks or installation health.",
+      "verification": "Mock a report with drift, request PR-comment plus save and assert no report write; inspect output and exit status independently."
+    }
+  ],
+  "downstream_effects": [
+    {
+      "effect": "Inherited discovery writes can affect later routing or another audit.",
+      "scope": "Other callers using the shared llm_backends registry.",
+      "likelihood": "conditional",
+      "basis": "checkup depends on infra_advisor and optional machine audit; those may replace registry contents.",
+      "impact": "A parent audit can change later backend choices, even though it never fixes project code itself.",
+      "verification": "Compare the registry before and after an isolated parent audit and identify the dependency that performed the write."
+    },
+    {
+      "effect": "CI or another caller may publish the report or use drift/recommendations to decide follow-up actions.",
+      "scope": "PR readers, saved report recipients and any subsequent task resources.",
+      "likelihood": "plausible",
+      "basis": "The workflow posts formatted output; main returns reports and recommended commands without executing repairs.",
+      "impact": "Incomplete findings can be overinterpreted and metadata disclosed. CI-specific wiring exemptions do not transfer to a local installation.",
+      "verification": "Review actual analyzer availability, checkout identity, runtime context and output audience before publication or a downstream decision."
+    }
+  ],
+  "reversibility": {
+    "status": "partial",
+    "strategy": "Reconcile inherited registry writes and saved reports separately. The checkup supplies findings, not an automatic code repair or rollback; published copies follow the publishing system.",
+    "residual_effects": [
+      "Probe traffic and report disclosures can persist after local report removal.",
+      "Changes made by a consumer of the findings need their own recovery evidence."
+    ]
+  },
+  "retry": {
+    "semantics": "conditional",
+    "check_before_retry": "Check partial analyzer results, registry state and saved outputs. Cached and fresh reruns can observe different environments and repeat discovery or report writes.",
+    "stop_condition": "Stop repeated probing or persistence on an unresolved failure. Resolve unavailable evidence proportionally rather than executing suggested fixes to make a headline green."
+  },
+  "required_scope": "Existing task authorization for the project and host metadata, inherited discovery range and report persistence. Publishing a PR comment is a separate caller action using its existing authorization.",
+  "analysis": {
+    "summary": "The checkup composes useful local diagnostics but also inherits discovery and optional persistence effects. Its availability flags, context exemptions and output mode matter when interpreting the verdict.",
+    "uncertainties": [
+      "infra_advisor, llm_backends, metrics, context_profiler, scanners, fix and report are not covered by this skill-local hash set.",
+      "Some optional analyses can be unavailable; a successful process exit does not authenticate findings or prove task completion.",
+      "policy_committed indicates file presence only, and BOTTE_CHECKUP_CONTEXT=github-pr changes wiring applicability."
+    ],
+    "evidence_refs": [
+      "cli.py:run",
+      "cli.py:doctor",
+      "cli.py:_machine_summary",
+      "cli.py:format_pr_comment",
+      "cli.py:main",
+      "../infra_advisor/effects.json",
+      "../llm_backends/effects.json"
+    ]
+  },
+  "reuse": [
+    {
+      "target": "Use a scoped checkup snapshot as one input to integration review.",
+      "rationale": "Common diagnostics and explicit availability/context fields help compare changes while keeping operational conclusions separate.",
+      "adaptations": [
+        "Keep the exact checkout and runtime context with the report.",
+        "Preserve unavailable checks and compare inherited state writes as well as findings.",
+        "Require task-specific evidence for completion and review the publication audience."
+      ],
+      "validation": "Replay cache-hit/cache-miss and unavailable-analysis fixtures, then compare actual target evidence before using the report in a merge or deployment decision.",
+      "status": "adaptation_to_test",
+      "validated_context": null,
+      "evidence_refs": []
+    }
+  ]
+}

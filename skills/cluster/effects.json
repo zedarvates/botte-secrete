@@ -1,0 +1,122 @@
+{
+  "schema": "botte.capability-effects/v1",
+  "capability_id": "zedarvates/botte-secrete:skills/cluster",
+  "contract_version": "0.1.0",
+  "source_hashes": {
+    "SKILL.md": "84baaccfec082afebf23c9cdbd84093094144577195b9b3d5083f7071b977e91",
+    "__init__.py": "9b861b5bcf9b20bff41fe1f8ec0498792f80c4dafcbb167706d510551b2410d5",
+    "cluster.py": "b9a9460804b33369e8154d4c6848f8d58f73f256508e379ab23198aa0b3ce769",
+    "agent.py": "9555f284098642f500ed689fee7641ab7a7d5a76361176fd6f593aad010c053a",
+    "cli.py": "6e1b1702807f99be13f9ad4d974194caeef0a18fb61d487f9fc6be53d6172be9"
+  },
+  "preconditions": [
+    "Choose status, pick, report saving, delegation or receiver maintenance; a status request is not necessarily read-only.",
+    "Resolve discovery scope and review the llm_backends declaration when registry refresh can occur.",
+    "Use the existing task authorization and trusted endpoint configuration for delegation; non-loopback delegation requires HTTPS and a token.",
+    "Receiver maintenance additionally depends on operator-configured named commands and their own consequences."
+  ],
+  "expected_effects": [
+    {
+      "effect": "status/machines may refresh backend discovery; status --subnet forces a refresh.",
+      "scope": "Discovery targets and the llm_backends registry in the toolkit checkout.",
+      "likelihood": "conditional",
+      "basis": "machines refreshes when fresh or no registry entries exist; status passes fresh=scan_subnet.",
+      "impact": "Produces network requests and replaces the shared registry through llm_backends; cached status can also discover when no entries remain.",
+      "verification": "Use mocked discovery with a temporary registry; verify subnet propagation and the cache-miss path."
+    },
+    {
+      "effect": "pick(lru) and status with chat candidates update last-used state before a task is delegated.",
+      "scope": "The current user's .botte-cluster.json and later LRU selections.",
+      "likelihood": "conditional",
+      "basis": "status calls pick(lru); pick writes a timestamp through _save_state. pick(latency) does not write that state.",
+      "impact": "Monitoring itself can change which backend receives future work. Best-effort writes and concurrent callers do not provide a reservation or lease.",
+      "verification": "Use two fixture backends and temporary LRU state; call status twice and inspect the changed recommendations without delegating."
+    },
+    {
+      "effect": "status --save writes a report containing machine and model details.",
+      "scope": "The caller working directory's .botte/reports and report consumers.",
+      "likelihood": "conditional",
+      "basis": "cli status invokes report.save only when requested.",
+      "impact": "Retains infrastructure metadata and consumes storage; the saved recommendation can become stale.",
+      "verification": "Save a mocked status report in a temporary working directory and inspect the destination and retained fields."
+    },
+    {
+      "effect": "delegate posts task text to a configured receiver and returns a truncated HTTP response.",
+      "scope": "Selected agent endpoint, transmitted task/token, receiver logs and any work accepted there.",
+      "likelihood": "conditional",
+      "basis": "delegate validates the endpoint and token before POST; delegated=True means a response was received, not that its payload reports task success.",
+      "impact": "The receiver may reject, accept or execute work. An interrupted request can leave unknown remote state; no request identity or deduplication protocol is supplied.",
+      "verification": "Mock HTTP replies containing both successful and failed task results; distinguish transport receipt from independently observed completion."
+    },
+    {
+      "effect": "Serving the reference receiver listens for tasks; permitted maintenance runs operator-defined subprocesses.",
+      "scope": "Receiver host, listening socket, inherited process environment and resources touched by configured commands.",
+      "likelihood": "conditional",
+      "basis": "agent exposes named read actions and _run_named requires a configured command plus confirm=True.",
+      "impact": "Consumes service resources and can mutate the host through approved commands. Output may disclose host data; process exit alone is not task proof.",
+      "verification": "Inject a runner for a named fixture command; verify unknown/unconfirmed commands do not launch and inspect result/error output."
+    }
+  ],
+  "downstream_effects": [
+    {
+      "effect": "Registry and LRU writes affect later routing even when status launched no task.",
+      "scope": "Later callers sharing the backend registry or user LRU state.",
+      "likelihood": "conditional",
+      "basis": "Status refreshes metadata and records its LRU recommendation as last used.",
+      "impact": "Repeated monitoring can perturb load distribution; last-used time is not observed workload or completion evidence.",
+      "verification": "Replay two status observations and compare later selections; do not infer active load from LRU alone."
+    },
+    {
+      "effect": "Receiver work may continue or leave partial mutations after caller timeout.",
+      "scope": "Remote task resources and any dependent operations.",
+      "likelihood": "plausible",
+      "basis": "The delegation client supplies neither transactional rollback nor remote cancellation/acknowledgment reconciliation.",
+      "impact": "Blind retries can duplicate maintenance, work and costs.",
+      "verification": "Use receiver-side task evidence and actual resource state to choose a bounded retry or stop."
+    }
+  ],
+  "reversibility": {
+    "status": "partial",
+    "strategy": "Reconcile discovery/LRU state separately from remote task resources. Restore only appropriate retained state; rollback of maintenance belongs to the selected command and receiver.",
+    "residual_effects": [
+      "Remote work, output disclosures and consumed resources are not undone by a caller timeout.",
+      "LRU state has no history or atomic cross-process reservation."
+    ]
+  },
+  "retry": {
+    "semantics": "conditional",
+    "check_before_retry": "Identify whether retry means another status selection, a saved report or a remote POST. For uncertain delegation, inspect the receiver result and affected resources first.",
+    "stop_condition": "Stop duplicate remote requests while completion is uncertain or endpoint/token configuration remains unresolved; resolve scope using the existing task authority."
+  },
+  "required_scope": "Existing authorization for the discovery range, shared state files, output destination and remote task. A named whitelist, confirm flag or declared contract does not create task authority.",
+  "analysis": {
+    "summary": "Status has observable scheduling side effects; delegation is a transport handoff whose business outcome must be verified separately.",
+    "uncertainties": [
+      "llm_backends and report implementations are external to these local source hashes.",
+      "Custom receiver implementations and maintenance command configurations determine additional effects.",
+      "No exactly-once delegation, remote cancellation or fleet rollback is provided."
+    ],
+    "evidence_refs": [
+      "cluster.py:status",
+      "cluster.py:pick",
+      "cluster.py:delegate",
+      "agent.py:_run_named",
+      "cli.py:main",
+      "../llm_backends/effects.json"
+    ]
+  },
+  "reuse": [
+    {
+      "target": "Build a target-scoped cluster observation and reconciliation report.",
+      "rationale": "Backend grouping and explicit transport results supply useful inputs when separated from verified remote outcomes.",
+      "adaptations": [
+        "Account for status-induced LRU writes and registry changes.",
+        "Use target receiver evidence for completion; do not reuse delegated=True as a success label."
+      ],
+      "validation": "Replay empty/two-backend status fixtures plus rejected and timed-out receiver replies before target deployment.",
+      "status": "adaptation_to_test",
+      "validated_context": null,
+      "evidence_refs": []
+    }
+  ]
+}

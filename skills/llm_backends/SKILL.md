@@ -71,6 +71,22 @@ print(res.text, res.total_tokens)        # all local — no cloud cost
 4. **Onboard** users with no local model, recommending the largest model their
    hardware can run and the right server to install.
 
+## Consequences, analysis and reuse
+
+Use [effects.json](effects.json) for the specific operation. `scan` and
+`audit --fresh` probe endpoints and overwrite the registry; even an ordinary
+audit refreshes when the registry is empty. The registry belongs to this toolkit
+checkout, not necessarily the audited project. An empty scan can replace a
+previously populated registry. `list` reads the saved snapshot.
+
+`chat` sends the supplied prompt/system text to the selected base URL and uses
+backend compute; a local label does not establish endpoint ownership or data
+retention. `chat_json` may make additional calls to repair an invalid JSON reply.
+Review actual scope before retrying a probe or an uncertain inference. Treat
+the reply, token counts and hardware recommendations within their evidence
+limits; successful inference does not verify task success or reusable quality.
+See the [common contract](../../docs/capability-effects.md).
+
 Related: [[llm_mcp]] (MCP tools for agents), `tiered_router` (cost tiers),
 `local_router` (task→backend mapping), `response_cache` (skip repeated calls).
 ```

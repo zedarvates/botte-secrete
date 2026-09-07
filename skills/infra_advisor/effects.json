@@ -1,0 +1,114 @@
+{
+  "schema": "botte.capability-effects/v1",
+  "capability_id": "zedarvates/botte-secrete:skills/infra_advisor",
+  "contract_version": "0.1.0",
+  "source_hashes": {
+    "SKILL.md": "8a9914f2666cf11c79e14dcb32b425e1c52ae8fc8649b8531d5cde5920f5f3b6",
+    "__init__.py": "7cbfd7a1af0d25790a036cf38130cd87a0bdc945d611a237f3923b617c75059f",
+    "advisor.py": "a06400383165c8638798d7cc91d8e3f1666816347e17347db2513119832449d3",
+    "auto_audit.py": "3c70e1340b16a268c2202dbe73234786eefabfbed507dfb6d7216e83c24f2599",
+    "budget_recommender.py": "83dacf4e8f78208b6418f3a0899d2a677396bf39398e507462c5f66bd86a2dec",
+    "cli.py": "feabfd1bde716fec23789cd7c5f840201962b1c853f70c4ad2a04dd01a84773c"
+  },
+  "preconditions": [
+    "Select CLI tips, auto, direct advice or report saving; tips forces discovery while auto can use cached entries.",
+    "Resolve authorized project/host metadata, discovery targets and output audience before the audit.",
+    "Inspect llm_backends effects for inherited registry writes; source hashes in this sidecar do not bind that dependency."
+  ],
+  "expected_effects": [
+    {
+      "effect": "tips refreshes discovery; auto/gather refresh when no cached backend entries exist.",
+      "scope": "Discovery endpoints, host hardware utilities and the llm_backends registry in the toolkit checkout.",
+      "likelihood": "conditional",
+      "basis": "cli tips calls advise(fresh=True); gather otherwise uses registry.load() or registry.refresh(scan_subnet=...).",
+      "impact": "An audit can produce network probes and a shared registry overwrite. A subnet flag on the cached auto path does not itself force a refresh.",
+      "verification": "Run gather against empty and populated temporary registries with mocked discovery; verify writes and explicit fresh behavior."
+    },
+    {
+      "effect": "auto_audit reads project directives/source and host/runtime metadata, returning scores, findings and recommendations.",
+      "scope": "Selected project, local skill catalog, host prefix sources, MCP configuration and caller output.",
+      "likelihood": "conditional",
+      "basis": "auto_audit assembles directives, duplication_scan, local catalog and profile_host; gather reports configured cloud-key names, not key values.",
+      "impact": "Consumes CPU/I/O and may expose paths, snippets and infrastructure information. Some sub-audits return errors or unavailable sections instead of complete findings.",
+      "verification": "Use an isolated project and mock external discovery; inspect missing/error sections and ensure suggested deeper-pass commands are not executed."
+    },
+    {
+      "effect": "auto --save persists Markdown/HTML reports under the audited project.",
+      "scope": "The selected project .botte/reports directory and output consumers.",
+      "likelihood": "conditional",
+      "basis": "cli calls report.save for the auto save path using rep[project].",
+      "impact": "Retains project and host facts beyond the audit and consumes storage; a report is a snapshot of one environment.",
+      "verification": "Save fixture output into a temporary project; inspect paths and contents."
+    },
+    {
+      "effect": "recommend and budget_recommender return heuristic hardware/software changes.",
+      "scope": "Caller decisions and stdout; recommendations themselves do not install or purchase anything.",
+      "likelihood": "conditional",
+      "basis": "advisor.recommend and budget_recommender.recommend use local rules/tables.",
+      "impact": "Can guide exploration but do not verify current prices, model compatibility or target workload savings.",
+      "verification": "Compare recommendations to supplied fixture inputs; obtain target measurements before claiming savings or making a purchase."
+    }
+  ],
+  "downstream_effects": [
+    {
+      "effect": "A cache-miss audit changes backend availability seen by later routing, cluster or checkup calls.",
+      "scope": "Other consumers of the llm_backends registry.",
+      "likelihood": "conditional",
+      "basis": "The dependency refresh replaces shared discovery state, including empty results.",
+      "impact": "A seemingly observational parent can alter later decisions or induce another discovery.",
+      "verification": "Replay the parent audit with an empty registry and inspect the saved entries and a subsequent consumer read."
+    },
+    {
+      "effect": "A consumer may act on recommendations or publish a retained report.",
+      "scope": "Target configuration, budget decisions and report recipients.",
+      "likelihood": "plausible",
+      "basis": "The audit returns advice and deeper-pass commands as data; execution/sharing is controlled by the caller.",
+      "impact": "Stale assumptions or missing analysis can propagate into changes; output can disclose project or host metadata.",
+      "verification": "Verify the concrete target context, unavailable sections and destination before applying or sharing advice."
+    }
+  ],
+  "reversibility": {
+    "status": "partial",
+    "strategy": "Review saved reports separately from inherited registry changes. Restore an appropriate retained registry snapshot only after accounting for later writes; recommendations require no code rollback unless acted upon.",
+    "residual_effects": [
+      "Network probes and disclosed report copies cannot be recalled by the audit.",
+      "Downstream configuration or purchases need their own recovery process."
+    ]
+  },
+  "retry": {
+    "semantics": "conditional",
+    "check_before_retry": "Check whether the previous audit refreshed shared metadata or wrote a report. Repetition may change the snapshot and duplicate retained output; inspect sub-audit errors separately.",
+    "stop_condition": "Stop repeated refresh/save attempts on unresolved scope or persistence errors. Do not infer permission to run the suggested deeper passes from the report."
+  },
+  "required_scope": "Current task authority to inspect project/host metadata, contact the resolved discovery targets, and retain/share reports at the selected destination. Advice grants no configuration, purchase or execution authority.",
+  "analysis": {
+    "summary": "Infrastructure advice is mostly analysis, with inherited discovery writes and optional report persistence. Its scores and savings are contextual heuristics; partial results remain explicitly limited.",
+    "uncertainties": [
+      "llm_backends, directives_audit, context_profiler, skill_finder and report are outside these local source bindings.",
+      "Unavailable sub-audits and cached metadata can limit the result without a total command failure.",
+      "Hardware price and workload-performance estimates are not current measurements."
+    ],
+    "evidence_refs": [
+      "advisor.py:gather",
+      "advisor.py:recommend",
+      "auto_audit.py:auto_audit",
+      "cli.py:main",
+      "budget_recommender.py:recommend",
+      "../llm_backends/effects.json"
+    ]
+  },
+  "reuse": [
+    {
+      "target": "Compare infrastructure options for a named project and workload.",
+      "rationale": "The report relates observed hardware/configuration to candidate changes and preserves reasons.",
+      "adaptations": [
+        "Separate measured target facts from cached state and heuristic savings.",
+        "Account for dependency writes and review the exact cost/quality criteria before action."
+      ],
+      "validation": "Replay cache-hit/cache-miss fixtures, then compare a candidate against target workload measurements without treating the score as proof.",
+      "status": "adaptation_to_test",
+      "validated_context": null,
+      "evidence_refs": []
+    }
+  ]
+}

@@ -1,18 +1,19 @@
 {
   "schema": "botte.capability-effects/v1",
   "capability_id": "zedarvates/botte-secrete:skills/capabilities",
-  "contract_version": "0.1.0",
+  "contract_version": "0.2.0",
   "source_hashes": {
-    "SKILL.md": "279be34033bd75d76fdf33f309e71b1cc7f93c07e2725a69049cd0bc90bbf8dd",
+    "SKILL.md": "2aa696f2d10bb366a4c4508686a43babf9d0e127e43c20fa15d2c42f1fe49256",
     "__init__.py": "7d4d3e1854faec18d12335c4a1632b9fd59e5b22f774a8a9fc69467d1ddb75c5",
-    "registry.py": "fc94e9f807b88eab5832986666b677c56ffc5e0fd8c72d6b901e9d990b679057",
-    "cli.py": "ae51d7d0f9bc202a80bdbe2d16a0092db522065c212e34704a2003794948d9da",
-    "effects.py": "3efa031be1798a5194d660fffec62637dd7e9765b1626e5a4c11e7d48798175a"
+    "registry.py": "ca66b89f5fb7f3b311c7bb4a2b9d2e68194a59a834c682774c8205ae979c77a7",
+    "cli.py": "7624a0ef72921a285ba3a69bf4965ffa086b27628df362499d2093c00f1e7976",
+    "effects.py": "3965c5d1f84f1ca1b932f12944493ffc14e3458062db54f098b5ccbb2741be47"
   },
   "preconditions": [
     "Python 3.10+ and a readable skill tree; local discovery only.",
     "Use python -B or PYTHONDONTWRITEBYTECODE=1 when interpreter bytecode-cache writes are unwanted.",
-    "Review the destination of stdout before including private skill descriptions or declarations."
+    "Review the destination of stdout before including private skill descriptions or declarations.",
+    "For an external skill tree, supply its expected identity or namespace from a trusted caller mapping, not from the inspected sidecar."
   ],
   "expected_effects": [
     {
@@ -27,9 +28,9 @@
       "effect": "Read the optional effects.json and bound files when effects inspection is requested.",
       "scope": "Selected skill directories; at most 64 KiB per sidecar and 8 MiB per bound source.",
       "likelihood": "conditional",
-      "basis": "effects.inspect_effects bounds reads, checks structure and compares the explicitly listed source hashes.",
+      "basis": "effects.inspect_effects bounds reads, validates structure, matches the caller-resolved identity and compares explicitly listed source hashes.",
       "impact": "Makes missing, invalid and stale declarations visible; matching hashes do not prove the described behavior.",
-      "verification": "Change or remove a bound fixture source and check for stale; malformed sidecars must report invalid without breaking discovery."
+      "verification": "Change a bound fixture source or its claimed identity; check stale or invalid respectively. Duplicate folder paths remain visible in effects-aware discovery."
     }
   ],
   "downstream_effects": [
@@ -38,7 +39,7 @@
       "scope": "Subsequent planning and execution performed by the caller, outside this registry.",
       "likelihood": "plausible",
       "basis": "The Conductor consumes the capability registry; callers decide how to use its output.",
-      "impact": "Can improve selection, or propagate an incomplete declaration or an ambiguous basename into a plan.",
+      "impact": "Can improve selection or propagate incomplete metadata. Effects-aware planning rejects ambiguous selected names; legacy consumers retain basename assumptions.",
       "verification": "Inspect the caller plan and validate the selected capability against the actual task, identity and existing authorization."
     },
     {
@@ -68,7 +69,7 @@
     "summary": "Discovery and effects inspection are local reads at the application level. Consequence declarations support task assessment; structural validity, ranking and matching hashes are not evidence of successful execution.",
     "uncertainties": [
       "Only explicitly bound files are checked; imported dependencies and runtime state may change independently.",
-      "The existing registry deduplicates folder basenames; do not infer global identity across repositories or duplicate folders.",
+      "Legacy discovery deduplicates folder basenames. Effects-aware discovery retains paths; trusted external identity mappings remain the caller responsibility.",
       "Future execution, stdout retention and downstream decisions are controlled by callers."
     ],
     "evidence_refs": [
@@ -83,10 +84,10 @@
       "target": "Inventory coverage of effects declarations in another compatible skill tree.",
       "rationale": "SKILL.md discovery and skill-local sidecar inspection already accept a supplied root; the mechanism can report migration gaps.",
       "adaptations": [
-        "Verify identity handling for duplicate folder basenames.",
+        "Supply the target tree namespace from its trusted installation mapping and resolve ambiguous names before planning executable commands.",
         "Bind each declaration to that tree and review private metadata before sharing results."
       ],
-      "validation": "Use a small target fixture tree with declared, missing, malformed and changed-source cases, then compare discovery coverage to an independent file listing.",
+      "validation": "Use a target fixture tree with declared, missing, malformed, changed-source, mismatched-identity and duplicate-basename cases; compare coverage to an independent file listing.",
       "status": "adaptation_to_test",
       "validated_context": null,
       "evidence_refs": [

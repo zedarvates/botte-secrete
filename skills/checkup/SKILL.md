@@ -63,5 +63,21 @@ is reported as **not applicable** instead of impossible CI drift; local checkups
 still flag missing wiring. Any project that deployed botte-secrète can reuse the
 same workflow.
 
+## Consequences, analysis and reuse
+
+Read [effects.json](effects.json) and the [infra declaration](../infra_advisor/effects.json)
+for inherited effects. The base audit can probe endpoints and update the backend
+registry when no cached entries exist. `--doctor --fresh` requests another
+refresh explicitly. `--save` writes project reports; `--pr-comment` prints a
+draft and takes precedence over saving, while the GitHub workflow separately
+publishes it. The CLI exit code alone does not certify a drift-free project.
+
+Inspect unavailable/error sections before interpreting an empty findings list.
+The `policy_committed` field checks file existence, not Git tracking, and CI's
+machine-wiring exemption does not establish local installation health. Report
+observations and omissions against the exact checkout/runtime; recommendations
+do not install tools, repair code or grant authority. See the
+[common contract](../../docs/capability-effects.md).
+
 Related: [[preflight]] (enforces prefer-local every turn), [[infra_advisor]],
 [[metrics]], [[directives_audit]], [[bootstrap]].

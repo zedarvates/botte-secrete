@@ -45,6 +45,10 @@ Related: [[skill_finder]], [[auto_router]], [[bootstrap]].
 
 When assessing a selected capability's consequences, read its optional
 `effects.json` through `effects <skill_dir>` or `load(include_effects=True)`.
+The inspector checks the identity resolved from the bundled path. For external
+trees, pass the trusted expected `--id` / `expected_id` or a registry
+`capability_namespace`; do not reuse the sidecar's claim as its own identity
+proof. Effects-aware discovery retains colliding folder paths for inspection.
 Distinguish `missing`, `invalid`, `stale` and `declared`; the last only confirms
 structure and listed source hashes, including for drafts. It does not verify
 behavior or grant authority. Ordinary registry output remains unchanged.
