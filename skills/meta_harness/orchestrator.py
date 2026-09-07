@@ -345,8 +345,19 @@ class MetaHarness:
                     self.session.add_result(step)
                     continue
 
+            now = time.monotonic()
+            capacity = guard.before_action(now=now)
+            if capacity.decision == RunDecision.UNCERTAIN:
+                self.session.terminate_uncertain(capacity.reason or "safe_exit")
+                self._skip_remaining_after_safe_exit(plan, i, capacity.reason or "safe_exit")
+                break
+
             step.status = "running"
-            sandbox = Sandbox(workdir=run_root, sandbox_dir=f".botte-sandbox/{step.agent}")
+            remaining = self.safe_exit_config.max_wall_seconds - (now - guard.started_at)
+            sandbox = Sandbox(
+                workdir=run_root, sandbox_dir=f".botte-sandbox/{step.agent}",
+                timeout=min(300, remaining),
+            )
 
             t0 = time.time()
             result = sandbox.run(step.command, args=step.args)

@@ -132,8 +132,25 @@ meta_harness/
   `QUARANTINED`.
 - Un handoff ne peut annoncer que `READY_FOR_REVIEW`; `SUCCEEDED` n'existe pas.
 - Le reviewer doit utiliser un autre `worker_id` et un autre worktree, puis
-  rejouer les contrôles. Son verdict est `ACCEPT`, `REWORK` ou `BLOCKED`.
+  rejouer chaque `required_evidence` avec le même `evidence_ref`, sur le SHA
+  exact du handoff et avec un bail actif non expiré. Un contrôle sans rapport
+  ne prouve rien sur la mission. Son verdict est `ACCEPT`, `REWORK` ou `BLOCKED`;
+  `BLOCKED` garde priorité même si un autre contrôle échoue.
 - Seul `ACCEPT` peut remplacer le checkpoint best-known-green. Une révision
-  nomme le contrôle qu'elle corrige et respecte `max_revisions`.
+  nomme le contrôle qu'elle corrige et respecte `max_revisions`, à la fois par
+  défaut nommé et au total après la tentative initiale. Le digest de mission
+  est figé à la première tentative; une autre session ou un défaut renommé
+  ne réinitialise pas le budget. Un ancien checkpoint sans digest exige une
+  réconciliation par le superviseur, en conservant son historique.
+- Les checks et baux proviennent du runner de confiance, jamais du payload
+  du builder. Un identifiant ou SHA vérifie une liaison, pas l'identité d'un
+  témoin. La séparation réelle des comptes et droits de stockage reste à
+  qualifier sur l'hôte; cette API Python locale n'authentifie pas un agent.
+- Le rapport de review exporte seulement les références observées au replay.
+  Une clôture de défaut requiert son replay réussi; la déclaration du builder
+  reste liée au handoff sans être promue en preuve indépendante.
+- Le CLI de review applique les budgets de la mission et refuse un worktree
+  modifié pendant le replay. Son statut ne confirme ni une fabrication,
+  ni une suppression effective de données, ni une vente sans témoin adapté.
 - Les contrats publics ne contiennent aucun chemin machine absolu; les chemins
   de récupération restent dans `.botte-cache/` local et privé.

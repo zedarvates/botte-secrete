@@ -6,6 +6,7 @@ from __future__ import annotations
 import subprocess
 import sys
 import tempfile
+from datetime import datetime, timedelta, timezone
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -91,9 +92,9 @@ def _review_lease(worker: str, fingerprint: str) -> dict:
         "lease_id": "wl_" + ("1" if worker == "phaseone" else "2") * 16,
         "worker_id": worker,
         "state": "ACTIVE",
-        "base_sha": "a" * 40,
+        "base_sha": ("a" if worker == "phaseone" else "b") * 40,
         "head_sha": "b" * 40,
-        "expires_at": "2026-09-02T00:00:00+00:00",
+        "expires_at": (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat(),
         "workspace_fingerprint": fingerprint,
     }
 
@@ -186,7 +187,7 @@ def main() -> int:
         review_workspace_lease=_review_lease("phasetwo", "d" * 64),
         replayed_checks=({
             "name": "project-tests-replay", "status": "PASS",
-            "evidence_ref": "replay:project-tests",
+            "evidence_ref": "tests:project",
         },),
     )
     _ok("fresh independent workspace can ACCEPT verified evidence",
@@ -224,7 +225,7 @@ def main() -> int:
             review_workspace_lease=_review_lease("phasetwo", "d" * 64),
             replayed_checks=({
                 "name": "project-tests-replay", "status": "PASS",
-                "evidence_ref": "replay:project-tests",
+                "evidence_ref": "tests:project",
             },),
         )
         high_risk_blocked.append(high_review["verdict"] == "BLOCKED")
