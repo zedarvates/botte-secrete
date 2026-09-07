@@ -11,6 +11,7 @@ import io
 import json
 import tempfile
 import unittest
+from importlib import import_module
 from pathlib import Path
 from unittest.mock import patch
 
@@ -32,8 +33,11 @@ class OperationEffectsTests(unittest.TestCase):
         patch.object(registry, "DEFAULT_REGISTRY_PATH", self.registry_path).start()
         self.discovery = patch.object(registry, "discover", return_value=self.backends).start()
         hardware = Hardware("fixture", "fixture", 4, 8.0)
-        patch("skills.llm_backends.audit.profile_hardware", return_value=hardware).start()
-        patch("skills.infra_advisor.advisor.profile_hardware", return_value=hardware).start()
+        # Python 3.10's dotted mock resolver sees the re-exported audit function.
+        patch.object(import_module("skills.llm_backends.audit"),
+                     "profile_hardware", return_value=hardware).start()
+        patch.object(import_module("skills.infra_advisor.advisor"),
+                     "profile_hardware", return_value=hardware).start()
         patch("urllib.request.urlopen", side_effect=AssertionError("unexpected network call")).start()
 
     def test_audit_cache_miss_and_fresh_replace_registry_but_cached_read_does_not(self):
