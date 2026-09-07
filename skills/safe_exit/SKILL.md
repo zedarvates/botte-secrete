@@ -18,7 +18,13 @@ exhausted or the trajectory stagnates.
 from skills.safe_exit import SafeExitConfig, SafeExitGuard
 
 guard = SafeExitGuard(SafeExitConfig(max_iterations=12, max_tool_calls=48))
-result = guard.observe(score=0.72, tool_calls_delta=3)
+# Before dispatch: skip the action if capacity is exhausted.
+capacity = guard.before_action(tool_calls_delta=3)
+if capacity.decision.value == "CONTINUE":
+    # Execute the allowed action here, then record its actual result.
+    result = guard.observe(score=0.72, tool_calls_delta=3)
+else:
+    result = capacity  # stop without executing or charging the action
 if result.decision.value == "UNCERTAIN":
     # stop the current trajectory; supervisor may choose a different plan/model
     ...
@@ -34,6 +40,9 @@ Supported stop reasons:
 
 A caller may start a new trajectory with a new plan/model after SAFE-EXIT, but
 must not silently reset the budget inside the same run.
+`observe` records completed actions; callers must use `before_action` to avoid
+launching the first excess tool call. MetaHarness also bounds each subprocess
+timeout by the remaining wall-time budget.
 
 ## Authorization gate
 

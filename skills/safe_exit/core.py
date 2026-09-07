@@ -76,6 +76,24 @@ class SafeExitGuard:
             maxlen=self.config.repeated_failure_limit
         )
 
+    def before_action(self, *, tool_calls_delta: int = 1, now: float | None = None) -> RunGuardResult:
+        """Check capacity before launching an action, without charging a skip."""
+        if tool_calls_delta < 0:
+            raise ValueError("tool_calls_delta must be non-negative")
+        current_time = time.monotonic() if now is None else now
+        reason = None
+        if self.iterations >= self.config.max_iterations:
+            reason = "iteration_budget_exhausted"
+        elif self.tool_calls + tool_calls_delta > self.config.max_tool_calls:
+            reason = "tool_budget_exhausted"
+        elif current_time - self.started_at >= self.config.max_wall_seconds:
+            reason = "wall_time_budget_exhausted"
+        return RunGuardResult(
+            decision=RunDecision.UNCERTAIN if reason else RunDecision.CONTINUE,
+            reason=reason, iterations=self.iterations, tool_calls=self.tool_calls,
+            best_score=self.best_score, no_progress_count=self.no_progress_count,
+        )
+
     def observe(
         self,
         *,
