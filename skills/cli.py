@@ -14,6 +14,7 @@ One command instead of ~90 `python -m skills.<module>.cli` invocations:
     botte run mission.json     execute a bounded mission in a leased worktree
     botte lease ...            inspect/release worktree leases safely
     botte review ...           replay a handoff in an independent worktree
+    botte rules audit ...      audit committed rule semantics and evidence
     botte asset-qa <command>   asset quality memory (rules + shadow k-NN)
     botte migration-audit ... deterministic migration completeness gate
     botte gain [path]          show measured project cost/savings metrics
@@ -44,6 +45,7 @@ _COMMANDS = {
     "run": ("skills.run_contract.run_cli", "bounded mission in a leased worktree"),
     "lease": ("skills.meta_harness.lease_cli", "inspect/release workspace leases"),
     "review": ("skills.meta_harness.review_cli", "independent Gauntlet replay"),
+    "rules": ("skills.directives_audit.rules_cli", "committed rule drift audit"),
     "asset-qa": ("skills.asset_quality.cli", "asset QA (rules + shadow k-NN)"),
     "migration-audit": ("skills.migration_audit.cli", "verify migration completeness"),
     "gain": ("skills.metrics.cli", "show measured cost/savings metrics"),
