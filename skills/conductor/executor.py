@@ -23,6 +23,7 @@ import subprocess
 import sys
 import time
 from dataclasses import asdict, dataclass
+from copy import deepcopy
 from typing import Callable, Optional
 
 
@@ -117,6 +118,7 @@ def execute(plan_dict: dict, *, confirm: bool = False, dry_run: bool = False,
     run = runner or _default_runner
     results: list[dict] = []
     counts = {"ran": 0, "skipped": 0, "blocked": 0, "failed": 0}
+    effects_before = [deepcopy(s.get("effects")) for s in steps]
 
     for s in steps:
         cls = classify(s)
@@ -152,6 +154,12 @@ def execute(plan_dict: dict, *, confirm: bool = False, dry_run: bool = False,
                                   _tail(out), why).to_dict())
         counts[status] += 1
 
+    # Retain the planning snapshot for comparison with observed results. It is
+    # descriptive data: classification and executable commands never use it.
+    for snapshot, result in zip(effects_before, results):
+        if snapshot is not None:
+            result["effects_before"] = snapshot
+
     return {
         "goal": plan_dict.get("goal", ""),
         "mode": "dry_run" if dry_run else ("confirmed" if confirm else "safe_only"),
@@ -163,10 +171,10 @@ def execute(plan_dict: dict, *, confirm: bool = False, dry_run: bool = False,
 
 def run_goal(goal: str, *, confirm: bool = False, dry_run: bool = False,
              timeout: int = 120, cwd: str = ".", top_k: int = 6,
-             runner: Optional[Runner] = None) -> dict:
+             runner: Optional[Runner] = None, include_effects: bool = False) -> dict:
     """Plan a goal, then execute its runnable steps. Convenience wrapper."""
     from skills.conductor.conductor import plan as _plan
-    p = _plan(goal, top_k=top_k)
+    p = _plan(goal, top_k=top_k, include_effects=include_effects)
     if "error" in p:
         return p
     return execute(p, confirm=confirm, dry_run=dry_run, timeout=timeout,

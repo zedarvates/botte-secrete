@@ -152,9 +152,12 @@ class EffectsTests(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertEqual(json.loads(output.getvalue())["status"], "declared")
 
-    def test_repository_pilot_matches_its_sources(self):
-        result = inspect_effects(Path(__file__).parent)
-        self.assertEqual(result["status"], "declared", result.get("errors"))
+    def test_repository_declarations_match_their_sources(self):
+        skills_root = Path(__file__).parents[1]
+        for name in ("capabilities", "conductor", "events", "trajectory"):
+            with self.subTest(capability=name):
+                result = inspect_effects(skills_root / name)
+                self.assertEqual(result["status"], "declared", result.get("errors"))
 
 
 def main() -> int:

@@ -15,7 +15,7 @@ from __future__ import annotations
 from dataclasses import dataclass, asdict
 from typing import Optional
 
-from skills.capabilities.registry import LAYERS, load as load_caps, curate
+from skills.capabilities.registry import LAYERS, REPO_ROOT, load as load_caps, curate
 
 # Concrete invocation hint per capability (so the plan is actionable).
 CAP_COMMAND = {
@@ -50,7 +50,7 @@ class Step:
         return asdict(self)
 
 
-def plan(goal: str, *, top_k: int = 6) -> dict:
+def plan(goal: str, *, top_k: int = 6, include_effects: bool = False) -> dict:
     """Compose an ordered capability plan for a goal. 0 cloud tokens."""
     goal = (goal or "").strip()
     if not goal:
@@ -81,11 +81,21 @@ def plan(goal: str, *, top_k: int = 6) -> dict:
     except Exception:
         effort = {"score": None, "tier": "UNKNOWN"}
 
+    serialized_steps = [s.to_dict() for s in steps]
+    if include_effects:
+        from skills.capabilities.effects import inspect_effects
+        cap_paths = {c.name: c.path for c in caps}
+        for step in serialized_steps:
+            # Inspect only selected capabilities, using the registry's actual
+            # path rather than assuming the frontmatter name is a folder name.
+            skill_path = REPO_ROOT / cap_paths[step["capability"]]
+            step["effects"] = inspect_effects(skill_path.parent)
+
     cloud_steps = [s.capability for s in steps if not s.local]
     return {
         "goal": goal,
         "effort": effort,
-        "steps": [s.to_dict() for s in steps],
+        "steps": serialized_steps,
         "local_first": (
             "Run every step local-first; only the reasoning inside "
             + (", ".join(cloud_steps) if cloud_steps else "—")

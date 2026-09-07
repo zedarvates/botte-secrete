@@ -7,16 +7,18 @@ description: Route a high-level goal to an ordered, local-first plan of capabili
 # conductor — goal → ordered plan of capabilities
 
 The router, generalised: not "which model tier?" but "given this **goal**, which
-capabilities, in which order, and what stays local?". The plan is the product —
-you (or the agent) execute it; the Conductor never runs anything itself.
+capabilities, in which order, and what stays local?". The planning API produces
+data; the optional executor runs the selected commands.
 
 ```bash
 python -m skills.conductor.cli "test my desktop app and report crashes"
 python -m skills.conductor.cli "reduce token cost and deploy on my project" --json
+python -m skills.conductor.cli "inspect verified outcome history" --effects --json
 
 # Execute the plan (read-only steps run; mutating/cloud steps are gated):
 python -m skills.conductor.cli "audit my project and report metrics" --execute
 python -m skills.conductor.cli "..." --execute --dry-run      # preview, runs nothing
+python -m skills.conductor.cli "..." --effects --execute --dry-run --json
 python -m skills.conductor.cli "..." --execute --confirm      # also run gated steps
 ```
 
@@ -47,6 +49,31 @@ The plan can be *run*, not just read. The executor classifies every step:
 `--dry-run` classifies everything and runs nothing (a preview). A failing step
 yields a non-zero exit so CI can react. The runner is injectable, so the
 behaviour is fully unit-tested without spawning subprocesses.
+
+## Consequences and handoff
+
+Read [effects.json](effects.json) before selecting an execution mode. Planning
+reads local declarations; `--save` writes reports, and `--execute` launches
+commands whose effects depend on their capability and arguments. An allowlisted
+"safe" classification is not proof of no network access or cache writes.
+
+Use `--effects` or `plan(..., include_effects=True)` to attach declarations only
+for selected steps. Match their scope to the actual command and current task
+authorization. The executor carries the original snapshot as `effects_before`
+for comparison with results; it never uses a declaration to unlock a command.
+The snapshot is not revalidated at execution time. Review source or context
+changes before relying on it. JSON contains complete details; `--effects --save`
+also writes a JSON companion because Markdown/HTML tables abbreviate values.
+
+After execution, distinguish a zero process exit from verified task success.
+Record actual changes, evidence, partial effects, deviations and the next
+action in the task report. A failed step does not stop later steps, and a
+timeout does not prove that no work happened. Inspect state before retrying;
+do not replay already successful mutations blindly. The orchestration's
+`cloud_tokens` value does not account for model calls made by child commands.
+
+Treat reuse suggestions as candidates requiring a check in their target
+context. See the [common contract](../../docs/capability-effects.md).
 
 Exposed via [[llm_mcp]] as `conduct` (plan) and `execute_plan` (plan + run safe
 steps). Built on [[capabilities]], [[auto_router]]; pairs with the [[control_loop]]

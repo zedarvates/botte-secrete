@@ -15,13 +15,13 @@ from skills.conductor import plan, run_goal
 
 def _run_execute(args) -> int:
     r = run_goal(args.goal, confirm=args.confirm, dry_run=args.dry_run,
-                 timeout=args.timeout)
+                 timeout=args.timeout, include_effects=args.effects)
     if "error" in r:
         print(f"ERROR: {r['error']}", file=sys.stderr)
         return 1
     if args.json:
         print(json.dumps(r, ensure_ascii=False, indent=2))
-        return 0
+        return 1 if r["summary"]["failed"] else 0
 
     c = r["summary"]
     print(f"🎬 Executed plan for: {r['goal']}")
@@ -32,6 +32,9 @@ def _run_execute(args) -> int:
         print(f"   {icon.get(s['status'], '•')} {s['capability']:18} [{s['status']}] "
               f"{s['command']}")
         print(f"        {s['note']}")
+        if "effects_before" in s:
+            print(f"        effects before execution: {s['effects_before']['status']} "
+                  "(declaration only; see --json for details)")
     # a failed step is a non-zero exit so callers/CI can react
     return 1 if c["failed"] else 0
 
@@ -41,6 +44,8 @@ def main(argv=None) -> int:
     p = argparse.ArgumentParser(prog="conductor", description=__doc__)
     p.add_argument("goal")
     p.add_argument("--json", action="store_true")
+    p.add_argument("--effects", action="store_true",
+                   help="include selected capabilities' effects declarations; no extra authority")
     p.add_argument("--save", nargs="?", const="both", choices=["md", "html", "both"],
                    help="save a timestamped plan under ./.botte/reports/")
     p.add_argument("--execute", action="store_true",
@@ -56,10 +61,17 @@ def main(argv=None) -> int:
     if args.execute:
         return _run_execute(args)
 
-    r = plan(args.goal)
+    r = plan(args.goal, include_effects=args.effects)
     if args.save and "error" not in r:
         from pathlib import Path as _P
-        from skills.report import save
+        from skills.report import save, timestamped_name
+        if args.effects:
+            # Markdown/HTML tables abbreviate nested values. Preserve a full
+            # JSON companion so consequence and reuse details are not lost.
+            from skills.atomic_json import write_json
+            target = _P(".botte") / "reports" / timestamped_name("plan-effects", "json")
+            r["effects_json"] = target.as_posix()
+            write_json(target, r)
         save("plan", r, fmt=args.save, out_dir=_P(".botte") / "reports",
              title=f"Plan — {r['goal']}")
     if "error" in r:
@@ -76,6 +88,11 @@ def main(argv=None) -> int:
         print(f"   {s['order']}. [{s['layer']:8}] {s['capability']:18} ({tag})")
         print(f"        {s['command']}")
         print(f"        why: {s['why'][:90]}")
+        if "effects" in s:
+            print(f"        effects: {s['effects']['status']} "
+                  "(declaration only; see --json for details)")
+    if "effects_json" in r:
+        print(f"\n   Complete effects report: {r['effects_json']}")
     print(f"\n   {r['local_first']}")
     return 0
 

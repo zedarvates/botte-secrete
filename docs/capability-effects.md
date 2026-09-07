@@ -82,6 +82,25 @@ are run by the inspector. This is a snapshot, not a lock on later execution.
 
 ## Use in a task and hand off
 
+The Conductor can include declarations in a plan:
+
+```bash
+python -m skills.conductor.cli "inspect verified outcome history" --effects --json
+python -m skills.conductor.cli "inspect verified outcome history" --effects --execute --dry-run --json
+```
+
+`plan(..., include_effects=True)` inspects only the selected capabilities.
+`run_goal(..., include_effects=True)` and `execute()` retain supplied declarations
+as `effects_before` in each result, including skipped, blocked and failed steps.
+These are planning snapshots, not observations or renewed source checks.
+Classification and authorization do not depend on their content. A failed
+execution returns a nonzero CLI exit code in both text and JSON modes.
+
+The CLI's text view shows status; JSON retains the complete declaration.
+With `--effects --save`, a complete JSON companion accompanies the abbreviated
+Markdown/HTML reports. Treat all these outputs according to the task's data
+scope before sharing them.
+
 Before using a selected capability, inspect its declaration when available and
 relate the relevant effects to the actual inputs, resources and existing task
 authority. Resolve material uncertainty with a proportional check. A missing
@@ -93,7 +112,8 @@ uncertainties and the next action. Keep the analysis concise and supported by
 observations. Assess each proposed reuse in its target context before promoting
 its status. Use the existing run-report or handoff mechanism for these facts.
 
-This first migration adds capability declarations and authoring support only.
-It does not change planner execution, permissions, scoring or learning. Do not
+This migration adds capability declarations, authoring support and optional
+planning/execution-report context. It does not change command classification,
+permissions, scoring or learning. Do not
 insert these fields into strict mission/handoff v1 objects: attach a reference
 where their schema permits it, or introduce an explicit schema migration.

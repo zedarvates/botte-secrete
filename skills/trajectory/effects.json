@@ -1,0 +1,120 @@
+{
+  "schema": "botte.capability-effects/v1",
+  "capability_id": "zedarvates/botte-secrete:skills/trajectory",
+  "contract_version": "0.1.0",
+  "source_hashes": {
+    "SKILL.md": "9d746e37088f1dcf329fa1137ce1c9eb074dfb66c1f83c697ff7cfd6e248c7c3",
+    "__init__.py": "aa182558f3e545ac427ce6001d0151ee622496769294afa296ef3529d9e8b6bc",
+    "quality.py": "c89aa542115c27718b26d99796bbc16ad28f2185948e02f7882f0abe94c59d1b",
+    "outcome.py": "3f2a0859e99e0cea5bdae862feb6129767428694e70c91d3ff672bb7df396a9c",
+    "agent_run.py": "9e85e480c263fbe6d4b5749b883aec3b4cff450b6d2550c9c3f6913397c2e9e2",
+    "task_status.py": "68be7281bc3968a5086a6a9b3e87e41b3f3e4b82dacbb5567ff6784a07626727",
+    "ci.py": "331c4cdaeef2da2c4cbc6ae3e2eee48eb6b34cff35fd0a0df3650de9edf8090f",
+    "benchmark.py": "047d523bc3ed7a5003c6863ee650072ffe4b5fc5d7cd0e9b6a98e33a9421acc5",
+    "cli.py": "b72ca6bac9b8bcc00cf1403d56e62374ba49600fcce4872390ffb88e4316708c"
+  },
+  "preconditions": [
+    "Choose the Quality Compass/outcome path or the legacy solver-history path explicitly; their persistence and privacy differ.",
+    "Use sanitized metadata and evidence references. Raw task hashing does not anonymize tags, verifier strings or evidence paths.",
+    "Provide a stable execution identity for outcome reconciliation and actual external evidence for any verified verdict.",
+    "Treat recommendations as shadow advice; context and current task authority still determine any later action."
+  ],
+  "expected_effects": [
+    {
+      "effect": "Append a private outcome envelope and, when verifier/evidence requirements pass, a verified support row and compact QA event.",
+      "scope": "Project .botte/quality-outcomes.jsonl, quality-trajectories.jsonl and events.jsonl.",
+      "likelihood": "conditional",
+      "basis": "emit_outcome checks identity/content against retained envelopes, calls record_verified when eligible, then appends its own envelope.",
+      "impact": "Preserves lifecycle facts and evidence-linked support; writes multiple files, may rotate old rows, and can leave a partial update if a later write fails.",
+      "verification": "In an isolated project, emit partial and verified fixtures, replay an identical execution/outcome, and inspect both ledgers and promotion status."
+    },
+    {
+      "effect": "Return status, passive task status, or k-NN advice; advice also appends a shadow event.",
+      "scope": "Caller output and project events.jsonl for advice calls.",
+      "likelihood": "conditional",
+      "basis": "advise_route compares retained support and calls _emit_advice on its return paths; no selected model is executed.",
+      "impact": "Makes suggestions explainable but incurs reads/computation and an event write; absence of model execution does not mean absence of filesystem effects.",
+      "verification": "Request advice against an empty temporary ledger; check the collecting/abstaining status, event presence and absence of a new verified support label."
+    },
+    {
+      "effect": "Legacy capture stores raw task, parameters, results and errors; legacy load/search can initialize an empty store.",
+      "scope": "skills/trajectory/store/trajectories.jsonl or an explicitly configured legacy store.",
+      "likelihood": "conditional",
+      "basis": "__init__.capture writes the supplied fields; load calls _ensure_dir before reading, and capture trims long histories.",
+      "impact": "Enables solver recall but can retain private raw data outside project-local Quality Compass state and remove older rows.",
+      "verification": "Redirect legacy storage to a temporary fixture location before testing capture/read initialization and retained fields."
+    },
+    {
+      "effect": "Benchmark or CI adapters can create report files; benchmark fitting uses a temporary support ledger and CI can write a sanitized public summary.",
+      "scope": "Temporary storage and explicitly selected report/output paths.",
+      "likelihood": "conditional",
+      "basis": "benchmark._knn builds a temporary ledger; cli benchmark --output and ci.emit_ci_outcome write requested artifacts.",
+      "impact": "Enables reproducible comparison without live model execution or activation; consumes resources and can overwrite the chosen report path.",
+      "verification": "Use synthetic fixtures with dedicated outputs; check fixture-only conclusions, output contents and no activation/routing change."
+    }
+  ],
+  "downstream_effects": [
+    {
+      "effect": "New support rows can change future shadow neighbors, maturity counts and routing suggestions.",
+      "scope": "Later advisory results and any caller decisions based on them.",
+      "likelihood": "plausible",
+      "basis": "load_verified and _support_records supply the k-NN and quality status; caller-supplied verifier families/references are checked structurally.",
+      "impact": "Good evidence can improve recall; mislabeled or context-mismatched evidence can bias suggestions without a runtime activation occurring.",
+      "verification": "Review actual evidence and target-context holdout/replay before treating advice as a validated improvement."
+    },
+    {
+      "effect": "Metadata or legacy raw text may be copied to another report or shared by a consumer.",
+      "scope": "Evidence, tags, legacy store and exported or caller-produced reports.",
+      "likelihood": "plausible",
+      "basis": "Privacy-safe fingerprints coexist with caller-supplied strings and a separate raw legacy lane.",
+      "impact": "Can support traceability while disclosing identifying information if consumers assume all stored fields are anonymous.",
+      "verification": "Inspect the concrete output fields and destination before sharing; use the sanitized CI surface only for its intended summary."
+    }
+  ],
+  "reversibility": {
+    "status": "partial",
+    "strategy": "Reconcile and correct evidence through the existing task process. Any ledger restoration must account for subsequent writes and consumers; no atomic multi-file rollback is supplied.",
+    "residual_effects": [
+      "Rotated history and exported disclosures may be unrecoverable.",
+      "Prior advice and decisions based on a bad label require separate review."
+    ]
+  },
+  "retry": {
+    "semantics": "conditional",
+    "check_before_retry": "Inspect both support and outcome ledgers after interruption. Reuse the execution identity and outcome content for reconciliation; direct record_verified calls without an outcome identity may append again.",
+    "stop_condition": "Do not manufacture a fresh identity to bypass uncertain state, missing evidence or an invalid manifest. Resolve the failed write or evidence mismatch first."
+  },
+  "required_scope": "Current task authorization to persist selected private metadata and evidence, read support history, and write any requested outputs. Advisory status, a verifier label or a declaration grants no activation or task-transition authority.",
+  "analysis": {
+    "summary": "The Quality Compass separates partial facts from eligible support and remains advisory. Source inspection exposes distinct write, privacy and deduplication boundaries that an agent should account for before reuse.",
+    "uncertainties": [
+      "Verifier-family and reference validation does not independently fetch or authenticate evidence.",
+      "Deduplication uses retained history and is not an atomic cross-process guarantee.",
+      "Dependencies, runtime data and the external events module are outside these skill-local source bindings.",
+      "A similar neighbor or a fixture success does not establish performance in a new domain."
+    ],
+    "evidence_refs": [
+      "outcome.py:emit_outcome",
+      "quality.py:record_verified",
+      "quality.py:advise_route",
+      "quality.py:_support_records",
+      "__init__.py:capture",
+      "benchmark.py:_knn"
+    ]
+  },
+  "reuse": [
+    {
+      "target": "Use a target domain support set to compare candidate workflows before changing routing.",
+      "rationale": "The externally evidenced support/holdout structure can compare methods while separating an observation, a recommendation and a later execution decision.",
+      "adaptations": [
+        "Define target-specific quality labels and independent evidence.",
+        "Keep input families disjoint across temporal holdout and review drift.",
+        "Preserve target privacy, authority and rollback requirements."
+      ],
+      "validation": "Run fixture validation first, then a target-context replay or holdout using independently verified outcomes; retain unobserved metrics and abstentions explicitly.",
+      "status": "adaptation_to_test",
+      "validated_context": null,
+      "evidence_refs": []
+    }
+  ]
+}

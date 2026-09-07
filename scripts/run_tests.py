@@ -53,6 +53,7 @@ SUITES = [
     ("capability_effects", [sys.executable, "-m", "skills.capabilities.test_effects"], "skills/capabilities/"),
     ("cluster", [sys.executable, "-m", "skills.cluster.test_cluster"], "skills/cluster/"),
     ("conductor", [sys.executable, "-m", "skills.conductor.test_conductor"], "skills/conductor/"),
+    ("conductor_effects", [sys.executable, "-m", "skills.conductor.test_effects"], "skills/conductor/"),
     ("control_loop", [sys.executable, "-m", "skills.control_loop.test_control_loop"], "skills/control_loop/"),
     ("report", [sys.executable, "-m", "skills.report.test_report"], "skills/report/"),
     ("cost_estimator", [sys.executable, "-m", "skills.cost_estimator.test_cost_estimator"], "skills/cost_estimator/"),

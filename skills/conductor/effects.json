@@ -1,0 +1,112 @@
+{
+  "schema": "botte.capability-effects/v1",
+  "capability_id": "zedarvates/botte-secrete:skills/conductor",
+  "contract_version": "0.1.0",
+  "source_hashes": {
+    "SKILL.md": "9d2acdbe9af70190ce39144580fb6140e923731a25fd7b61c115ed21b00278b4",
+    "__init__.py": "a47ff74d33ed7ea19ac4ab5781e7967deb4a4d022bb46811edf9cd46cf77e839",
+    "conductor.py": "b9c18577af8a75ac531b6474323eefada2ffffd93b81db0be9f8749b0eddfbd0",
+    "executor.py": "aa4b5ce063ccef1da70e8b1e1e6a6e669f1da76102674dcc452f624e766f095c",
+    "cli.py": "6b61b58e3f80bc3f07f3782f11e01b1154414cb468735bc28d2b2163e65724de"
+  },
+  "preconditions": [
+    "Distinguish planning, saving, dry-run and execution; their effects differ.",
+    "Execution expects a trusted plan and current authorization for each resolved command, project and network scope.",
+    "Inspect placeholders and dependencies; a failed step does not stop later steps.",
+    "Use --effects for optional declarations; matching source hashes are a planning snapshot, not an execution lock."
+  ],
+  "expected_effects": [
+    {
+      "effect": "Read the registry, rank capabilities and return an ordered plan; optionally inspect selected effects declarations.",
+      "scope": "Local skill metadata, caller memory and stdout.",
+      "likelihood": "conditional",
+      "basis": "conductor.plan calls local curation and effort estimation; include_effects inspects selected paths only.",
+      "impact": "Makes task selection and consequences inspectable; reads metadata, consumes CPU/I/O and can expose descriptions.",
+      "verification": "Compare default and opt-in fixture plans after removing effects; verify only selected directories are inspected."
+    },
+    {
+      "effect": "Write Markdown/HTML plan reports with --save; --effects adds a complete JSON companion.",
+      "scope": "The current project .botte/reports directory and any consumer of the generated report.",
+      "likelihood": "conditional",
+      "basis": "cli.main uses report.save and atomic_json.write_json only on the save path.",
+      "impact": "Preserves expectations for handoff; consumes storage and may retain task text and private declarations.",
+      "verification": "Save into a temporary project; parse the JSON companion and compare it to the full expected declaration."
+    },
+    {
+      "effect": "Launch runnable commands when execution is requested; gated steps require confirm and placeholders remain skipped.",
+      "scope": "Selected project, child processes, and any files, backends or subnet targets reached by their commands.",
+      "likelihood": "conditional",
+      "basis": "executor.classify and execute use the existing allowlist, confirm flag and command arguments; declarations never unlock steps.",
+      "impact": "Can produce useful results or mutate state, generate artifacts, contact backends and incur child-model costs; local/safe labels are not proof of absence of side effects.",
+      "verification": "Use an injected runner to verify ran, blocked, skipped and failed cases; inspect actual command scope before a real run."
+    },
+    {
+      "effect": "Return per-step process results and retain optional effects_before snapshots.",
+      "scope": "Caller report, including command output tails.",
+      "likelihood": "conditional",
+      "basis": "executor.execute records exit codes and output tails; cli returns nonzero for failed execution in JSON and text modes.",
+      "impact": "Supports comparison with expectations; process success alone does not verify the task or every downstream effect.",
+      "verification": "Fail an injected step, mutate its source metadata during execution, and verify failure plus the original snapshot are retained."
+    }
+  ],
+  "downstream_effects": [
+    {
+      "effect": "A later agent may reuse the plan, process output or declaration as input to another action.",
+      "scope": "Subsequent task decisions and their affected resources.",
+      "likelihood": "plausible",
+      "basis": "Plans and execution reports are returned to callers; commands and effects depend on the new task context.",
+      "impact": "Can avoid rediscovery, or propagate an outdated assumption if a successful exit or declared effect is treated as permission or proof.",
+      "verification": "Review evidence and actual state before the next action; reassess source freshness and target scope."
+    },
+    {
+      "effect": "Partial work can remain after failure or timeout, while later steps may still run.",
+      "scope": "Child-command resources and subsequent steps in the same plan.",
+      "likelihood": "conditional",
+      "basis": "The executor reports failures and continues its loop; it provides no transaction or automatic rollback.",
+      "impact": "Blindly repeating a plan can duplicate successful writes or operate on incomplete earlier outputs.",
+      "verification": "Reconcile affected resources and each prior step result before deciding which steps to retry."
+    }
+  ],
+  "reversibility": {
+    "status": "partial",
+    "strategy": "Planning itself changes no project inputs. Review saved reports separately; executed work needs the rollback defined by each child capability.",
+    "residual_effects": [
+      "Captured stdout and task disclosures may persist.",
+      "Child writes, external effects and incurred costs are not undone by the executor."
+    ]
+  },
+  "retry": {
+    "semantics": "conditional",
+    "check_before_retry": "Inspect actual child state, completed steps, source freshness and report destinations. A timeout is not evidence of non-execution.",
+    "stop_condition": "Do not repeat unresolved mutations or run dependent steps whose required prior result is missing; use the existing task scope to choose the next action."
+  },
+  "required_scope": "Planning needs read access to selected metadata; saving and execution need the current task authorization for the actual output and child-command resources. --confirm and declarations do not supply that authorization.",
+  "analysis": {
+    "summary": "Planning, persistence and execution have distinct consequences. The optional snapshot supports handoff analysis while classification remains independent of metadata. Child output and declared effects still need evidence-based interpretation.",
+    "uncertainties": [
+      "Child-command effects and total costs are not measured by the orchestration cloud_tokens field.",
+      "Source hashes cover listed files only; imported modules, live services and runtime state may differ.",
+      "No automatic fail-fast, rollback, transaction or execution-time freshness check is supplied."
+    ],
+    "evidence_refs": [
+      "conductor.py:plan",
+      "executor.py:classify",
+      "executor.py:execute",
+      "cli.py:_run_execute"
+    ]
+  },
+  "reuse": [
+    {
+      "target": "Carry consequence expectations into another task planner and its result report.",
+      "rationale": "The plan/result separation provides a reusable place to compare an earlier declaration with later process observations.",
+      "adaptations": [
+        "Map target capability identities and commands explicitly.",
+        "Preserve target authorization and report privacy rules; revalidate source bindings in the new environment."
+      ],
+      "validation": "Replay selected, missing, stale, blocked, failed and dry-run fixture cases through the target planner without launching real mutations.",
+      "status": "adaptation_to_test",
+      "validated_context": null,
+      "evidence_refs": []
+    }
+  ]
+}
