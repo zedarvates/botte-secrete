@@ -60,6 +60,9 @@ schemas from `docs/schemas/` for inter-agent reports.
 1. Inspect the affected call path and reuse an existing module when possible.
 2. Keep the implementation under `skills/<name>/`.
 3. Add or update `SKILL.md` with the module contract and safe commands.
+   For effects, analysis and possible reuse, use the optional
+   [effects declaration and template](capability-effects.md). Keep its source
+   bindings current when behavior changes; an old declaration is not new evidence.
 4. Add a focused test beside the module.
 5. Wire public entry points deliberately: top-level CLI, MCP schema and dispatch,
    bootstrap, or dashboard as applicable.

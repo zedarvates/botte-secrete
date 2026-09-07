@@ -6,13 +6,15 @@ description: The system's self-model — a capability registry (scans every SKIL
 
 # capabilities — the system's map of itself (registry + curator)
 
-Turns the 26 modules from a *collection* into a *system*: one self-describing
+Turns the discovered modules from a *collection* into a *system*: one self-describing
 tree the rest can reason over.
 
 ```bash
 python -m skills.capabilities.cli map               # ASCII layered system tree
 python -m skills.capabilities.cli list --json       # the registry
 python -m skills.capabilities.cli curate "test my desktop app"
+python -m skills.capabilities.cli list --json --effects  # opt-in declarations
+python -m skills.capabilities.cli effects skills/capabilities
 ```
 
 ## Layers (the arborescence)
@@ -38,3 +40,22 @@ branches of the tree to use. Built on [[skill_finder]].
 This registry is the foundation for the Conductor (goal → decision tree → ordered
 plan of capabilities, executed local-first) and the control loop (measure → adapt).
 Related: [[skill_finder]], [[auto_router]], [[bootstrap]].
+
+## Effects, analysis and reuse
+
+When assessing a selected capability's consequences, read its optional
+`effects.json` through `effects <skill_dir>` or `load(include_effects=True)`.
+Distinguish `missing`, `invalid`, `stale` and `declared`; the last only confirms
+structure and listed source hashes, including for drafts. It does not verify
+behavior or grant authority. Ordinary registry output remains unchanged.
+
+Relate expected effects to the current task and its existing authorization.
+After use, record observed effects, evidence, deviations, uncertainties and the
+next action through the task's existing report. For plausible reuse, state what
+transfers, adaptations and a check in the target context; do not inherit a prior
+validation or permission automatically.
+
+When creating or updating declarations, use the read-only `template` command and
+the [authoring contract](../../docs/capability-effects.md). Keep substantial
+details in the sidecar, loaded only when needed. The registry's own declaration
+covers discovery and inspection, not execution of the capabilities it lists.

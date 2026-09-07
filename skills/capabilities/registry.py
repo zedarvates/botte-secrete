@@ -60,9 +60,13 @@ class Capability:
     description: str
     path: str
     local_capable: bool
+    effects: Optional[dict] = None
 
     def to_dict(self) -> dict:
-        return asdict(self)
+        result = asdict(self)
+        if self.effects is None:
+            result.pop("effects")  # preserve the legacy discovery contract
+        return result
 
 
 def _frontmatter(text: str) -> tuple[dict, str]:
@@ -87,7 +91,8 @@ def _summary(name: str, fm: dict, body: str) -> str:
     return name
 
 
-def load(skills_root: Optional[Path] = None) -> list[Capability]:
+def load(skills_root: Optional[Path] = None, *,
+         include_effects: bool = False) -> list[Capability]:
     root = Path(skills_root or (REPO_ROOT / "skills"))
     caps: dict[str, Capability] = {}
     for md in sorted(root.rglob("SKILL.md")):
@@ -107,9 +112,14 @@ def load(skills_root: Optional[Path] = None) -> list[Capability]:
             rel = md.relative_to(REPO_ROOT).as_posix()
         except ValueError:
             rel = md.as_posix()  # scanning a tree outside the repo
+        effects = None
+        if include_effects:
+            from skills.capabilities.effects import inspect_effects
+            effects = inspect_effects(md.parent)
         caps[folder] = Capability(
             name=name, layer=layer, description=_summary(name, fm, body),
             path=rel, local_capable=folder not in _CLOUD_CAPABLE,
+            effects=effects,
         )
     return sorted(caps.values(), key=lambda c: (LAYERS.index(c.layer), c.name))
 

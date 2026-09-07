@@ -50,6 +50,7 @@ SUITES = [
     ("docgen", [sys.executable, "-m", "skills.docgen.test_docgen"], "skills/docgen/"),
     ("app_test", [sys.executable, "-m", "skills.app_test.test_app_test"], "skills/app_test/"),
     ("capabilities", [sys.executable, "-m", "skills.capabilities.test_capabilities"], "skills/capabilities/"),
+    ("capability_effects", [sys.executable, "-m", "skills.capabilities.test_effects"], "skills/capabilities/"),
     ("cluster", [sys.executable, "-m", "skills.cluster.test_cluster"], "skills/cluster/"),
     ("conductor", [sys.executable, "-m", "skills.conductor.test_conductor"], "skills/conductor/"),
     ("control_loop", [sys.executable, "-m", "skills.control_loop.test_control_loop"], "skills/control_loop/"),
