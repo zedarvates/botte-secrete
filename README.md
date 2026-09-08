@@ -247,6 +247,7 @@ Report vulnerabilities privately as described in [SECURITY.md](SECURITY.md).
 | Understand the system | [Architecture](docs/ARCHITECTURE.md) |
 | Develop or test Botte | [Development guide](docs/DEVELOPMENT.md) |
 | Integrate MCP | [MCP integration](docs/mcp-integration.md) |
+| Pilot shared agent memory | [Authenticated memory API, MCP bridge and advisory scribe](docs/shared-memory.md) |
 | Connect Hermes | [Hermes integration](docs/integrations/hermes.md) |
 | Understand the loop optimizer | [Loop Optimizer](docs/loop-optimizer.md) |
 | Review changes by release | [Changelog](CHANGELOG.md) |
