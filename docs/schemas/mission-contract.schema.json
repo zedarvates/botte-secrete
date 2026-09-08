@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/zedarvates/botte-secrete/blob/main/docs/schemas/mission-contract.schema.json",
+  "title": "Botte Secrete bounded mission contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "mission_id", "objective", "scope", "forbidden_actions",
+    "authority", "risk", "privacy", "capabilities", "budgets",
+    "required_evidence", "approval_gates", "rollback", "context"
+  ],
+  "properties": {
+    "schema": {"const": "botte.mission/v1"},
+    "mission_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$"},
+    "objective": {"type": "string", "minLength": 1, "maxLength": 2000},
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["include", "exclude"],
+      "properties": {
+        "include": {"type": "array", "minItems": 1, "maxItems": 200, "uniqueItems": true, "items": {"type": "string", "maxLength": 512}},
+        "exclude": {"type": "array", "maxItems": 200, "uniqueItems": true, "items": {"type": "string", "maxLength": 512}}
+      }
+    },
+    "forbidden_actions": {
+      "type": "array", "maxItems": 50, "uniqueItems": true,
+      "items": {"type": "string", "maxLength": 64},
+      "allOf": [
+        {"contains": {"const": "merge"}},
+        {"contains": {"const": "deploy"}},
+        {"contains": {"const": "release"}},
+        {"contains": {"const": "secrets"}},
+        {"contains": {"const": "payments"}}
+      ]
+    },
+    "authority": {"enum": ["SIMULATE", "SHADOW", "ACT"]},
+    "risk": {"enum": ["R0", "R1", "R2", "R3", "R4"]},
+    "privacy": {"enum": ["PUBLIC", "PRIVATE", "CONFIDENTIAL"]},
+    "capabilities": {"type": "array", "maxItems": 50, "uniqueItems": true, "items": {"type": "string", "maxLength": 64}},
+    "budgets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["max_iterations", "max_tool_calls", "max_wall_seconds", "max_revisions"],
+      "properties": {
+        "max_iterations": {"type": "integer", "minimum": 1},
+        "max_tool_calls": {"type": "integer", "minimum": 0},
+        "max_wall_seconds": {"type": "integer", "minimum": 1},
+        "max_tokens": {"type": "integer", "minimum": 0},
+        "max_cost_usd": {"type": "number", "minimum": 0},
+        "max_revisions": {"type": "integer", "minimum": 1}
+      }
+    },
+    "required_evidence": {"type": "array", "minItems": 1, "maxItems": 50, "uniqueItems": true, "items": {"type": "string", "maxLength": 128}},
+    "approval_gates": {"type": "array", "maxItems": 50, "uniqueItems": true, "items": {"type": "string", "maxLength": 128}},
+    "rollback": {
+      "type": "object", "additionalProperties": false,
+      "required": ["required", "snapshot_ref"],
+      "properties": {
+        "required": {"type": "boolean"},
+        "snapshot_ref": {"type": "string", "maxLength": 256}
+      }
+    },
+    "context": {
+      "type": "object", "additionalProperties": false,
+      "required": ["budget_tokens", "required_files", "optional_files"],
+      "properties": {
+        "budget_tokens": {"type": "integer", "minimum": 1},
+        "required_files": {"type": "array", "maxItems": 200, "uniqueItems": true, "items": {"type": "string", "maxLength": 512}},
+        "optional_files": {"type": "array", "maxItems": 200, "uniqueItems": true, "items": {"type": "string", "maxLength": 512}}
+      }
+    },
+    "owner_approval_ref": {"type": "string", "maxLength": 256}
+  }
+}

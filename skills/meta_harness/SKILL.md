@@ -1,14 +1,16 @@
 ---
 name: meta_harness
-description: Meta-Harness orchestre les skills Botte comme des agents interchangeables dans un pipeline gouverné. Planifie → exécute en sandbox → review croisé → applique avec garde-fous. Inspiré d'Omnigent mais 100% Botte-native.
-tags: [orchestration, pipeline, governance, sandbox, multi-agent]
+description: Meta-Harness orchestre les skills Botte comme des agents interchangeables dans un pipeline gouverné. Planifie → exécute en sandbox → review croisé → applique avec garde-fous et SAFE-EXIT.
+tags: [orchestration, pipeline, governance, sandbox, multi-agent, safe-exit]
 ---
 
 # meta_harness — orchestration multi-agent
 
-Un meta-harness qui orchestre les skills Botte (audit, fix, counter-audit, optimize, test)
-dans un pipeline gouverné. Chaque étape tourne dans son propre sandbox
-(subprocess, workdir isolé). Governance = approval gates + budgets + rollback.
+Un meta-harness qui orchestre les skills Botte (audit, fix, counter-audit,
+optimize, test) dans un pipeline gouverné. Une mission contractuelle reçoit un
+**bail Git worktree expirant** : les workers ne partagent jamais leur répertoire
+d'écriture. Governance = approval gates; SAFE-EXIT = budgets, stagnation et
+sortie `UNCERTAIN`; les preuves restent liées à l'état Git exact.
 
 ## Concept
 
@@ -25,8 +27,9 @@ Meta-Harness
     └── Sandbox 4: run tests
     │
     ├── Governance → approval gate avant apply
+    ├── SAFE-EXIT → budgets/stagnation → UNCERTAIN + skip remaining
     │
-    └── Report → synthèse multi-agent
+    └── Report → synthèse multi-agent + termination reason
 ```
 
 ## Agents disponibles
@@ -62,34 +65,92 @@ python -m skills.meta_harness.cli status <session_id>
 
 # Rollback
 python -m skills.meta_harness.cli rollback <session_id>
+
+# Mission contractuelle (audit SHADOW par défaut)
+botte run mission.json --project . --plan audit
+botte review mission.json handoff.json --project . --plan test-only
+
+# Nettoyage explicite; un worktree sale est conservé en quarantaine
+botte lease --project . list
+botte lease --project . release <lease_id>
 ```
 
 ## API Python
 
 ```python
-from skills.meta_harness import MetaHarness, PipelinePlan, Step, Sandbox
+from skills.meta_harness import MetaHarness
+from skills.safe_exit import SafeExitConfig
 
-# Créer un harness
-h = MetaHarness(workdir="/path/to/project")
+h = MetaHarness(
+    workdir="/path/to/project",
+    safe_exit_config=SafeExitConfig(
+        max_iterations=12,
+        max_tool_calls=48,
+        max_wall_seconds=900,
+    ),
+)
 
-# Planifier un pipeline
 plan = h.plan(["audit", "counter-audit", "fix", "test"])
+session = h.execute(plan)
 
-# Exécuter
-session = h.execute(plan, approval=False)
-
-# Voir le rapport
 print(session.report())
+if session.termination_decision == "UNCERTAIN":
+    print("SAFE-EXIT:", session.termination_reason)
 ```
+
+## SAFE-EXIT semantics
+
+- Only actually executed sandbox steps consume an iteration/tool-call unit.
+- Dependency/governance skips do not consume the execution budget.
+- Equivalent repeated failures can terminate the trajectory early.
+- After `UNCERTAIN`, every still-pending step is recorded as skipped and is not executed.
+- The session JSON persists `termination_decision` and `termination_reason`.
+- Starting a new plan after `UNCERTAIN` is a supervisor decision; the current run must not silently reset its budget.
+- SAFE-EXIT does not replace OS/container network isolation or destructive-operation snapshot gates.
 
 ## Architecture
 
 ```
 meta_harness/
-├── orchestrator.py   — Planification pipeline + dispatch
-├── runner.py         — Sandbox subprocess + workdir isolé
-├── governance.py     — Garde-fous, budgets, rollback
-├── session.py        — Persistance + historique
+├── orchestrator.py   — Planification + dispatch + SAFE-EXIT enforcement
+├── runner.py         — Subprocess + timeout dans le worktree loué
+├── lease.py          — Baux expirants, empreintes Git, quarantaine
+├── review.py         — Gauntlet indépendant + best-known-green
+├── governance.py     — Approval gates
+├── session.py        — Persistance + historique + handoff typé
 ├── cli.py            — argparse CLI
-└── test_meta_harness.py
+├── test_meta_harness.py
+├── test_reliable_run.py
+└── test_safe_exit_integration.py
 ```
+
+## Frontières de fiabilité
+
+- `SIMULATE` et `SHADOW` refusent les agents mutateurs avant la création du
+  bail. `ACT` exige la référence d'approbation propriétaire et un snapshot.
+- Une libération ne supprime jamais un worktree sale : elle le conserve en
+  `QUARANTINED`.
+- Un handoff ne peut annoncer que `READY_FOR_REVIEW`; `SUCCEEDED` n'existe pas.
+- Le reviewer doit utiliser un autre `worker_id` et un autre worktree, puis
+  rejouer chaque `required_evidence` avec le même `evidence_ref`, sur le SHA
+  exact du handoff et avec un bail actif non expiré. Un contrôle sans rapport
+  ne prouve rien sur la mission. Son verdict est `ACCEPT`, `REWORK` ou `BLOCKED`;
+  `BLOCKED` garde priorité même si un autre contrôle échoue.
+- Seul `ACCEPT` peut remplacer le checkpoint best-known-green. Une révision
+  nomme le contrôle qu'elle corrige et respecte `max_revisions`, à la fois par
+  défaut nommé et au total après la tentative initiale. Le digest de mission
+  est figé à la première tentative; une autre session ou un défaut renommé
+  ne réinitialise pas le budget. Un ancien checkpoint sans digest exige une
+  réconciliation par le superviseur, en conservant son historique.
+- Les checks et baux proviennent du runner de confiance, jamais du payload
+  du builder. Un identifiant ou SHA vérifie une liaison, pas l'identité d'un
+  témoin. La séparation réelle des comptes et droits de stockage reste à
+  qualifier sur l'hôte; cette API Python locale n'authentifie pas un agent.
+- Le rapport de review exporte seulement les références observées au replay.
+  Une clôture de défaut requiert son replay réussi; la déclaration du builder
+  reste liée au handoff sans être promue en preuve indépendante.
+- Le CLI de review applique les budgets de la mission et refuse un worktree
+  modifié pendant le replay. Son statut ne confirme ni une fabrication,
+  ni une suppression effective de données, ni une vente sans témoin adapté.
+- Les contrats publics ne contiennent aucun chemin machine absolu; les chemins
+  de récupération restent dans `.botte-cache/` local et privé.

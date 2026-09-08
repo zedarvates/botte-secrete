@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/zedarvates/botte-secrete/blob/main/docs/schemas/rules-audit.schema.json",
+  "title": "Botte deterministic rules audit",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "project_ref",
+    "manifest_ref",
+    "manifest_present",
+    "score",
+    "summary",
+    "findings",
+    "fingerprint"
+  ],
+  "properties": {
+    "schema": {
+      "const": "botte.rules-audit/v1"
+    },
+    "project_ref": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "manifest_ref": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "manifest_present": {
+      "type": "boolean"
+    },
+    "score": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rules", "errors", "warnings", "conflicts", "unenforced", "stale"],
+      "properties": {
+        "rules": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "errors": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "warnings": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "conflicts": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "unenforced": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "stale": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "findings": {
+      "type": "array",
+      "maxItems": 10000,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["severity", "code", "rule_id", "reference", "message", "fix_hint"],
+        "properties": {
+          "severity": {
+            "enum": ["error", "warning", "info"]
+          },
+          "code": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "rule_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          },
+          "reference": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          "fix_hint": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          }
+        }
+      }
+    },
+    "fingerprint": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  }
+}
