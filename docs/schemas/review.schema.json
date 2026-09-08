@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/zedarvates/botte-secrete/blob/main/docs/schemas/review.schema.json",
+  "title": "Botte Secrete independent Gauntlet review",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "mission_id", "attempt_id", "reviewer_id", "created_at",
+    "reviewed_handoff_sha256", "author_workspace_fingerprint",
+    "review_workspace_fingerprint", "head_sha", "verdict", "reasons",
+    "replayed_checks", "evidence_refs", "closed_failure_refs",
+    "approval_required", "next_safe_action", "review_sha256"
+  ],
+  "properties": {
+    "schema": {"const": "botte.review/v1"},
+    "mission_id": {"type": "string", "maxLength": 128},
+    "attempt_id": {"type": "string", "maxLength": 128},
+    "reviewer_id": {"type": "string", "maxLength": 128},
+    "created_at": {"type": "string", "format": "date-time"},
+    "reviewed_handoff_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "author_workspace_fingerprint": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "review_workspace_fingerprint": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "head_sha": {"type": "string", "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"},
+    "verdict": {"enum": ["ACCEPT", "REWORK", "BLOCKED"]},
+    "reasons": {"type": "array", "minItems": 1, "maxItems": 100, "items": {"type": "string", "maxLength": 512}},
+    "replayed_checks": {"type": "array", "minItems": 1, "maxItems": 100},
+    "evidence_refs": {"type": "array", "maxItems": 200, "uniqueItems": true, "items": {"type": "string", "maxLength": 256}},
+    "closed_failure_refs": {"type": "array", "maxItems": 100, "uniqueItems": true, "items": {"type": "string", "maxLength": 256}},
+    "approval_required": {"type": "boolean"},
+    "next_safe_action": {"type": "string", "minLength": 1, "maxLength": 512},
+    "review_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  }
+}

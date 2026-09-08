@@ -33,6 +33,7 @@ STATUSES = (
     "PARTIAL", "FAIL", "UNCERTAIN", "PASS", "PASS_ROBUST",
     "ABSTAINED", "ESCALATED", "APPROVAL_REQUIRED",
 )
+REVIEW_VERDICTS = ("ACCEPT", "REWORK", "BLOCKED")
 MAX_ENTRIES = 5_000
 MAX_BYTES = 8 * 1024 * 1024
 _OUTCOME_ID = re.compile(r"^qo_[0-9a-f]{16}$")
@@ -87,6 +88,104 @@ def _versions(values: Mapping[str, str] | None) -> dict[str, str]:
         _text(value, field="tool_version value", maximum=128, required=True)
         for key, value in sorted(values.items())
     }
+
+
+def _git_oid(value: object, *, field: str) -> str:
+    cleaned = _text(value, field=field, maximum=64)
+    if cleaned and (
+        len(cleaned) not in (40, 64)
+        or any(char not in "0123456789abcdef" for char in cleaned)
+    ):
+        raise ValueError(f"{field} must be a lowercase Git object ID")
+    return cleaned
+
+
+def _sha256(value: object, *, field: str) -> str:
+    cleaned = _text(value, field=field, maximum=64)
+    if cleaned and not _FINGERPRINT.fullmatch(cleaned):
+        raise ValueError(f"{field} must be a lowercase SHA-256")
+    return cleaned
+
+
+def _workspace_lease(value: Mapping | None) -> dict:
+    if value is None:
+        return {}
+    if not isinstance(value, Mapping):
+        raise ValueError("workspace_lease must be an object")
+    allowed = {
+        "lease_id", "worker_id", "state", "base_sha", "head_sha",
+        "expires_at", "workspace_fingerprint",
+    }
+    if set(value) != allowed:
+        raise ValueError("workspace_lease must contain only privacy-safe contract fields")
+    state = _text(value["state"], field="workspace_lease.state", maximum=16, required=True)
+    if state not in ("ACTIVE", "RELEASED", "QUARANTINED", "EXPIRED"):
+        raise ValueError("workspace_lease.state is unsupported")
+    return {
+        "lease_id": _text(
+            value["lease_id"], field="workspace_lease.lease_id", maximum=128, required=True
+        ),
+        "worker_id": _text(
+            value["worker_id"], field="workspace_lease.worker_id", maximum=128, required=True
+        ),
+        "state": state,
+        "base_sha": _git_oid(value["base_sha"], field="workspace_lease.base_sha"),
+        "head_sha": _git_oid(value["head_sha"], field="workspace_lease.head_sha"),
+        "expires_at": _text(
+            value["expires_at"], field="workspace_lease.expires_at", maximum=64, required=True
+        ),
+        "workspace_fingerprint": _sha256(
+            value["workspace_fingerprint"], field="workspace_lease.workspace_fingerprint"
+        ),
+    }
+
+
+def _checks(values: Iterable[Mapping]) -> list[dict]:
+    if values is None or isinstance(values, (str, bytes)):
+        raise ValueError("checks must be a list")
+    items = list(values)
+    if len(items) > 100:
+        raise ValueError("checks must contain at most 100 items")
+    normalized = []
+    for item in items:
+        if not isinstance(item, Mapping) or set(item) != {
+            "name", "status", "evidence_ref"
+        }:
+            raise ValueError("each check requires name, status and evidence_ref")
+        status = _text(item["status"], field="check.status", maximum=16, required=True)
+        if status not in ("PASS", "FAIL", "UNCERTAIN", "SKIPPED"):
+            raise ValueError("check.status is unsupported")
+        normalized.append({
+            "name": _text(item["name"], field="check.name", maximum=128, required=True),
+            "status": status,
+            "evidence_ref": _text(
+                item["evidence_ref"], field="check.evidence_ref", maximum=256
+            ),
+        })
+    return normalized
+
+
+def _artifacts(values: Iterable[Mapping]) -> list[dict]:
+    if values is None or isinstance(values, (str, bytes)):
+        raise ValueError("artifacts must be a list")
+    items = list(values)
+    if len(items) > 100:
+        raise ValueError("artifacts must contain at most 100 items")
+    normalized = []
+    for item in items:
+        if not isinstance(item, Mapping) or set(item) != {"kind", "ref", "sha256"}:
+            raise ValueError("each artifact requires kind, ref and sha256")
+        reference = _text(item["ref"], field="artifact.ref", maximum=256, required=True)
+        if reference.startswith(("/", "~", "\\")) or (
+            len(reference) >= 3 and reference[1:3] in (":/", ":\\")
+        ):
+            raise ValueError("artifact.ref must not expose an absolute machine path")
+        normalized.append({
+            "kind": _text(item["kind"], field="artifact.kind", maximum=64, required=True),
+            "ref": reference,
+            "sha256": _sha256(item["sha256"], field="artifact.sha256"),
+        })
+    return normalized
 
 
 def _append(path: Path, record: dict) -> None:
@@ -165,6 +264,20 @@ def emit_outcome(
     abstained: bool = False,
     escalated: bool = False,
     approval_required: bool = False,
+    mission_id: str = "",
+    attempt_id: str = "",
+    worker_id: str = "",
+    workspace_lease: Mapping | None = None,
+    repository_ref: str = "",
+    base_sha: str = "",
+    head_sha: str = "",
+    dirty_tree_sha256: str = "",
+    check_command_sha256: str = "",
+    checks: Iterable[Mapping] = (),
+    artifacts: Iterable[Mapping] = (),
+    uncertainties: Iterable[str] = (),
+    review_verdict: str | None = None,
+    next_safe_action: str = "",
 ) -> dict:
     """Emit one idempotent envelope and optionally promote its verified verdict.
 
@@ -201,6 +314,41 @@ def emit_outcome(
         permission_profile, field="permission_profile", maximum=64
     )
     versions = _versions(tool_versions)
+    mission_id = _text(mission_id, field="mission_id", maximum=128)
+    attempt_id = _text(attempt_id, field="attempt_id", maximum=128)
+    worker_id = _text(worker_id, field="worker_id", maximum=128)
+    lease = _workspace_lease(workspace_lease)
+    repository_ref = _text(repository_ref, field="repository_ref", maximum=256)
+    base_sha = _git_oid(base_sha, field="base_sha")
+    head_sha = _git_oid(head_sha, field="head_sha")
+    dirty_tree_sha256 = _sha256(dirty_tree_sha256, field="dirty_tree_sha256")
+    check_command_sha256 = _sha256(
+        check_command_sha256, field="check_command_sha256"
+    )
+    normalized_checks = _checks(checks)
+    normalized_artifacts = _artifacts(artifacts)
+    normalized_uncertainties = _strings(
+        uncertainties, field="uncertainties", maximum=512, limit=100
+    )
+    if review_verdict is not None:
+        review_verdict = str(review_verdict).strip().upper()
+        if review_verdict not in REVIEW_VERDICTS:
+            raise ValueError(f"review_verdict must be one of: {', '.join(REVIEW_VERDICTS)}")
+        verifier_family = verifier.partition(":")[0].casefold()
+        if verifier_family not in {"human", "independent"}:
+            raise ValueError("review_verdict requires an independent or human verifier")
+    next_safe_action = _text(
+        next_safe_action, field="next_safe_action", maximum=512
+    )
+    binding_values = (mission_id, attempt_id, worker_id)
+    if any(binding_values) and not all(binding_values):
+        raise ValueError("mission_id, attempt_id and worker_id must be supplied together")
+    if lease and lease["worker_id"] != worker_id:
+        raise ValueError("workspace_lease.worker_id must match worker_id")
+    if lease and base_sha and lease["base_sha"] != base_sha:
+        raise ValueError("workspace_lease.base_sha must match base_sha")
+    if lease and head_sha and lease["head_sha"] != head_sha:
+        raise ValueError("workspace_lease.head_sha must match head_sha")
     duration_ms = _metric(duration_ms, field="duration_ms")
     cost_usd = _metric(cost_usd, field="cost_usd")
     tokens = _metric(tokens, field="tokens", integer=True)
@@ -238,6 +386,16 @@ def emit_outcome(
         "source": source,
         "harness": harness,
         "model": model,
+        "mission_id": mission_id,
+        "attempt_id": attempt_id,
+        "worker_id": worker_id,
+        "workspace_lease": lease,
+        "repository_ref": repository_ref,
+        "base_sha": base_sha,
+        "head_sha": head_sha,
+        "dirty_tree_sha256": dirty_tree_sha256,
+        "check_command_sha256": check_command_sha256,
+        "review_verdict": review_verdict,
     }, sort_keys=True, separators=(",", ":"))
     outcome_id = "qo_" + hashlib.sha256(identity.encode("utf-8")).hexdigest()[:16]
     existing = next((item for item in load_outcomes(project_root)
@@ -272,6 +430,7 @@ def emit_outcome(
     now = time.time()
     envelope = {
         "schema": SCHEMA,
+        "schema_version": 1,
         "id": outcome_id,
         "recorded_at": datetime.fromtimestamp(now, timezone.utc).isoformat(),
         "timestamp": now,
@@ -292,6 +451,20 @@ def emit_outcome(
         "model": model,
         "harness": harness,
         "tool_versions": versions,
+        "mission_id": mission_id,
+        "attempt_id": attempt_id,
+        "worker_id": worker_id,
+        "workspace_lease": lease,
+        "repository_ref": repository_ref,
+        "base_sha": base_sha,
+        "head_sha": head_sha,
+        "dirty_tree_sha256": dirty_tree_sha256,
+        "check_command_sha256": check_command_sha256,
+        "checks": normalized_checks,
+        "artifacts": normalized_artifacts,
+        "uncertainties": normalized_uncertainties,
+        "review_verdict": review_verdict,
+        "next_safe_action": next_safe_action,
         "duration_ms": duration_ms,
         "cost_usd": cost_usd,
         "tokens": tokens,

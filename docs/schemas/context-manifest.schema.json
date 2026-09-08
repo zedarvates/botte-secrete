@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/zedarvates/botte-secrete/blob/main/docs/schemas/context-manifest.schema.json",
+  "title": "Botte Secrete exact context manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "mission_id", "mission_sha256", "generated_at", "entries",
+    "omitted", "total_tokens_est", "budget_tokens", "safety_rules_pinned",
+    "raw_content_stored", "manifest_sha256"
+  ],
+  "properties": {
+    "schema": {"const": "botte.context-manifest/v1"},
+    "mission_id": {"type": "string", "maxLength": 128},
+    "mission_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "generated_at": {"type": "string", "format": "date-time"},
+    "entries": {
+      "type": "array", "maxItems": 500,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["path", "kind", "sha256", "tokens_est", "required", "compressible", "reason"],
+        "properties": {
+          "path": {"type": "string", "maxLength": 512},
+          "kind": {"enum": ["policy", "directive", "mission-required", "mission-optional"]},
+          "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "tokens_est": {"type": "integer", "minimum": 1},
+          "required": {"type": "boolean"},
+          "compressible": {"type": "boolean"},
+          "reason": {"type": "string", "maxLength": 128}
+        }
+      }
+    },
+    "omitted": {"type": "array", "maxItems": 500, "items": {"type": "object"}},
+    "total_tokens_est": {"type": "integer", "minimum": 1},
+    "budget_tokens": {"type": "integer", "minimum": 1},
+    "safety_rules_pinned": {"const": true},
+    "raw_content_stored": {"const": false},
+    "manifest_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  }
+}
