@@ -78,6 +78,18 @@ class MissionBoundaryTests(unittest.TestCase):
             harness.execute(plan)
         self.assertIsNone(harness.workspace_lease)
 
+    def test_harness_cannot_reuse_prior_results_as_new_evidence(self):
+        harness = self.harness(mission=_mission(required_evidence=["audit:counter"]))
+        session = harness.execute(harness.plan(["test"]))
+        self.assertEqual(session.handoff["status"], "PARTIAL")
+        info = _AGENT_CATALOG["rochefort"]
+        # Missing porthos means this valid catalog step cannot run. The old
+        # passing test result must never be relabeled as audit:counter.
+        step = Step(info["name"], list(info["command"]), requires=list(info["requires"]),
+                    evidence_ref=info["evidence_ref"])
+        with self.assertRaises(ValueError):
+            harness.execute(PipelinePlan("second", [step]))
+
     def test_forged_evidence_dependencies_or_status_are_rejected(self):
         for field, value in (("evidence_ref", "audit:security"), ("requires", ["fake"]),
                              ("status", "passed")):
