@@ -4,6 +4,9 @@ Status: implemented pilot, opt-in. Backend: the existing SQLite Memory Hub v2.
 The HTTP API and stdio MCP bridge use one service and one configured store.
 No remote host has been configured by adding these files.
 
+For the host service, two named workers and an executable acceptance probe,
+use the [homelab startup guide](shared-memory-homelab.md).
+
 ## What works
 
 - Sourced capture and work checkpoints, private or shared inside an allowed project.
@@ -28,8 +31,10 @@ python -m skills.memory_hub.cli init --directory /absolute/private/memory-pilot 
 python -m skills.memory_hub.cli serve --directory /absolute/private/memory-pilot --port 8766
 ```
 
-`init` requires a new directory. It creates `auth.json` and two owner-only token
-files without printing their contents. On Windows, restrict the directory ACL
+`init` requires a new directory. By default it creates `auth.json` and two
+owner-only token files without printing their contents. Repeat `--agent NAME`
+to provision distinct normal workers; the operator identity remains separate.
+On Windows, restrict the directory ACL
 to the account running the service before placing real data in it.
 
 | Identity | Intended use |

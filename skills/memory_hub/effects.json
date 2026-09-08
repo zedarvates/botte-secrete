@@ -1,7 +1,7 @@
 {
   "schema": "botte.capability-effects/v1",
   "capability_id": "zedarvates/botte-secrete:skills/memory_hub",
-  "contract_version": "0.1.0",
+  "contract_version": "0.1.1",
   "source_hashes": {
     "SKILL.md": "f97b6f19b13b821177905ac376f80425dbc1aed255107c3208dfe5580c791c98",
     "store.py": "86aaa5c48d109e801af2f3d694faf95ae3f1353951b17c84e9ea373119be1648",
@@ -11,12 +11,14 @@
     "shared_http.py": "ba98b67ed25277de697068856ce619d1f0a960a4bea1af5d4430cdac0416e6b6",
     "shared_mcp.py": "17a5ca217827fd559a904cccec655b17ae755e2f6312c05cff90bfb3ba4a31cb",
     "scribe.py": "cd6ce4cb7950046867a2243a54c5cdf9fa736ac0166bb943cc2208f511f8d3b4",
-    "cli.py": "18494743fd3142139175f83cd40dfd1a38910e284f167616264e89b52e71e90d"
+    "cli.py": "9fc405290fd82fdec3666a0ffe7153866c6241d9919284c41b2f0c92eb82f149",
+    "smoke.py": "07da817623767a0dcd18fe840d5d01fc5465bf461d3b8a48890f8127ba49228d"
   },
   "preconditions": [
     "Configure a private directory, explicit identities, operation rights and project scopes.",
     "Keep operator credentials outside general agent tools. Use HTTPS or a loopback tunnel for remote clients.",
-    "Use current expected_version values and stable request_id values for uncertain write retries."
+    "Use current expected_version values and stable request_id values for uncertain write retries.",
+    "Run smoke as an operator with two distinct normal worker credentials for an agreed pilot project; its synthetic writes are intentional."
   ],
   "expected_effects": [
     {
@@ -50,6 +52,22 @@
       "basis": "forget performs all deletions and the hashed tombstone in one transaction.",
       "impact": "Irreversible through the API; exports, loaded context and backups remain separate.",
       "verification": "Inspect affected tables and replay the original capture."
+    },
+    {
+      "effect": "Provision named worker identities in a new private directory and generate a client MCP configuration.",
+      "scope": "Operator-selected local files; client-config prints paths and never prints token contents.",
+      "likelihood": "conditional",
+      "basis": "init validates all names before creating owner-only token and authentication files; client-config does not activate a client.",
+      "impact": "Enables separate agent identities without editing authentication JSON by hand. A partially failed init may leave files in its new directory.",
+      "verification": "Exercise distinct credentials, invalid-name rejection, existing-directory refusal and configuration output."
+    },
+    {
+      "effect": "Exercise the configured service under two worker identities using UUID-scoped synthetic observations and a real MCP subprocess.",
+      "scope": "The selected project and only the acceptance run's generated keys.",
+      "likelihood": "conditional",
+      "basis": "smoke checks sharing, privacy, quarantine, correction and replay, then attempts cleanup including after an uncertain write response.",
+      "impact": "A successful probe removes its live fixtures and leaves replay tombstones. Forced interruption or unavailable storage may leave synthetic rows; the report identifies pending keys.",
+      "verification": "Run the CLI against a restarted temporary server and inject lost responses, failed cleanup and a broken replay guard."
     }
   ],
   "downstream_effects": [
@@ -82,12 +100,14 @@
       "Real host connectivity and backup/restore remain unverified.",
       "Supplied-vector tests use synthetic vectors; no neural encoder was executed.",
       "The newest 2000 accessible active entries form the bounded candidate pool.",
-      "Legacy local MCP entry points are outside the new network authorization boundary."
+      "Legacy local MCP entry points are outside the new network authorization boundary.",
+      "Two credentials exercised from one host do not prove that two separate homelab machines are connected."
     ],
     "evidence_refs": [
       "test_shared_service.py",
       "test_shared_transport.py",
-      "test_quarantine.py"
+      "test_quarantine.py",
+      "../../docs/shared-memory-homelab.md"
     ]
   },
   "reuse": [
