@@ -244,8 +244,19 @@ Exhausted limits are reported. Concurrency can affect file samples; evidence doe
 not prove exclusive causation. Checkpoints may miss an unfinished final write.
 `unassessed_effects` counts all unique declared effects, including those with one
 supported facet. No complete-effect verification or automatic reuse promotion is
-performed. Inter-step dependency enforcement and transactional recovery remain
-separate work.
+performed. Transactional recovery remains separate work.
+
+## Explicit workflow checks and resumption
+
+The opt-in [verified skill runs](verified-skill-runs.md) companion adds explicit
+local file checks, source bindings, dependency gates and checkpointed resumption.
+It uses `--plan` or MCP `execute_verified_plan`; its report assesses declared
+predicates and retains before/after file samples. The observation mode above
+records instrumented calls and write attempts. These modes have separate
+contracts and cannot be combined through the CLI in v1. Neither proves all
+effects or complete task quality. Reference reports through existing
+`evidence_refs`; keep these versioned companions separate from effects and
+mission/handoff v1 schemas.
 
 ## Initial rollout
 

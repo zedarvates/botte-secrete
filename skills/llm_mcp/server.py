@@ -511,6 +511,22 @@ TOOLS = [
             "required": ["goal"]},
     },
     {
+        "name": "execute_verified_plan",
+        "description": "Preview or execute an explicit botte.skill-plan/v1 with local file "
+                       "checks and dependency gates. Defaults to preview. Optional project-relative "
+                       "checkpoint resumes only unstarted work. Checks verify declared conditions; "
+                       "the plan and confirm flag do not grant task authority.",
+        "inputSchema": {"type": "object", "additionalProperties": False, "properties": {
+            "plan": {"type": "object"},
+            "project": {"type": "string", "default": "."},
+            "confirm": {"type": "boolean", "default": False},
+            "dry_run": {"type": "boolean", "default": True},
+            "checkpoint": {"type": "string"},
+            "resume": {"type": "boolean", "default": False},
+            "timeout": {"type": "integer", "minimum": 1, "maximum": 3600, "default": 120}},
+            "required": ["plan"]},
+    },
+    {
         "name": "security_scan",
         "description": "Taint / data-flow security scan of a project (neuro-symbolic, "
                        "local-first). Traces attacker-controlled sources (argv, env, request, "
@@ -1238,6 +1254,17 @@ def _tool_execute_plan(args: dict) -> str:
     return json.dumps(r, ensure_ascii=False, indent=2)
 
 
+def _tool_execute_verified_plan(args: dict) -> str:
+    from skills.conductor.verified import execute_verified
+    if set(args) - {"plan", "project", "confirm", "dry_run", "checkpoint", "resume", "timeout"}:
+        return json.dumps({"error": "unknown execution arguments"})
+    r = execute_verified(args["plan"], cwd=args.get("project", "."),
+                         confirm=args.get("confirm", False), dry_run=args.get("dry_run", True),
+                         checkpoint=args.get("checkpoint"), resume=args.get("resume", False),
+                         timeout=args.get("timeout", 120))
+    return json.dumps(r, ensure_ascii=False, indent=2)
+
+
 def _tool_context_profile(args: dict) -> str:
     from skills.context_profiler import profile
     return json.dumps(profile(args.get("project", ".")), ensure_ascii=False, indent=2)
@@ -1472,6 +1499,7 @@ DISPATCH = {
     "routing_stats": _tool_routing_stats,
     "conduct": _tool_conduct,
     "execute_plan": _tool_execute_plan,
+    "execute_verified_plan": _tool_execute_verified_plan,
     "security_scan": _tool_security_scan,
     "scan_malicious": _tool_scan_malicious,
     "nn_audit": _tool_nn_audit,
