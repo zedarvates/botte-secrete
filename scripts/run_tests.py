@@ -32,6 +32,8 @@ os.environ.setdefault("BOTTE_NN_AUTO_LABELS", "0")
 # (label, command, module_prefix) — the e2e script + every module's test_<module>.
 # module_prefix is the skills/ directory prefix used for --changed matching.
 SUITES = [
+    ("cardinal", [sys.executable, "-m", "skills.cardinal.test_cardinal"], "skills/cardinal/"),
+    ("report_effects", [sys.executable, "-m", "skills.report.test_effects"], "skills/report/"),
     ("prefix_effects", [sys.executable, "-m", "skills.prefix_pruner.test_prefix_effects"], "skills/prefix_"),
     ("e2e", [sys.executable, "skills/test_e2e.py"], ""),
     ("cli_router", [sys.executable, "-m", "skills.test_cli"], "skills/"),

@@ -191,3 +191,5 @@ Run `list --json --effects` to see current coverage and source freshness.
 | `preflight` | Prompt guidance, policy writes and effects on later agent sessions. |
 | `prefix_pruner` | Context removal, retention counters, shared state writes and downstream information loss. |
 | `prefix_tree` | Plaintext prefix persistence, comparison output and receiver-baseline assumptions. |
+| `cardinal` | Scoped counter-review, input completeness, report-derived scoring and verdict persistence. |
+| `report` | Rendering loss, collision-safe file creation, partial saves and output disclosure. |
