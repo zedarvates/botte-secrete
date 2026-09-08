@@ -299,6 +299,8 @@ class MetaHarness:
     def execute(self, plan: PipelinePlan) -> Session:
         """Execute a plan step by step, respecting governance and SAFE-EXIT."""
         if self.mission is not None:
+            if self.session.plan is not None:
+                raise ValueError("mission harness instances are single-use; create a fresh attempt")
             # Validate a private snapshot at the execution boundary, including
             # plans constructed directly or changed after plan().
             plan = deepcopy(plan)

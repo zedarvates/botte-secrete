@@ -56,6 +56,8 @@ resolution or source changes invalidate the corresponding prior evidence.
 
 ## Compatibility and trust limits
 
+Each mission harness instance executes once; a fresh attempt needs a fresh
+instance so previous results cannot be reused under new evidence labels.
 Mission callers must use catalog plans. Callers may omit a context manifest to
 compile it from the lease; supplied stale or forged manifests now fail closed.
 Dirty work remains available for inspection and an explicit commit, followed
