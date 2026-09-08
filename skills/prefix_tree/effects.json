@@ -1,0 +1,93 @@
+{
+  "schema": "botte.capability-effects/v1",
+  "capability_id": "zedarvates/botte-secrete:skills/prefix_tree",
+  "contract_version": "0.1.0",
+  "source_hashes": {
+    "SKILL.md": "52e585d9d4607e415215f9bf11eec4dd361519036caec6e32ddbc1579398f6ab",
+    "__init__.py": "63a3fc679b033ed56b1a005eabbe0e197c09e1bfbec58a8cc50518c40e51d734",
+    "cli.py": "114ad9448082c2f0965123e21d7fa74e401af1910f699bac41271e083e4a9982"
+  },
+  "preconditions": [
+    "Select the operation and its actual input, output and shared user-state scope.",
+    "Preserve useful original content before replacement; inspect existing state and concurrent writers.",
+    "Treat reduction and reuse as hypotheses requiring task-context validation, not execution permission."
+  ],
+  "expected_effects": [
+    {
+      "effect": "register replaces a named full prefix and rewrites the shared JSON store.",
+      "scope": "User ~/.botte/prefix-tree-store.json and in-memory agent mapping.",
+      "likelihood": "conditional",
+      "basis": "PrefixTrie.register calls _save; prefix text is serialized without encryption.",
+      "impact": "Persists potentially private prompt text; concurrent writes or malformed prior state can lose earlier entries.",
+      "verification": "Use a temporary TREE_STORE, inspect saved full strings and preserve prior content before replacement."
+    },
+    {
+      "effect": "diff returns unchanged, an exact append suffix, or full replacement without updating the baseline.",
+      "scope": "Stored prefix, new text and returned/printed output.",
+      "likelihood": "conditional",
+      "basis": "Equality is checked first; startswith determines append; shorter or different text returns in full.",
+      "impact": "Avoids dropping whitespace or mistaking deletion for equality, but output strings are not an unambiguous transport format.",
+      "verification": "Test deletion, equality, whitespace-only append and replacement; verify stored baseline remains unchanged."
+    },
+    {
+      "effect": "common/stats read stored prefixes and print a common string or metadata.",
+      "scope": "Memory, stdout and its recipients; CLI registration arguments may also persist in shell history.",
+      "likelihood": "conditional",
+      "basis": "common_prefix and stats do not save; the savings statistic uses a fixed character heuristic.",
+      "impact": "Can disclose prompt content or agent identifiers. Estimated savings are not measured model usage.",
+      "verification": "Check output audience and confirm read operations do not change store bytes."
+    }
+  ],
+  "downstream_effects": [
+    {
+      "effect": "A receiver may process an incomplete prompt if it lacks the exact baseline or misinterprets marker-like text.",
+      "scope": "Downstream prompt reconstruction and resulting model actions.",
+      "likelihood": "plausible",
+      "basis": "The module supplies text hints but no typed transport envelope, baseline digest or acknowledgment.",
+      "impact": "Can silently change intended context; storage of a baseline does not prove receiver knowledge.",
+      "verification": "Define and validate a typed baseline-aware transport before reuse, including stale receivers and arbitrary marker-like input."
+    }
+  ],
+  "reversibility": {
+    "status": "partial",
+    "strategy": "Restore useful original text and prior store contents from preserved copies; reconcile downstream actions separately.",
+    "residual_effects": [
+      "Published or captured prompt content cannot be recalled by this module.",
+      "Prior state may be unavailable after replacement; downstream decisions remain."
+    ]
+  },
+  "retry": {
+    "semantics": "conditional",
+    "check_before_retry": "Inspect the actual output and shared state after interruption; account for completed writes, changing counters/baselines and concurrent activity.",
+    "stop_condition": "Resolve repeated persistence failures or uncertain source/state before repeating a write; do not infer task success from reduced output."
+  },
+  "required_scope": "Existing task authorization for the selected input, shared user-state writes, output destination and recipients. A stored prefix or pruning score grants no permission to change instructions or perform downstream actions.",
+  "analysis": {
+    "summary": "PrefixTrie stores full strings in a dictionary and compares them. It is not a compressed trie, sender, receiver or lossless wire protocol.",
+    "uncertainties": [
+      "No automatic baseline synchronization or receiver verification exists.",
+      "Writes are not atomic or locked; malformed JSON may be ignored before later replacement.",
+      "Plaintext retention, CLI argument history and downstream interpretation depend on the environment."
+    ],
+    "evidence_refs": [
+      "cli.py:PrefixTrie.register",
+      "cli.py:PrefixTrie.diff",
+      "cli.py:PrefixTrie.stats",
+      "../prefix_pruner/test_prefix_effects.py"
+    ]
+  },
+  "reuse": [
+    {
+      "target": "Adapt prefix comparison to a baseline-aware prompt transport.",
+      "rationale": "Exact append detection can reduce repeated payload only when both endpoints share the same baseline.",
+      "adaptations": [
+        "Introduce explicit full/append/unchanged types and a baseline identity.",
+        "Specify receiver acknowledgment, mismatch fallback and deletion semantics."
+      ],
+      "validation": "Require byte-exact reconstruction for append, replacement, empty input, whitespace, stale baselines and marker-like content in the target transport.",
+      "status": "adaptation_to_test",
+      "validated_context": null,
+      "evidence_refs": []
+    }
+  ]
+}

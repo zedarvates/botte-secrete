@@ -172,7 +172,7 @@ before consumers use it to govern workflows; do not add unsupported fields to v1
 
 ## Initial rollout
 
-The following declarations cover the first eleven capabilities. This is coverage
+The following declarations cover the initial capabilities. This is coverage
 of reviewed source descriptions, not validation of every execution or reuse.
 Run `list --json --effects` to see current coverage and source freshness.
 
@@ -189,3 +189,5 @@ Run `list --json --effects` to see current coverage and source freshness.
 | `cluster` | Status/LRU writes, backend discovery and delegation. |
 | `infra_advisor` | Host/project diagnostics and inherited discovery writes. |
 | `preflight` | Prompt guidance, policy writes and effects on later agent sessions. |
+| `prefix_pruner` | Context removal, retention counters, shared state writes and downstream information loss. |
+| `prefix_tree` | Plaintext prefix persistence, comparison output and receiver-baseline assumptions. |

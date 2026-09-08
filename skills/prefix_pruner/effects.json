@@ -1,0 +1,94 @@
+{
+  "schema": "botte.capability-effects/v1",
+  "capability_id": "zedarvates/botte-secrete:skills/prefix_pruner",
+  "contract_version": "0.1.0",
+  "source_hashes": {
+    "SKILL.md": "c3b9cff36806bcd7698f580e0ddf2b771480cd07c307605c64332f305627a156",
+    "__init__.py": "142c99a75835115d879dec1e2fc1a650f884315e41255d6f0a2d7f4e6db81721",
+    "cli.py": "428066d586b7343d0279c676a0b24e9e525fdd94c9d58009b513558323f9e64a",
+    "pruner.py": "451ee51f47d1533c8bedb8239add6e164c3e4fd7ed68d356572e9767cd234ea3"
+  },
+  "preconditions": [
+    "Select the operation and its actual input, output and shared user-state scope.",
+    "Preserve useful original content before replacement; inspect existing state and concurrent writers.",
+    "Treat reduction and reuse as hypotheses requiring task-context validation, not execution permission."
+  ],
+  "expected_effects": [
+    {
+      "effect": "prune_content removes selected recognized spans and returns the remaining original text.",
+      "scope": "Input context, returned text and CLI stdout or --output file.",
+      "likelihood": "conditional",
+      "basis": "split_sections resolves overlapping spans in source order; pruning removes rejected spans without rebuilding retained content.",
+      "impact": "Can reduce context or omit task-critical information; matching and counters do not establish semantic irrelevance.",
+      "verification": "Compare retained bytes, gaps, nested sections and source order in controlled fixtures; inspect requirements before downstream use."
+    },
+    {
+      "effect": "Multi-section pruning registers sections and updates keep/skip counters, repeatedly rewriting shared state.",
+      "scope": "User ~/.botte/prefix-tree.json, containing hashes, types, estimated counts and timestamps.",
+      "likelihood": "conditional",
+      "basis": "register_section, record_use and record_skip each save; zero/one span returns before registration.",
+      "impact": "Consumes file I/O and changes later decisions even when no text is removed. Counts describe retention decisions, not observed agent usage.",
+      "verification": "Patch PREFIX_STORE to a temporary path; compare state before and after kept and rejected cases."
+    },
+    {
+      "effect": "tree/stats read metadata; CLI --output replaces the destination and pruning notices go to stderr.",
+      "scope": "Shared metadata, output file and output recipients.",
+      "likelihood": "conditional",
+      "basis": "CLI handlers load PrefixTree; cmd_prune writes output only when requested.",
+      "impact": "Reports may reveal usage metadata or context text; file replacement can destroy an original if used as the destination.",
+      "verification": "Inspect command mode, destinations and stdout/stderr separately in a disposable fixture."
+    }
+  ],
+  "downstream_effects": [
+    {
+      "effect": "A consumer may reason from incomplete context or feed earlier pruning choices back into future pruning.",
+      "scope": "Later model tasks and the shared retention history.",
+      "likelihood": "plausible",
+      "basis": "Returned text can become a prompt; keep/skip decisions update the same history used for future selection.",
+      "impact": "Can propagate missing instructions or reinforce an unvalidated usefulness estimate.",
+      "verification": "Compare task correctness and instruction retention with the original context; record omissions and measured costs."
+    }
+  ],
+  "reversibility": {
+    "status": "partial",
+    "strategy": "Restore useful original text and prior store contents from preserved copies; reconcile downstream actions separately.",
+    "residual_effects": [
+      "Published or captured prompt content cannot be recalled by this module.",
+      "Prior state may be unavailable after replacement; downstream decisions remain."
+    ]
+  },
+  "retry": {
+    "semantics": "conditional",
+    "check_before_retry": "Inspect the actual output and shared state after interruption; account for completed writes, changing counters/baselines and concurrent activity.",
+    "stop_condition": "Resolve repeated persistence failures or uncertain source/state before repeating a write; do not infer task success from reduced output."
+  },
+  "required_scope": "Existing task authorization for the selected input, shared user-state writes, output destination and recipients. A stored prefix or pruning score grants no permission to change instructions or perform downstream actions.",
+  "analysis": {
+    "summary": "The implementation transforms text and records its own choices. It does not measure which sections an agent actually uses; regex spans and character-based token estimates require contextual review.",
+    "uncertainties": [
+      "Shared state is not project-bound; counters may reflect unrelated tasks.",
+      "Malformed history may be ignored and later replaced; writes are not atomic or locked.",
+      "Semantic necessity and real token savings are not established by scores."
+    ],
+    "evidence_refs": [
+      "pruner.py:split_sections",
+      "pruner.py:prune_content",
+      "pruner.py:PrefixTree._save",
+      "test_prefix_effects.py"
+    ]
+  },
+  "reuse": [
+    {
+      "target": "Evaluate context reduction in another agent harness.",
+      "rationale": "The transformation accepts explicit text and an injectable tree object.",
+      "adaptations": [
+        "Separate authoritative instructions from pruning candidates.",
+        "Use target-scoped state and independently measure task quality and retention."
+      ],
+      "validation": "Replay representative target tasks with and without pruning; compare required facts, task results, exact retained text and actual token usage.",
+      "status": "adaptation_to_test",
+      "validated_context": null,
+      "evidence_refs": []
+    }
+  ]
+}
