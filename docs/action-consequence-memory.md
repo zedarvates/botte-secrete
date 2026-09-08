@@ -6,6 +6,8 @@ existing SQLite service owns access rights, quarantine, receipts and deletion;
 the adapter does not create another memory database or a new network boundary.
 See the [local acceptance record](validation/action-consequence-memory-v1.json)
 for the tested scope and remaining deployment limits.
+The [two-identity host pilot](action-memory-homelab-pilot.md) provides a
+reproducible producer/consumer check for the configured homelab service.
 
 ## What an episode means
 
