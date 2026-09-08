@@ -16,7 +16,6 @@ from skills.meta_harness.lease import WorkspaceLeaseError
 from skills.meta_harness.review import ReviewError
 from skills.run_contract import (
     ContractError,
-    compile_context_manifest,
     load_mission,
     resume_base_ref,
 )
@@ -40,7 +39,6 @@ def main(argv=None) -> int:
     try:
         mission = load_mission(args.mission)
         project = Path(args.project).resolve()
-        manifest = compile_context_manifest(project, mission)
         base_ref = args.base_ref or "HEAD"
         if args.resume:
             try:
@@ -56,12 +54,10 @@ def main(argv=None) -> int:
             mission["mission_id"].encode("utf-8")
         ).hexdigest()[:24]
         run_dir = project / ".botte-cache" / "runs" / mission_key / attempt_id
-        write_json(run_dir / "context-manifest.json", manifest)
 
         harness = MetaHarness(
             workdir=str(project),
             mission=mission,
-            context_manifest=manifest,
             worker_id=args.worker_id,
             attempt_id=attempt_id,
             base_ref=base_ref,
@@ -75,6 +71,7 @@ def main(argv=None) -> int:
             )
         plan = harness.plan(plans[args.plan])
         session = harness.execute(plan)
+        write_json(run_dir / "context-manifest.json", harness.context_manifest)
         write_json(run_dir / "handoff.json", session.handoff)
         if args.format == "json":
             print(session.to_json())
