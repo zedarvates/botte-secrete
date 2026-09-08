@@ -68,3 +68,10 @@ When creating or updating declarations, use the read-only `template` command and
 the [authoring contract](../../docs/capability-effects.md). Keep substantial
 details in the sidecar, loaded only when needed. The registry's own declaration
 covers discovery and inspection, not execution of the capabilities it lists.
+
+For runtime comparison, the [observation companion](../../docs/capability-effects.md#observe-and-reconcile-a-run)
+provides `ObservationSession`, `validate_report` and `summarize` in
+`skills.capabilities.observations`. Collection is opt-in and records instrumented
+call links and bounded file evidence. A checkpoint writes a caller-selected
+report file; there is no automatic tracing or execution of verification text.
+Keep whole effects and reuse unverified when only one write facet was sampled.

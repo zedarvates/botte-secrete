@@ -69,7 +69,7 @@ names repeat; only canonical paths receive built-in command hints.
 Match their scope to the actual command and current task
 authorization. The executor carries the original snapshot as `effects_before`
 for comparison with results; it never uses a declaration to unlock a command.
-The snapshot is not revalidated at execution time. Review source or context
+The snapshot itself remains unchanged. Review source or context
 changes before relying on it. JSON contains complete details; `--effects --save`
 also writes a JSON companion because Markdown/HTML tables abbreviate values.
 
@@ -82,6 +82,17 @@ do not replay already successful mutations blindly. The orchestration's
 
 Treat reuse suggestions as candidates requiring a check in their target
 context. See the [common contract](../../docs/capability-effects.md).
+
+Use `--execute --observe-effects --json` (MCP `observe_effects: true`) to add
+a separate versioned observation report and compare declaration freshness at
+instrumented call entry. The first adapters link checkup/infra/backend/cluster
+calls and sample registry/LRU writes. Follow parent IDs to assess inherited
+effects; `effects_summary` counts each write once and retains swallowed failures
+or unfinished calls. A supported write facet is only partial evidence; network
+effects, task success and costs remain unverified. Dry-run provides no execution
+evidence. Add `--save both` to retain the full execution JSON for handoff. Inspect
+partial state before retrying after errors or timeout. See the common contract's
+observation section for coverage and schema details.
 
 Exposed via [[llm_mcp]] as `conduct` (plan) and `execute_plan` (plan + run safe
 steps). Built on [[capabilities]], [[auto_router]]; pairs with the [[control_loop]]

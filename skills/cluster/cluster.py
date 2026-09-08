@@ -30,6 +30,7 @@ from typing import Optional
 
 from skills.llm_backends import registry
 from skills.llm_backends.discovery import Backend
+from skills.capabilities.observations import observed_operation, observed_file_write
 
 _STATE = Path.home() / ".botte-cluster.json"
 
@@ -69,9 +70,11 @@ def _load_state() -> dict:
         return {}
 
 
+@observed_operation("save_lru_state")
 def _save_state(state: dict) -> None:
     try:
-        _STATE.write_text(json.dumps(state), encoding="utf-8")
+        with observed_file_write(_STATE, "/expected_effects/1"):
+            _STATE.write_text(json.dumps(state), encoding="utf-8")
     except OSError:
         pass
 
@@ -105,6 +108,7 @@ def pick(strategy: str = "lru") -> Optional[dict]:
             "latency_ms": chosen.latency_ms, "strategy": strategy}
 
 
+@observed_operation("status")
 def status(scan_subnet: bool = False) -> dict:
     ms = machines(scan_subnet=scan_subnet, fresh=scan_subnet)
     chat = _chat_backends()

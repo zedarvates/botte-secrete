@@ -1,13 +1,14 @@
 {
   "schema": "botte.capability-effects/v1",
   "capability_id": "zedarvates/botte-secrete:skills/conductor",
-  "contract_version": "0.2.1",
+  "contract_version": "0.3.0",
   "source_hashes": {
-    "SKILL.md": "4924cafd236a4ab2030f3a00bf4d7fd2cd0506453e858f9727245edd8f954894",
+    "SKILL.md": "bfad322acd189cc50f5a302aada8a3c64146cbd548d037489faecf7d9a7f1074",
     "__init__.py": "a47ff74d33ed7ea19ac4ab5781e7967deb4a4d022bb46811edf9cd46cf77e839",
     "conductor.py": "d7d8ec22e19d8b53adeeb3e3954e0c3fb11971505b3edf3aaec29d0604a3f8c1",
-    "executor.py": "aa4b5ce063ccef1da70e8b1e1e6a6e669f1da76102674dcc452f624e766f095c",
-    "cli.py": "6b61b58e3f80bc3f07f3782f11e01b1154414cb468735bc28d2b2163e65724de"
+    "executor.py": "e55b918580ffa9f8affd66ee1dc5071a381573c7473de3f3ba3f1f8d56af4694",
+    "cli.py": "fcec9bf116d630ec219e32096ccb91f0c0e3dd86ee9ac7a80cf526ebebae4cad",
+    "observed_run.py": "beed304d7e6f03622f5ba7106dac5e5d8d2e75b4bb5cdbcea3e83e0eee56e6e0"
   },
   "preconditions": [
     "Distinguish planning, saving, dry-run and execution; their effects differ.",
@@ -25,10 +26,10 @@
       "verification": "Compare default and opt-in fixture plans after removing effects; verify selected-only inspection and distinct metadata/commands for homonymous entries."
     },
     {
-      "effect": "Write Markdown/HTML plan reports with --save; --effects adds a complete JSON companion.",
+      "effect": "Write Markdown/HTML plan or execution reports with --save; --effects or --observe-effects also saves complete JSON.",
       "scope": "The current project .botte/reports directory and any consumer of the generated report.",
       "likelihood": "conditional",
-      "basis": "cli.main uses report.save and atomic_json.write_json only on the save path.",
+      "basis": "cli._save_report reserves a unique JSON filename before atomic_json.write_json; report.save handles Markdown/HTML. These writes occur only on requested save paths.",
       "impact": "Preserves expectations for handoff; consumes storage and may retain task text and private declarations.",
       "verification": "Save into a temporary project; parse the JSON companion and compare it to the full expected declaration."
     },
@@ -47,6 +48,14 @@
       "basis": "executor.execute records exit codes and output tails; cli returns nonzero for failed execution in JSON and text modes.",
       "impact": "Supports comparison with expectations; process success alone does not verify the task or every downstream effect.",
       "verification": "Fail an injected step, mutate its source metadata during execution, and verify failure plus the original snapshot are retained."
+    },
+    {
+      "effect": "With observe_effects, wrap supported child CLI calls and return a versioned partial observation report with call links and execution-time declaration comparisons.",
+      "scope": "Selected child process, private temporary checkpoints, declaration files, sampled backend registry/LRU state and the returned or explicitly saved report.",
+      "likelihood": "conditional",
+      "basis": "observed_run uses the same execution classification and launches a module wrapper for four bundled CLIs. Cooperative observation checkpoints are read and validated after exit or timeout, then the temporary directory is removed.",
+      "impact": "Exposes inherited writes, swallowed failures and unfinished calls, while adding file sampling/checkpoint overhead. Zero process exit and supported file facets do not validate full effects or task success.",
+      "verification": "Exercise real isolated subprocess output, nonzero exits and timeout after a completed write; verify retained evidence, dry-run/gates, planning mismatch and complete MCP/CLI report transport."
     }
   ],
   "downstream_effects": [
@@ -86,14 +95,16 @@
     "uncertainties": [
       "Child-command effects and total costs are not measured by the orchestration cloud_tokens field.",
       "Source hashes cover listed files only; imported modules, live services and runtime state may differ.",
-      "No automatic fail-fast, rollback, transaction or execution-time freshness check is supplied.",
-      "The llm_mcp transport is outside these skill-local source bindings; command resolution still relies on the trusted installed environment."
+      "No automatic fail-fast, rollback or transaction is supplied; optional freshness checks cover instrumented call entry only.",
+      "The llm_mcp transport is outside these skill-local source bindings; command resolution still relies on the trusted installed environment.",
+      "Observation helpers and atomic checkpoint persistence are imported dependencies outside these skill-local hashes. Coverage is cooperative, bounded and not an authenticated attestation."
     ],
     "evidence_refs": [
       "conductor.py:plan",
       "executor.py:classify",
       "executor.py:execute",
-      "cli.py:_run_execute"
+      "cli.py:_run_execute",
+      "observed_run.py:run_observed"
     ]
   },
   "reuse": [

@@ -1,12 +1,12 @@
 {
   "schema": "botte.capability-effects/v1",
   "capability_id": "zedarvates/botte-secrete:skills/infra_advisor",
-  "contract_version": "0.1.0",
+  "contract_version": "0.3.0",
   "source_hashes": {
     "SKILL.md": "8a9914f2666cf11c79e14dcb32b425e1c52ae8fc8649b8531d5cde5920f5f3b6",
     "__init__.py": "7cbfd7a1af0d25790a036cf38130cd87a0bdc945d611a237f3923b617c75059f",
-    "advisor.py": "a06400383165c8638798d7cc91d8e3f1666816347e17347db2513119832449d3",
-    "auto_audit.py": "3c70e1340b16a268c2202dbe73234786eefabfbed507dfb6d7216e83c24f2599",
+    "advisor.py": "4ac5593b4f31bad608c1bd651fc983165219d3da5dd28ce094fd72c28ec5f4ce",
+    "auto_audit.py": "082ccfed911ab939315255ee09b139ef7c86038fa14e6adf4163650e2be83b1d",
     "budget_recommender.py": "83dacf4e8f78208b6418f3a0899d2a677396bf39398e507462c5f66bd86a2dec",
     "cli.py": "feabfd1bde716fec23789cd7c5f840201962b1c853f70c4ad2a04dd01a84773c"
   },
@@ -47,6 +47,14 @@
       "basis": "advisor.recommend and budget_recommender.recommend use local rules/tables.",
       "impact": "Can guide exploration but do not verify current prices, model compatibility or target workload savings.",
       "verification": "Compare recommendations to supplied fixture inputs; obtain target measurements before claiming savings or making a purchase."
+    },
+    {
+      "effect": "Inside an explicitly enabled observation session, expose instrumented call boundaries and any supported write samples to a separate partial evidence report.",
+      "scope": "Current synchronous call context, current effects declaration and configured checkpoint/report destinations; no file contents or endpoint arguments are added by the observer.",
+      "likelihood": "conditional",
+      "basis": "Operation decorators and write contexts use skills.capabilities.observations, an imported dependency not bound by these local hashes. Registry and LRU write hooks reference existing effect indices without claiming to validate the entire effect.",
+      "impact": "Makes direct and inherited consequences traceable; adds bounded reads and optional checkpoint writes and can disclose paths, fingerprints and declarations.",
+      "verification": "Run the isolated observation fixtures in skills/conductor/test_observations.py; check inactive mode, nested parents, cache hits and partial writes, and leave uninstrumented effects unassessed."
     }
   ],
   "downstream_effects": [
@@ -86,7 +94,8 @@
     "uncertainties": [
       "llm_backends, directives_audit, context_profiler, skill_finder and report are outside these local source bindings.",
       "Unavailable sub-audits and cached metadata can limit the result without a total command failure.",
-      "Hardware price and workload-performance estimates are not current measurements."
+      "Hardware price and workload-performance estimates are not current measurements.",
+      "Optional observation reports cover instrumented synchronous calls and selected writes only; uninstrumented, concurrent, remote or background effects remain unverified."
     ],
     "evidence_refs": [
       "advisor.py:gather",

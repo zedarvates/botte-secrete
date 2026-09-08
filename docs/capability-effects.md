@@ -120,7 +120,8 @@ The MCP tools `conduct` and `execute_plan` accept the same optional
 `include_effects: true`; omitted or false preserves their previous output.
 `run_goal(..., include_effects=True)` and `execute()` retain supplied declarations
 as `effects_before` in each result, including skipped, blocked and failed steps.
-These are planning snapshots, not observations or renewed source checks.
+These remain planning snapshots. Use the separate observation mode below for
+execution-time declaration checks and partial runtime evidence.
 Classification and authorization do not depend on their content. A failed
 execution returns a nonzero CLI exit code in both text and JSON modes.
 
@@ -162,13 +163,89 @@ track those external implementations: inspect the dependency version used by
 the target operation when this matters. References are not automatically
 resolved, aggregated, or executed by the declaration inspector.
 
-For a run report, distinguish the operation/context and planning snapshot from
-observed effects, evidence, deviations, completed/ongoing steps and recoverable
-state after interruption. Such a report can be referenced through existing
-`evidence_refs`. The current executor does not generate this full effect bilan,
-check inter-step requirements, or stop dependent work automatically. A future
-machine-readable operation/bilan companion needs an explicit version and tests
-before consumers use it to govern workflows; do not add unsupported fields to v1.
+## Observe and reconcile a run
+
+```bash
+python -m skills.conductor.cli "audit my project" --execute --observe-effects --json --save both
+```
+
+`--observe-effects` requires execution mode and implies `--effects`. Python
+`run_goal(..., observe_effects=True)` and MCP `execute_plan` with
+`observe_effects: true` expose the same option. Dry-run and blocked steps produce
+`not_run` records without launching an observer. Existing execution classification
+and confirmation rules still apply.
+
+Each result adds `effects_observed` using the separate
+[`botte.effect-observations/v1` schema](schemas/effect-observations.schema.json),
+an `effects_summary`, and `effects_changed_since_plan` (true, false, or null when
+no matching execution identity is available). The original `effects_before`
+is retained. Each instrumented call re-inspects its declaration at entry;
+the report deduplicates immutable declaration snapshots by SHA-256. It retains
+the observer's UTC start time, working directory and Python version, and each
+call's actual source directory, including when its declaration is unavailable. A changed
+status or declaration is visible, but does not automatically block execution.
+
+The first adapters cover these actual synchronous calls:
+
+| Capability | Recorded operations | Sampled writes |
+|---|---|---|
+| `checkup` | `run` | Inherited writes through linked children |
+| `infra_advisor` | `auto_audit`, `gather` | Inherited registry writes |
+| `llm_backends` | `audit`, `registry.refresh`, `registry.save` | Backend registry |
+| `cluster` | `status`, `save_lru_state` | LRU state and inherited registry writes |
+
+Supported CLI commands run in a child wrapper with a private temporary checkpoint.
+Calls have unique IDs and parent IDs; one write belongs to one call, so a parent
+and its descendants do not inflate the write count. For example, follow the
+registry write's call through `registry.refresh`, `gather`, `auto_audit` and
+`checkup.run` to see the inherited consequence. A cached audit can record calls
+without any write. That does not establish that all its effects were absent.
+
+Each write records its attempted operation, absolute resource path, bounded
+before/after file size and SHA-256, and a reference to one effect in the call's
+declaration. No file contents, prompts, credentials or endpoint arguments are
+collected by this observer. Paths, fingerprints and declarations can still be
+private; existing command-output tails can contain separate sensitive data.
+
+Reconciliation deliberately checks only the `file_present_after_write` facet:
+`supported` means a returned write and a present post-write sample with a current
+declaration; `deviation` records a raised write or a missing post-write file;
+`unknown` covers unavailable/stale declarations, unfinished writes and unreadable
+samples. This never validates the whole prose effect or its preconditions.
+Even identical samples retain the write attempt. Errors absorbed by a parent
+remain visible in `failed_writes`; a successful parent does not erase them.
+
+Checkpoints are flushed at call/write boundaries. After a timeout, completed
+samples remain available and open calls remain `running`; the parent records
+`timed_out`. Invalid, missing, oversized or mismatched-run checkpoints produce
+unknown evidence. The summary recommends inspecting partial state before retry
+when interruption or failure is recorded. It does not perform rollback or retry.
+`--save` reserves a unique filename and atomically writes the complete execution
+JSON beside abbreviated Markdown/HTML; concurrent saves do not replace another
+JSON companion. An interrupted reservation can leave an empty file.
+Reference that artifact through existing `evidence_refs`; do not extend strict
+mission/handoff v1 objects with unsupported fields.
+
+For direct Python integration, `ObservationSession` is an opt-in context manager
+in `skills.capabilities.observations`. Inside it, instrumented functions retain
+their normal return values. `session.report` and `summarize(session.report)` expose
+the evidence. Its process remains `running` because the caller's process has not
+exited. `validate_report()` checks structure, bound declarations, graph references
+and evidence/comparison consistency without executing references or networking.
+
+Coverage is cooperative and partial: there is no OS-wide tracing, remote-call
+attestation, cost measurement, verified task success, or automatic discovery of
+every downstream effect. Uninstrumented commands still execute normally and get
+an explicit unknown-coverage report. An injected runner observes only synchronous
+instrumented calls in its own context. Background threads/processes do not inherit
+the session automatically. Files above 8 MiB, non-regular files and uncertain
+samples remain unknown; reports are bounded to 128 calls, 256 writes and 2 MiB.
+Exhausted limits are reported. Concurrency can affect file samples; evidence does
+not prove exclusive causation. Checkpoints may miss an unfinished final write.
+`unassessed_effects` counts all unique declared effects, including those with one
+supported facet. No complete-effect verification or automatic reuse promotion is
+performed. Inter-step dependency enforcement and transactional recovery remain
+separate work.
 
 ## Initial rollout
 

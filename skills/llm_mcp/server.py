@@ -504,6 +504,8 @@ TOOLS = [
             "goal": {"type": "string"},
             "confirm": {"type": "boolean"},
             "dry_run": {"type": "boolean"},
+            "observe_effects": {"type": "boolean", "default": False,
+                                "description": "Include declarations and a partial observed-effects report with call links; no extra authority."},
             "include_effects": {"type": "boolean", "default": False,
                                 "description": "Retain planning declarations as effects_before; not observations."}},
             "required": ["goal"]},
@@ -1231,7 +1233,8 @@ def _tool_execute_plan(args: dict) -> str:
     from skills.conductor import run_goal
     r = run_goal(args["goal"], confirm=bool(args.get("confirm", False)),
                  dry_run=bool(args.get("dry_run", False)),
-                 include_effects=bool(args.get("include_effects", False)))
+                 include_effects=bool(args.get("include_effects", False)),
+                 observe_effects=bool(args.get("observe_effects", False)))
     return json.dumps(r, ensure_ascii=False, indent=2)
 
 

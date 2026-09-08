@@ -1,11 +1,11 @@
 {
   "schema": "botte.capability-effects/v1",
   "capability_id": "zedarvates/botte-secrete:skills/checkup",
-  "contract_version": "0.1.1",
+  "contract_version": "0.3.0",
   "source_hashes": {
     "SKILL.md": "36de63508a244feaf69f40e756f5d26e12ba6a9e51bdfd8ec382466760178a48",
     "__init__.py": "ef6b9260d322843b5bdbba8d0af39c54a1e572cc4c0275a6ffd0e9805154bf58",
-    "cli.py": "5334396c4706b004fc84dcc30876b7416ae9e4e63893accd0aea6448ffe94764"
+    "cli.py": "6cf9bc2414b120bb35b28adcb470f0c1011c00d33b5edf7f6109a2af7e0135d1"
   },
   "preconditions": [
     "A readable target project and installed dependencies for the intended diagnostics; unavailable scanners must remain explicit in interpretation.",
@@ -38,6 +38,14 @@
       "basis": "main prints diagnostic data and calls report.save when selected; --pr-comment returns before --save and performs no GitHub API call.",
       "impact": "Preserves observations but can retain sensitive project details. The CLI returns zero after report production even when drift is present.",
       "verification": "Compare parsed JSON with findings and scanner availability; inspect saved destinations and exit status. Test any external CI gate against report fields rather than exit zero alone."
+    },
+    {
+      "effect": "Inside an explicitly enabled observation session, expose instrumented call boundaries and any supported write samples to a separate partial evidence report.",
+      "scope": "Current synchronous call context, current effects declaration and configured checkpoint/report destinations; no file contents or endpoint arguments are added by the observer.",
+      "likelihood": "conditional",
+      "basis": "Operation decorators and write contexts use skills.capabilities.observations, an imported dependency not bound by these local hashes. Registry and LRU write hooks reference existing effect indices without claiming to validate the entire effect.",
+      "impact": "Makes direct and inherited consequences traceable; adds bounded reads and optional checkpoint writes and can disclose paths, fingerprints and declarations.",
+      "verification": "Run the isolated observation fixtures in skills/conductor/test_observations.py; check inactive mode, nested parents, cache hits and partial writes, and leave uninstrumented effects unassessed."
     }
   ],
   "downstream_effects": [
@@ -86,7 +94,8 @@
       "Only skill-local entry points are bound; imported analyzers, discovery, host profiling and report code are outside these source hashes.",
       "Scanner availability, false positives/negatives, runtime metadata and heuristic cost estimates vary by environment.",
       "The CLI supplies no automatic fix, outcome verifier or failure gate for drift findings.",
-      "policy_committed indicates file presence only, and BOTTE_CHECKUP_CONTEXT=github-pr changes wiring applicability."
+      "policy_committed indicates file presence only, and BOTTE_CHECKUP_CONTEXT=github-pr changes wiring applicability.",
+      "Optional observation reports cover instrumented synchronous calls and selected writes only; uninstrumented, concurrent, remote or background effects remain unverified."
     ],
     "evidence_refs": [
       "cli.py:run",

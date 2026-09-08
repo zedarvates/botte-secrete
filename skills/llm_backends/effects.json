@@ -1,13 +1,13 @@
 {
   "schema": "botte.capability-effects/v1",
   "capability_id": "zedarvates/botte-secrete:skills/llm_backends",
-  "contract_version": "0.1.0",
+  "contract_version": "0.3.0",
   "source_hashes": {
     "SKILL.md": "7fbde5c6b2af1394280346f6860f6b2c7ef27358600a669f3a5e6daf56b163b9",
     "__init__.py": "eca04ab1a01da980fdfff0125043a40cb68a83bcfc484a05862f5bffdd58bd1f",
-    "registry.py": "c9dfe3281daae9e676c4557a27dd86c494900ba2f784d907e2bb95b3e62d1c2e",
+    "registry.py": "760617183d341c44798ebd6682b81e867afc04b26e71db738ce1478442866edd",
     "discovery.py": "1f5c1a4223704a634b68a90353bcd112cacef82e79db27c8faba56189c8a4e5b",
-    "audit.py": "bf48db3cfaa0e2731f2522c516abcfd1cdbe0d50281dbd90c7fc145ecd68a570",
+    "audit.py": "ac9cd0b190a3f627c612679e6ef18eed79b8906a25c6dc8fa8bd63df81a2b5bb",
     "client.py": "a0cb44947eca9895ff4a9ce0b71a7d81b8e8e48f560dd1c96bc65192911c1f9c",
     "cli.py": "97b85651dea30abb836261230d08946b4f5961ff3ceed6f1361d8640d4fd5c00"
   },
@@ -48,6 +48,14 @@
       "basis": "client._post sends an HTTP POST; chat_json loops up to retries+1 with a corrective prompt, while usage comes from backend responses.",
       "impact": "Uses compute and may retain or disclose input and output at the endpoint. Parsed JSON and a successful reply do not establish task correctness.",
       "verification": "Mock the HTTP response, inspect the transmitted body and count malformed-JSON repair calls; do not send private data to test fixtures."
+    },
+    {
+      "effect": "Inside an explicitly enabled observation session, expose instrumented call boundaries and any supported write samples to a separate partial evidence report.",
+      "scope": "Current synchronous call context, current effects declaration and configured checkpoint/report destinations; no file contents or endpoint arguments are added by the observer.",
+      "likelihood": "conditional",
+      "basis": "Operation decorators and write contexts use skills.capabilities.observations, an imported dependency not bound by these local hashes. Registry and LRU write hooks reference existing effect indices without claiming to validate the entire effect.",
+      "impact": "Makes direct and inherited consequences traceable; adds bounded reads and optional checkpoint writes and can disclose paths, fingerprints and declarations.",
+      "verification": "Run the isolated observation fixtures in skills/conductor/test_observations.py; check inactive mode, nested parents, cache hits and partial writes, and leave uninstrumented effects unassessed."
     }
   ],
   "downstream_effects": [
@@ -88,7 +96,8 @@
       "Registry writes are not atomic or protected by a cross-process lock.",
       "Backend URLs and response usage fields are supplied by configuration or remote servers.",
       "Model recommendations do not verify current prices, compatibility, throughput or quality.",
-      "The optional project profiler and interpreter/runtime behavior are outside these local source bindings."
+      "The optional project profiler and interpreter/runtime behavior are outside these local source bindings.",
+      "Optional observation reports cover instrumented synchronous calls and selected writes only; uninstrumented, concurrent, remote or background effects remain unverified."
     ],
     "evidence_refs": [
       "registry.py:refresh",

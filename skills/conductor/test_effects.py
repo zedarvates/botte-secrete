@@ -208,6 +208,42 @@ class PlanningEffectsTests(unittest.TestCase):
                         self.assertEqual(step[effects_key]["contract"], self.contract)
 
 
+    def test_mcp_observation_opt_in_implies_declarations_and_respects_dry_run(self):
+        from skills.llm_mcp.server import TOOLS, handle
+        definition = next(t for t in TOOLS if t["name"] == "execute_plan")
+        self.assertFalse(definition["inputSchema"]["properties"]["observe_effects"]["default"])
+        with patch("skills.conductor.observed_run.run_observed") as runner:
+            response = handle({"jsonrpc": "2.0", "id": 9, "method": "tools/call", "params": {
+                "name": "execute_plan", "arguments": {"goal": "fixture", "dry_run": True,
+                                                        "observe_effects": True}}})
+        runner.assert_not_called()
+        payload = json.loads(response["result"]["content"][0]["text"])
+        result = payload["results"][0]
+        self.assertEqual(result["effects_before"]["contract"], self.contract)
+        self.assertEqual(result["effects_observed"]["process"]["status"], "not_run")
+
+    def test_saved_execution_contains_complete_observation_companion(self):
+        before = Path.cwd()
+        try:
+            os.chdir(self.root)
+            reports = []
+            with patch("skills.report.timestamped_name", side_effect=lambda name, ext: f"fixed.{ext}"):
+                for _ in range(2):
+                    with contextlib.redirect_stdout(io.StringIO()) as output:
+                        code = cli(["fixture", "--observe-effects", "--execute", "--dry-run",
+                                    "--json", "--save", "both"])
+                    self.assertEqual(code, 0)
+                    reports.append(json.loads(output.getvalue()))
+            self.assertNotEqual(reports[0]["effects_json"], reports[1]["effects_json"])
+            for result in reports:
+                complete = json.loads(Path(result["effects_json"]).read_text(encoding="utf-8"))
+                self.assertEqual(complete, result)
+                self.assertEqual(complete["results"][0]["effects_observed"]["schema"],
+                                 "botte.effect-observations/v1")
+        finally:
+            os.chdir(before)
+
+
 def main() -> int:
     result = unittest.TextTestRunner().run(unittest.defaultTestLoader.loadTestsFromTestCase(PlanningEffectsTests))
     failed = len(result.failures) + len(result.errors)
