@@ -1,7 +1,7 @@
 ---
 name: conductor
 layer: DECIDE
-description: Route a high-level goal to an ordered, local-first plan of capabilities — the generalised router — and optionally EXECUTE the plan's read-only steps. Reads the capability registry/curator, composes steps ordered by the system's layers (SENSE→DECIDE→ACT→REMEMBER→GOVERN→DEPLOY), annotates each local vs cloud with a concrete command, and estimates the goal's effort. The executor runs the safe analysis steps unattended and confirm-gates anything that mutates state or escalates to the cloud. Use when the user states a goal and you need to decide which botte capabilities to use in what order (or run them), or asks "how should I approach X with this toolkit".
+description: Select and order Botte capabilities for a goal, preview their commands, or execute a trusted plan within existing task authority. Use explicit skill plans when local artifact checks, dependencies or checkpointed resumption are needed. Selection is local and lexical; inspect selected skill instructions to confirm applicability before execution.
 ---
 
 # conductor — goal → ordered plan of capabilities
@@ -75,7 +75,7 @@ also writes a JSON companion because Markdown/HTML tables abbreviate values.
 
 After execution, distinguish a zero process exit from verified task success.
 Record actual changes, evidence, partial effects, deviations and the next
-action in the task report. A failed step does not stop later steps, and a
+action in the task report. In legacy execution a failed step does not stop later steps, and a
 timeout does not prove that no work happened. Inspect state before retrying;
 do not replay already successful mutations blindly. The orchestration's
 `cloud_tokens` value does not account for model calls made by child commands.
@@ -93,6 +93,24 @@ effects, task success and costs remain unverified. Dry-run provides no execution
 evidence. Add `--save both` to retain the full execution JSON for handoff. Inspect
 partial state before retrying after errors or timeout. See the common contract's
 observation section for coverage and schema details.
+
+## Explicit checks and checkpoints
+
+For a workflow with required artifacts or resumption, read
+[verified skill runs](../../docs/verified-skill-runs.md). Its separate
+`botte.skill-plan/v1` lists commands, local pre/postcondition checks, bound
+source files and explicit dependencies. The lexical plan's layer order does
+not establish those dependencies. The CLI `--plan` and MCP
+`execute_verified_plan` preview by default; Python exposes `execute_verified`.
+
+This mode distinguishes process exits from verified local predicates, records
+observed file changes, and blocks consumers of unavailable results. A private
+checkpoint permits resuming unstarted work after rechecking inputs, successful
+outputs and bound sources.
+Started but unresolved work requires state reconciliation. Read the report's
+coverage: file checks cannot establish all downstream effects or model quality.
+Reference the report through existing handoff evidence fields; never equate a
+report's `verified` status with an independently verified task-quality label.
 
 Exposed via [[llm_mcp]] as `conduct` (plan) and `execute_plan` (plan + run safe
 steps). Built on [[capabilities]], [[auto_router]]; pairs with the [[control_loop]]

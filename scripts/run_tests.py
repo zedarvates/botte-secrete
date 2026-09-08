@@ -57,6 +57,8 @@ SUITES = [
     ("cluster", [sys.executable, "-m", "skills.cluster.test_cluster"], "skills/cluster/"),
     ("conductor", [sys.executable, "-m", "skills.conductor.test_conductor"], "skills/conductor/"),
     ("conductor_effects", [sys.executable, "-m", "skills.conductor.test_effects"], "skills/conductor/"),
+    ("verified_runs", [sys.executable, "-m", "skills.conductor.test_verified"], "skills/conductor/"),
+    ("verified_pilots", [sys.executable, "-m", "skills.conductor.test_verified_pilots"], "skills/conductor/"),
     ("effects_operations", [sys.executable, "-m", "skills.capabilities.test_effects_operations"], "skills/capabilities/"),
     ("effect_observations", [sys.executable, "-m", "skills.conductor.test_observations"], "skills/conductor/"),
     ("control_loop", [sys.executable, "-m", "skills.control_loop.test_control_loop"], "skills/control_loop/"),

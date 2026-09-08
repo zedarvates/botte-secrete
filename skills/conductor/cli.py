@@ -74,7 +74,11 @@ def _run_execute(args) -> int:
 def main(argv=None) -> int:
     force_utf8()
     p = argparse.ArgumentParser(prog="conductor", description=__doc__)
-    p.add_argument("goal")
+    p.add_argument("goal", nargs="?")
+    p.add_argument("--plan", help="explicit botte.skill-plan/v1 JSON; preview unless --execute")
+    p.add_argument("--project", default=".", help="project root for an explicit plan")
+    p.add_argument("--checkpoint", help="project-relative private skill-run JSON checkpoint")
+    p.add_argument("--resume", action="store_true", help="resume unstarted work from --checkpoint")
     p.add_argument("--json", action="store_true")
     p.add_argument("--effects", action="store_true",
                    help="include selected capabilities' effects declarations; no extra authority")
@@ -95,6 +99,22 @@ def main(argv=None) -> int:
         if not args.execute:
             p.error("--observe-effects requires --execute")
         args.effects = True
+
+    if args.plan:
+        if args.goal or args.save or args.effects:
+            p.error("--plan has its own goal and effects; use --checkpoint to retain its report")
+        from skills.conductor.verified import execute_verified, read_document
+        try:
+            explicit = read_document(args.plan)
+            r = execute_verified(explicit, cwd=args.project, confirm=args.confirm,
+                                 dry_run=args.dry_run or not args.execute, timeout=args.timeout,
+                                 checkpoint=args.checkpoint, resume=args.resume)
+        except (OSError, ValueError) as exc:
+            r = {"error": str(exc)}
+        print(json.dumps(r, ensure_ascii=False, indent=2))
+        return 1 if "error" in r or (r["mode"] != "dry_run" and not r["complete"]) else 0
+    if not args.goal or args.checkpoint or args.resume or args.project != ".":
+        p.error("provide a goal, or use --plan for checkpointed execution")
 
     if args.execute:
         return _run_execute(args)

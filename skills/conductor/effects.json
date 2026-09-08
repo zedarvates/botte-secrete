@@ -1,19 +1,20 @@
 {
   "schema": "botte.capability-effects/v1",
   "capability_id": "zedarvates/botte-secrete:skills/conductor",
-  "contract_version": "0.3.0",
+  "contract_version": "0.4.0",
   "source_hashes": {
-    "SKILL.md": "bfad322acd189cc50f5a302aada8a3c64146cbd548d037489faecf7d9a7f1074",
-    "__init__.py": "a47ff74d33ed7ea19ac4ab5781e7967deb4a4d022bb46811edf9cd46cf77e839",
+    "SKILL.md": "4df426155d42cc23ff7423dfdcc072cfb5e4be607fb1e3888a6bb0a4a6be0377",
+    "__init__.py": "e9b15c49cb32b65ebb539c65786e92906b6d892449c74e82d0203bf0f972fa4a",
     "conductor.py": "d7d8ec22e19d8b53adeeb3e3954e0c3fb11971505b3edf3aaec29d0604a3f8c1",
     "executor.py": "e55b918580ffa9f8affd66ee1dc5071a381573c7473de3f3ba3f1f8d56af4694",
-    "cli.py": "fcec9bf116d630ec219e32096ccb91f0c0e3dd86ee9ac7a80cf526ebebae4cad",
-    "observed_run.py": "beed304d7e6f03622f5ba7106dac5e5d8d2e75b4bb5cdbcea3e83e0eee56e6e0"
+    "cli.py": "dad275db09a12cee2fc9b7c8f06436ebabf5793b5a946a14e6183b8e33d5b806",
+    "observed_run.py": "beed304d7e6f03622f5ba7106dac5e5d8d2e75b4bb5cdbcea3e83e0eee56e6e0",
+    "verified.py": "d2fb2a143b1dba804d76261784a4795b18588459330e562fdb1ba92a6bb6dcd2"
   },
   "preconditions": [
     "Distinguish planning, saving, dry-run and execution; their effects differ.",
     "Execution expects a trusted plan and current authorization for each resolved command, project and network scope.",
-    "Inspect placeholders and dependencies; a failed step does not stop later steps.",
+    "Legacy execution continues after failures. For artifact prerequisites or resumption, supply a trusted botte.skill-plan/v1 with meaningful local checks and explicit dependencies.",
     "Use --effects or MCP include_effects for optional declarations. Selection uses source paths; matching hashes are a planning snapshot, not an execution lock."
   ],
   "expected_effects": [
@@ -56,6 +57,14 @@
       "basis": "observed_run uses the same execution classification and launches a module wrapper for four bundled CLIs. Cooperative observation checkpoints are read and validated after exit or timeout, then the temporary directory is removed.",
       "impact": "Exposes inherited writes, swallowed failures and unfinished calls, while adding file sampling/checkpoint overhead. Zero process exit and supported file facets do not validate full effects or task success.",
       "verification": "Exercise real isolated subprocess output, nonzero exits and timeout after a completed write; verify retained evidence, dry-run/gates, planning mismatch and complete MCP/CLI report transport."
+    },
+    {
+      "effect": "Execute an explicit skill plan with local pre/postcondition checks, source bindings, dependency gates and optional atomic checkpoints.",
+      "scope": "Declared project-relative observations, private checkpoint and lock, dispatched child-command resources, and returned compact evidence.",
+      "likelihood": "conditional",
+      "basis": "verified.execute_verified validates the full plan, uses exact canonical command matching for unattended dispatch, observes bounded file state, and rechecks required inputs, outputs and source bindings before dependent consumption or resumption.",
+      "impact": "Separates process exits from verified local predicates; detects partial file changes, blocks unavailable dependencies and avoids automatically repeating started unresolved work. Unknown child costs and unobserved resources remain explicit.",
+      "verification": "Run test_verified and test_verified_pilots in temporary projects: actual subprocess writes and resumption, incomplete output and interruption, inherited checkup registry creation with fixture discovery, and prefix-context retention."
     }
   ],
   "downstream_effects": [
@@ -68,10 +77,10 @@
       "verification": "Review evidence and actual state before the next action; reassess source freshness and target scope."
     },
     {
-      "effect": "Partial work can remain after failure or timeout, while later steps may still run.",
+      "effect": "Partial work can remain after failure or timeout. Legacy execution continues; explicit verified plans gate dependent work using declared local predicates.",
       "scope": "Child-command resources and subsequent steps in the same plan.",
       "likelihood": "conditional",
-      "basis": "The executor reports failures and continues its loop; it provides no transaction or automatic rollback.",
+      "basis": "Legacy executor.execute continues its loop. verified.execute_verified blocks unavailable dependencies, continues independent branches, and never automatically replays started unresolved work. Neither path is transactional.",
       "impact": "Blindly repeating a plan can duplicate successful writes or operate on incomplete earlier outputs.",
       "verification": "Reconcile affected resources and each prior step result before deciding which steps to retry."
     }
@@ -91,20 +100,24 @@
   },
   "required_scope": "Planning needs read access to selected metadata; saving and execution need the current task authorization for the actual output and child-command resources. --confirm and declarations do not supply that authorization.",
   "analysis": {
-    "summary": "Planning, persistence and execution have distinct consequences. Path-based association preserves each selected entry and its metadata; a matching display name elsewhere does not acquire a built-in command. Optional effects snapshots remain independent of classification and outcome verification.",
+    "summary": "Planning, persistence and execution have distinct consequences. Path-based association preserves each selected entry and its metadata; a matching display name elsewhere does not acquire a built-in command. Optional effects snapshots remain independent of classification and outcome verification. The opt-in verified executor supplies a separate versioned local-evidence and checkpoint companion; declared predicates do not establish complete task quality.",
     "uncertainties": [
       "Child-command effects and total costs are not measured by the orchestration cloud_tokens field.",
       "Source hashes cover listed files only; imported modules, live services and runtime state may differ.",
-      "No automatic fail-fast, rollback or transaction is supplied; optional freshness checks cover instrumented call entry only.",
+      "Legacy execution supplies no automatic dependency gate; optional observation checks declarations at instrumented call entry. The explicit mode checks only listed files and predicates; it is not a transaction, sandbox, authenticated proof store or fleet lease.",
       "The llm_mcp transport is outside these skill-local source bindings; command resolution still relies on the trusted installed environment.",
-      "Observation helpers and atomic checkpoint persistence are imported dependencies outside these skill-local hashes. Coverage is cooperative, bounded and not an authenticated attestation."
+      "Observation helpers and atomic checkpoint persistence are imported dependencies outside these skill-local hashes. Coverage is cooperative, bounded and not an authenticated attestation.",
+      "The context fingerprint includes the project and Python interpreter but does not inventory remote services or installed packages; observation snapshots do not defend against concurrent hostile filesystem mutation."
     ],
     "evidence_refs": [
       "conductor.py:plan",
       "executor.py:classify",
       "executor.py:execute",
       "cli.py:_run_execute",
-      "observed_run.py:run_observed"
+      "observed_run.py:run_observed",
+      "verified.py:execute_verified",
+      "test_verified.py",
+      "test_verified_pilots.py"
     ]
   },
   "reuse": [
