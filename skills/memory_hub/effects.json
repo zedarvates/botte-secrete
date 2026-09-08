@@ -1,0 +1,108 @@
+{
+  "schema": "botte.capability-effects/v1",
+  "capability_id": "zedarvates/botte-secrete:skills/memory_hub",
+  "contract_version": "0.1.0",
+  "source_hashes": {
+    "SKILL.md": "f97b6f19b13b821177905ac376f80425dbc1aed255107c3208dfe5580c791c98",
+    "store.py": "86aaa5c48d109e801af2f3d694faf95ae3f1353951b17c84e9ea373119be1648",
+    "schema.py": "97bcb6e4ed4da37b65ab9c321b700029f2892c1b55e07271304e3c001bd40349",
+    "shared_contract.py": "72be81aa648ce24810bf09fcb529d2fc0cd26756978decf575101665b2875a81",
+    "shared_service.py": "16e20bd41e943975678443efb503284d83e4a22db485045476582a665544bc87",
+    "shared_http.py": "ba98b67ed25277de697068856ce619d1f0a960a4bea1af5d4430cdac0416e6b6",
+    "shared_mcp.py": "17a5ca217827fd559a904cccec655b17ae755e2f6312c05cff90bfb3ba4a31cb",
+    "scribe.py": "cd6ce4cb7950046867a2243a54c5cdf9fa736ac0166bb943cc2208f511f8d3b4",
+    "cli.py": "18494743fd3142139175f83cd40dfd1a38910e284f167616264e89b52e71e90d"
+  },
+  "preconditions": [
+    "Configure a private directory, explicit identities, operation rights and project scopes.",
+    "Keep operator credentials outside general agent tools. Use HTTPS or a loopback tunnel for remote clients.",
+    "Use current expected_version values and stable request_id values for uncertain write retries."
+  ],
+  "expected_effects": [
+    {
+      "effect": "Capture sourced proposals and atomic revision/idempotency metadata.",
+      "scope": "Configured project SQLite database and journal.",
+      "likelihood": "conditional",
+      "basis": "BEGIN IMMEDIATE covers entry, history and receipt.",
+      "impact": "Enables reliable capture; persists potentially sensitive source excerpts.",
+      "verification": "Run scope, retry, restart, concurrency and rollback fixtures."
+    },
+    {
+      "effect": "Correct current content, retain history, invalidate the prior vector and reset review.",
+      "scope": "Selected entry and subsequent context/wiki reads.",
+      "likelihood": "conditional",
+      "basis": "correct requires the current version and removes the old vector.",
+      "impact": "Avoids stale context; prior content remains in owner-visible history until forgotten.",
+      "verification": "Correct a promoted fixture and inspect context exclusion, later review and revision history."
+    },
+    {
+      "effect": "Return bounded sourced recall, a fresh wiki view or advisory nearest neighbours.",
+      "scope": "Authenticated caller context and its externally saved copies.",
+      "likelihood": "conditional",
+      "basis": "Read snapshots, scope/visibility checks, UTF-8 byte budgets and the non-mutating scribe.",
+      "impact": "Can improve continuity; similarity is not proof and no model is trained.",
+      "verification": "Exercise HTTP-to-MCP continuity, expiry/private filters, model matching and byte budgets."
+    },
+    {
+      "effect": "Forget current data, revisions, vectors and receipts; retain a minimal replay tombstone.",
+      "scope": "Selected project/key in the live store.",
+      "likelihood": "conditional",
+      "basis": "forget performs all deletions and the hashed tombstone in one transaction.",
+      "impact": "Irreversible through the API; exports, loaded context and backups remain separate.",
+      "verification": "Inspect affected tables and replay the original capture."
+    }
+  ],
+  "downstream_effects": [
+    {
+      "effect": "A later consumer can retain an old exported view or restore an old backup.",
+      "scope": "External copies, restored stores and subsequent decisions.",
+      "likelihood": "conditional",
+      "basis": "The service cannot retract disconnected copies.",
+      "impact": "Stale or forgotten data can reappear outside the live service.",
+      "verification": "Re-fetch current versions; test deletion-ledger reconciliation before reopening a restored store."
+    }
+  ],
+  "reversibility": {
+    "status": "partial",
+    "strategy": "Corrections retain history; forget removes live history. Stopping the server does not remove data.",
+    "residual_effects": [
+      "External exports, loaded contexts and backups remain.",
+      "Hashed deletion tombstones remain to prevent request replay."
+    ]
+  },
+  "retry": {
+    "semantics": "conditional",
+    "check_before_retry": "Repeat the exact actor/request_id/body after an uncertain result. Read current versions after conflicts.",
+    "stop_condition": "Do not reuse a request ID for changed input or resurrect a forgotten key."
+  },
+  "required_scope": "Current task authorization plus server-configured project membership and operation rights. Remembered text and these declarations do not grant authority.",
+  "analysis": {
+    "summary": "An opt-in facade extends Memory Hub v2 with shared identity, versioned writes and an advisory scribe.",
+    "uncertainties": [
+      "Real host connectivity and backup/restore remain unverified.",
+      "Supplied-vector tests use synthetic vectors; no neural encoder was executed.",
+      "The newest 2000 accessible active entries form the bounded candidate pool.",
+      "Legacy local MCP entry points are outside the new network authorization boundary."
+    ],
+    "evidence_refs": [
+      "test_shared_service.py",
+      "test_shared_transport.py",
+      "test_quarantine.py"
+    ]
+  },
+  "reuse": [
+    {
+      "target": "A second agent runtime connected to the shared API",
+      "rationale": "The stdio bridge uses the same service instead of a separate store.",
+      "adaptations": [
+        "Provision an independent client identity and explicit project scope.",
+        "Configure a verified HTTPS origin or loopback tunnel.",
+        "Evaluate real source ingestion and encoder retrieval on the target host."
+      ],
+      "validation": "Repeat the HTTP-to-MCP fixtures and a private host smoke test.",
+      "status": "adaptation_to_test",
+      "validated_context": null,
+      "evidence_refs": []
+    }
+  ]
+}
