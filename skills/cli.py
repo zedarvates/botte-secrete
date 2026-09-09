@@ -31,6 +31,7 @@ _COMMANDS = {
     "doctor": ("skills.checkup.cli", "checkup + machine scan + ranked actions"),
     "checkup": ("skills.checkup.cli", "drift checkup"),
     "route": ("skills.auto_router.cli", "0-token routing decision"),
+    "needle2": ("skills.tool_router.needle2_cli", "advisory read-only memory routing"),
     "dashboard": ("skills.dashboard.cli", "cost/savings dashboard"),
     "bootstrap": ("skills.bootstrap.cli", "deploy botte into a project"),
     "mcp": ("skills.llm_mcp.server", "MCP server (stdio)"),

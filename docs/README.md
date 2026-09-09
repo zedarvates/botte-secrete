@@ -20,6 +20,7 @@ the code in `skills/<name>/SKILL.md`.
 | Connect an MCP-compatible agent | [MCP integration](mcp-integration.md) |
 | Connect Cursor or Windsurf | [Cursor and Windsurf](integrations/cursor-windsurf-mcp.md) |
 | Evaluate a Hermes integration | [Hermes](integrations/hermes.md) |
+| Evaluate Needle 2 for memory tools | [Consultative CPU pilot](needle2-memory-pilot.md) |
 | Use the Loop Optimizer safely | [Loop Optimizer](loop-optimizer.md) |
 | Build and capture the public dashboard | [Dashboard capture](dashboard-capture.md) |
 | Regenerate README visuals | [Documentation visuals](screenshots-plan.md) |
