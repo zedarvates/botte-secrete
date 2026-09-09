@@ -1,0 +1,97 @@
+{
+  "schema": "botte.capability-effects/v1",
+  "capability_id": "zedarvates/botte-secrete:skills/events",
+  "contract_version": "0.1.0",
+  "source_hashes": {
+    "SKILL.md": "ddabfbe1705df6440c3cfe07e510b477b24aa143cde83a152cebcd6610926cb3",
+    "__init__.py": "dfa92a29b03038649f1896b8b2f93d7c371ac9d69d251539736dffd5ced4fcad",
+    "events.py": "99d40f3fe68c439a9c1954608a3502a39881682e425284cc84f34ead53d69b63",
+    "cli.py": "da3764d471e0ea5c62aa7554a428b8cba24b336ef0dc2e7031a749658e83ec71",
+    "export.py": "e8b80e8e10d1ded49a70d289f4a688dc417c9196a42d6036b7b268618546e8ea"
+  },
+  "preconditions": [
+    "Select the operation explicitly: tail/read, append, follow, clear or export.",
+    "Use JSON-compatible, sanitized event fields and a project/output path within the current task scope.",
+    "Treat rotation, partial logs and duplicated follower events as possible; this is not a durable exactly-once event bus.",
+    "The export helpers may require optional pandas/Parquet dependencies; developer load-test utilities are outside this declaration."
+  ],
+  "expected_effects": [
+    {
+      "effect": "Append a timestamped row and create .botte if needed; an existing large log may first be reduced to its newest half.",
+      "scope": "The selected project .botte/events.jsonl and its retained history.",
+      "likelihood": "conditional",
+      "basis": "events.log_event serializes before mutation, calls _maybe_rotate and then appends; ordinary path/serialization failures are best-effort.",
+      "impact": "Makes decisions visible; consumes storage and can remove older history on rotation. A single large append can exceed the rotation threshold.",
+      "verification": "Append sanitized fixture rows and read them back; force a small threshold and check which history remains."
+    },
+    {
+      "effect": "Read or follow retained rows, omitting malformed JSON lines; follow polls repeatedly until its caller stops.",
+      "scope": "Local event file, CPU/I/O, caller output and any stdout capture.",
+      "likelihood": "conditional",
+      "basis": "read_events reads the current file; follow_events polls and resets its position when the retained file shrinks.",
+      "impact": "Enables debugging and replay; reads can expose supplied metadata and following may repeat retained rows after rotation.",
+      "verification": "Use fixture logs with a malformed line and a rotation, then inspect emitted rows without triggering external actions."
+    },
+    {
+      "effect": "Delete the log when clear is requested, or create/overwrite an export output when an export helper is invoked.",
+      "scope": "The project log or the explicit/derived CSV/Parquet output path.",
+      "likelihood": "conditional",
+      "basis": "clear_events unlinks the log; export helpers write their output. CSV projects selected fields and shortens reason text.",
+      "impact": "Clearing removes local evidence; exports can preserve or disclose private fields and are not always lossless or reversible.",
+      "verification": "Use a copied fixture, check the distinct output path before export, compare retained fields and verify clear only targets that fixture."
+    }
+  ],
+  "downstream_effects": [
+    {
+      "effect": "Dashboards, replay tools or external consumers may draw conclusions or initiate actions from retained events.",
+      "scope": "Consumers of the local log and any exported copies.",
+      "likelihood": "plausible",
+      "basis": "The logger supplies caller-provided observations; it does not attest to external action completion or control consumers.",
+      "impact": "Missing, duplicate or rotated rows can distort counts or lead a consumer to repeat work.",
+      "verification": "Reconcile event identifiers and independent task evidence before making a state-changing decision."
+    }
+  ],
+  "reversibility": {
+    "status": "partial",
+    "strategy": "Ordinary appends can be superseded by a correcting observation. Restore cleared/rotated history only from an existing authorized backup; handle exported copies separately.",
+    "residual_effects": [
+      "Removed history cannot be reconstructed from the remaining log alone.",
+      "Exports and disclosures to consumers are not recalled by deleting the local log."
+    ]
+  },
+  "retry": {
+    "semantics": "non_idempotent",
+    "check_before_retry": "Check whether an append already exists and whether rotation occurred. Repeated appends have new timestamps; readers/followers are not exactly-once acknowledgments.",
+    "stop_condition": "Stop repeated writes on the same unresolved path/serialization error; never infer permission to repeat the underlying action from an absent log row."
+  },
+  "required_scope": "Existing task authorization for reading or mutating the selected project log, and separately for clearing history or writing/sharing exports.",
+  "analysis": {
+    "summary": "The event log is a useful local observation channel with explicit loss, retention and retry limits. It provides no durability receipt, action proof or automatic privacy guarantee.",
+    "uncertainties": [
+      "Persistence is best-effort; caller success does not establish that an event is present.",
+      "Concurrent append/rotation and follower replay are not transactional.",
+      "Event payloads and export destinations are supplied by callers and may contain identifying data."
+    ],
+    "evidence_refs": [
+      "events.py:log_event",
+      "events.py:_maybe_rotate",
+      "events.py:follow_events",
+      "events.py:clear_events",
+      "export.py:export_csv"
+    ]
+  },
+  "reuse": [
+    {
+      "target": "Use retained decisions to investigate routing behavior or declaration coverage.",
+      "rationale": "Timestamped operation records provide context for comparing what a caller intended with what it reported.",
+      "adaptations": [
+        "Account for retention windows, duplicate rows and missing events.",
+        "Keep detailed outcome evidence in the task report; sanitize any shared extract."
+      ],
+      "validation": "Compare known fixture actions with a log containing a duplicate, a malformed row and rotated history; report uncertainty instead of treating the log as complete.",
+      "status": "adaptation_to_test",
+      "validated_context": null,
+      "evidence_refs": []
+    }
+  ]
+}

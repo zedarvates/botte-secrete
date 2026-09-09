@@ -7,7 +7,7 @@ Stratégies :
 1. Section-level pruning — marque/démarque les blocs de contexte
 2. Prefix tree — arbre global des préfixes pour tous les agents
 3. Diffing contextuel — ne charger que les branches utiles
-4. Usage tracking — track quelles sections sont réellement lues
+4. Retention tracking — record this pruner's own keep/skip decisions
 
 Usage:
     python -m skills.prefix_pruner.cli prune --input context.txt --output pruned.txt
@@ -20,6 +20,7 @@ import hashlib
 import json
 import os
 import re
+import sys
 import time
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
@@ -47,7 +48,7 @@ class SectionNode:
 
     @property
     def usefulness(self) -> float:
-        """Ratio of use to skip — how often this section actually matters."""
+        """Ratio of recorded keeps to decisions, not independently observed utility."""
         total = self.use_count + self.skip_count
         if total == 0:
             return 0.5  # Neutral for new sections
@@ -55,7 +56,7 @@ class SectionNode:
 
 
 class PrefixTree:
-    """Global prefix tree tracking which context sections are actually useful."""
+    """Shared section metadata and keep/skip counters for pruning decisions."""
 
     def __init__(self):
         self.sections: dict[str, SectionNode] = {}
@@ -64,7 +65,7 @@ class PrefixTree:
     def _load(self):
         if PREFIX_STORE.exists():
             try:
-                data = json.loads(PREFIX_STORE.read_text())
+                data = json.loads(PREFIX_STORE.read_text(encoding="utf-8"))
                 for sid, d in data.get("sections", {}).items():
                     self.sections[sid] = SectionNode(**d)
             except (json.JSONDecodeError, TypeError):
@@ -83,7 +84,7 @@ class PrefixTree:
                 "last_used": s.last_used,
                 "created": s.created,
             } for sid, s in self.sections.items()},
-        }, indent=2))
+        }, indent=2), encoding="utf-8")
 
     def register_section(self, section_id: str, section_type: str,
                          content: str, token_count: int):
@@ -108,7 +109,7 @@ class PrefixTree:
         self._save()
 
     def record_use(self, section_id: str):
-        """Record that a section was actually used by the agent."""
+        """Increment the use counter; pruning calls this when it keeps a section."""
         if section_id in self.sections:
             self.sections[section_id].use_count += 1
             self.sections[section_id].last_used = time.time()
@@ -198,7 +199,12 @@ def split_sections(content: str) -> list[dict]:
             "end": len(content),
         })
 
-    return sections
+    # Keep source order and avoid processing nested/overlapping spans twice.
+    ordered = []
+    for section in sorted(sections, key=lambda s: (s["start"], -s["end"])):
+        if not ordered or section["start"] >= ordered[-1]["end"]:
+            ordered.append(section)
+    return ordered
 
 
 def prune_content(content: str, tree: Optional[PrefixTree] = None,
@@ -217,7 +223,9 @@ def prune_content(content: str, tree: Optional[PrefixTree] = None,
     if len(sections) <= 1:
         return content  # Nothing to prune
 
-    pruned = []
+    kept = []
+    cursor = 0
+    removed = 0
     total_pruned_tokens = 0
 
     for section in sections:
@@ -236,15 +244,19 @@ def prune_content(content: str, tree: Optional[PrefixTree] = None,
             keep = tree.sections[section_id].usefulness >= 0.3 or tree.sections[section_id].use_count == 0
 
         if keep:
-            pruned.append(section["content"])
             tree.record_use(section_id)
         else:
+            kept.append(content[cursor:section["start"]])
+            cursor = section["end"]
+            removed += 1
             total_pruned_tokens += token_count
             tree.record_skip(section_id)
 
-    result = "\n\n".join(pruned)
+    kept.append(content[cursor:])
+    result = "".join(kept)
 
     if total_pruned_tokens > 0:
-        print(f"  ✂️ Pruned {total_pruned_tokens} tokens (removed {len(sections) - len(pruned)} sections)")
+        print(f"  ✂️ Pruned ~{total_pruned_tokens} tokens (removed {removed} sections)",
+              file=sys.stderr)
 
     return result

@@ -1,0 +1,114 @@
+{
+  "schema": "botte.capability-effects/v1",
+  "capability_id": "zedarvates/botte-secrete:skills/cache",
+  "contract_version": "0.1.0",
+  "source_hashes": {
+    "SKILL.md": "d93c0a5bcf55ebcd8042d80d961ef8a9de99c8e9afc0f005f65510b1a8ee6364",
+    "__init__.py": "2080763d3b27de18c2a9321a4f61093f9acac8f0b160d4703c87453446f44964",
+    "form_cache.py": "bb227c32187d8d370e3ffa214af8dce578206caad49ca5f0f652b00950c91b0e"
+  },
+  "preconditions": [
+    "An existing project directory with the file access needed by the chosen operation; construction creates .botte-cache/.",
+    "Use application-controlled entry names and understand the supplied scan callback's own effects.",
+    "Reassess scanner options, dependencies, external inputs and task meaning before reusing a result; freshness metadata does not bind these.",
+    "Stored results are not redacted; respect existing data retention and output scope."
+  ],
+  "expected_effects": [
+    {
+      "effect": "Create the cache directory and inspect entries; freshness checks can delete expired, incompatible or fingerprint-mismatched JSON files.",
+      "scope": "Target .botte-cache/, project metadata, and best-effort cache hit/miss events under .botte/.",
+      "likelihood": "conditional",
+      "basis": "ProjectCache.__init__ creates the directory; is_fresh can unlink entries; get calls _log_hit.",
+      "impact": "Reads can mutate local state. Metadata scanning consumes I/O; eviction can discard the only stored result and events can persist.",
+      "verification": "Use a temporary project with fresh, expired and source-changed entries; inspect cache files and event output after each operation."
+    },
+    {
+      "effect": "Replace a named cache entry and augment the caller's dictionary with timestamp, version, project path and fingerprint.",
+      "scope": "The JSON entry and the dictionary passed to set or its report helpers.",
+      "likelihood": "conditional",
+      "basis": "ProjectCache.set adds metadata in place and calls atomic_json.write_json; the helper atomically replaces one file.",
+      "impact": "Avoids partially replaced JSON under normal operation but overwrites prior results and retains unredacted supplied data. It is not a lock or multi-step transaction.",
+      "verification": "Compare input dictionary keys and parsed stored data; test concurrent-use assumptions separately in the target workflow."
+    },
+    {
+      "effect": "On a miss, invoke the supplied scanner and cache its result; invalidate and clear_old remove selected cache files.",
+      "scope": "Callback resources plus named entries or matching JSON files in .botte-cache/.",
+      "likelihood": "conditional",
+      "basis": "get_or_scan invokes scanner_fn after a miss; invalidate unlinks one or all JSON entries, and clear_old uses file age.",
+      "impact": "Can save repeated scanning on a hit; misses consume callback resources and may repeat its writes or external effects. Deletion requires recomputation or a prior copy to recover.",
+      "verification": "Count callback invocations with a controlled fixture and compare the exact deleted files to the requested cleanup scope."
+    },
+    {
+      "effect": "Store and retrieve approximate prompt/response pairs in process memory through FormCache.",
+      "scope": "The FormCache instance; separate from ProjectCache's on-disk entries.",
+      "likelihood": "conditional",
+      "basis": "FormCache uses lowercase word sets and Jaccard similarity, returning the first match above its threshold; no TTL or project binding is applied.",
+      "impact": "May reuse a response for a similar prompt while losing word order and ignoring changed task context.",
+      "verification": "Test semantically different prompts with similar word sets; verify equivalence before accepting any approximate hit."
+    }
+  ],
+  "downstream_effects": [
+    {
+      "effect": "A later agent may use stale or context-incompatible cached results as evidence.",
+      "scope": "Subsequent analysis, fixes or decisions based on the reused result.",
+      "likelihood": "plausible",
+      "basis": "The fingerprint covers paths, sizes and mtimes, not content or scanner configuration; it excludes internal directories and can be absent on an accepted entry.",
+      "impact": "Can propagate earlier assumptions or hide relevant changes; a cache hit is not proof of task correctness.",
+      "verification": "Recheck task/scanner context and source changes; compare with a fresh authorized scan when the assumptions no longer hold."
+    },
+    {
+      "effect": "Concurrent misses or retries may repeat callback work, overwrite another result and append additional cache events.",
+      "scope": "Concurrent callers, callback resources and event retention.",
+      "likelihood": "conditional",
+      "basis": "The lookup/scan/write sequence has no shared lock or transaction; get emits events and the callback runs before cache persistence.",
+      "impact": "Can duplicate expensive or mutating work; a failed cache write does not establish that the callback did nothing.",
+      "verification": "Inspect callback completion and stored entries before retrying; test concurrency with an injected callback if the target workflow needs it."
+    }
+  ],
+  "reversibility": {
+    "status": "partial",
+    "strategy": "Restore deleted/replaced results from prior copies or recompute with an authorized callback. Handle callback rollback and event retention separately.",
+    "residual_effects": [
+      "Old values may be unavailable after eviction or replacement.",
+      "Caller dictionary mutations, callback effects and previously emitted events are not undone by cache cleanup."
+    ]
+  },
+  "retry": {
+    "semantics": "conditional",
+    "check_before_retry": "Check the current entry, source/context freshness and whether the callback already completed; account for concurrent writers and repeated logging.",
+    "stop_condition": "Resolve a failing write or uncertain callback completion before repeating a potentially mutating scan; invalidate context-incompatible hits rather than trusting their TTL."
+  },
+  "required_scope": "Existing access to the selected project's inputs and cache/event storage, plus authorization for the supplied callback and any result disclosure. A hit transfers no permission to perform a later action.",
+  "analysis": {
+    "summary": "ProjectCache combines local storage, conditional eviction and caller-controlled computation. FormCache supplies approximate matches only. Neither age nor similarity proves semantic validity, and savings depend on observed hit rates and callback costs.",
+    "uncertainties": [
+      "Only skill-local files are bound; atomic_json, event logging, scanners and their dependencies may change independently.",
+      "Metadata-preserving edits, missing fingerprints, ignored paths, clock changes and concurrent activity can affect freshness.",
+      "Payload confidentiality and callback effects depend on caller inputs; there is no measured universal token-saving percentage."
+    ],
+    "evidence_refs": [
+      "__init__.py:ProjectCache.is_fresh",
+      "__init__.py:ProjectCache.set",
+      "__init__.py:ProjectCache.get_or_scan",
+      "__init__.py:ProjectCache.invalidate",
+      "form_cache.py:FormCache.get",
+      "skills/atomic_json.py:write_json (repository dependency)"
+    ]
+  },
+  "reuse": [
+    {
+      "target": "Share a project scan between sequential agents in a compatible workflow.",
+      "rationale": "The local result store can avoid repeating an expensive callback when its relevant inputs and interpretation match.",
+      "adaptations": [
+        "Bind the workflow's scanner options, dependency versions and external inputs to its reuse decision.",
+        "Distinguish exact project-result reuse from FormCache's approximate prompt matching."
+      ],
+      "validation": "Use a target fixture with unchanged sources, changed files, changed scanner options and a failed persistence step; verify reuse or recomputation and callback invocation counts.",
+      "status": "adaptation_to_test",
+      "validated_context": null,
+      "evidence_refs": [
+        "__init__.py:ProjectCache.get_or_scan"
+      ]
+    }
+  ]
+}

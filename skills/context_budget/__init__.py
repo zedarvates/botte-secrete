@@ -1,4 +1,4 @@
-"""context_budget — pick the optimal context to load under a token budget.
+"""context_budget — propose context under a conservatively rounded token budget.
 
     from skills.context_budget import select_skills, knapsack
     select_skills("optimize slow postgres queries", budget=3000)   # 0 cloud tokens

@@ -47,6 +47,14 @@ built to lean on local hardware and cheap models wherever possible.
 Run the relevant tests, keep diffs minimal, and don't commit machine-specific
 generated files (e.g. `configs/llm-endpoints.json`, `.mcp.json` — both ignored).
 
+## Effects and reuse
+
+For a selected capability, consult its optional `effects.json` and the
+[effects contract](docs/capability-effects.md). Relate predictions to the actual
+task; report observed results, evidence, deviations and remaining uncertainty.
+Check plausible reuse in its target context. Declarations do not grant authority
+or verify outcomes; use existing task permissions and report schemas.
+
 ## Botte Secrète policy
 This project follows `.botte/policy.md` (prefer local models for cheap work, improve prompts locally, run `/checkup` after updates). Read it.
 

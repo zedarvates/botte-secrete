@@ -1,0 +1,104 @@
+{
+  "schema": "botte.capability-effects/v1",
+  "capability_id": "zedarvates/botte-secrete:skills/report",
+  "contract_version": "0.1.0",
+  "source_hashes": {
+    "SKILL.md": "3a55dc8ba4943180d910321ac7f26382b060c1c80b978501984a765bf1689120",
+    "__init__.py": "468ad172d24fa4a4f3239a8aed995bbe97d5c64e9ac7b558c4b806ebfe329841",
+    "cli.py": "a55bea4ec3e961414cef8663bd0f7cb7f290f4f3589f35b1969536f738e6848d",
+    "report.py": "77b4755c5fe241348db1dc283295a13c7f12bd876cd86aafa96d89a2110d292f"
+  },
+  "preconditions": [
+    "Select rendering, saving or listing; only saving writes report artifacts.",
+    "Use existing task scope for the output directory and recipients; supplied values are not redacted.",
+    "Retain complete source data separately when exact evidence or machine-readable handoff matters.",
+    "Use md, html or both as the format; invalid formats fail before output-directory creation."
+  ],
+  "expected_effects": [
+    {
+      "effect": "Render a report dictionary as Markdown or self-contained HTML.",
+      "scope": "Caller memory and any consumer of returned text.",
+      "likelihood": "conditional",
+      "basis": "to_markdown and to_html format values; list/table cells are abbreviated, HTML is escaped, and Markdown retains supplied markup.",
+      "impact": "Makes findings readable but loses details in longer values and can disclose private data or links. Formatting does not validate the findings.",
+      "verification": "Compare representative long/nested values with full source JSON and inspect the actual presentation before relying on it."
+    },
+    {
+      "effect": "save creates the output directory and writes new timestamped UTF-8 report files with collision suffixes when needed.",
+      "scope": "Selected output directory, defaulting to .botte/reports in the current working directory.",
+      "likelihood": "conditional",
+      "basis": "save opens each file with exclusive creation and retries occupied names with numeric suffixes; existing files are not replaced by this helper.",
+      "impact": "Preserves prior evidence during repeated or concurrent saves. New artifacts consume storage and can be observed before writing completes.",
+      "verification": "Freeze the timestamp and perform concurrent saves in a temporary directory; verify unique paths, retained prior bytes and each expected payload."
+    },
+    {
+      "effect": "list_reports and its CLI expose metadata derived from recognized filenames.",
+      "scope": "Selected directory, returned rows and stdout consumers.",
+      "likelihood": "conditional",
+      "basis": "Listing parses names/timestamps and optional collision suffixes, ordering suffixes numerically within a timestamp; it does not parse report bodies.",
+      "impact": "Enables browsing but can reveal paths and names. Filename recency is not evidence that a report is complete, authentic or current.",
+      "verification": "List original and suffixed fixture names and confirm ordering, stable row fields and unchanged file contents."
+    }
+  ],
+  "downstream_effects": [
+    {
+      "effect": "Consumers may rely on abbreviated reports as if they were complete evidence or copy them to another audience.",
+      "scope": "Subsequent analysis, decisions and recipients of saved or rendered reports.",
+      "likelihood": "plausible",
+      "basis": "Renderers abbreviate some values and callers control retention/publication; the module does not attach authenticated source evidence.",
+      "impact": "Can propagate omissions or expose input details. Git ignore rules do not prevent copying or publication.",
+      "verification": "Keep a complete-data reference in the owning workflow and reassess the report scope and recipient before reuse."
+    },
+    {
+      "effect": "A failed save can leave a completed first format or a partially written new file; retries create further artifacts.",
+      "scope": "Output files and readers of the report directory.",
+      "likelihood": "conditional",
+      "basis": "Each format is rendered and written separately; exclusive creation prevents collision overwrite but does not make the pair a transaction or each write atomic.",
+      "impact": "A report file may exist despite a failed invocation; paired formats can have different suffixes when their collision histories differ.",
+      "verification": "Inspect actual output paths and completion after failure; do not infer successful persistence from existence alone."
+    }
+  ],
+  "reversibility": {
+    "status": "partial",
+    "strategy": "Remove only artifacts created by the relevant invocation when appropriate; prior files remain preserved by exclusive creation. Handle copies, publications and downstream decisions separately.",
+    "residual_effects": [
+      "Disclosure to recipients and previously made decisions cannot be undone by this module.",
+      "A failed write can leave a partial artifact requiring inspection or cleanup."
+    ]
+  },
+  "retry": {
+    "semantics": "conditional",
+    "check_before_retry": "Inspect completed and partial outputs, actual source data and destination scope. Repeated saves create additional files rather than updating a prior report.",
+    "stop_condition": "Resolve recurring render/write errors before retrying; do not treat a listed filename as proof of complete output."
+  },
+  "required_scope": "Existing task authorization to read supplied data, write the chosen report directory and expose rendered content or filenames to the selected recipients. This module does not authorize audit execution or publication.",
+  "analysis": {
+    "summary": "Presentation, persistence and browsing have different effects. Exclusive creation preserves prior files on timestamp collisions, while abbreviation, direct writes and filename-only listing limit evidentiary use.",
+    "uncertainties": [
+      "The module does not verify report inputs, redact data, authenticate filenames or provide a lossless machine-readable report.",
+      "Other processes can alter files; writes are not atomic and multiple formats are not a transaction.",
+      "Retention, access control and publication depend on the owning workflow and environment."
+    ],
+    "evidence_refs": [
+      "report.py:save",
+      "report.py:list_reports",
+      "report.py:to_markdown",
+      "report.py:to_html",
+      "test_effects.py"
+    ]
+  },
+  "reuse": [
+    {
+      "target": "Persist readable audit history for another project workflow.",
+      "rationale": "The generic renderer and configurable output directory can preserve separately named report artifacts.",
+      "adaptations": [
+        "Link to full source data when abbreviated values are insufficient.",
+        "Define retention, report completion checks and publication scope for the target workflow."
+      ],
+      "validation": "Test repeated/concurrent saves and longer source values in a target fixture; inspect file preservation, readable output and access to complete evidence.",
+      "status": "adaptation_to_test",
+      "validated_context": null,
+      "evidence_refs": []
+    }
+  ]
+}

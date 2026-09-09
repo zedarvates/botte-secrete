@@ -1,0 +1,112 @@
+{
+  "schema": "botte.capability-effects/v1",
+  "capability_id": "zedarvates/botte-secrete:skills/capabilities",
+  "contract_version": "0.4.0",
+  "source_hashes": {
+    "SKILL.md": "f3d69ab19448ab9ae10de46b904973caf1336ff287237c5b13df050ba1a5101f",
+    "__init__.py": "7d4d3e1854faec18d12335c4a1632b9fd59e5b22f774a8a9fc69467d1ddb75c5",
+    "registry.py": "920b2e3ba35760ffa77b6f3bf6b4b043a98a4d6141d4fb4dd3b682b994eec204",
+    "cli.py": "7624a0ef72921a285ba3a69bf4965ffa086b27628df362499d2093c00f1e7976",
+    "effects.py": "3965c5d1f84f1ca1b932f12944493ffc14e3458062db54f098b5ccbb2741be47",
+    "observations.py": "3f3538ce6f8b342b9c42e13c1560e77b9e350e8dd1f579b567fbc7763643ce97",
+    "observation_schema.py": "f346c90c6979d9bab0608d32f08e3b86c39d3dfbcdfe2484118c530fe4e1bbd2",
+    "network_observations.py": "c91421fb04df629dafcbe167f83f52336424c6750589854fa39578aefe7239a5"
+  },
+  "preconditions": [
+    "Python 3.10+ and a readable skill tree; local discovery only.",
+    "Use python -B or PYTHONDONTWRITEBYTECODE=1 when interpreter bytecode-cache writes are unwanted.",
+    "Review the destination of stdout before including private skill descriptions or declarations.",
+    "For an external skill tree, supply its expected identity or namespace from a trusted caller mapping, not from the inspected sidecar."
+  ],
+  "expected_effects": [
+    {
+      "effect": "Read SKILL.md files and return or print a capability listing, ranked candidates, effects inspection or draft JSON.",
+      "scope": "The selected local skill tree and the caller/output consumer.",
+      "likelihood": "conditional",
+      "basis": "registry.load retains every SKILL.md path when include_effects or preserve_paths is requested; curate can include selected paths. cli.main does not execute listed capabilities.",
+      "impact": "Enables discovery and consequence assessment; consumes local CPU, memory and file I/O, and can reveal descriptions and source paths.",
+      "verification": "Compare the output to a controlled fixture tree; confirm default JSON keys remain unchanged and no fixture files change."
+    },
+    {
+      "effect": "Read the optional effects.json and bound files when effects inspection is requested.",
+      "scope": "Selected skill directories; at most 64 KiB per sidecar and 8 MiB per bound source.",
+      "likelihood": "conditional",
+      "basis": "effects.inspect_effects bounds reads, validates structure, matches the caller-resolved identity and compares explicitly listed source hashes.",
+      "impact": "Makes missing, invalid and stale declarations visible; matching hashes do not prove the described behavior.",
+      "verification": "Change a bound fixture source or its claimed identity; check stale or invalid respectively. Duplicate folder paths remain visible in effects-aware discovery."
+    },
+    {
+      "effect": "When ObservationSession is explicitly enabled, collect instrumented call links, bounded file samples and TCP/HTTP response metadata; optionally persist caller-owned checkpoints.",
+      "scope": "Current Python context and explicitly enrolled workers, listed skill declarations, sampled files and the explicitly selected checkpoint destination.",
+      "likelihood": "conditional",
+      "basis": "observations.py and network_observations.py wrap reviewed sites only. Inactive calls inspect no declarations, files or network metadata. A session lock serializes evidence updates; closing detaches unfinished worker records. Atomic checkpoint persistence is an imported dependency.",
+      "impact": "Preserves partial evidence across interruption; adds CPU, I/O, fsync and storage and retains paths, digests, declarations and opaque per-run target aliases. A transport response does not verify remote work, cost or task success.",
+      "verification": "Run isolated file/child-timeout and loopback-network fixtures; validate v2 checkpoints during parallel discovery, HTTP errors, body timeouts, stale declarations and late workers. Existing v1 reports remain readable."
+    }
+  ],
+  "downstream_effects": [
+    {
+      "effect": "A planner may use a discovery result or reuse candidate when selecting later work.",
+      "scope": "Subsequent planning and execution performed by the caller, outside this registry.",
+      "likelihood": "plausible",
+      "basis": "The Conductor consumes the capability registry; callers decide how to use its output.",
+      "impact": "Can improve selection, or propagate an incomplete declaration if callers ignore context or join metadata by display name instead of path.",
+      "verification": "Inspect the caller plan and validate the selected capability against the actual task, identity and existing authorization."
+    },
+    {
+      "effect": "The output may persist in terminal logs or a caller report; Python may create bytecode caches unless disabled.",
+      "scope": "Caller logging/storage and interpreter cache directories.",
+      "likelihood": "conditional",
+      "basis": "CLI writes stdout; retention is controlled by its consumer, and cache writes by the interpreter.",
+      "impact": "Private descriptions may remain visible after the command; repeated inspection consumes resources and may duplicate logs.",
+      "verification": "Inspect output capture and interpreter settings in the execution environment."
+    }
+  ],
+  "reversibility": {
+    "status": "partial",
+    "strategy": "The application handlers do not mutate source skills or execute listed tools. Captured output follows the caller retention policy; remove generated bytecode caches only if appropriate. Optional observation checkpoints can be removed under the caller retention policy; they do not undo observed work.",
+    "residual_effects": [
+      "Disclosures to an output recipient cannot be recalled by this module.",
+      "Decisions made by another component require their own review or rollback."
+    ]
+  },
+  "retry": {
+    "semantics": "conditional",
+    "check_before_retry": "Recheck the skill tree and stdout destination; results can change with sources and repetitions may duplicate logs.",
+    "stop_condition": "Stop repeated inspection when the same unreadable source or invalid declaration remains unresolved."
+  },
+  "required_scope": "Read access to the selected skill tree and permission to expose its descriptions to the current output consumer. This declaration grants no execution permission for discovered skills. Observation additionally needs read access to instrumented files and write permission for any explicitly selected checkpoint.",
+  "analysis": {
+    "summary": "Discovery and effects inspection are local reads at the application level. Consequence declarations support task assessment; structural validity, ranking and matching hashes are not evidence of successful execution. The optional observation API preserves cooperative evidence separately from declarations, with no complete-effect or reuse validation.",
+    "uncertainties": [
+      "Only explicitly bound files are checked; imported dependencies and runtime state may change independently.",
+      "Legacy discovery deduplicates folder basenames. Effects-aware discovery retains paths; trusted external identity mappings remain the caller responsibility.",
+      "Future execution, stdout retention and downstream decisions are controlled by callers."
+    ],
+    "evidence_refs": [
+      "registry.py:load",
+      "registry.py:curate",
+      "cli.py:main",
+      "effects.py:inspect_effects",
+      "observations.py:validate_report",
+      "network_observations.py:network_attempt"
+    ]
+  },
+  "reuse": [
+    {
+      "target": "Inventory coverage of effects declarations in another compatible skill tree.",
+      "rationale": "SKILL.md discovery and skill-local sidecar inspection already accept a supplied root; the mechanism can report migration gaps.",
+      "adaptations": [
+        "Supply the target namespace from its trusted installation mapping and use selected paths to associate metadata and commands.",
+        "Bind each declaration to that tree and review private metadata before sharing results."
+      ],
+      "validation": "Use a target fixture tree with declared, missing, malformed, changed-source, mismatched-identity and duplicate-basename cases; compare coverage to an independent file listing.",
+      "status": "adaptation_to_test",
+      "validated_context": null,
+      "evidence_refs": [
+        "registry.py:load",
+        "effects.py:inspect_effects"
+      ]
+    }
+  ]
+}

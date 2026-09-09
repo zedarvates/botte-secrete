@@ -1,0 +1,105 @@
+{
+  "schema": "botte.capability-effects/v1",
+  "capability_id": "zedarvates/botte-secrete:skills/preflight",
+  "contract_version": "0.1.0",
+  "source_hashes": {
+    "SKILL.md": "ab7fb72a05e279a6ca6125c92353267d0cccf91c8e677f6c631a36cd07566370",
+    "hook.py": "8101856736d585bbbcca87c65a5771214f9e66410736784b9775b853bede5694",
+    "policy.py": "8e987f6cdce056e535b59e76010fec5e5994b6223943c6ff4e73aa4dec1d91c5"
+  },
+  "preconditions": [
+    "Distinguish the read-only prompt hook from installation or policy-authoring operations that write project files.",
+    "Treat the supplied project path as task-scoped input; policy and agent-instruction writes require authorization for that project.",
+    "Prompt text, local skill metadata and injected guidance can enter the active model context; apply the task's disclosure rules before using the hook.",
+    "A prefer-local recommendation does not prove that a local model, MCP tool, terminal wrapper or target harness is installed, healthy or appropriate for the current task."
+  ],
+  "expected_effects": [
+    {
+      "effect": "Read a submitted prompt and project path, perform local lexical skill matching, and emit preflight guidance to stdout when the hook receives a non-empty prompt.",
+      "scope": "Prompt text, local Botte/project skill metadata, process environment and the current harness context receiving stdout.",
+      "likelihood": "conditional",
+      "basis": "hook.py reads JSON or plain stdin, calls skills.skill_finder.find over local roots, builds guidance and writes it to stdout while swallowing hook errors.",
+      "impact": "Adds routing, tool and prompt-clarification context without an LLM call; it consumes small local CPU/I/O and can disclose prompt-derived or skill-name information to the receiving model context.",
+      "verification": "Pipe fixed prompt/cwd fixtures into skills.preflight.hook; compare stdout and exit status for normal, empty and malformed inputs without changing project files."
+    },
+    {
+      "effect": "Create a default .botte/policy.md when policy.write_default is called and no policy exists, or replace it only when overwrite is explicitly requested.",
+      "scope": "The selected project's .botte directory and policy file.",
+      "likelihood": "conditional",
+      "basis": "policy.write_default checks existence, creates parent directories and writes DEFAULT_POLICY; the default overwrite flag is false.",
+      "impact": "Persists shared routing, hygiene and budget guidance for later agents/developers; an incorrect project path or deliberate overwrite can replace intended project policy.",
+      "verification": "Run against a temporary project, verify first-write and no-op repeat behavior, then separately verify explicit overwrite behavior on controlled content."
+    },
+    {
+      "effect": "Append a pointer to .botte/policy.md to the first existing AGENTS.md or CLAUDE.md that lacks the pointer when ensure_agents_pointer is called.",
+      "scope": "One selected project instruction file and every later agent session that consumes it.",
+      "likelihood": "conditional",
+      "basis": "policy.ensure_agents_pointer checks AGENTS.md then CLAUDE.md, skips files already containing the policy path, and appends AGENTS_POINTER to the first writable match.",
+      "impact": "Makes the shared policy persistent across future sessions; it modifies an instruction source and can change later routing behavior even though the current hook itself is fail-open.",
+      "verification": "Use temporary AGENTS.md/CLAUDE.md fixtures to verify append-once semantics, file precedence, missing-file behavior and unchanged content on retry."
+    }
+  ],
+  "downstream_effects": [
+    {
+      "effect": "Future agents may choose local tools, improve prompts or run checkups because injected or committed policy guidance remains in their context.",
+      "scope": "Later task routing, model/tool selection, token use and project maintenance decisions.",
+      "likelihood": "probable",
+      "basis": "The skill is designed to inject the same guidance on every supported pre-prompt hook and to persist a pointer in project instruction files.",
+      "impact": "Can reduce cloud use and routing drift, but stale or over-broad policy can repeatedly bias otherwise valid task-specific choices.",
+      "verification": "Compare a fixed set of representative tasks with and without the preflight context; record selected routes, task quality, total cost and abstentions rather than assuming the policy helped."
+    },
+    {
+      "effect": "A project policy edit can propagate through version control, shared worktrees or other automation that reads AGENTS.md/CLAUDE.md.",
+      "scope": "Collaborators and agents consuming the modified project files after the write is shared.",
+      "likelihood": "plausible",
+      "basis": "The files are ordinary persistent project files; propagation depends on the repository and synchronization workflow outside this skill.",
+      "impact": "A mistaken rule can outlive the initiating session; a correct rule can prevent opt-in drift across agents.",
+      "verification": "Review the exact diff and repository state before sharing; confirm downstream consumers read the intended project/version rather than a stale copy."
+    }
+  ],
+  "reversibility": {
+    "status": "partial",
+    "strategy": "The prompt hook is read-only with respect to project files. Revert policy or instruction-file changes with the project's normal version/file rollback after inspecting the exact diff; disable or remove hook wiring separately when applicable.",
+    "residual_effects": [
+      "Guidance already injected into the current model context cannot be retroactively unseen.",
+      "Copied, committed or synchronized policy text may persist in histories or downstream worktrees after a local revert."
+    ]
+  },
+  "retry": {
+    "semantics": "conditional",
+    "check_before_retry": "Check whether the hook already produced context for the current turn and inspect existing .botte/policy.md plus AGENTS.md/CLAUDE.md before repeating any write. Do not use overwrite merely to refresh a file without reviewing semantic drift.",
+    "stop_condition": "Stop when the desired policy/pointer already exists, when project scope is uncertain, or when routing guidance conflicts with a higher-priority task requirement or unavailable local capability."
+  },
+  "required_scope": "The hook needs read access to prompt input and local skill metadata. Writing policy or agent-instruction pointers needs explicit task authority for the selected project files; neither the declaration nor a hook installation grants that authority.",
+  "analysis": {
+    "summary": "Preflight has a low-cost read-only context path and separate persistent authoring paths. The main consequence is not command execution by the hook but repeated influence on later routing, so source freshness, project scope and observed routing quality matter more than assuming prefer-local is universally optimal.",
+    "uncertainties": [
+      "The declaration does not bind bootstrap/deployer code that may wire the hook into harness settings, so installation-side writes must be assessed separately.",
+      "The actual local model/tool availability and quality are runtime properties not verified by this skill.",
+      "The hook intentionally swallows exceptions; absence of injected context can therefore look like ordinary success unless the caller verifies stdout when that distinction matters."
+    ],
+    "evidence_refs": [
+      "hook.py:_read_input",
+      "hook.py:_suggested_skills",
+      "hook.py:build_context",
+      "hook.py:main",
+      "policy.py:write_default",
+      "policy.py:ensure_agents_pointer"
+    ]
+  },
+  "reuse": [
+    {
+      "target": "Adapt the pre-prompt policy injector to another agent harness or repository without transferring Botte-specific routing assumptions blindly.",
+      "rationale": "The hook is standalone stdin/stdout logic and the persistent policy is an ordinary project file, so the mechanism is portable even when tool names and routing economics differ.",
+      "adaptations": [
+        "Map the target harness's pre-prompt hook contract and failure semantics explicitly.",
+        "Replace Botte-specific tool names, token budgets and project-instruction conventions with target-validated equivalents.",
+        "Measure whether the target's local route preserves task quality before promoting repeated routing guidance."
+      ],
+      "validation": "Replay representative cheap and reasoning-heavy prompts in the target harness, including unavailable-local-tool and hook-error fixtures; compare route, quality, cost and whether user prompts remain unblocked.",
+      "status": "adaptation_to_test",
+      "validated_context": null,
+      "evidence_refs": []
+    }
+  ]
+}

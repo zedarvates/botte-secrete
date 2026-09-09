@@ -30,6 +30,8 @@ import urllib.request
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field, asdict
 from typing import Optional
+from skills.capabilities.observations import observed_operation, submit_observed
+from skills.capabilities.network_observations import network_attempt
 
 
 # ── Backend probe definitions ───────────────────────────────────────────────
@@ -85,8 +87,11 @@ def _http_get(url: str, timeout: float) -> Optional[dict]:
     """GET a JSON endpoint. Returns parsed JSON or None on any failure."""
     req = urllib.request.Request(url, headers={"Accept": "application/json"})
     try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
-            raw = resp.read()
+        with network_attempt("http", req, "/expected_effects/1", method="GET") as evidence:
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                evidence.response(resp)
+                raw = resp.read()
+                evidence.read_complete()
         return json.loads(raw.decode("utf-8", "replace"))
     except (urllib.error.URLError, OSError, ValueError, json.JSONDecodeError):
         return None
@@ -95,8 +100,9 @@ def _http_get(url: str, timeout: float) -> Optional[dict]:
 def _port_open(host: str, port: int, timeout: float) -> bool:
     """Fast TCP check before doing the (slower) HTTP probe."""
     try:
-        with socket.create_connection((host, port), timeout=timeout):
-            return True
+        with network_attempt("tcp", (host, port), "/expected_effects/1", method="CONNECT"):
+            with socket.create_connection((host, port), timeout=timeout):
+                return True
     except OSError:
         return False
 
@@ -121,6 +127,7 @@ def _extract_models(api: str, payload: dict) -> list[str]:
 
 # ── Single-host probing ──────────────────────────────────────────────────────
 
+@observed_operation("probe_host")
 def probe_host(host: str, probe: Probe, port: Optional[int] = None,
                timeout: float = 1.5) -> Optional[Backend]:
     """Probe one host for one backend kind. Returns a Backend or None."""
@@ -143,12 +150,13 @@ def probe_host(host: str, probe: Probe, port: Optional[int] = None,
     )
 
 
+@observed_operation("scan_host")
 def scan_host(host: str, timeout: float = 1.5,
               probes: tuple[Probe, ...] = PROBES) -> list[Backend]:
     """Probe a single host for every known backend, in parallel."""
     found: list[Backend] = []
     with ThreadPoolExecutor(max_workers=len(probes)) as pool:
-        futures = {pool.submit(probe_host, host, p, None, timeout): p for p in probes}
+        futures = {submit_observed(pool, probe_host, host, p, None, timeout): p for p in probes}
         for fut in as_completed(futures):
             backend = fut.result()
             if backend:
@@ -183,6 +191,7 @@ def subnet_hosts(cidr_base: Optional[str] = None) -> list[str]:
 
 # ── Top-level discovery ──────────────────────────────────────────────────────
 
+@observed_operation("discover")
 def discover(hosts: Optional[list[str]] = None,
              scan_subnet: bool = False,
              timeout: float = 1.0,
@@ -206,7 +215,7 @@ def discover(hosts: Optional[list[str]] = None,
     pairs = [(h, p) for h in targets for p in PROBES]
     with ThreadPoolExecutor(max_workers=max_workers) as pool:
         futures = {
-            pool.submit(probe_host, h, p, None, timeout): (h, p)
+            submit_observed(pool, probe_host, h, p, None, timeout): (h, p)
             for (h, p) in pairs
         }
         for fut in as_completed(futures):

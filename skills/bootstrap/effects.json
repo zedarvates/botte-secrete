@@ -1,0 +1,115 @@
+{
+  "schema": "botte.capability-effects/v1",
+  "capability_id": "zedarvates/botte-secrete:skills/bootstrap",
+  "contract_version": "0.1.0",
+  "source_hashes": {
+    "SKILL.md": "dc4ddaba0ed183daeb1c871f095b6cb533a456588b7812068b99ea60712d8f11",
+    "__init__.py": "a2c8b5a3c681d28783c39545042a846031a52eaa00c37e634d3bf8e759f16e5a",
+    "cli.py": "e3c67121ded8cd2cb1e96921cb1c96ef03276ea687537fa462af0250da640d0f",
+    "setup.py": "bb46a4140086b3d2d9bfd905d59dba1b8b338f2cc4b705a636fa1b191464c858"
+  },
+  "preconditions": [
+    "An existing target directory and the installed toolkit's Python environment.",
+    "Current task scope covers target configuration, agent directives/hooks and backend discovery; --scan-subnet extends probes to the local /24.",
+    "Preserve prior configuration and check existing MCP/settings JSON is readable with the expected object structure before setup.",
+    "The toolkit registry and target configuration directories must be writable; setup is not a dry-run or transaction."
+  ],
+  "expected_effects": [
+    {
+      "effect": "Probe local backend ports and model endpoints, then replace the toolkit backend registry; --scan-subnet extends the targets.",
+      "scope": "Loopback by default, optional local /24 hosts, and toolkit configs/llm-endpoints.json.",
+      "likelihood": "conditional",
+      "basis": "setup calls llm_backends.registry.refresh(scan_subnet=...) before modifying the target; refresh discovers and saves.",
+      "impact": "Consumes network/CPU/I/O and updates backend metadata used by other projects; probe requests can appear in service logs.",
+      "verification": "Use a controlled target and mocked discovery to inspect call scope and registry destination; verify live reachability separately when authorized."
+    },
+    {
+      "effect": "Merge botte-llm into .mcp.json and optionally register a detected OculiX MCP jar.",
+      "scope": "The target .mcp.json, including existing server entries and machine-specific command paths.",
+      "likelihood": "conditional",
+      "basis": "wire_mcp and wire_oculix_mcp parse, update and rewrite the document; unreadable or invalid JSON falls back to an empty object.",
+      "impact": "Prepares tools for a later agent session. Existing named entries are replaced; invalid JSON may lose prior settings, and incompatible structures can raise an error.",
+      "verification": "Compare parsed configuration with its prior contents, check unrelated servers and inspect the named commands; no server start is implied by registration."
+    },
+    {
+      "effect": "Write default routing configuration, policy, a preflight hook, directive pointers and a setup report.",
+      "scope": "Target .botte/config.json, .botte/policy.md, .claude/settings.json, AGENTS.md or CLAUDE.md, and .botte/setup-report.json.",
+      "likelihood": "conditional",
+      "basis": "setup calls write_config, preflight.policy helpers, wire_hook and report writing; ensure_agents_md creates a starter only when requested and instructions are absent.",
+      "impact": "Changes future prompt handling and project configuration. Config/report are replaced, custom config is not merged, and existing directives can gain a pointer even without --create-agents-md.",
+      "verification": "Diff every affected file; verify JSON shape, existing hooks, policy preservation, directive changes and whether all expected setup stages completed."
+    },
+    {
+      "effect": "Return and print setup details containing project/toolkit paths, backend metadata and names of configured cloud-key variables.",
+      "scope": "Setup report, stdout and their consumers.",
+      "likelihood": "conditional",
+      "basis": "_detect_cloud_keys returns environment variable names, not values; setup and cli.main expose configuration summaries.",
+      "impact": "Supports onboarding but discloses machine metadata and consumes storage; setup does not measure subsequent savings.",
+      "verification": "Inspect the report destination and fields before sharing; verify later routing with an authorized task rather than inferring it from the report."
+    }
+  ],
+  "downstream_effects": [
+    {
+      "effect": "A consuming agent may load the registered tools and execute the preflight hook on later prompts.",
+      "scope": "Later agent sessions, their selected models, tools and affected project resources.",
+      "likelihood": "plausible",
+      "basis": "Generated MCP entries and UserPromptSubmit settings are configuration consumed by the host, whose lifecycle is outside setup.",
+      "impact": "May change tool availability, context and routing costs. Local routing or zero cloud use is not guaranteed by installation.",
+      "verification": "Inspect the consuming agent's effective configuration and a small authorized task, including actual backend selection and results."
+    },
+    {
+      "effect": "An interrupted or failed setup may leave a partially configured project and a changed shared backend registry.",
+      "scope": "Writes completed before the failing stage, including resources outside the target project.",
+      "likelihood": "conditional",
+      "basis": "Setup writes multiple files sequentially without backups, a transaction or rollback.",
+      "impact": "Blind retries can overwrite custom values again or operate on incomplete state.",
+      "verification": "Reconcile current files and completed stages with preserved originals before retrying or restoring selected changes."
+    }
+  ],
+  "reversibility": {
+    "status": "partial",
+    "strategy": "Restore specific prior configuration/directive contents and remove only entries introduced by this setup; reconcile shared registry changes and later agent activity separately.",
+    "residual_effects": [
+      "Overwritten content cannot be recovered without a prior copy or other history.",
+      "Probe logs, captured output and actions already taken by the consuming agent may remain."
+    ]
+  },
+  "retry": {
+    "semantics": "conditional",
+    "check_before_retry": "Inspect completed writes, JSON validity, custom config values, hook markers and backend/probe scope. Updating named entries is not full-operation idempotence.",
+    "stop_condition": "Resolve malformed configuration, failed writes or unclear partial state before another setup attempt; do not infer non-execution from a timeout."
+  },
+  "required_scope": "Existing authorization to configure the named project, modify its agent integration, write the toolkit registry and probe the selected hosts. This declaration does not extend task permissions.",
+  "analysis": {
+    "summary": "Setup has immediate configuration/network effects and delayed agent effects. Source review supports conditional repeatability of named entries, not transactional deployment, preservation of malformed files or proven token savings.",
+    "uncertainties": [
+      "Imported discovery, policy and audit code is not included in these skill-local hashes.",
+      "Existing configuration shape, concurrent edits, consuming-agent behavior and future model costs vary by project.",
+      "There is no built-in dry-run, backup or automatic rollback."
+    ],
+    "evidence_refs": [
+      "setup.py:setup",
+      "setup.py:wire_mcp",
+      "setup.py:wire_hook",
+      "setup.py:write_config",
+      "skills/preflight/policy.py:ensure_agents_pointer (repository dependency)",
+      "skills/llm_backends/registry.py:refresh (repository dependency)"
+    ]
+  },
+  "reuse": [
+    {
+      "target": "Onboard another project to the toolkit's local-first routing configuration.",
+      "rationale": "The target directory is an explicit input and setup writes a repeatable set of integration files.",
+      "adaptations": [
+        "Review target JSON structures, existing custom routing, directive conventions and host hook compatibility.",
+        "Preserve original files and define probe scope and a project-specific recovery procedure."
+      ],
+      "validation": "Exercise setup and repeat setup in a disposable target with representative existing configuration and mocked probes; compare files and validate subsequent agent behavior separately.",
+      "status": "adaptation_to_test",
+      "validated_context": null,
+      "evidence_refs": [
+        "setup.py:setup"
+      ]
+    }
+  ]
+}
