@@ -12,11 +12,13 @@ A single unified client calls either side (both speak OpenAI /v1/chat).
 
 from __future__ import annotations
 
+import hashlib
 import json
 import time
 import urllib.error
 import urllib.request
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Optional
 
 from skills.tiered_router import Tier, TIER_INFO, Budget, estimate_tokens, estimate_cost
@@ -63,7 +65,7 @@ class AutoRouter:
     def decide(self, prompt: str, task_type: str = "",
                force_tier: Optional[Tier] = None) -> AutoDecision:
         eff = estimate_effort(prompt, task_type=task_type)
-        tier = force_tier or eff.tier
+        tier = force_tier if force_tier is not None else eff.tier
 
         local = registry.best_chat_backend()
         local_model = registry.preferred_model(local) if local else None
@@ -183,15 +185,24 @@ class AutoRouter:
             )
             return result
         cache = None
-        cache_context = json.dumps({
-            "system": system or "", "task_type": task_type,
-            "max_tokens": max_tokens, "mode": d.mode,
-        }, ensure_ascii=False, sort_keys=True)
+        cache_context = ""
         try:
+            # ResponseCache normalizes query whitespace. Bind exact prompt bytes
+            # and the selected scope here so that normalization cannot broaden reuse.
+            cache_context = json.dumps({
+                "version": 2, "system": system or "", "task_type": task_type,
+                "max_tokens": max_tokens, "mode": d.mode, "via": d.via,
+                "endpoint": d.base_url.rstrip("/"),
+                "project": str(Path(project_root).resolve()),
+                "prompt_sha256": hashlib.sha256(prompt.encode("utf-8")).hexdigest(),
+            }, ensure_ascii=False, sort_keys=True)
             from skills.response_cache import _cache as cache
             hit = cache.get(prompt, model=d.model, context=cache_context,
                             use_semantic=False)
-        except (OSError, ValueError, TypeError):
+        except (OSError, ValueError, TypeError, RuntimeError):
+            # An unresolved scope (including a symlink loop) must not use an
+            # unscoped cache entry. Inference remains independent of caching.
+            cache = None
             hit = None
         if hit is not None:
             result = {"decision": d.to_dict(), "text": hit.response, "tokens": 0,
@@ -213,7 +224,6 @@ class AutoRouter:
                 # was the correct route. Keep it out of the training labels until an
                 # explicit override or verified fallback supplies ground truth.
                 feedback_id = self._log_observation(d, outcome="local_failed")
-                _log_escalate("local", "cloud", f"local call failed: {e}")
                 result = {"decision": d.to_dict(), "error": str(e)}
                 if feedback_id:
                     result["feedback_id"] = feedback_id
@@ -329,7 +339,7 @@ class AutoRouter:
         state, cloud provider search, and the final verdict.
         """
         eff = estimate_effort(prompt, task_type=task_type)
-        tier = force_tier or eff.tier
+        tier = force_tier if force_tier is not None else eff.tier
         words = len(prompt.split())
 
         local = registry.best_chat_backend()
@@ -392,7 +402,7 @@ class AutoRouter:
         else:
             trace["belt"] = {
                 "active": False,
-                "reason": ("forced tier" if force_tier else
+                "reason": ("forced tier" if force_tier is not None else
                            f"tier {tier.name} not in (LOCAL, CHEAP] range" if tier > Tier.CHEAP else
                            "no local backend" if not local else
                            "tier already LOCAL"),
@@ -460,14 +470,6 @@ def _log_route(d: AutoDecision) -> None:
         log_event("route", filter=(1 if d._belt_ctx else 2), out=d.mode,
                    tier=d.tier.name, model=d.model, reason=d.reason,
                    est_cost=round(d.est_cost, 6))
-    except Exception:
-        pass
-
-
-def _log_escalate(from_mode: str, to_mode: str, reason: str) -> None:
-    try:
-        from skills.events import log_event
-        log_event("escalate", **{"from": from_mode, "to": to_mode, "reason": reason})
     except Exception:
         pass
 

@@ -270,3 +270,5 @@ Run `list --json --effects` to see current coverage and source freshness.
 | `prefix_tree` | Plaintext prefix persistence, comparison output and receiver-baseline assumptions. |
 | `cardinal` | Scoped counter-review, input completeness, report-derived scoring and verdict persistence. |
 | `report` | Rendering loss, collision-safe file creation, partial saves and output disclosure. |
+| `auto_router` | Decision reads, inference/fusion disclosure, scoped cache reuse, estimated budgets and unverified telemetry. |
+| `tiered_router` | Advisory tier estimates, in-memory accounting/cache mutations and partial context reconstruction. |

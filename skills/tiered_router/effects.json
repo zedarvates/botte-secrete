@@ -1,0 +1,110 @@
+{
+  "schema": "botte.capability-effects/v1",
+  "capability_id": "zedarvates/botte-secrete:skills/tiered_router",
+  "contract_version": "0.1.0",
+  "source_hashes": {
+    "SKILL.md": "c93138c68cd4fc370fae99212adab01ea5fc3cc95ccade8c6e8131a4a66cea34",
+    "__init__.py": "af1c79b738f9d63253d42c8e57e82e4585b046949ba892a13b211c6dc4aedb5a"
+  },
+  "preconditions": [
+    "Identify the operation, instance lifetime, task/context and how the executing caller uses proposals.",
+    "Supply nonnegative token counts and a suitable budget; record each actual execution once.",
+    "Retain complete source data before using partial compression helpers and verify receiver state."
+  ],
+  "expected_effects": [
+    {
+      "effect": "route and estimate helpers produce advisory tiers and estimated token/cost values without model calls or writes.",
+      "scope": "Caller-provided text, in-memory mappings, budget/cache state and returned proposal.",
+      "likelihood": "conditional",
+      "basis": "Task mapping or explicit force_tier chooses the desired tier; a recent matching cache key returns FREE. Budget failure may downgrade or return a LOCAL fallback.",
+      "impact": "local_available describes tier eligibility, not discovered hardware. A fallback does not enforce the token cap or establish a usable backend.",
+      "verification": "Exercise explicit FREE and exhausted budgets in isolated instances; verify actual feasibility separately in the execution layer."
+    },
+    {
+      "effect": "record and Budget.spend increment usage; report aggregates the caller-supplied history.",
+      "scope": "Budget counters, CallRecord history and returned totals in the current Python objects.",
+      "likelihood": "conditional",
+      "basis": "No date rollover, persistence, reservation or deduplication is implemented. report uses a rough fixed premium cost per recorded call.",
+      "impact": "Repeated records double-count usage; a new instance forgets previous spend. Estimated comparisons can differ from actual provider billing.",
+      "verification": "Compare counters with known recorded calls and real execution IDs; independently measure target usage before interpreting savings."
+    },
+    {
+      "effect": "cache_response retains response references and evicts the oldest stored timestamp beyond 500 entries.",
+      "scope": "Instance-local cache keyed by caller-supplied string; route lookup uses task type and input text with a 24-hour age check.",
+      "likelihood": "conditional",
+      "basis": "set retains data without copying; lookup ignores model, project, system prompt, requested tier and current source state.",
+      "impact": "Caller mutation and omitted context can change or invalidate apparent reuse; the proposal does not authenticate the answer.",
+      "verification": "Inspect caller key/context, age, shared object references and invalidation rules before treating a hit as useful."
+    },
+    {
+      "effect": "AgentCompressor retains a shared knowledge map and size history and returns partial field/list transformations.",
+      "scope": "In-memory knowledge references, returned data and recursively appended transmission counters.",
+      "likelihood": "conditional",
+      "basis": "compress omits known fields/list members; decompress merges dictionaries and replaces other values. No messages or files are sent.",
+      "impact": "List reconstruction, deletions, reordering and nested shared keys can lose data or retain stale state. Size counters are character estimates and count recursive calls.",
+      "verification": "Compare reconstruction with full source data, especially lists and deletions; retain originals and actual receiver knowledge."
+    }
+  ],
+  "downstream_effects": [
+    {
+      "effect": "An executing caller may treat a proposal or a cost report as evidence of availability, capacity or savings.",
+      "scope": "Downstream model routing, billing decisions and usage reports.",
+      "likelihood": "plausible",
+      "basis": "The returned labels and estimates are advisory, and counters only reflect explicit calls to record/spend.",
+      "impact": "Unavailable local fallback, undercounted concurrent work or stale usage can lead to failed work or overspend.",
+      "verification": "Require actual endpoint checks and recorded provider usage from the executing layer before claiming feasibility or savings."
+    },
+    {
+      "effect": "Consumers can act on incomplete or stale cached/compressed information.",
+      "scope": "Agent context, reconstructed state and subsequent decisions.",
+      "likelihood": "plausible",
+      "basis": "Cache context is narrow and compression assumes shared receiver knowledge without acknowledgement.",
+      "impact": "Information loss can propagate to later decisions even after the in-memory helper is discarded.",
+      "verification": "Compare target outputs against the complete source and verify the target task independently."
+    }
+  ],
+  "reversibility": {
+    "status": "partial",
+    "strategy": "Rebuild object state from a caller-owned snapshot or replay verified records once; restore full source data for context. Reconcile downstream actions separately.",
+    "residual_effects": [
+      "Lost source state may be unrecoverable without retained originals.",
+      "Discarding an object does not undo requests or decisions already performed by consumers."
+    ]
+  },
+  "retry": {
+    "semantics": "conditional",
+    "check_before_retry": "Read-only estimates can be repeated against stable state; record/spend double-count and cache/compression writes alter timestamps, references or history. Reconcile partial caller actions first.",
+    "stop_condition": "Resolve unknown accounting state, cache context or receiver knowledge before repeating mutations or using their output for execution."
+  },
+  "required_scope": "Existing task authority for the supplied data and in-memory state. This helper neither performs nor authorizes model requests, message sending or budget commitments by downstream callers.",
+  "analysis": {
+    "summary": "A stdlib advisory routing/accounting helper with explicit in-memory mutations. Budget naming and nominal tier values do not imply persistent quotas, live availability or measured savings.",
+    "uncertainties": [
+      "Caller-supplied usage is not authenticated; counters are not transactionally shared across threads/processes.",
+      "Tier rates and the premium baseline are static heuristics, not current provider prices.",
+      "AgentCompressor lacks lossless reconstruction guarantees and the cache omits execution context.",
+      "Downstream callers and runtime state are outside these local source bindings."
+    ],
+    "evidence_refs": [
+      "__init__.py:TieredRouter.route",
+      "__init__.py:Budget.spend",
+      "__init__.py:TieredRouter.record",
+      "__init__.py:TieredRouter.report",
+      "__init__.py:AgentCompressor"
+    ]
+  },
+  "reuse": [
+    {
+      "target": "Compare advisory tier policies in an offline routing experiment.",
+      "rationale": "Pure estimates and caller-recorded usage can be replayed with isolated objects before involving endpoints.",
+      "adaptations": [
+        "Scope objects and cache keys to complete target context; implement calendar/persistence or reservations in the caller when needed.",
+        "Use comparable measured token counts and independent quality checks rather than nominal tier values."
+      ],
+      "validation": "Compare explicit tiers, exhausted budgets, repeated recording and representative task outputs against actual target usage and availability.",
+      "status": "adaptation_to_test",
+      "validated_context": null,
+      "evidence_refs": []
+    }
+  ]
+}
