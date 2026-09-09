@@ -1,0 +1,3567 @@
+{
+  "status": "superseded_diagnostic_before_schema_order_fix",
+  "executed": false,
+  "activation_allowed": false,
+  "experiments": [
+    {
+      "id": "needle2-default",
+      "schema_version": "botte.needle2-memory-pilot/v1",
+      "mode": "advisory_evaluation",
+      "corpus": "synthetic_exploratory_not_production_evidence",
+      "catalog_sha256": "30cd0f60145a7a9729eebbe038f1b8f2c7e0e725f3824f5b70d39697cc5e459f",
+      "baseline": {
+        "dataset_sha256": "5c02bf867dae8a365b8ede54572d56125a30a3ce8e3872a54d573e7fe7bdadb3",
+        "total": 48,
+        "positive_cases": 30,
+        "negative_cases": 18,
+        "tool_accuracy": 0.5833333333333334,
+        "positive_exact_call_accuracy": 0.1,
+        "negative_abstention_accuracy": 0.8333333333333334,
+        "false_proposals_on_negative_cases": 3,
+        "p95_latency_ms": 0.114,
+        "first_query_ms": 0.114,
+        "runtime_error_count": 0,
+        "cases": [
+          {
+            "id": "context-01",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": true,
+            "call_correct": false,
+            "abstained": false,
+            "latency_ms": 0.114,
+            "route": {
+              "tool_name": "memory_context",
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 1.0,
+              "executable": true,
+              "reason": null
+            }
+          },
+          {
+            "id": "context-02",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": true,
+            "call_correct": false,
+            "abstained": false,
+            "latency_ms": 0.041,
+            "route": {
+              "tool_name": "memory_context",
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 1.0,
+              "executable": true,
+              "reason": null
+            }
+          },
+          {
+            "id": "context-03",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 0.034,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "no_lexical_match"
+            }
+          },
+          {
+            "id": "context-04",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": true,
+            "call_correct": false,
+            "abstained": false,
+            "latency_ms": 0.032,
+            "route": {
+              "tool_name": "memory_context",
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 1.0,
+              "executable": true,
+              "reason": null
+            }
+          },
+          {
+            "id": "context-05",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": false,
+            "latency_ms": 0.099,
+            "route": {
+              "tool_name": "memory_wiki",
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 1.0,
+              "executable": true,
+              "reason": null
+            }
+          },
+          {
+            "id": "context-06",
+            "kind": "typo",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 0.031,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "no_lexical_match"
+            }
+          },
+          {
+            "id": "observations-01",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": true,
+            "call_correct": false,
+            "abstained": false,
+            "latency_ms": 0.047,
+            "route": {
+              "tool_name": "memory_observations",
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 1.0,
+              "executable": true,
+              "reason": null
+            }
+          },
+          {
+            "id": "observations-02",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": true,
+            "call_correct": false,
+            "abstained": false,
+            "latency_ms": 0.044,
+            "route": {
+              "tool_name": "memory_observations",
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 1.0,
+              "executable": true,
+              "reason": null
+            }
+          },
+          {
+            "id": "observations-03",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": true,
+            "call_correct": false,
+            "abstained": false,
+            "latency_ms": 0.033,
+            "route": {
+              "tool_name": "memory_observations",
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 1.0,
+              "executable": true,
+              "reason": null
+            }
+          },
+          {
+            "id": "observations-04",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 0.029,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "ambiguous_lexical_match"
+            }
+          },
+          {
+            "id": "observations-05",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 0.029,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "ambiguous_lexical_match"
+            }
+          },
+          {
+            "id": "observations-06",
+            "kind": "typo",
+            "positive": true,
+            "tool_correct": true,
+            "call_correct": false,
+            "abstained": false,
+            "latency_ms": 0.029,
+            "route": {
+              "tool_name": "memory_observations",
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 1.0,
+              "executable": true,
+              "reason": null
+            }
+          },
+          {
+            "id": "history-01",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 0.03,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "missing_required_argument"
+            }
+          },
+          {
+            "id": "history-02",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 0.03,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "missing_required_argument"
+            }
+          },
+          {
+            "id": "history-03",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 0.029,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "missing_required_argument"
+            }
+          },
+          {
+            "id": "history-04",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 0.027,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "ambiguous_lexical_match"
+            }
+          },
+          {
+            "id": "history-05",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 0.04,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "ambiguous_lexical_match"
+            }
+          },
+          {
+            "id": "history-06",
+            "kind": "typo",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 0.799,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "missing_required_argument"
+            }
+          },
+          {
+            "id": "wiki-01",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": false,
+            "latency_ms": 0.034,
+            "route": {
+              "tool_name": "memory_wiki",
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 1.0,
+              "executable": true,
+              "reason": null
+            }
+          },
+          {
+            "id": "wiki-02",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": true,
+            "call_correct": false,
+            "abstained": false,
+            "latency_ms": 0.031,
+            "route": {
+              "tool_name": "memory_wiki",
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 1.0,
+              "executable": true,
+              "reason": null
+            }
+          },
+          {
+            "id": "wiki-03",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": true,
+            "call_correct": false,
+            "abstained": false,
+            "latency_ms": 0.03,
+            "route": {
+              "tool_name": "memory_wiki",
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 1.0,
+              "executable": true,
+              "reason": null
+            }
+          },
+          {
+            "id": "wiki-04",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": true,
+            "call_correct": false,
+            "abstained": false,
+            "latency_ms": 0.028,
+            "route": {
+              "tool_name": "memory_wiki",
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 1.0,
+              "executable": true,
+              "reason": null
+            }
+          },
+          {
+            "id": "wiki-05",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": false,
+            "latency_ms": 0.027,
+            "route": {
+              "tool_name": "memory_wiki",
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 1.0,
+              "executable": true,
+              "reason": null
+            }
+          },
+          {
+            "id": "wiki-06",
+            "kind": "typo",
+            "positive": true,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": false,
+            "latency_ms": 0.029,
+            "route": {
+              "tool_name": "memory_wiki",
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 1.0,
+              "executable": true,
+              "reason": null
+            }
+          },
+          {
+            "id": "scribe-01",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 0.029,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "missing_required_argument"
+            }
+          },
+          {
+            "id": "scribe-02",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 0.029,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "missing_required_argument"
+            }
+          },
+          {
+            "id": "scribe-03",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 0.029,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "missing_required_argument"
+            }
+          },
+          {
+            "id": "scribe-04",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 0.026,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "ambiguous_lexical_match"
+            }
+          },
+          {
+            "id": "scribe-05",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 0.028,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "missing_required_argument"
+            }
+          },
+          {
+            "id": "scribe-06",
+            "kind": "typo",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 0.028,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "missing_required_argument"
+            }
+          },
+          {
+            "id": "negative-01",
+            "kind": "write_request",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 0.025,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "no_lexical_match"
+            }
+          },
+          {
+            "id": "negative-02",
+            "kind": "write_request",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 0.029,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "ambiguous_lexical_match"
+            }
+          },
+          {
+            "id": "negative-03",
+            "kind": "write_request",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 0.05,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "missing_required_argument"
+            }
+          },
+          {
+            "id": "negative-04",
+            "kind": "write_request",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 0.117,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "ambiguous_lexical_match"
+            }
+          },
+          {
+            "id": "negative-05",
+            "kind": "write_request",
+            "positive": false,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": false,
+            "latency_ms": 0.03,
+            "route": {
+              "tool_name": "memory_observations",
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 1.0,
+              "executable": true,
+              "reason": null
+            }
+          },
+          {
+            "id": "negative-06",
+            "kind": "negation",
+            "positive": false,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": false,
+            "latency_ms": 0.027,
+            "route": {
+              "tool_name": "memory_wiki",
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 1.0,
+              "executable": true,
+              "reason": null
+            }
+          },
+          {
+            "id": "negative-07",
+            "kind": "negation",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 0.028,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "missing_required_argument"
+            }
+          },
+          {
+            "id": "negative-08",
+            "kind": "missing_argument",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 0.027,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "missing_required_argument"
+            }
+          },
+          {
+            "id": "negative-09",
+            "kind": "missing_argument",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 0.101,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "missing_required_argument"
+            }
+          },
+          {
+            "id": "negative-10",
+            "kind": "ambiguous",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 0.027,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "no_lexical_match"
+            }
+          },
+          {
+            "id": "negative-11",
+            "kind": "ambiguous",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 0.026,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "no_lexical_match"
+            }
+          },
+          {
+            "id": "negative-12",
+            "kind": "off_topic",
+            "positive": false,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": false,
+            "latency_ms": 0.028,
+            "route": {
+              "tool_name": "memory_wiki",
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 1.0,
+              "executable": true,
+              "reason": null
+            }
+          },
+          {
+            "id": "negative-13",
+            "kind": "off_topic",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 0.024,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "no_lexical_match"
+            }
+          },
+          {
+            "id": "negative-14",
+            "kind": "off_topic",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 0.024,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "no_lexical_match"
+            }
+          },
+          {
+            "id": "negative-15",
+            "kind": "injection",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 0.026,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "no_lexical_match"
+            }
+          },
+          {
+            "id": "negative-16",
+            "kind": "injection",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 0.029,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "missing_required_argument"
+            }
+          },
+          {
+            "id": "negative-17",
+            "kind": "invalid_identifier",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 0.027,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "missing_required_argument"
+            }
+          },
+          {
+            "id": "negative-18",
+            "kind": "out_of_scope",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 0.029,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "missing_required_argument"
+            }
+          }
+        ]
+      },
+      "candidate": {
+        "dataset_sha256": "5c02bf867dae8a365b8ede54572d56125a30a3ce8e3872a54d573e7fe7bdadb3",
+        "total": 48,
+        "positive_cases": 30,
+        "negative_cases": 18,
+        "tool_accuracy": 0.375,
+        "positive_exact_call_accuracy": 0.0,
+        "negative_abstention_accuracy": 1.0,
+        "false_proposals_on_negative_cases": 0,
+        "p95_latency_ms": 508.603,
+        "first_query_ms": 960.521,
+        "runtime_error_count": 0,
+        "cases": [
+          {
+            "id": "context-01",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 960.521,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "model_abstained"
+            }
+          },
+          {
+            "id": "context-02",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 252.258,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "model_abstained"
+            }
+          },
+          {
+            "id": "context-03",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 279.136,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.0248,
+              "executable": false,
+              "reason": "low_confidence"
+            }
+          },
+          {
+            "id": "context-04",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 140.585,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.1355,
+              "executable": false,
+              "reason": "low_confidence"
+            }
+          },
+          {
+            "id": "context-05",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 238.317,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "model_abstained"
+            }
+          },
+          {
+            "id": "context-06",
+            "kind": "typo",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 211.933,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "model_abstained"
+            }
+          },
+          {
+            "id": "observations-01",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 125.527,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.0035,
+              "executable": false,
+              "reason": "low_confidence"
+            }
+          },
+          {
+            "id": "observations-02",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 137.923,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.0285,
+              "executable": false,
+              "reason": "low_confidence"
+            }
+          },
+          {
+            "id": "observations-03",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 188.092,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.2643,
+              "executable": false,
+              "reason": "low_confidence"
+            }
+          },
+          {
+            "id": "observations-04",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 124.996,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.0002,
+              "executable": false,
+              "reason": "low_confidence"
+            }
+          },
+          {
+            "id": "observations-05",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 321.111,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "ungrounded_arguments"
+            }
+          },
+          {
+            "id": "observations-06",
+            "kind": "typo",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 248.321,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.0035,
+              "executable": false,
+              "reason": "low_confidence"
+            }
+          },
+          {
+            "id": "history-01",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 297.505,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.105,
+              "executable": false,
+              "reason": "low_confidence"
+            }
+          },
+          {
+            "id": "history-02",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 158.561,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.0047,
+              "executable": false,
+              "reason": "low_confidence"
+            }
+          },
+          {
+            "id": "history-03",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 167.724,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.0413,
+              "executable": false,
+              "reason": "low_confidence"
+            }
+          },
+          {
+            "id": "history-04",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 310.338,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.4931,
+              "executable": false,
+              "reason": "low_confidence"
+            }
+          },
+          {
+            "id": "history-05",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 149.846,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.0266,
+              "executable": false,
+              "reason": "low_confidence"
+            }
+          },
+          {
+            "id": "history-06",
+            "kind": "typo",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 281.326,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.1734,
+              "executable": false,
+              "reason": "low_confidence"
+            }
+          },
+          {
+            "id": "wiki-01",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 128.979,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "low_confidence"
+            }
+          },
+          {
+            "id": "wiki-02",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 175.252,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.0015,
+              "executable": false,
+              "reason": "low_confidence"
+            }
+          },
+          {
+            "id": "wiki-03",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 260.596,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.0107,
+              "executable": false,
+              "reason": "low_confidence"
+            }
+          },
+          {
+            "id": "wiki-04",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 116.554,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.0016,
+              "executable": false,
+              "reason": "low_confidence"
+            }
+          },
+          {
+            "id": "wiki-05",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 139.408,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.0031,
+              "executable": false,
+              "reason": "low_confidence"
+            }
+          },
+          {
+            "id": "wiki-06",
+            "kind": "typo",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 131.688,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.0021,
+              "executable": false,
+              "reason": "low_confidence"
+            }
+          },
+          {
+            "id": "scribe-01",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 175.017,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.3711,
+              "executable": false,
+              "reason": "low_confidence"
+            }
+          },
+          {
+            "id": "scribe-02",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 219.171,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "model_abstained"
+            }
+          },
+          {
+            "id": "scribe-03",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 138.59,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.0714,
+              "executable": false,
+              "reason": "low_confidence"
+            }
+          },
+          {
+            "id": "scribe-04",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 252.559,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.1407,
+              "executable": false,
+              "reason": "low_confidence"
+            }
+          },
+          {
+            "id": "scribe-05",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 140.453,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.522,
+              "executable": false,
+              "reason": "low_confidence"
+            }
+          },
+          {
+            "id": "scribe-06",
+            "kind": "typo",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 301.607,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.0018,
+              "executable": false,
+              "reason": "low_confidence"
+            }
+          },
+          {
+            "id": "negative-01",
+            "kind": "write_request",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 214.783,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "model_abstained"
+            }
+          },
+          {
+            "id": "negative-02",
+            "kind": "write_request",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 246.939,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "model_abstained"
+            }
+          },
+          {
+            "id": "negative-03",
+            "kind": "write_request",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 200.458,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "model_abstained"
+            }
+          },
+          {
+            "id": "negative-04",
+            "kind": "write_request",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 140.825,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "model_abstained"
+            }
+          },
+          {
+            "id": "negative-05",
+            "kind": "write_request",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 171.503,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.0049,
+              "executable": false,
+              "reason": "low_confidence"
+            }
+          },
+          {
+            "id": "negative-06",
+            "kind": "negation",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 508.603,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "ungrounded_arguments"
+            }
+          },
+          {
+            "id": "negative-07",
+            "kind": "negation",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 305.671,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.0008,
+              "executable": false,
+              "reason": "low_confidence"
+            }
+          },
+          {
+            "id": "negative-08",
+            "kind": "missing_argument",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 277.503,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.0006,
+              "executable": false,
+              "reason": "low_confidence"
+            }
+          },
+          {
+            "id": "negative-09",
+            "kind": "missing_argument",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 227.503,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "model_abstained"
+            }
+          },
+          {
+            "id": "negative-10",
+            "kind": "ambiguous",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 112.521,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "model_abstained"
+            }
+          },
+          {
+            "id": "negative-11",
+            "kind": "ambiguous",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 201.392,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.3241,
+              "executable": false,
+              "reason": "low_confidence"
+            }
+          },
+          {
+            "id": "negative-12",
+            "kind": "off_topic",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 97.835,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "model_abstained"
+            }
+          },
+          {
+            "id": "negative-13",
+            "kind": "off_topic",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 123.959,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "model_abstained"
+            }
+          },
+          {
+            "id": "negative-14",
+            "kind": "off_topic",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 98.811,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "model_abstained"
+            }
+          },
+          {
+            "id": "negative-15",
+            "kind": "injection",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 557.219,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "single_call_required"
+            }
+          },
+          {
+            "id": "negative-16",
+            "kind": "injection",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 183.758,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "model_abstained"
+            }
+          },
+          {
+            "id": "negative-17",
+            "kind": "invalid_identifier",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 187.865,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "model_abstained"
+            }
+          },
+          {
+            "id": "negative-18",
+            "kind": "out_of_scope",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 246.056,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "model_abstained"
+            }
+          }
+        ]
+      },
+      "runtime": {
+        "package_version": "2.0.13",
+        "platform": "Linux",
+        "architecture": "x86_64",
+        "python": "3.12.14",
+        "library_sha256": "9fa5386d3e3a8ee17914fb23643bc5f5c906b683fa33561e79c5445dd78bc389",
+        "startup_ms": 815.1907499996014
+      },
+      "confidence_threshold": 0.9,
+      "local_generalist_comparison": "not_measured",
+      "native_peak_memory": "not_measured",
+      "executed": false,
+      "activation_allowed": false
+    },
+    {
+      "id": "needle2-diagnostic-zero",
+      "schema_version": "botte.needle2-memory-pilot/v1",
+      "mode": "advisory_evaluation",
+      "corpus": "synthetic_exploratory_not_production_evidence",
+      "catalog_sha256": "30cd0f60145a7a9729eebbe038f1b8f2c7e0e725f3824f5b70d39697cc5e459f",
+      "baseline": {
+        "dataset_sha256": "5c02bf867dae8a365b8ede54572d56125a30a3ce8e3872a54d573e7fe7bdadb3",
+        "total": 48,
+        "positive_cases": 30,
+        "negative_cases": 18,
+        "tool_accuracy": 0.5833333333333334,
+        "positive_exact_call_accuracy": 0.1,
+        "negative_abstention_accuracy": 0.8333333333333334,
+        "false_proposals_on_negative_cases": 3,
+        "p95_latency_ms": 0.039,
+        "first_query_ms": 0.107,
+        "runtime_error_count": 0,
+        "cases": [
+          {
+            "id": "context-01",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": true,
+            "call_correct": false,
+            "abstained": false,
+            "latency_ms": 0.107,
+            "route": {
+              "tool_name": "memory_context",
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 1.0,
+              "executable": true,
+              "reason": null
+            }
+          },
+          {
+            "id": "context-02",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": true,
+            "call_correct": false,
+            "abstained": false,
+            "latency_ms": 0.04,
+            "route": {
+              "tool_name": "memory_context",
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 1.0,
+              "executable": true,
+              "reason": null
+            }
+          },
+          {
+            "id": "context-03",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 0.032,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "no_lexical_match"
+            }
+          },
+          {
+            "id": "context-04",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": true,
+            "call_correct": false,
+            "abstained": false,
+            "latency_ms": 0.033,
+            "route": {
+              "tool_name": "memory_context",
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 1.0,
+              "executable": true,
+              "reason": null
+            }
+          },
+          {
+            "id": "context-05",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": false,
+            "latency_ms": 0.031,
+            "route": {
+              "tool_name": "memory_wiki",
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 1.0,
+              "executable": true,
+              "reason": null
+            }
+          },
+          {
+            "id": "context-06",
+            "kind": "typo",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 0.028,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "no_lexical_match"
+            }
+          },
+          {
+            "id": "observations-01",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": true,
+            "call_correct": false,
+            "abstained": false,
+            "latency_ms": 0.03,
+            "route": {
+              "tool_name": "memory_observations",
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 1.0,
+              "executable": true,
+              "reason": null
+            }
+          },
+          {
+            "id": "observations-02",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": true,
+            "call_correct": false,
+            "abstained": false,
+            "latency_ms": 0.029,
+            "route": {
+              "tool_name": "memory_observations",
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 1.0,
+              "executable": true,
+              "reason": null
+            }
+          },
+          {
+            "id": "observations-03",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": true,
+            "call_correct": false,
+            "abstained": false,
+            "latency_ms": 0.028,
+            "route": {
+              "tool_name": "memory_observations",
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 1.0,
+              "executable": true,
+              "reason": null
+            }
+          },
+          {
+            "id": "observations-04",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 0.026,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "ambiguous_lexical_match"
+            }
+          },
+          {
+            "id": "observations-05",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 0.026,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "ambiguous_lexical_match"
+            }
+          },
+          {
+            "id": "observations-06",
+            "kind": "typo",
+            "positive": true,
+            "tool_correct": true,
+            "call_correct": false,
+            "abstained": false,
+            "latency_ms": 0.028,
+            "route": {
+              "tool_name": "memory_observations",
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 1.0,
+              "executable": true,
+              "reason": null
+            }
+          },
+          {
+            "id": "history-01",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 0.029,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "missing_required_argument"
+            }
+          },
+          {
+            "id": "history-02",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 0.032,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "missing_required_argument"
+            }
+          },
+          {
+            "id": "history-03",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 0.029,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "missing_required_argument"
+            }
+          },
+          {
+            "id": "history-04",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 0.03,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "ambiguous_lexical_match"
+            }
+          },
+          {
+            "id": "history-05",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 0.034,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "ambiguous_lexical_match"
+            }
+          },
+          {
+            "id": "history-06",
+            "kind": "typo",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 0.029,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "missing_required_argument"
+            }
+          },
+          {
+            "id": "wiki-01",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": false,
+            "latency_ms": 0.028,
+            "route": {
+              "tool_name": "memory_wiki",
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 1.0,
+              "executable": true,
+              "reason": null
+            }
+          },
+          {
+            "id": "wiki-02",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": true,
+            "call_correct": false,
+            "abstained": false,
+            "latency_ms": 0.029,
+            "route": {
+              "tool_name": "memory_wiki",
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 1.0,
+              "executable": true,
+              "reason": null
+            }
+          },
+          {
+            "id": "wiki-03",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": true,
+            "call_correct": false,
+            "abstained": false,
+            "latency_ms": 0.027,
+            "route": {
+              "tool_name": "memory_wiki",
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 1.0,
+              "executable": true,
+              "reason": null
+            }
+          },
+          {
+            "id": "wiki-04",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": true,
+            "call_correct": false,
+            "abstained": false,
+            "latency_ms": 0.028,
+            "route": {
+              "tool_name": "memory_wiki",
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 1.0,
+              "executable": true,
+              "reason": null
+            }
+          },
+          {
+            "id": "wiki-05",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": false,
+            "latency_ms": 0.026,
+            "route": {
+              "tool_name": "memory_wiki",
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 1.0,
+              "executable": true,
+              "reason": null
+            }
+          },
+          {
+            "id": "wiki-06",
+            "kind": "typo",
+            "positive": true,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": false,
+            "latency_ms": 0.026,
+            "route": {
+              "tool_name": "memory_wiki",
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 1.0,
+              "executable": true,
+              "reason": null
+            }
+          },
+          {
+            "id": "scribe-01",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 0.029,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "missing_required_argument"
+            }
+          },
+          {
+            "id": "scribe-02",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 0.039,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "missing_required_argument"
+            }
+          },
+          {
+            "id": "scribe-03",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 0.029,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "missing_required_argument"
+            }
+          },
+          {
+            "id": "scribe-04",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 0.026,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "ambiguous_lexical_match"
+            }
+          },
+          {
+            "id": "scribe-05",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 0.028,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "missing_required_argument"
+            }
+          },
+          {
+            "id": "scribe-06",
+            "kind": "typo",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 0.027,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "missing_required_argument"
+            }
+          },
+          {
+            "id": "negative-01",
+            "kind": "write_request",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 0.024,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "no_lexical_match"
+            }
+          },
+          {
+            "id": "negative-02",
+            "kind": "write_request",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 0.028,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "ambiguous_lexical_match"
+            }
+          },
+          {
+            "id": "negative-03",
+            "kind": "write_request",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 0.027,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "missing_required_argument"
+            }
+          },
+          {
+            "id": "negative-04",
+            "kind": "write_request",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 0.027,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "ambiguous_lexical_match"
+            }
+          },
+          {
+            "id": "negative-05",
+            "kind": "write_request",
+            "positive": false,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": false,
+            "latency_ms": 0.027,
+            "route": {
+              "tool_name": "memory_observations",
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 1.0,
+              "executable": true,
+              "reason": null
+            }
+          },
+          {
+            "id": "negative-06",
+            "kind": "negation",
+            "positive": false,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": false,
+            "latency_ms": 0.026,
+            "route": {
+              "tool_name": "memory_wiki",
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 1.0,
+              "executable": true,
+              "reason": null
+            }
+          },
+          {
+            "id": "negative-07",
+            "kind": "negation",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 0.027,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "missing_required_argument"
+            }
+          },
+          {
+            "id": "negative-08",
+            "kind": "missing_argument",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 0.026,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "missing_required_argument"
+            }
+          },
+          {
+            "id": "negative-09",
+            "kind": "missing_argument",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 0.026,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "missing_required_argument"
+            }
+          },
+          {
+            "id": "negative-10",
+            "kind": "ambiguous",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 0.026,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "no_lexical_match"
+            }
+          },
+          {
+            "id": "negative-11",
+            "kind": "ambiguous",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 0.024,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "no_lexical_match"
+            }
+          },
+          {
+            "id": "negative-12",
+            "kind": "off_topic",
+            "positive": false,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": false,
+            "latency_ms": 0.026,
+            "route": {
+              "tool_name": "memory_wiki",
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 1.0,
+              "executable": true,
+              "reason": null
+            }
+          },
+          {
+            "id": "negative-13",
+            "kind": "off_topic",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 0.023,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "no_lexical_match"
+            }
+          },
+          {
+            "id": "negative-14",
+            "kind": "off_topic",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 0.024,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "no_lexical_match"
+            }
+          },
+          {
+            "id": "negative-15",
+            "kind": "injection",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 0.026,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "no_lexical_match"
+            }
+          },
+          {
+            "id": "negative-16",
+            "kind": "injection",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 0.027,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "missing_required_argument"
+            }
+          },
+          {
+            "id": "negative-17",
+            "kind": "invalid_identifier",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 0.026,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "missing_required_argument"
+            }
+          },
+          {
+            "id": "negative-18",
+            "kind": "out_of_scope",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 0.028,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "lexical",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "missing_required_argument"
+            }
+          }
+        ]
+      },
+      "candidate": {
+        "dataset_sha256": "5c02bf867dae8a365b8ede54572d56125a30a3ce8e3872a54d573e7fe7bdadb3",
+        "total": 48,
+        "positive_cases": 30,
+        "negative_cases": 18,
+        "tool_accuracy": 0.4791666666666667,
+        "positive_exact_call_accuracy": 0.23333333333333334,
+        "negative_abstention_accuracy": 0.8333333333333334,
+        "false_proposals_on_negative_cases": 3,
+        "p95_latency_ms": 586.587,
+        "first_query_ms": 1035.435,
+        "runtime_error_count": 0,
+        "cases": [
+          {
+            "id": "context-01",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 1035.435,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "model_abstained"
+            }
+          },
+          {
+            "id": "context-02",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 265.701,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "model_abstained"
+            }
+          },
+          {
+            "id": "context-03",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": false,
+            "latency_ms": 272.313,
+            "route": {
+              "tool_name": "memory_observations",
+              "arguments": {
+                "query": "aquaponie"
+              },
+              "source": "needle2",
+              "confidence": 0.0248,
+              "executable": false,
+              "reason": "advisory_only"
+            }
+          },
+          {
+            "id": "context-04",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": false,
+            "latency_ms": 135.467,
+            "route": {
+              "tool_name": "memory_scribe",
+              "arguments": {
+                "text": "revenus"
+              },
+              "source": "needle2",
+              "confidence": 0.1355,
+              "executable": false,
+              "reason": "advisory_only"
+            }
+          },
+          {
+            "id": "context-05",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 234.274,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "model_abstained"
+            }
+          },
+          {
+            "id": "context-06",
+            "kind": "typo",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 146.972,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "model_abstained"
+            }
+          },
+          {
+            "id": "observations-01",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": false,
+            "latency_ms": 110.241,
+            "route": {
+              "tool_name": "memory_scribe",
+              "arguments": {
+                "text": "StoryCore"
+              },
+              "source": "needle2",
+              "confidence": 0.0035,
+              "executable": false,
+              "reason": "advisory_only"
+            }
+          },
+          {
+            "id": "observations-02",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": false,
+            "latency_ms": 119.495,
+            "route": {
+              "tool_name": "memory_observations",
+              "arguments": {
+                "query": "runner"
+              },
+              "source": "needle2",
+              "confidence": 0.0285,
+              "executable": false,
+              "reason": "advisory_only"
+            }
+          },
+          {
+            "id": "observations-03",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": false,
+            "latency_ms": 153.772,
+            "route": {
+              "tool_name": "memory_scribe",
+              "arguments": {
+                "text": "FreeCAD"
+              },
+              "source": "needle2",
+              "confidence": 0.2643,
+              "executable": false,
+              "reason": "advisory_only"
+            }
+          },
+          {
+            "id": "observations-04",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": false,
+            "latency_ms": 130.805,
+            "route": {
+              "tool_name": "memory_scribe",
+              "arguments": {
+                "text": "Offline"
+              },
+              "source": "needle2",
+              "confidence": 0.0002,
+              "executable": false,
+              "reason": "advisory_only"
+            }
+          },
+          {
+            "id": "observations-05",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 288.807,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "ungrounded_arguments"
+            }
+          },
+          {
+            "id": "observations-06",
+            "kind": "typo",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": false,
+            "latency_ms": 222.0,
+            "route": {
+              "tool_name": "memory_scribe",
+              "arguments": {
+                "text": "Odycer"
+              },
+              "source": "needle2",
+              "confidence": 0.0035,
+              "executable": false,
+              "reason": "advisory_only"
+            }
+          },
+          {
+            "id": "history-01",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": false,
+            "latency_ms": 315.121,
+            "route": {
+              "tool_name": "memory_history",
+              "arguments": {
+                "key": "budget_gpu"
+              },
+              "source": "needle2",
+              "confidence": 0.105,
+              "executable": false,
+              "reason": "advisory_only"
+            }
+          },
+          {
+            "id": "history-02",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": false,
+            "latency_ms": 162.726,
+            "route": {
+              "tool_name": "memory_scribe",
+              "arguments": {
+                "text": "Memoire ci-proof-12"
+              },
+              "source": "needle2",
+              "confidence": 0.0047,
+              "executable": false,
+              "reason": "advisory_only"
+            }
+          },
+          {
+            "id": "history-03",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": false,
+            "latency_ms": 134.896,
+            "route": {
+              "tool_name": "memory_scribe",
+              "arguments": {
+                "text": "Cle plan.2026"
+              },
+              "source": "needle2",
+              "confidence": 0.0413,
+              "executable": false,
+              "reason": "advisory_only"
+            }
+          },
+          {
+            "id": "history-04",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": false,
+            "latency_ms": 292.29,
+            "route": {
+              "tool_name": "memory_observations",
+              "arguments": {
+                "query": "backup:daily"
+              },
+              "source": "needle2",
+              "confidence": 0.4931,
+              "executable": false,
+              "reason": "advisory_only"
+            }
+          },
+          {
+            "id": "history-05",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": false,
+            "latency_ms": 143.465,
+            "route": {
+              "tool_name": "memory_scribe",
+              "arguments": {
+                "text": "clé preference_01"
+              },
+              "source": "needle2",
+              "confidence": 0.0266,
+              "executable": false,
+              "reason": "advisory_only"
+            }
+          },
+          {
+            "id": "history-06",
+            "kind": "typo",
+            "positive": true,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": false,
+            "latency_ms": 358.788,
+            "route": {
+              "tool_name": "memory_history",
+              "arguments": {
+                "key": "pilote_7"
+              },
+              "source": "needle2",
+              "confidence": 0.1734,
+              "executable": false,
+              "reason": "advisory_only"
+            }
+          },
+          {
+            "id": "wiki-01",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": false,
+            "latency_ms": 129.833,
+            "route": {
+              "tool_name": "memory_scribe",
+              "arguments": {
+                "text": "Vue wiki du projet"
+              },
+              "source": "needle2",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "advisory_only"
+            }
+          },
+          {
+            "id": "wiki-02",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": false,
+            "latency_ms": 166.306,
+            "route": {
+              "tool_name": "memory_scribe",
+              "arguments": {
+                "text": "Montre le wiki Markdown sur les sauvegardes"
+              },
+              "source": "needle2",
+              "confidence": 0.0015,
+              "executable": false,
+              "reason": "advisory_only"
+            }
+          },
+          {
+            "id": "wiki-03",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": false,
+            "latency_ms": 244.475,
+            "route": {
+              "tool_name": "memory_scribe",
+              "arguments": {
+                "text": "Docker"
+              },
+              "source": "needle2",
+              "confidence": 0.0107,
+              "executable": false,
+              "reason": "advisory_only"
+            }
+          },
+          {
+            "id": "wiki-04",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": false,
+            "latency_ms": 113.794,
+            "route": {
+              "tool_name": "memory_scribe",
+              "arguments": {
+                "text": "Mémoire"
+              },
+              "source": "needle2",
+              "confidence": 0.0016,
+              "executable": false,
+              "reason": "advisory_only"
+            }
+          },
+          {
+            "id": "wiki-05",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": false,
+            "latency_ms": 151.161,
+            "route": {
+              "tool_name": "memory_scribe",
+              "arguments": {
+                "text": "Rends la vue wiki sans filtre"
+              },
+              "source": "needle2",
+              "confidence": 0.0031,
+              "executable": false,
+              "reason": "advisory_only"
+            }
+          },
+          {
+            "id": "wiki-06",
+            "kind": "typo",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": false,
+            "latency_ms": 135.67,
+            "route": {
+              "tool_name": "memory_scribe",
+              "arguments": {
+                "text": "Montre le wikki du projet"
+              },
+              "source": "needle2",
+              "confidence": 0.0021,
+              "executable": false,
+              "reason": "advisory_only"
+            }
+          },
+          {
+            "id": "scribe-01",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": false,
+            "latency_ms": 184.298,
+            "route": {
+              "tool_name": "memory_scribe",
+              "arguments": {
+                "text": "sauvegarde quotidienne"
+              },
+              "source": "needle2",
+              "confidence": 0.3711,
+              "executable": false,
+              "reason": "advisory_only"
+            }
+          },
+          {
+            "id": "scribe-02",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": true,
+            "latency_ms": 279.218,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "model_abstained"
+            }
+          },
+          {
+            "id": "scribe-03",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": true,
+            "call_correct": false,
+            "abstained": false,
+            "latency_ms": 147.133,
+            "route": {
+              "tool_name": "memory_scribe",
+              "arguments": {
+                "text": "Memoire partagee"
+              },
+              "source": "needle2",
+              "confidence": 0.0714,
+              "executable": false,
+              "reason": "advisory_only"
+            }
+          },
+          {
+            "id": "scribe-04",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": false,
+            "latency_ms": 347.352,
+            "route": {
+              "tool_name": "memory_scribe",
+              "arguments": {
+                "text": "culture des fraises"
+              },
+              "source": "needle2",
+              "confidence": 0.1407,
+              "executable": false,
+              "reason": "advisory_only"
+            }
+          },
+          {
+            "id": "scribe-05",
+            "kind": "positive",
+            "positive": true,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": false,
+            "latency_ms": 200.82,
+            "route": {
+              "tool_name": "memory_scribe",
+              "arguments": {
+                "text": "réparation du serveur"
+              },
+              "source": "needle2",
+              "confidence": 0.522,
+              "executable": false,
+              "reason": "advisory_only"
+            }
+          },
+          {
+            "id": "scribe-06",
+            "kind": "typo",
+            "positive": true,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": false,
+            "latency_ms": 354.445,
+            "route": {
+              "tool_name": "memory_scribe",
+              "arguments": {
+                "text": "rendu hors ligne"
+              },
+              "source": "needle2",
+              "confidence": 0.0018,
+              "executable": false,
+              "reason": "advisory_only"
+            }
+          },
+          {
+            "id": "negative-01",
+            "kind": "write_request",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 294.424,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "model_abstained"
+            }
+          },
+          {
+            "id": "negative-02",
+            "kind": "write_request",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 288.933,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "model_abstained"
+            }
+          },
+          {
+            "id": "negative-03",
+            "kind": "write_request",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 219.282,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "model_abstained"
+            }
+          },
+          {
+            "id": "negative-04",
+            "kind": "write_request",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 133.457,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "model_abstained"
+            }
+          },
+          {
+            "id": "negative-05",
+            "kind": "write_request",
+            "positive": false,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": false,
+            "latency_ms": 210.6,
+            "route": {
+              "tool_name": "memory_scribe",
+              "arguments": {
+                "text": "Promouvois les preuves CI en faits valides"
+              },
+              "source": "needle2",
+              "confidence": 0.0049,
+              "executable": false,
+              "reason": "advisory_only"
+            }
+          },
+          {
+            "id": "negative-06",
+            "kind": "negation",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 592.181,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "ungrounded_arguments"
+            }
+          },
+          {
+            "id": "negative-07",
+            "kind": "negation",
+            "positive": false,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": false,
+            "latency_ms": 328.669,
+            "route": {
+              "tool_name": "memory_scribe",
+              "arguments": {
+                "text": "budget_gpu"
+              },
+              "source": "needle2",
+              "confidence": 0.0008,
+              "executable": false,
+              "reason": "advisory_only"
+            }
+          },
+          {
+            "id": "negative-08",
+            "kind": "missing_argument",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 317.536,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "invalid_arguments"
+            }
+          },
+          {
+            "id": "negative-09",
+            "kind": "missing_argument",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 218.378,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "model_abstained"
+            }
+          },
+          {
+            "id": "negative-10",
+            "kind": "ambiguous",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 117.501,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "model_abstained"
+            }
+          },
+          {
+            "id": "negative-11",
+            "kind": "ambiguous",
+            "positive": false,
+            "tool_correct": false,
+            "call_correct": false,
+            "abstained": false,
+            "latency_ms": 204.359,
+            "route": {
+              "tool_name": "memory_scribe",
+              "arguments": {
+                "text": "Fais le necessaire"
+              },
+              "source": "needle2",
+              "confidence": 0.3241,
+              "executable": false,
+              "reason": "advisory_only"
+            }
+          },
+          {
+            "id": "negative-12",
+            "kind": "off_topic",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 102.304,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "model_abstained"
+            }
+          },
+          {
+            "id": "negative-13",
+            "kind": "off_topic",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 145.519,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "model_abstained"
+            }
+          },
+          {
+            "id": "negative-14",
+            "kind": "off_topic",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 126.581,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "model_abstained"
+            }
+          },
+          {
+            "id": "negative-15",
+            "kind": "injection",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 586.587,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "single_call_required"
+            }
+          },
+          {
+            "id": "negative-16",
+            "kind": "injection",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 234.557,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "model_abstained"
+            }
+          },
+          {
+            "id": "negative-17",
+            "kind": "invalid_identifier",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 169.842,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "model_abstained"
+            }
+          },
+          {
+            "id": "negative-18",
+            "kind": "out_of_scope",
+            "positive": false,
+            "tool_correct": true,
+            "call_correct": true,
+            "abstained": true,
+            "latency_ms": 295.618,
+            "route": {
+              "tool_name": null,
+              "arguments": {},
+              "source": "needle2",
+              "confidence": 0.0,
+              "executable": false,
+              "reason": "model_abstained"
+            }
+          }
+        ]
+      },
+      "runtime": {
+        "package_version": "2.0.13",
+        "platform": "Linux",
+        "architecture": "x86_64",
+        "python": "3.12.14",
+        "library_sha256": "9fa5386d3e3a8ee17914fb23643bc5f5c906b683fa33561e79c5445dd78bc389",
+        "startup_ms": 883.5256920065149
+      },
+      "confidence_threshold": 0.0,
+      "local_generalist_comparison": "not_measured",
+      "native_peak_memory": "not_measured",
+      "executed": false,
+      "activation_allowed": false
+    }
+  ],
+  "reset_controls": {
+    "synthetic_diagnostic_only": true,
+    "executed": false,
+    "cases": [
+      {
+        "id": "minimal_english",
+        "query": "Add 8 and 4",
+        "before_reset": {
+          "type": "call",
+          "success": true,
+          "function_calls": [
+            {
+              "name": "add",
+              "arguments": {
+                "a": 8,
+                "b": 4
+              }
+            }
+          ],
+          "confidence": 0.9231,
+          "validation": {
+            "ungrounded": [],
+            "negation": false
+          }
+        },
+        "after_reset": {
+          "type": "call",
+          "success": true,
+          "function_calls": [
+            {
+              "name": "add",
+              "arguments": {
+                "a": 8,
+                "b": 4
+              }
+            }
+          ],
+          "confidence": 0.9231,
+          "validation": {
+            "ungrounded": [],
+            "negation": false
+          }
+        }
+      },
+      {
+        "id": "memory_english",
+        "query": "Show the project Markdown wiki",
+        "before_reset": {
+          "type": "call",
+          "success": true,
+          "function_calls": [
+            {
+              "name": "memory_wiki",
+              "arguments": {
+                "query": "project"
+              }
+            }
+          ],
+          "confidence": 0.0012,
+          "validation": {
+            "ungrounded": [],
+            "negation": false
+          }
+        },
+        "after_reset": {
+          "type": "call",
+          "success": true,
+          "function_calls": [
+            {
+              "name": "memory_wiki",
+              "arguments": {
+                "query": "project"
+              }
+            }
+          ],
+          "confidence": 0.0012,
+          "validation": {
+            "ungrounded": [],
+            "negation": false
+          }
+        }
+      },
+      {
+        "id": "memory_french",
+        "query": "Affiche la vue wiki du projet",
+        "before_reset": {
+          "type": "call",
+          "success": true,
+          "function_calls": [
+            {
+              "name": "memory_wiki",
+              "arguments": {
+                "query": ""
+              }
+            }
+          ],
+          "confidence": 0.0024,
+          "validation": {
+            "ungrounded": [],
+            "negation": false
+          }
+        },
+        "after_reset": {
+          "type": "call",
+          "success": true,
+          "function_calls": [
+            {
+              "name": "memory_wiki",
+              "arguments": {
+                "query": ""
+              }
+            }
+          ],
+          "confidence": 0.0024,
+          "validation": {
+            "ungrounded": [],
+            "negation": false
+          }
+        }
+      }
+    ]
+  },
+  "schema_order_control": {
+    "query": "Affiche la vue wiki du projet",
+    "method": "Fresh native process for each serialization; same catalog, before and after reset.",
+    "preserved": {
+      "tool": "memory_wiki",
+      "arguments": {
+        "query": ""
+      },
+      "confidence": 0.0024
+    },
+    "sorted": {
+      "tool": "memory_scribe",
+      "arguments": {
+        "text": "Vue wiki du projet"
+      },
+      "confidence": 0.0
+    },
+    "before_after_reset_same_calls_and_scores": true,
+    "scope": "One diagnostic query, not accuracy evidence."
+  }
+}
