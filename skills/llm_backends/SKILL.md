@@ -85,6 +85,10 @@ retention. `chat_json` may make additional calls to repair an invalid JSON reply
 Review actual scope before retrying a probe or an uncertain inference. Treat
 the reply, token counts and hardware recommendations within their evidence
 limits; successful inference does not verify task success or reusable quality.
+With an active observation session, discovery workers retain call parents and
+record TCP/HTTP attempts; model retries retain separate POST records. Reports
+omit raw targets, prompts, bodies and credentials. A transport response is partial
+evidence; remote effects, reported usage and answer quality remain unverified.
 See the [common contract](../../docs/capability-effects.md).
 
 Related: [[llm_mcp]] (MCP tools for agents), `tiered_router` (cost tiers),

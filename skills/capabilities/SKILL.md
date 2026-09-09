@@ -71,7 +71,11 @@ covers discovery and inspection, not execution of the capabilities it lists.
 
 For runtime comparison, the [observation companion](../../docs/capability-effects.md#observe-and-reconcile-a-run)
 provides `ObservationSession`, `validate_report` and `summarize` in
-`skills.capabilities.observations`. Collection is opt-in and records instrumented
-call links and bounded file evidence. A checkpoint writes a caller-selected
-report file; there is no automatic tracing or execution of verification text.
-Keep whole effects and reuse unverified when only one write facet was sampled.
+`skills.capabilities.observations`. Opt-in v2 collection records instrumented call
+links, bounded file evidence and TCP/HTTP response metadata; v1 reports remain
+readable. Network targets have opaque run-local aliases, with no payloads or
+credentials. A checkpoint writes a caller-selected report file. Propagate worker
+contexts explicitly with `submit_observed` and join them before session closure;
+late completions cannot rewrite a closed report. There is no automatic tracing
+or execution of verification text. Keep whole effects and reuse unverified when
+only a write or transport-response facet was sampled.

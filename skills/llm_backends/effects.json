@@ -1,14 +1,14 @@
 {
   "schema": "botte.capability-effects/v1",
   "capability_id": "zedarvates/botte-secrete:skills/llm_backends",
-  "contract_version": "0.3.0",
+  "contract_version": "0.4.0",
   "source_hashes": {
-    "SKILL.md": "7fbde5c6b2af1394280346f6860f6b2c7ef27358600a669f3a5e6daf56b163b9",
+    "SKILL.md": "6798fcdffb24c857e1a63aa0999c02c97ab7aa00ce7f83b7cbfb778c26b8e33f",
     "__init__.py": "eca04ab1a01da980fdfff0125043a40cb68a83bcfc484a05862f5bffdd58bd1f",
     "registry.py": "760617183d341c44798ebd6682b81e867afc04b26e71db738ce1478442866edd",
-    "discovery.py": "1f5c1a4223704a634b68a90353bcd112cacef82e79db27c8faba56189c8a4e5b",
+    "discovery.py": "312f045d7ff62d783f56e589ab88ddfa0778a702890d18a20a35100cb8fdd468",
     "audit.py": "ac9cd0b190a3f627c612679e6ef18eed79b8906a25c6dc8fa8bd63df81a2b5bb",
-    "client.py": "a0cb44947eca9895ff4a9ce0b71a7d81b8e8e48f560dd1c96bc65192911c1f9c",
+    "client.py": "eeb7e559ff78161e4125b78b0ee449e4737bc33ae81a8ef6c4c05ba4e73358a8",
     "cli.py": "97b85651dea30abb836261230d08946b4f5961ff3ceed6f1361d8640d4fd5c00"
   },
   "preconditions": [
@@ -50,12 +50,12 @@
       "verification": "Mock the HTTP response, inspect the transmitted body and count malformed-JSON repair calls; do not send private data to test fixtures."
     },
     {
-      "effect": "Inside an explicitly enabled observation session, expose instrumented call boundaries and any supported write samples to a separate partial evidence report.",
-      "scope": "Current synchronous call context, current effects declaration and configured checkpoint/report destinations; no file contents or endpoint arguments are added by the observer.",
+      "effect": "Inside an explicitly enabled observation session, expose call boundaries, registry write samples and TCP/HTTP attempts in a separate partial evidence report.",
+      "scope": "Current call context and enrolled discovery workers, current effects declarations and configured checkpoint/report destinations; no prompt, response body, credential or raw endpoint is added by the observer.",
       "likelihood": "conditional",
-      "basis": "Operation decorators and write contexts use skills.capabilities.observations, an imported dependency not bound by these local hashes. Registry and LRU write hooks reference existing effect indices without claiming to validate the entire effect.",
-      "impact": "Makes direct and inherited consequences traceable; adds bounded reads and optional checkpoint writes and can disclose paths, fingerprints and declarations.",
-      "verification": "Run the isolated observation fixtures in skills/conductor/test_observations.py; check inactive mode, nested parents, cache hits and partial writes, and leave uninstrumented effects unassessed."
+      "basis": "Operation decorators and transport/write contexts use imported skills.capabilities observation helpers outside these hashes. discover/scan_host propagate worker contexts; probe_host links TCP and GET attempts; chat and chat_json retain distinct POST retries.",
+      "impact": "Makes inherited consequences traceable and retains received status even if the body times out. Adds bounded reads, optional checkpoint writes and opaque target metadata; server behavior, usage and answer quality remain unverified.",
+      "verification": "Run test_observations.py and test_network_observations.py in skills/conductor; inspect real loopback probes, parallel checkpoints, redirects, JSON retries, HTTP errors and body timeout without live models or private data."
     }
   ],
   "downstream_effects": [
@@ -97,14 +97,16 @@
       "Backend URLs and response usage fields are supplied by configuration or remote servers.",
       "Model recommendations do not verify current prices, compatibility, throughput or quality.",
       "The optional project profiler and interpreter/runtime behavior are outside these local source bindings.",
-      "Optional observation reports cover instrumented synchronous calls and selected writes only; uninstrumented, concurrent, remote or background effects remain unverified."
+      "Observation covers selected calls, writes and TCP/HTTP response facets, including enrolled discovery workers. Other background activity, intermediate redirects, remote effects and cost remain unverified."
     ],
     "evidence_refs": [
       "registry.py:refresh",
       "registry.py:save",
       "audit.py:audit",
       "client.py:LocalLLMClient.chat_json",
-      "cli.py:_cmd_profile"
+      "cli.py:_cmd_profile",
+      "discovery.py:probe_host",
+      "discovery.py:discover"
     ]
   },
   "reuse": [

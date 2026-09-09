@@ -176,7 +176,7 @@ python -m skills.conductor.cli "audit my project" --execute --observe-effects --
 and confirmation rules still apply.
 
 Each result adds `effects_observed` using the separate
-[`botte.effect-observations/v1` schema](schemas/effect-observations.schema.json),
+[`botte.effect-observations/v2` schema](schemas/effect-observations-v2.schema.json),
 an `effects_summary`, and `effects_changed_since_plan` (true, false, or null when
 no matching execution identity is available). The original `effects_before`
 is retained. Each instrumented call re-inspects its declaration at entry;
@@ -184,30 +184,36 @@ the report deduplicates immutable declaration snapshots by SHA-256. It retains
 the observer's UTC start time, working directory and Python version, and each
 call's actual source directory, including when its declaration is unavailable. A changed
 status or declaration is visible, but does not automatically block execution.
+The v2 companion adds a required `network` array. Readers still accept existing
+[closed v1 reports](schemas/effect-observations.schema.json); v1 producers and
+stored artifacts need no rewriting. Consumers must select the declared version.
+The separate capability-effects and mission/handoff schemas remain v1.
 
-The first adapters cover these actual synchronous calls:
+The adapters cover these actual calls, including explicitly enrolled discovery
+workers:
 
-| Capability | Recorded operations | Sampled writes |
+| Capability | Recorded operations | Direct evidence |
 |---|---|---|
-| `checkup` | `run` | Inherited writes through linked children |
-| `infra_advisor` | `auto_audit`, `gather` | Inherited registry writes |
-| `llm_backends` | `audit`, `registry.refresh`, `registry.save` | Backend registry |
-| `cluster` | `status`, `save_lru_state` | LRU state and inherited registry writes |
+| `checkup` | `run` | Inherited evidence through linked children |
+| `infra_advisor` | `auto_audit`, `gather` | Inherited registry writes and probes |
+| `llm_backends` | `audit`, `registry.refresh`, `registry.save`, `discover`, `scan_host`, `probe_host`, `chat`, `chat_json` | Registry writes, TCP connects, discovery GETs and model POSTs |
+| `cluster` | `status`, `save_lru_state`, `delegate` | LRU writes, delegation POSTs and inherited discovery |
 
 Supported CLI commands run in a child wrapper with a private temporary checkpoint.
-Calls have unique IDs and parent IDs; one write belongs to one call, so a parent
-and its descendants do not inflate the write count. For example, follow the
+Calls have unique IDs and parent IDs; each write or network attempt belongs to
+one call, so a parent and its descendants do not inflate the counts. Follow the
 registry write's call through `registry.refresh`, `gather`, `auto_audit` and
 `checkup.run` to see the inherited consequence. A cached audit can record calls
 without any write. That does not establish that all its effects were absent.
 
 Each write records its attempted operation, absolute resource path, bounded
 before/after file size and SHA-256, and a reference to one effect in the call's
-declaration. No file contents, prompts, credentials or endpoint arguments are
-collected by this observer. Paths, fingerprints and declarations can still be
-private; existing command-output tails can contain separate sensitive data.
+declaration. No file contents, prompts, credentials, headers, response bodies,
+exception strings or raw endpoint arguments are collected by this observer.
+Paths, fingerprints and declarations can still be private; existing command-output
+tails can contain separate sensitive data.
 
-Reconciliation deliberately checks only the `file_present_after_write` facet:
+Write reconciliation checks only the `file_present_after_write` facet:
 `supported` means a returned write and a present post-write sample with a current
 declaration; `deviation` records a raised write or a missing post-write file;
 `unknown` covers unavailable/stale declarations, unfinished writes and unreadable
@@ -215,11 +221,34 @@ samples. This never validates the whole prose effect or its preconditions.
 Even identical samples retain the write attempt. Errors absorbed by a parent
 remain visible in `failed_writes`; a successful parent does not erase them.
 
-Checkpoints are flushed at call/write boundaries. After a timeout, completed
-samples remain available and open calls remain `running`; the parent records
+Network records describe the actual TCP connect or HTTP open/read attempt,
+method, duration, categorical failure and received HTTP status. Targets use
+opaque aliases scoped to this report, plus scheme and address kind. These
+describe URL origins or supplied address literals, without DNS resolution;
+they do not identify the actual peer, proxy, owner or authenticated principal.
+For HTTP, the final response origin is compared with the requested origin;
+intermediate redirects are not enumerated. Delegation rejects redirects even
+when observation is disabled, so task credentials are not forwarded to another
+endpoint. Discovery retains its existing GET redirect behavior.
+
+`transport_response: supported` means a TCP connection returned or an HTTP
+status was received, with a current declaration and bound effect reference.
+An HTTP error response supports that narrow facet too. Missing/stale declarations,
+unanswered connects and requests remain `unknown`. A received status does not
+prove that the response body finished: `response_complete` records that separately.
+`remote_effects` always remains `unknown`, including HTTP 200/202 replies and
+`delegated: true`. Model JSON retries appear as distinct POST attempts, without
+inferring token use, cost, answer quality or receiver-side task completion.
+
+Checkpoints are flushed at call/write and network phase boundaries. After a
+timeout, completed samples and received HTTP metadata remain available while
+unfinished operations stay visible; the parent records
 `timed_out`. Invalid, missing, oversized or mismatched-run checkpoints produce
 unknown evidence. The summary recommends inspecting partial state before retry
-when interruption or failure is recorded. It does not perform rollback or retry.
+when interruption, a failed write/call or an unfinished/failed POST is recorded.
+Inspect receiver state after an uncertain POST; a caller timeout cannot establish
+whether remote work already happened. The observer performs no rollback, probe,
+retry or cancellation itself.
 `--save` reserves a unique filename and atomically writes the complete execution
 JSON beside abbreviated Markdown/HTML; concurrent saves do not replace another
 JSON companion. An interrupted reservation can leave an empty file.
@@ -230,16 +259,21 @@ For direct Python integration, `ObservationSession` is an opt-in context manager
 in `skills.capabilities.observations`. Inside it, instrumented functions retain
 their normal return values. `session.report` and `summarize(session.report)` expose
 the evidence. Its process remains `running` because the caller's process has not
-exited. `validate_report()` checks structure, bound declarations, graph references
-and evidence/comparison consistency without executing references or networking.
+exited. `validate_report()` checks v1/v2 structure, bound declarations, graph
+references and evidence/comparison consistency without executing references or
+networking. `submit_observed()` explicitly propagates the current context to
+enrolled thread-pool work. Join those workers before closing the session for
+complete instrumented coverage; closing freezes its report and checkpoint and
+marks unfinished calls. Later worker completions cannot rewrite that evidence.
 
 Coverage is cooperative and partial: there is no OS-wide tracing, remote-call
 attestation, cost measurement, verified task success, or automatic discovery of
 every downstream effect. Uninstrumented commands still execute normally and get
-an explicit unknown-coverage report. An injected runner observes only synchronous
-instrumented calls in its own context. Background threads/processes do not inherit
-the session automatically. Files above 8 MiB, non-regular files and uncertain
-samples remain unknown; reports are bounded to 128 calls, 256 writes and 2 MiB.
+an explicit unknown-coverage report. An injected runner observes instrumented
+calls in its context and explicitly enrolled workers. Other threads/processes
+do not inherit the session automatically. Files above 8 MiB, non-regular files
+and uncertain samples remain unknown; reports are bounded to 128 calls,
+256 writes, 256 network attempts and 2 MiB for persisted checkpoints.
 Exhausted limits are reported. Concurrency can affect file samples; evidence does
 not prove exclusive causation. Checkpoints may miss an unfinished final write.
 `unassessed_effects` counts all unique declared effects, including those with one

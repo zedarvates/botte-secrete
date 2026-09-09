@@ -239,7 +239,7 @@ class PlanningEffectsTests(unittest.TestCase):
                 complete = json.loads(Path(result["effects_json"]).read_text(encoding="utf-8"))
                 self.assertEqual(complete, result)
                 self.assertEqual(complete["results"][0]["effects_observed"]["schema"],
-                                 "botte.effect-observations/v1")
+                                 "botte.effect-observations/v2")
         finally:
             os.chdir(before)
 

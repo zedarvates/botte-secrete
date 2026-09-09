@@ -1,15 +1,16 @@
 {
   "schema": "botte.capability-effects/v1",
   "capability_id": "zedarvates/botte-secrete:skills/capabilities",
-  "contract_version": "0.3.0",
+  "contract_version": "0.4.0",
   "source_hashes": {
-    "SKILL.md": "388c80347eaadb0eddac4401598efb2f56e8781d5d5db0e3ac0d7bf4786a1f36",
+    "SKILL.md": "f3d69ab19448ab9ae10de46b904973caf1336ff287237c5b13df050ba1a5101f",
     "__init__.py": "7d4d3e1854faec18d12335c4a1632b9fd59e5b22f774a8a9fc69467d1ddb75c5",
     "registry.py": "920b2e3ba35760ffa77b6f3bf6b4b043a98a4d6141d4fb4dd3b682b994eec204",
     "cli.py": "7624a0ef72921a285ba3a69bf4965ffa086b27628df362499d2093c00f1e7976",
     "effects.py": "3965c5d1f84f1ca1b932f12944493ffc14e3458062db54f098b5ccbb2741be47",
-    "observations.py": "a90c9a05e51b19b69c6825ef9223a2af9997807a3b733d7724fdddaf2d41ec12",
-    "observation_schema.py": "f4b4555cd1739fe01addfafe7e627df692c58a4c4ffa5102b8d9d1b781064b11"
+    "observations.py": "3f3538ce6f8b342b9c42e13c1560e77b9e350e8dd1f579b567fbc7763643ce97",
+    "observation_schema.py": "f346c90c6979d9bab0608d32f08e3b86c39d3dfbcdfe2484118c530fe4e1bbd2",
+    "network_observations.py": "c91421fb04df629dafcbe167f83f52336424c6750589854fa39578aefe7239a5"
   },
   "preconditions": [
     "Python 3.10+ and a readable skill tree; local discovery only.",
@@ -35,12 +36,12 @@
       "verification": "Change a bound fixture source or its claimed identity; check stale or invalid respectively. Duplicate folder paths remain visible in effects-aware discovery."
     },
     {
-      "effect": "When ObservationSession is explicitly enabled, collect instrumented call links and bounded file samples; optionally persist caller-owned checkpoints.",
-      "scope": "Current synchronous Python context, listed skill declarations, sampled files and the explicitly selected checkpoint destination.",
+      "effect": "When ObservationSession is explicitly enabled, collect instrumented call links, bounded file samples and TCP/HTTP response metadata; optionally persist caller-owned checkpoints.",
+      "scope": "Current Python context and explicitly enrolled workers, listed skill declarations, sampled files and the explicitly selected checkpoint destination.",
       "likelihood": "conditional",
-      "basis": "observations.py instruments reviewed operation/write sites only; inactive calls do not inspect declarations or sample files. Checkpoint writes use atomic_json from outside this skill directory.",
-      "impact": "Preserves partial evidence across interruption; adds CPU, I/O, fsync and storage and retains absolute paths, digests and declarations. Does not verify network or complete task effects.",
-      "verification": "Use temporary fixtures for nested calls, cached reads, identical-byte writes, swallowed partial failures, stale declarations, malformed checkpoints and real child timeout; validate the separate v1 report."
+      "basis": "observations.py and network_observations.py wrap reviewed sites only. Inactive calls inspect no declarations, files or network metadata. A session lock serializes evidence updates; closing detaches unfinished worker records. Atomic checkpoint persistence is an imported dependency.",
+      "impact": "Preserves partial evidence across interruption; adds CPU, I/O, fsync and storage and retains paths, digests, declarations and opaque per-run target aliases. A transport response does not verify remote work, cost or task success.",
+      "verification": "Run isolated file/child-timeout and loopback-network fixtures; validate v2 checkpoints during parallel discovery, HTTP errors, body timeouts, stale declarations and late workers. Existing v1 reports remain readable."
     }
   ],
   "downstream_effects": [
@@ -87,7 +88,8 @@
       "registry.py:curate",
       "cli.py:main",
       "effects.py:inspect_effects",
-      "observations.py:validate_report"
+      "observations.py:validate_report",
+      "network_observations.py:network_attempt"
     ]
   },
   "reuse": [

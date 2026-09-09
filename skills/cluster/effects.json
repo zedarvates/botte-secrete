@@ -1,11 +1,11 @@
 {
   "schema": "botte.capability-effects/v1",
   "capability_id": "zedarvates/botte-secrete:skills/cluster",
-  "contract_version": "0.3.0",
+  "contract_version": "0.4.0",
   "source_hashes": {
-    "SKILL.md": "84baaccfec082afebf23c9cdbd84093094144577195b9b3d5083f7071b977e91",
+    "SKILL.md": "576f07bb030ae1f0fbe5dc2d4aeb991de0a018d7daf5742aa2cdff1a587d697b",
     "__init__.py": "9b861b5bcf9b20bff41fe1f8ec0498792f80c4dafcbb167706d510551b2410d5",
-    "cluster.py": "1f4caebc119e89010b1fb1628ca88f47b5f7ee38d9ae7eb8778d8b4cf4dbae7e",
+    "cluster.py": "b15fc14cb9ffad0e23c689ad5dd5d05c40fe44b524f8f979f910fcd23a411af4",
     "agent.py": "9555f284098642f500ed689fee7641ab7a7d5a76361176fd6f593aad010c053a",
     "cli.py": "6e1b1702807f99be13f9ad4d974194caeef0a18fb61d487f9fc6be53d6172be9"
   },
@@ -44,9 +44,9 @@
       "effect": "delegate posts task text to a configured receiver and returns a truncated HTTP response.",
       "scope": "Selected agent endpoint, transmitted task/token, receiver logs and any work accepted there.",
       "likelihood": "conditional",
-      "basis": "delegate validates the endpoint and token before POST; delegated=True means a response was received, not that its payload reports task success.",
+      "basis": "delegate validates the endpoint/token, then POSTs through a redirect-rejecting opener even without observation. delegated=True means a response was received, not that its payload reports task success.",
       "impact": "The receiver may reject, accept or execute work. An interrupted request can leave unknown remote state; no request identity or deduplication protocol is supplied.",
-      "verification": "Mock HTTP replies containing both successful and failed task results; distinguish transport receipt from independently observed completion."
+      "verification": "Use loopback replies with failed or incomplete task results and redirect destinations; verify no redirected token/task request, distinguish transport receipt from receiver-side completion, and inspect timeout evidence."
     },
     {
       "effect": "Serving the reference receiver listens for tasks; permitted maintenance runs operator-defined subprocesses.",
@@ -57,12 +57,12 @@
       "verification": "Inject a runner for a named fixture command; verify unknown/unconfirmed commands do not launch and inspect result/error output."
     },
     {
-      "effect": "Inside an explicitly enabled observation session, expose instrumented call boundaries and any supported write samples to a separate partial evidence report.",
-      "scope": "Current synchronous call context, current effects declaration and configured checkpoint/report destinations; no file contents or endpoint arguments are added by the observer.",
+      "effect": "Inside an explicitly enabled observation session, expose instrumented calls, LRU write samples and delegation POST attempts in a separate partial evidence report.",
+      "scope": "Current call context and inherited discovery workers, current effects declarations and checkpoint/report destinations; no task text, token, response body or raw endpoint is added by the observer.",
       "likelihood": "conditional",
-      "basis": "Operation decorators and write contexts use skills.capabilities.observations, an imported dependency not bound by these local hashes. Registry and LRU write hooks reference existing effect indices without claiming to validate the entire effect.",
-      "impact": "Makes direct and inherited consequences traceable; adds bounded reads and optional checkpoint writes and can disclose paths, fingerprints and declarations.",
-      "verification": "Run the isolated observation fixtures in skills/conductor/test_observations.py; check inactive mode, nested parents, cache hits and partial writes, and leave uninstrumented effects unassessed."
+      "basis": "Operation decorators, write contexts and network_attempt use imported skills.capabilities helpers outside these hashes. Existing effect indices associate LRU writes and delegation POSTs with immutable declaration snapshots.",
+      "impact": "Makes direct and inherited consequences traceable; adds bounded reads, optional checkpoint writes and opaque target metadata. HTTP acceptance, including 202, leaves remote effects unknown.",
+      "verification": "Run skills/conductor/test_observations.py and test_network_observations.py; inspect nested writes, inactive mode, rejected endpoints, blocked redirects, partial HTTP replies and accepted-but-incomplete delegation."
     }
   ],
   "downstream_effects": [
@@ -103,7 +103,7 @@
       "llm_backends and report implementations are external to these local source hashes.",
       "Custom receiver implementations and maintenance command configurations determine additional effects.",
       "No exactly-once delegation, remote cancellation or fleet rollback is provided.",
-      "Optional observation reports cover instrumented synchronous calls and selected writes only; uninstrumented, concurrent, remote or background effects remain unverified."
+      "Observation covers selected calls, writes and transport-response facets. A token, successful HTTP response or delegated=True does not authenticate evidence of remote task completion; other background effects remain unverified."
     ],
     "evidence_refs": [
       "cluster.py:status",

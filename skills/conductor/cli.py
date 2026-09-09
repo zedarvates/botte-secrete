@@ -64,7 +64,8 @@ def _run_execute(args) -> int:
         if "effects_summary" in s:
             e = s["effects_summary"]
             print(f"        observed: {e['calls']} calls, {e['deviations']} write deviations, "
-                  f"{e['unfinished_calls']} unfinished calls; coverage partial (see --json)")
+                  f"{e['unfinished_calls']} unfinished calls, "
+                  f"{e['network_attempts']} network attempts; coverage partial (see --json)")
     if "effects_json" in r:
         print(f"   Complete effects report: {r['effects_json']}")
     # a failed step is a non-zero exit so callers/CI can react

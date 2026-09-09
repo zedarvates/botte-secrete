@@ -1,13 +1,13 @@
 {
   "schema": "botte.capability-effects/v1",
   "capability_id": "zedarvates/botte-secrete:skills/conductor",
-  "contract_version": "0.3.0",
+  "contract_version": "0.4.0",
   "source_hashes": {
-    "SKILL.md": "bfad322acd189cc50f5a302aada8a3c64146cbd548d037489faecf7d9a7f1074",
+    "SKILL.md": "60a46b6089ebf5293be8512bb4d19f3902d8058128cd07732e4c92c1da0f5436",
     "__init__.py": "a47ff74d33ed7ea19ac4ab5781e7967deb4a4d022bb46811edf9cd46cf77e839",
     "conductor.py": "d7d8ec22e19d8b53adeeb3e3954e0c3fb11971505b3edf3aaec29d0604a3f8c1",
     "executor.py": "e55b918580ffa9f8affd66ee1dc5071a381573c7473de3f3ba3f1f8d56af4694",
-    "cli.py": "fcec9bf116d630ec219e32096ccb91f0c0e3dd86ee9ac7a80cf526ebebae4cad",
+    "cli.py": "a85d52c18428655a58d84462ebb6bf21bd60d80a6a5fad96e8793497bcf04b37",
     "observed_run.py": "beed304d7e6f03622f5ba7106dac5e5d8d2e75b4bb5cdbcea3e83e0eee56e6e0"
   },
   "preconditions": [
@@ -50,12 +50,12 @@
       "verification": "Fail an injected step, mutate its source metadata during execution, and verify failure plus the original snapshot are retained."
     },
     {
-      "effect": "With observe_effects, wrap supported child CLI calls and return a versioned partial observation report with call links and execution-time declaration comparisons.",
-      "scope": "Selected child process, private temporary checkpoints, declaration files, sampled backend registry/LRU state and the returned or explicitly saved report.",
+      "effect": "With observe_effects, wrap supported child CLI calls and return a v2 partial observation report with call links, write/network evidence and execution-time declaration comparisons.",
+      "scope": "Selected child process and enrolled discovery workers, private temporary checkpoints, declaration files, sampled registry/LRU state, TCP/HTTP metadata and the returned or explicitly saved report.",
       "likelihood": "conditional",
-      "basis": "observed_run uses the same execution classification and launches a module wrapper for four bundled CLIs. Cooperative observation checkpoints are read and validated after exit or timeout, then the temporary directory is removed.",
-      "impact": "Exposes inherited writes, swallowed failures and unfinished calls, while adding file sampling/checkpoint overhead. Zero process exit and supported file facets do not validate full effects or task success.",
-      "verification": "Exercise real isolated subprocess output, nonzero exits and timeout after a completed write; verify retained evidence, dry-run/gates, planning mismatch and complete MCP/CLI report transport."
+      "basis": "observed_run preserves execution classification and wraps four bundled CLIs. Cooperative checkpoints are read and validated after exit or timeout, then the temporary directory is removed. The reader accepts v1 and v2.",
+      "impact": "Exposes inherited writes, transport attempts, swallowed failures and unfinished calls, while adding sampling/checkpoint overhead. Zero exit and supported file/transport facets do not validate remote work, costs or complete task effects.",
+      "verification": "Exercise isolated child output, nonzero exits, timeout after a write and loopback network attempts; verify dry-run/gates, legacy v1 reading, declaration mismatch and complete MCP/CLI transport."
     }
   ],
   "downstream_effects": [

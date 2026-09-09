@@ -84,12 +84,13 @@ Treat reuse suggestions as candidates requiring a check in their target
 context. See the [common contract](../../docs/capability-effects.md).
 
 Use `--execute --observe-effects --json` (MCP `observe_effects: true`) to add
-a separate versioned observation report and compare declaration freshness at
-instrumented call entry. The first adapters link checkup/infra/backend/cluster
-calls and sample registry/LRU writes. Follow parent IDs to assess inherited
-effects; `effects_summary` counts each write once and retains swallowed failures
-or unfinished calls. A supported write facet is only partial evidence; network
-effects, task success and costs remain unverified. Dry-run provides no execution
+a separate v2 observation report and compare declaration freshness at instrumented
+call entry; stored v1 reports remain readable. Adapters link checkup/infra/backend/
+cluster calls, including discovery workers, registry/LRU writes and TCP/HTTP
+attempts. Follow parent IDs to assess inherited effects; `effects_summary` counts
+each attempt once and retains swallowed failures or unfinished calls. Supported
+write and transport-response facets are partial evidence; remote effects, task
+success and costs remain unverified. Dry-run provides no execution
 evidence. Add `--save both` to retain the full execution JSON for handoff. Inspect
 partial state before retrying after errors or timeout. See the common contract's
 observation section for coverage and schema details.

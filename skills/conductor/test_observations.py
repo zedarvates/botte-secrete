@@ -165,7 +165,7 @@ class ObservationTests(unittest.TestCase):
             lambda r: r["observations"][0].update(comparison="deviation"),
             lambda r: r["observations"][0].update(effect_ref="/expected_effects/999"),
             lambda r: r["declarations"][next(iter(r["declarations"]))].update(contract_version="forged"),
-            lambda r: r.update(schema="botte.effect-observations/v2"),
+            lambda r: r.update(schema="botte.effect-observations/v999"),
         ):
             bad = deepcopy(report)
             mutate(bad)
@@ -190,7 +190,8 @@ class ChildObservationTests(unittest.TestCase):
             directory.mkdir(parents=True, exist_ok=True)
             (directory / "__init__.py").write_text("", encoding="utf-8")
         for relative in ("atomic_json.py", "capabilities/effects.py", "capabilities/observations.py",
-                         "capabilities/observation_schema.py", "conductor/observed_run.py"):
+                         "capabilities/observation_schema.py", "capabilities/network_observations.py",
+                         "conductor/observed_run.py"):
             shutil.copyfile(REPO / "skills" / relative, self.root / "skills" / relative)
         (self.root / "skills/capabilities/registry.py").write_text(
             "from pathlib import Path\nREPO_ROOT = Path(__file__).resolve().parents[2]\n", encoding="utf-8")
