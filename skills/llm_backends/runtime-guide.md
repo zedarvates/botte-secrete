@@ -249,6 +249,11 @@ credential rotation requires reconciliation with the original identity. Do not
 regenerate an outbox or rerun inference to retry a memory write. The external
 adapter must preserve the same rule, mapping `request_id` to its own dedup key.
 
+Each run saves `config.private.json` with the original non-secret configuration.
+If task routes or budgets have since changed, pass that saved configuration to
+`capture` instead of the current project configuration. The exact request and
+credential binding still apply; there is no need to repeat the model call.
+
 Every inference run uses a new private directory. Existing directories are
 refused before any network call; interrupted runs retain their state, input and
 completed observations, and are never automatically resumed. File writes use

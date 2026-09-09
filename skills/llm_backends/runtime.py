@@ -109,6 +109,9 @@ def execute(config, tasks, run_dir, *, profile_ids=None, repetitions=1, external
     write_json(directory / "state.json", state)
     contexts, preparations, observations, outputs = {}, {}, [], []
     try:
+        # Keep the original configuration available after the agent edits task routes.
+        # It contains credential references only and stays in the private run directory.
+        write_json(directory / "config.private.json", config)
         for task in tasks:
             before = time.monotonic()
             contexts[task["id"]] = prepare_context(config, task, external_context)

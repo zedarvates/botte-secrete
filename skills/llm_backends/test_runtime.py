@@ -175,6 +175,7 @@ class ExecutionTests(unittest.TestCase):
             report = execute(config, [TASK], self.root / "run")
             self.assertEqual(report["summary"]["baseline"]["predicate_passes"], 1)
             self.assertEqual(load(self.root / "run/output.private.json")[0]["text"], "2")
+            self.assertEqual(load(self.root / "run/config.private.json"), config)
             self.assertIsNone(report["observations"][0]["ttft_ms"])
             self.assertNotIn(TASK["prompt"], json.dumps(report))
             self.assertNotIn(url, json.dumps(report))
@@ -436,6 +437,13 @@ class SharedMemoryTests(unittest.TestCase):
                     self.assertTrue(receipt["replayed"])
                     self.assertTrue(receipt["quarantined"])
                     self.assertEqual(receipt["version"], 1)
+                    self.assertEqual(len(requests), before)
+                    edited_config = copy.deepcopy(config)
+                    edited_config["budgets"]["max_output_tokens"] += 1
+                    with self.assertRaises(ValueError):
+                        capture(edited_config, root / "run")
+                    original = load(root / "run/config.private.json")
+                    self.assertTrue(capture(original, root / "run")["replayed"])
                     self.assertEqual(len(requests), before)
                     with patch.dict(os.environ, {"BOTTE_MEMORY_TOKEN": "different-identity-credential"}), self.assertRaises(ValueError):
                         capture(config, root / "run")
