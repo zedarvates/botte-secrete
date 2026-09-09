@@ -1,13 +1,13 @@
 {
   "schema": "botte.capability-effects/v1",
   "capability_id": "zedarvates/botte-secrete:skills/auto_router",
-  "contract_version": "0.1.0",
+  "contract_version": "0.1.1",
   "source_hashes": {
-    "SKILL.md": "4e8799a3bba23884cc0ab9ba51dcb65921a5ed0c18b91661395a26d993781e9f",
+    "SKILL.md": "7264943a6ecc5406cf252d4ba3a33621d504e4929732a8e62feeda83345caa20",
     "__init__.py": "f17b490b7fc37455101fae4472d397345f8cdc48b7accaff0a07ec0f382abcec",
     "cli.py": "787b8ff4e18347bb6e54f229903e8321ec9e4d8e8432f3c3941acffd3f0d6ac4",
     "router.py": "eac6ff04e0823ba8735859440a70e28cb4ef33b23890ad5bc85b5c87ee2d9d0e",
-    "effort.py": "4ab5267d230ed984e642a6a492a21532b9402a2f1d38b551886ab828b51d6611",
+    "effort.py": "b879ad42b3e1eefc53cef5bb36133410e883f64eafe774efa3dd5d9c63ce8951",
     "providers.py": "27040da5e909f776541bba1d74622510bde44aa4c2cbc7d03354981553e7b8e0",
     "fusion.py": "30bf58eda2b1e38d77d29563378afdcc4ed7c0637cf2424d0d998efdc3c04e5a",
     "nn_belt.py": "6020b7aba21aca549d529c3e999f840226831557ab1f6f11ea353581b0c8bde9",
@@ -23,7 +23,7 @@
       "effect": "route/decide, explain and providers read routing state and return a proposal without an inference call.",
       "scope": "Backend registry, environment-key availability, local thresholds/policy, learned weights/calibration and CLI output.",
       "likelihood": "conditional",
-      "basis": "decide reads the registry and consults heuristics and optional belts; providers resolves catalog entries by key presence. explain includes a prompt excerpt and recomputes the decision.",
+      "basis": "decide reads the registry and consults heuristics and optional belts; providers resolves catalog entries by key presence. explain includes a prompt excerpt and recomputes the decision. The effort reader validates finite ordered thresholds in [0, 1]; malformed configuration falls back to defaults without rewriting it.",
       "impact": "Can expose prompt excerpts or host/model metadata; a selected tier can influence a later paid request. Explicit FREE is retained but can still select local inference.",
       "verification": "Use controlled registry/provider fixtures; assert no inference calls and distinguish the selected route from actual execution."
     },
@@ -99,7 +99,8 @@
       "LocalLLMClient selects its backend again: the selected endpoint in the cache context is not an execution lock. Credentials and model weights can change behind the same endpoint.",
       "Imported response_cache, llm_backends, tiered_router, events, trajectory, control_loop and botte_nn implementations/state are outside these skill-local source bindings.",
       "Router/fusion operations lack a complete observation adapter; dependency observations cannot attest remote effects or success.",
-      "Other entry points such as composite, speculative, dry_cloud, session_budget and diagnostic scripts require their own operation review."
+      "Other entry points such as composite, speculative, dry_cloud, session_budget and diagnostic scripts require their own operation review.",
+      "Valid threshold structure is not evidence of a useful policy. Falling back from malformed user configuration can change subsequent routing decisions; control_loop evidence must be assessed separately."
     ],
     "evidence_refs": [
       "router.py:AutoRouter.decide",

@@ -20,9 +20,10 @@ import json
 import time
 from pathlib import Path
 from typing import Optional
+from skills.atomic_json import write_json
 
 from skills.auto_router.effort import (
-    DEFAULT_THRESHOLDS, load_thresholds, _THRESHOLDS_PATH,
+    DEFAULT_THRESHOLDS, load_thresholds, validate_thresholds, _THRESHOLDS_PATH,
 )
 
 LEDGER_PATH = Path.home() / ".botte" / "control-ledger.jsonl"
@@ -89,7 +90,7 @@ def analyze(records: Optional[list[dict]] = None) -> dict:
 def adapt(stats: Optional[dict] = None, thresholds: Optional[list] = None) -> dict:
     """Compute adjusted thresholds from outcomes. Returns {thresholds, changed, why}."""
     stats = stats if stats is not None else analyze()
-    cur = list(thresholds or load_thresholds())
+    cur = validate_thresholds(thresholds if thresholds is not None else load_thresholds())
     free, local, cheap, standard = cur
     n = stats.get("samples", 0)
     if n < MIN_SAMPLES:
@@ -115,16 +116,20 @@ def adapt(stats: Optional[dict] = None, thresholds: Optional[list] = None) -> di
     # keep strict ordering free < local < cheap < standard
     local = min(max(local, free + 0.02), cheap - 0.02)
     new = [free, round(local, 3), cheap, standard]
+    try:
+        validate_thresholds(new)
+    except ValueError:
+        return {"thresholds": cur, "changed": False,
+                "why": "threshold spacing cannot accommodate the proposed step — no change"}
     return {"thresholds": new, "changed": new != cur,
             "why": "; ".join(why) or "within target band — no change"}
 
 
 def apply(thresholds: list, path: Optional[Path] = None) -> Path:
+    thresholds = validate_thresholds(thresholds)
     p = path or _THRESHOLDS_PATH
-    p.parent.mkdir(parents=True, exist_ok=True)
-    p.write_text(json.dumps({"thresholds": thresholds,
-                             "updated": time.strftime("%Y-%m-%dT%H:%M:%S")}),
-                 encoding="utf-8")
+    write_json(p, {"thresholds": thresholds,
+                   "updated": time.strftime("%Y-%m-%dT%H:%M:%S")})
     return p
 
 

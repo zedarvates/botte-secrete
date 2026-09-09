@@ -21,6 +21,11 @@ catalog and ensemble strategies.
 
 ## Auto-decision
 
+Persisted effort thresholds must contain four finite, strictly increasing numeric
+values in `[0, 1]`. Invalid configuration falls back to the defaults without
+rewriting the file. See [control_loop](../control_loop/SKILL.md) before applying
+a shared threshold change; valid values do not establish a good routing policy.
+
 ```bash
 python -m skills.auto_router.cli route "classify: bug or feature?"   # → LOCAL
 python -m skills.auto_router.cli route "design a distributed cache and prove correctness"
