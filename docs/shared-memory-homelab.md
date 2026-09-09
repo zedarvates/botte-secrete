@@ -140,5 +140,6 @@ systemctl --user disable --now botte-memory-pilot.service
 L'arrêt conserve les données. Après une modification de `auth.json`, redémarrer
 le service pour charger les droits actualisés. Conserver le checkout précédent
 pour un retour de code ; ne pas restaurer une ancienne base sans réconcilier
-les oublis récents. Les sauvegardes automatiques et leur restauration ne sont
-pas installées par ce guide.
+les oublis récents. Le [parcours de sauvegarde et restauration](shared-memory-recovery.md)
+prépare une nouvelle base avec réconciliation des oublis. Les sauvegardes
+planifiées et la bascule du service restent des opérations distinctes.

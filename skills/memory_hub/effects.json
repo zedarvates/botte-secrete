@@ -1,7 +1,7 @@
 {
   "schema": "botte.capability-effects/v1",
   "capability_id": "zedarvates/botte-secrete:skills/memory_hub",
-  "contract_version": "0.1.1",
+  "contract_version": "0.1.2",
   "source_hashes": {
     "SKILL.md": "f97b6f19b13b821177905ac376f80425dbc1aed255107c3208dfe5580c791c98",
     "store.py": "86aaa5c48d109e801af2f3d694faf95ae3f1353951b17c84e9ea373119be1648",
@@ -11,14 +11,16 @@
     "shared_http.py": "ba98b67ed25277de697068856ce619d1f0a960a4bea1af5d4430cdac0416e6b6",
     "shared_mcp.py": "17a5ca217827fd559a904cccec655b17ae755e2f6312c05cff90bfb3ba4a31cb",
     "scribe.py": "cd6ce4cb7950046867a2243a54c5cdf9fa736ac0166bb943cc2208f511f8d3b4",
-    "cli.py": "9fc405290fd82fdec3666a0ffe7153866c6241d9919284c41b2f0c92eb82f149",
-    "smoke.py": "07da817623767a0dcd18fe840d5d01fc5465bf461d3b8a48890f8127ba49228d"
+    "cli.py": "5fe29278c8586478aa27253f0adb872ca360656bbd8daeeae83e386c52d6dc3c",
+    "smoke.py": "07da817623767a0dcd18fe840d5d01fc5465bf461d3b8a48890f8127ba49228d",
+    "recovery.py": "2353ff97c15bde42a49574c072546676190d8413a8211bf3083ea7b4d7d7b95c"
   },
   "preconditions": [
     "Configure a private directory, explicit identities, operation rights and project scopes.",
     "Keep operator credentials outside general agent tools. Use HTTPS or a loopback tunnel for remote clients.",
     "Use current expected_version values and stable request_id values for uncertain write retries.",
-    "Run smoke as an operator with two distinct normal worker credentials for an agreed pilot project; its synthetic writes are intentional."
+    "Run smoke as an operator with two distinct normal worker credentials for an agreed pilot project; its synthetic writes are intentional.",
+    "For restore, stop current writers and retain the authoritative current deletion ledger; choose a new data directory and preserve actor identities and rights."
   ],
   "expected_effects": [
     {
@@ -68,6 +70,14 @@
       "basis": "smoke checks sharing, privacy, quarantine, correction and replay, then attempts cleanup including after an uncertain write response.",
       "impact": "A successful probe removes its live fixtures and leaves replay tombstones. Forced interruption or unavailable storage may leave synthetic rows; the report identifies pending keys.",
       "verification": "Run the CLI against a restarted temporary server and inject lost responses, failed cleanup and a broken replay guard."
+    },
+    {
+      "effect": "Create a private per-project SQLite snapshot or prepare a fresh restore candidate reconciled against current deletion tombstones.",
+      "scope": "New operator-selected local directories; no credentials, service activation or existing-store replacement.",
+      "likelihood": "conditional",
+      "basis": "SQLite backup includes committed WAL data; restore verifies checksum, schema and integrity, removes forgotten keys from all five data tables, retains tombstones and compacts the new file.",
+      "impact": "Enables local recovery rehearsal. Snapshots contain plaintext private memory; restore loses later non-deletion updates and cannot attest ledger freshness or stopped writers.",
+      "verification": "Run WAL, ACL, provenance, history, replay, deletion, corrupted-input, no-overwrite and interruption tests in test_recovery.py."
     }
   ],
   "downstream_effects": [
@@ -97,7 +107,7 @@
   "analysis": {
     "summary": "An opt-in facade extends Memory Hub v2 with shared identity, versioned writes and an advisory scribe.",
     "uncertainties": [
-      "Real host connectivity and backup/restore remain unverified.",
+      "Real host connectivity, off-host backup retention and disaster recovery remain unverified; local snapshot/restore fixtures are tested.",
       "Supplied-vector tests use synthetic vectors; no neural encoder was executed.",
       "The newest 2000 accessible active entries form the bounded candidate pool.",
       "Legacy local MCP entry points are outside the new network authorization boundary.",
@@ -107,7 +117,9 @@
       "test_shared_service.py",
       "test_shared_transport.py",
       "test_quarantine.py",
-      "../../docs/shared-memory-homelab.md"
+      "../../docs/shared-memory-homelab.md",
+      "test_recovery.py",
+      "../../docs/shared-memory-recovery.md"
     ]
   },
   "reuse": [

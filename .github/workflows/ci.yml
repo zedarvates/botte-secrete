@@ -31,7 +31,7 @@ jobs:
         id: tests
         run: |
           python scripts/run_tests.py -q
-          python -m pytest --rootdir=. -q skills/memory_hub/test_shared_service.py skills/memory_hub/test_shared_transport.py skills/memory_hub/test_memory_hub.py
+          python -m pytest --rootdir=. -q skills/memory_hub/test_shared_service.py skills/memory_hub/test_shared_transport.py skills/memory_hub/test_memory_hub.py skills/memory_hub/test_recovery.py
         timeout-minutes: 10
       - name: Validate GitHub documentation
         id: docs
