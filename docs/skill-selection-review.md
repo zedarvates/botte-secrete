@@ -101,5 +101,9 @@ covers routing decisions. This change adds regression coverage to the existing
 skill review, without introducing a second runtime router or claiming either
 benchmark already measures full skill applicability.
 
+The [selection acceptance runner](skill-selection-acceptance.md) prepares a
+paired local-model run and reuses Conductor resumption. Its starter corpus is
+synthetic; real held-out selection quality remains unmeasured.
+
 Apply the [six improvement axes](tool-improvement-axes.md) when interpreting
 these results. The general representative-task comparison remains open.

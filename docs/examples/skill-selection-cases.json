@@ -1,0 +1,87 @@
+{
+  "schema": "botte.skill-selection-cases/v1",
+  "dataset_class": "fixture",
+  "review_evidence": [],
+  "purpose": "Starter scenarios for selection acceptance; not an independently reviewed real-task holdout.",
+  "skills": {
+    "personal/memory/SKILL.md": "---\nname: memory\ndescription: Record and read notes and decisions.\n---\nOperation: append a private note. Use only for personal notes. Prerequisites: the stated principal equals the note owner, and the destination is explicitly private. Exclude project-visible records, deletion, machine RAM diagnostics and any unknown ownership. Do not execute when a prerequisite is missing.\n",
+    "team/memory/SKILL.md": "---\nname: memory\ndescription: Record and read notes and decisions.\n---\nOperation: append a project decision. Use only for project-visible decisions. Prerequisites: an explicit project and confirmed append permission for the stated principal. Read permission alone is insufficient. Exclude private notes, deletion and machine RAM diagnostics. Do not execute when a prerequisite is missing.\n",
+    "machine/memory/SKILL.md": "---\nname: memory\ndescription: Inspect memory.\n---\nOperation: inspect current machine RAM usage, read-only. Prerequisite: permission to read machine metrics is explicitly present. Exclude personal or project note storage, note deletion, process termination and GPU configuration changes.\n",
+    "runs/checkpoint/SKILL.md": "---\nname: checkpoint\ndescription: Inspect checkpoints and interrupted runs.\n---\nOperation: inspect a provided checkpoint and report completed, active and uncertain steps. Prerequisite: a readable checkpoint is explicitly available. This operation never starts or restarts a job. Exclude requests to relaunch uncertain work without reconciling its current state.\n",
+    "images/convert/SKILL.md": "---\nname: convert\ndescription: Convert an image to PNG.\n---\nOperation: convert an existing readable raster image into a new PNG. Prerequisites: the source is explicitly present and readable, and the destination is explicitly absent and distinct from the source. Exclude overwriting files, missing sources, memory-note operations and checkpoint resumption.\n"
+  },
+  "cases": [
+    {
+      "id": "private-note",
+      "task": "Select only skills able to append a private note now. Principal and note owner are both willow. Destination is explicitly private. Do not perform the operation.",
+      "expected_paths": ["personal/memory/SKILL.md"],
+      "rationale": "Private note prerequisites are supplied; the project and RAM homonyms perform different operations."
+    },
+    {
+      "id": "project-decision",
+      "task": "Select only skills able to append a project-visible decision now. Project is atlas and principal willow has confirmed append permission. Do not perform the operation.",
+      "expected_paths": ["team/memory/SKILL.md"],
+      "rationale": "The requested visibility and append permission satisfy the project operation."
+    },
+    {
+      "id": "inspect-checkpoint",
+      "task": "Select only skills able to inspect a readable supplied checkpoint and report completed, active and uncertain steps now. Do not launch any job.",
+      "expected_paths": ["runs/checkpoint/SKILL.md"],
+      "rationale": "Read-only inspection is supported; this does not authorize relaunch."
+    },
+    {
+      "id": "new-png",
+      "task": "Select only skills able to convert a raster image to PNG now. Source is present and readable. Destination is absent and distinct from source. Do not perform the operation.",
+      "expected_paths": ["images/convert/SKILL.md"],
+      "rationale": "All conversion prerequisites are explicitly satisfied."
+    },
+    {
+      "id": "ram-usage",
+      "task": "Select only skills able to inspect current machine RAM usage, read-only. Permission to read machine metrics is explicitly present. Do not read notes or change a process.",
+      "expected_paths": ["machine/memory/SKILL.md"],
+      "rationale": "The homonym for machine memory fits; note-storage skills do not."
+    },
+    {
+      "id": "two-destinations",
+      "task": "Select every skill needed for two separate appends: a private note owned by principal willow to an explicitly private destination, and a project-visible decision in atlas where willow has confirmed append permission. Do not execute either append.",
+      "expected_paths": ["personal/memory/SKILL.md", "team/memory/SKILL.md"],
+      "rationale": "Both distinct paths are needed despite the shared name; order is not an acceptance criterion."
+    },
+    {
+      "id": "wrong-owner",
+      "task": "Select only skills able to append a private note now. Principal is willow, note owner is cedar, and destination is private. A missing prerequisite requires abstention. Do not perform the operation.",
+      "expected_paths": [],
+      "rationale": "The principal is not the owner; lexical proximity must not establish eligibility."
+    },
+    {
+      "id": "read-permission-only",
+      "task": "Select only skills able to append a project-visible decision in atlas now. Principal willow has read permission only; append permission is absent. A missing prerequisite requires abstention.",
+      "expected_paths": [],
+      "rationale": "Read permission cannot satisfy an append prerequisite."
+    },
+    {
+      "id": "delete-notes",
+      "task": "Select only skills able to permanently delete private and project notes. Every stated prerequisite may be assumed satisfied, but an explicitly excluded operation requires abstention. Do not perform deletion.",
+      "expected_paths": [],
+      "rationale": "No catalog entry supports deletion, even with valid ownership and permissions."
+    },
+    {
+      "id": "restart-uncertain",
+      "task": "Select only skills able to restart an uncertain interrupted job immediately without inspecting its current state. A readable checkpoint is available. An excluded operation requires abstention. Do not restart anything.",
+      "expected_paths": [],
+      "rationale": "The checkpoint skill supports inspection and explicitly excludes this relaunch."
+    },
+    {
+      "id": "missing-image",
+      "task": "Select only skills able to convert a raster image to a new PNG now. The source is absent; destination is absent and distinct. A missing prerequisite requires abstention. Do not create or fetch an image.",
+      "expected_paths": [],
+      "rationale": "A missing source blocks conversion."
+    },
+    {
+      "id": "overwrite-image",
+      "task": "Select only skills able to convert a readable, existing raster image to PNG by overwriting its source path. An explicitly excluded operation requires abstention. Do not modify any file.",
+      "expected_paths": [],
+      "rationale": "The destination must be absent and distinct; overwrite is excluded."
+    }
+  ]
+}
