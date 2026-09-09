@@ -86,6 +86,8 @@ SUITES = [
     ("worker_benchmark", [sys.executable, "-m", "skills.local_harness.test_worker_benchmark"], "skills/local_harness/"),
     ("migration_audit", [sys.executable, "-m", "skills.migration_audit.test_migration_audit"], "skills/migration_audit/"),
     ("memory_quarantine", [sys.executable, "-m", "skills.memory_hub.test_quarantine"], "skills/memory_hub/"),
+    ("action_memory", [sys.executable, "-m", "skills.memory_hub.test_action_memory"], "skills/memory_hub/"),
+    ("action_memory_pilot", [sys.executable, "-m", "scripts.test_action_memory_pilot"], "scripts/"),
     ("calibration", [sys.executable, "-m", "skills.botte_nn.test_calibration"], "skills/botte_nn/"),
     ("audit_dag", [sys.executable, "-m", "skills.audit_dag.test_audit_dag"], "skills/audit_dag/"),
     ("nn_audit", [sys.executable, "-m", "skills.nn_audit.test_nn_audit"], "skills/nn_audit/"),

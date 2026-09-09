@@ -1,0 +1,91 @@
+{
+  "schema": "botte.shared-memory-acceptance/v1",
+  "recorded_at": "2026-09-08T08:56:15.650010+00:00",
+  "base_commit": "7da1eaeff66aad9fe4bf0b771b58a0688c868c09",
+  "status": "local_pilot_validated",
+  "runtime": {
+    "python": "3.12.13",
+    "platform": "Linux",
+    "test_dependencies": "pytest and jsonschema loaded from a separate test directory using PYTHONPATH"
+  },
+  "observations": [
+    {
+      "command": "python3 -m pytest --rootdir=. -q skills/memory_hub/test_shared_service.py skills/memory_hub/test_shared_transport.py skills/memory_hub/test_memory_hub.py",
+      "exit_code": 0,
+      "passed": 94,
+      "failed": 0,
+      "duration_seconds": 8.88,
+      "scope": "Synthetic fixtures; actual loopback HTTP and stdio MCP subprocess; existing Memory Hub behavior."
+    },
+    {
+      "command": "python3 scripts/run_tests.py --changed -q",
+      "exit_code": 0,
+      "passed": 71,
+      "failed": 0,
+      "suite_count": 3,
+      "scope": "e2e, cli_router and memory_quarantine; this is not the full repository suite."
+    },
+    {
+      "command": "python3 scripts/test_readme_commands.py",
+      "exit_code": 0,
+      "passed": 11,
+      "failed": 0,
+      "skipped": 11
+    },
+    {
+      "command": "python3 scripts/check_docs_links.py",
+      "exit_code": 0,
+      "markdown_files": 63,
+      "broken_local_links": 0
+    },
+    {
+      "command": "python3 -m skills.checkup.cli . --json",
+      "exit_code": 0,
+      "scope": "Workspace advisory check only; MCP and local inference are not configured here."
+    },
+    {
+      "check": "Generated OpenAPI equality; effects contract JSON Schema and source hashes; optional test dependencies and CI wiring",
+      "status": "passed"
+    },
+    {
+      "check": "SKILL.md validated with the skill-creator quick_validate.py script",
+      "status": "passed"
+    }
+  ],
+  "ci": {
+    "configured_python_versions": [
+      "3.10",
+      "3.11",
+      "3.12"
+    ],
+    "remote_execution_observed": false,
+    "scope": "The existing CI test step now also runs the focused memory pytest suites."
+  },
+  "not_validated_or_deployed": [
+    "A running service or two real client identities on the homelab.",
+    "This conversation automatically consulting the new MCP bridge.",
+    "PostgreSQL/pgvector, a neural embedding encoder or GraphRAG.",
+    "Real-corpus retrieval accuracy or trained scribe neural weights.",
+    "Remote TLS proxy integration, Windows ACLs or backup/restore reconciliation.",
+    "The complete repository test matrix."
+  ],
+  "source_sha256": {
+    ".github/workflows/ci.yml": "18c93ec4160262dbc8c68ef148bfbc0c4f8767eff780bf0460ad4833f222a534",
+    "README.md": "e4bc23044d1a6d10047cc0ea522704a4ca3a45d1e6d89011028e975e136ce9e2",
+    "docs/plans/2026-09-08_shared-memory-scribe.md": "f8f4453d57b5f13c3b7900eceb7f13facab88aa0803966dafa24ee14a01b76cb",
+    "docs/schemas/shared-memory.openapi.json": "22d7699f7e52e9db5c8b4f26f76497a5248dc59101841cd54734e7e7d9aa6384",
+    "docs/shared-memory.md": "e7545df1ea4be61ea17f00532083fb2a2866efb530b4bc667baf8c0affb33024",
+    "pyproject.toml": "4c796aeab5d777e1b409e32d6606a755332aaa4b67be92ef99fdaaed03818278",
+    "skills/memory_hub/SKILL.md": "f97b6f19b13b821177905ac376f80425dbc1aed255107c3208dfe5580c791c98",
+    "skills/memory_hub/cli.py": "18494743fd3142139175f83cd40dfd1a38910e284f167616264e89b52e71e90d",
+    "skills/memory_hub/effects.json": "2f1cfe7cd06599a183e3d8aa4b7c1a1688a78ea5fa410492aa36e675ce66be08",
+    "skills/memory_hub/scribe.py": "cd6ce4cb7950046867a2243a54c5cdf9fa736ac0166bb943cc2208f511f8d3b4",
+    "skills/memory_hub/shared_contract.py": "72be81aa648ce24810bf09fcb529d2fc0cd26756978decf575101665b2875a81",
+    "skills/memory_hub/shared_http.py": "ba98b67ed25277de697068856ce619d1f0a960a4bea1af5d4430cdac0416e6b6",
+    "skills/memory_hub/shared_mcp.py": "17a5ca217827fd559a904cccec655b17ae755e2f6312c05cff90bfb3ba4a31cb",
+    "skills/memory_hub/shared_service.py": "16e20bd41e943975678443efb503284d83e4a22db485045476582a665544bc87",
+    "skills/memory_hub/store.py": "86aaa5c48d109e801af2f3d694faf95ae3f1353951b17c84e9ea373119be1648",
+    "skills/memory_hub/test_shared_service.py": "c49bb1087853053607c00e064c43118527eb12a23ead856fdffa80a1469f7465",
+    "skills/memory_hub/test_shared_transport.py": "3b42a4ef569c3546161430edcc5869507bac1d919a92d33a6b88e79eab0c7a2f"
+  }
+}

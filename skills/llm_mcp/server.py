@@ -527,6 +527,38 @@ TOOLS = [
             "required": ["plan"]},
     },
     {
+        "name": "recall_action_memory",
+        "description": "Recall action consequences for an explicit skill plan using the configured shared memory identity. "
+                       "Returns untrusted observations and rechecks only paths selected by this plan. Advice never executes work.",
+        "inputSchema": {"type": "object", "additionalProperties": False, "properties": {
+            "plan": {"type": "object"}, "project": {"type": "string", "default": "."},
+            "project_id": {"type": "string"}, "limit": {"type": "integer", "minimum": 1, "maximum": 5, "default": 3}},
+            "required": ["plan", "project_id"]},
+    },
+    {
+        "name": "remember_skill_run",
+        "description": "Archive a matching skill-run report and capture bounded action episodes through shared memory. "
+                       "Retries capture only; observations remain quarantined and do not become verified task labels.",
+        "inputSchema": {"type": "object", "additionalProperties": False, "properties": {
+            "plan": {"type": "object"}, "report": {"type": "object"},
+            "project": {"type": "string", "default": "."}, "project_id": {"type": "string"},
+            "visibility": {"type": "string", "enum": ["private", "project"], "default": "private"}},
+            "required": ["plan", "report", "project_id"]},
+    },
+    {
+        "name": "execute_remembered_plan",
+        "description": "Preview or execute an explicit plan with action-memory recall before work and capture after. "
+                       "Defaults to preview. Requires a private checkpoint; memory outages remain visible without replaying commands.",
+        "inputSchema": {"type": "object", "additionalProperties": False, "properties": {
+            "plan": {"type": "object"}, "project": {"type": "string", "default": "."},
+            "project_id": {"type": "string"}, "checkpoint": {"type": "string"},
+            "confirm": {"type": "boolean", "default": False}, "dry_run": {"type": "boolean", "default": True},
+            "resume": {"type": "boolean", "default": False},
+            "timeout": {"type": "integer", "minimum": 1, "maximum": 3600, "default": 120},
+            "visibility": {"type": "string", "enum": ["private", "project"], "default": "private"}},
+            "required": ["plan", "project_id", "checkpoint"]},
+    },
+    {
         "name": "security_scan",
         "description": "Taint / data-flow security scan of a project (neuro-symbolic, "
                        "local-first). Traces attacker-controlled sources (argv, env, request, "
@@ -1265,6 +1297,27 @@ def _tool_execute_verified_plan(args: dict) -> str:
     return json.dumps(r, ensure_ascii=False, indent=2)
 
 
+def _action_memory(operation, args):
+    from skills.memory_hub.action_cli import dispatch
+    try:
+        result = dispatch(operation, args)
+    except Exception as error:
+        result = {"error_type": type(error).__name__, "error": str(error)}
+    return json.dumps(result, ensure_ascii=False, indent=2)
+
+
+def _tool_recall_action_memory(args):
+    return _action_memory("recall", args)
+
+
+def _tool_remember_skill_run(args):
+    return _action_memory("capture", args)
+
+
+def _tool_execute_remembered_plan(args):
+    return _action_memory("run", args)
+
+
 def _tool_context_profile(args: dict) -> str:
     from skills.context_profiler import profile
     return json.dumps(profile(args.get("project", ".")), ensure_ascii=False, indent=2)
@@ -1500,6 +1553,9 @@ DISPATCH = {
     "conduct": _tool_conduct,
     "execute_plan": _tool_execute_plan,
     "execute_verified_plan": _tool_execute_verified_plan,
+    "recall_action_memory": _tool_recall_action_memory,
+    "remember_skill_run": _tool_remember_skill_run,
+    "execute_remembered_plan": _tool_execute_remembered_plan,
     "security_scan": _tool_security_scan,
     "scan_malicious": _tool_scan_malicious,
     "nn_audit": _tool_nn_audit,

@@ -109,7 +109,7 @@ class MemoryStore:
             for conn in self._connections.values(): conn.close()
             self._connections.clear()
 
-    def store(self, entry):
+    def store(self, entry, *, commit=True):
         self._normalize_provenance(entry)
         conn = self._conn(entry.project_id)
         now = time.time()
@@ -137,7 +137,8 @@ class MemoryStore:
             f"INSERT INTO {table} (key, value_json, asset_type, category, confidence, status, visibility, sensitivity, project_id, agent_id, source_ref, source_digest, source_type, source_uri, source_id, run_id, observed_at, trust_class, executable_instruction, quarantined, created_by, expires_at, created_at, updated_at, access_count, version, tags_json) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(project_id, key) DO UPDATE SET value_json=excluded.value_json, asset_type=excluded.asset_type, category=excluded.category, confidence=excluded.confidence, status=excluded.status, visibility=excluded.visibility, sensitivity=excluded.sensitivity, source_ref=excluded.source_ref, source_digest=excluded.source_digest, source_type=excluded.source_type, source_uri=excluded.source_uri, source_id=excluded.source_id, run_id=excluded.run_id, observed_at=excluded.observed_at, trust_class=excluded.trust_class, executable_instruction=0, quarantined=excluded.quarantined, expires_at=excluded.expires_at, updated_at=excluded.updated_at, version=excluded.version, tags_json=excluded.tags_json",
             (entry.key, val_json, entry.asset_type, entry.category, entry.confidence, entry.status, entry.visibility, entry.sensitivity, entry.project_id, entry.agent_id, entry.source_ref, entry.source_digest, entry.source_type, entry.source_uri, entry.source_id, entry.run_id, entry.observed_at, entry.trust_class, 0, int(entry.quarantined), entry.created_by, entry.expires_at, created_at, now, 0, version, tags_json)
         )
-        conn.commit()
+        if commit:
+            conn.commit()
 
     @staticmethod
     def _table_for(entry):
