@@ -4,8 +4,8 @@ on:
   push:
     branches: [main]
   pull_request:
-    # Exercise the action-memory integration stack before it reaches main.
-    branches: [main, feat/verified-skill-runs-v1]
+    # Exercise stacked integration changes before they reach main.
+    branches: [main, feat/verified-skill-runs-v1, feat/action-consequence-memory-v1]
 
 permissions:
   contents: read
