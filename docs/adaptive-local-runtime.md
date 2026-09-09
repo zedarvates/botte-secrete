@@ -10,6 +10,10 @@ benchmarks and replay-safe observation capture. Native speculative decoding
 must already be supported and configured in the target engine; a profile alone
 does not activate it or prove a speedup.
 
+For actual hosts, the [minimal acceptance kit](../skills/llm_backends/acceptance-guide.md)
+provides a one-request smoke, private per-host observations and a bounded public
+export, with explicit remaining network/GPU evidence requirements.
+
 ```bash
 botte runtime inspect
 botte runtime template --topology single --memory none

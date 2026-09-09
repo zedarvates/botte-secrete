@@ -17,6 +17,10 @@ from skills.memory_hub.shared_contract import encode
 
 def main(argv=None):
     force_utf8()
+    argv = list(sys.argv[1:] if argv is None else argv)
+    if argv[:1] == ["acceptance"]:
+        from skills.llm_backends.acceptance import main as acceptance_main
+        return acceptance_main(argv[1:])
     parser = argparse.ArgumentParser(description=__doc__)
     subs = parser.add_subparsers(dest="command", required=True)
     make = subs.add_parser("template", help="Generate an offline, non-executable draft")
@@ -25,6 +29,7 @@ def main(argv=None):
     make.add_argument("--output", help="Create a new private file; never overwrite")
     subs.add_parser("schema", help="Configuration, task and external-context JSON Schemas")
     subs.add_parser("inspect", help="Read inventory of this host only; no network scan")
+    subs.add_parser("acceptance", help="Prepare and record a minimal two-host smoke; see acceptance --help")
     for name in ("validate", "plan", "run", "benchmark", "capture"):
         sub = subs.add_parser(name)
         sub.add_argument("config", help="Local configuration JSON")

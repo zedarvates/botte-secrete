@@ -262,6 +262,11 @@ use a user-private location protected by the account's ACLs.
 
 ## Pilot with two target GPUs and another machine
 
+Start with the [minimal two-host acceptance kit](acceptance-guide.md). It
+collects private host observations, performs one bounded direct request and
+exports a limited public summary. Its GPU-presence check never becomes a claim
+of GPU execution or speedup; native engine evidence is reviewed separately.
+
 Inventory both hosts and declare each GPU separately. Start with one target
 and one direct baseline, then a native local-draft profile if supported. Compare
 with a remote-draft endpoint only after the engine's native transport is
