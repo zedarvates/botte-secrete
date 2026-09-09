@@ -4,6 +4,7 @@ One command instead of ~90 `python -m skills.<module>.cli` invocations:
 
     botte doctor [path]        full project health checkup
     botte route "<prompt>"     0-token routing decision (local vs cloud)
+    botte runtime <command>    portable local inference and memory profiles
     botte dashboard [path]     cost/savings dashboard (HTML, --tui, --fleet)
     botte bootstrap <path>     deploy botte into a project
     botte checkup [path]       drift checkup (doctor without machine scan)
@@ -31,6 +32,7 @@ _COMMANDS = {
     "doctor": ("skills.checkup.cli", "checkup + machine scan + ranked actions"),
     "checkup": ("skills.checkup.cli", "drift checkup"),
     "route": ("skills.auto_router.cli", "0-token routing decision"),
+    "runtime": ("skills.llm_backends.runtime_cli", "portable local inference + memory profiles"),
     "dashboard": ("skills.dashboard.cli", "cost/savings dashboard"),
     "bootstrap": ("skills.bootstrap.cli", "deploy botte into a project"),
     "mcp": ("skills.llm_mcp.server", "MCP server (stdio)"),
