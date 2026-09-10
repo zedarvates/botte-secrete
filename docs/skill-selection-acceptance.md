@@ -19,6 +19,66 @@ was a working-tree snapshot at that time. The registered regression suite uses
 injected replies and a loopback HTTP fixture, including actual child processes
 and interrupted/resumed runs; it supplies no homelab or real-model evidence.
 
+## First measured CPU pass
+
+On 2026-09-10, one frozen pass made **24 real inference calls** with the existing
+Qwen2.5-0.5B-Instruct Q8_0 weights and llama.cpp build 10809 on CPU. The baseline
+was `6651335fa0d96a39d14f3b95c10d8a30763fc835`; the candidate was
+`8f2bd6e7031785a294baa53bf642b73f994d3205`. Both source snapshots matched their
+commits. The corpus, prompts and source code were unchanged during the run.
+There were no corrective retries or inference warmup requests.
+
+The [protocol frozen before execution](validation/skill-selection-cpu-protocol-v1.json)
+records the source, corpus, harness, weight and runtime hashes, four CPU threads,
+one slot, 4,096 context tokens and disabled prompt caching. The
+[unmodified comparison](validation/skill-selection-cpu-v1.json) retains all 24
+observations. The [execution and handoff record](validation/skill-selection-cpu-execution-v1.json)
+adds per-case interpretation, resource consequences and the decision.
+
+| Observed measure | Baseline | Candidate |
+| --- | ---: | ---: |
+| Exact selection with an available model review | 2/12 | 5/12 |
+| Exact selection on applicable operations | 2/6 | 5/6 |
+| Correct abstention on exclusions or missing prerequisites | 0/6 | 0/6 |
+| Negative cases returning an unwanted selection | 6/6 | 6/6 |
+| Extra returned paths across all cases | 12 | 6 |
+| Required paths retrieved on positive cases | 6/6 | 6/6 |
+| Endpoint-reported prompt tokens, total | 1,423 | 4,199 |
+| Endpoint-reported completion tokens, total | 24 | 24 |
+| HTTP round-trip median | 335 ms | 845 ms |
+| HTTP round-trip p95 | 443 ms | 1,219 ms |
+
+Three cases become exact: private notes, project decisions and RAM inspection.
+Both versions still return a selection in **every** abstention-required case.
+For the two-destination task, the baseline returns both required paths through
+lexical fallback; that is not credited as a successful model review. The
+candidate's reviewed selection returns only the private-note path. Thus raw
+path equality alone would be 3/12 versus 5/12 and would conceal the baseline's
+fallback. No previously exact reviewed selection is lost, but the loss of the
+second destination remains an observed regression in returned coverage.
+
+**Decision: do not promote this runtime for autonomous operation selection.**
+All observations are complete, but exclusion handling fails and one multi-skill
+request remains incomplete. Supplying full instructions and preserving identity
+does not establish that the model applies prerequisites correctly. This
+comparison changes instruction delivery, identity and abstention parsing
+together; it does not isolate the cause of the three improvements.
+
+This small synthetic pass supplies development evidence. Qualification still
+requires separately frozen, independently reviewed target situations. The
+prompt-token total is about 2.95 times larger for the candidate. Timings describe
+this shared CPU host and a single pass; p95 over twelve calls is the maximum,
+and the first prompt is cold. They establish no GPU performance or general
+latency claim. Downstream task quality, energy and monetary cost remain unmeasured.
+
+The checkpoint verified all 24 observations and their file hashes were rechecked.
+Sources, weights and runtime files were unchanged after inference. The owned
+loopback server exited successfully; no call is active, pending or uncertain,
+and no selected operation was executed. This run is complete and must not be
+replayed to improve its score. Its results were not promoted into learning
+memory or an active routing rule. Subsequent evidence-only commits do not change
+the revisions that were actually measured.
+
 ## Prepare and execute
 
 From the candidate checkout, prepare a baseline worktree at the revision before
