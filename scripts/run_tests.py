@@ -42,6 +42,8 @@ SUITES = [
     ("auto_router", [sys.executable, "-m", "skills.auto_router.test_auto_router"], "skills/auto_router/"),
     ("router_outcome", [sys.executable, "-m", "skills.auto_router.test_outcome_adapter"], "skills/auto_router/"),
     ("skill_finder", [sys.executable, "-m", "skills.skill_finder.test_skill_finder"], "skills/skill_finder/"),
+    ("skill_review", [sys.executable, "-m", "skills.skill_finder.test_review"], "skills/skill_finder/"),
+    ("selection_acceptance", [sys.executable, "-m", "scripts.test_skill_selection_benchmark"], "scripts/"),
     ("project_profiler", [sys.executable, "-m", "skills.skill_project_optimizer.test_profiler"], "skills/skill_project_optimizer/"),
     ("bootstrap", [sys.executable, "-m", "skills.bootstrap.test_bootstrap"], "skills/bootstrap/"),
     ("infra_advisor", [sys.executable, "-m", "skills.infra_advisor.test_infra_advisor"], "skills/infra_advisor/"),
