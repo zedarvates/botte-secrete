@@ -143,10 +143,11 @@ useful routing by itself. The lexical baseline performs no argument extraction.
 Measurements are exploratory, authored for this pilot, and not a held-out
 production evaluation. P95 includes the cold first request and measures the
 parent/worker round trip; no latency claim is transferable to the homelab. Native
-peak memory has not been independently measured. A local generalist comparison,
-French threshold calibration on a separate corpus, and real authorized user
-tasks remain unmeasured. These records must not enter the successful-action
-learning ledger or be used as an activation gate.
+peak memory has not been independently measured. At this initial 48-case stage,
+a local generalist comparison, French threshold calibration on a separate corpus,
+and real authorized user tasks were unmeasured. The follow-up below adds a new
+synthetic calibration split and a small CPU generalist. These records must not
+enter the successful-action learning ledger or be used as an activation gate.
 
 Unit tests use stand-in engines for response validation, process failure,
 context reset, and isolation. The integration test exercises the real local
@@ -158,3 +159,13 @@ separately in the linked native experiments.
 Sources: [Needle implementation](https://github.com/cactus-compute/needle),
 [pinned Needle 2 artifacts](https://huggingface.co/Cactus-Compute/needle2/tree/32e9e3a93b205f786929697446ae669cf0a84579),
 [Python package 2.0.13](https://pypi.org/project/cactus-needle/2.0.13/).
+
+## Follow-up: frozen calibration and a small CPU generalist
+
+The [bounded follow-up study](needle2-calibration-study.md) ran 20 new calibration
+cases through Needle 2 and Qwen2.5-0.5B Instruct Q8_0. Both returned 4/10 exact
+positive calls; unwanted proposals were 4/10 and 6/10 respectively. The best
+zero-error threshold on that calibration set retained only 2/10 positives over
+two tools, triggering the predeclared stop rule. The separate 20-case validation
+split remains unrun. This is additional exploratory CPU evidence, not homelab
+acceptance, and the original 48-case results above remain unchanged.

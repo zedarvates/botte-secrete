@@ -1,0 +1,71 @@
+{
+  "schema_version": "botte.needle2-study-comparison/v1",
+  "protocol_sha256": "48fa7ee554f853d76f3e2a98fef6e377c0685a280f2b4f3ea716ad14aeee3496",
+  "split": "calibration",
+  "needle_diagnostic": {
+    "threshold": 0,
+    "positive_cases": 10,
+    "negative_cases": 10,
+    "proposals": 11,
+    "positive_exact_calls": 4,
+    "positive_wrong_proposals": 3,
+    "negative_proposals": 4,
+    "exact_proposal_precision": 0.36363636363636365,
+    "positive_exact_coverage": 0.4,
+    "tools_with_exact_calls": [
+      "memory_context",
+      "memory_history",
+      "memory_scribe"
+    ],
+    "by_tool": {
+      "memory_context": 1,
+      "memory_observations": 0,
+      "memory_history": 2,
+      "memory_wiki": 0,
+      "memory_scribe": 1
+    },
+    "first_request_ms": 1070.426,
+    "p95_roundtrip_ms": 375.028,
+    "runtime_errors": 0
+  },
+  "needle_selected": null,
+  "generalist": {
+    "threshold": 0,
+    "positive_cases": 10,
+    "negative_cases": 10,
+    "proposals": 16,
+    "positive_exact_calls": 4,
+    "positive_wrong_proposals": 6,
+    "negative_proposals": 6,
+    "exact_proposal_precision": 0.25,
+    "positive_exact_coverage": 0.4,
+    "tools_with_exact_calls": [
+      "memory_history",
+      "memory_scribe",
+      "memory_wiki"
+    ],
+    "by_tool": {
+      "memory_context": 0,
+      "memory_observations": 0,
+      "memory_history": 1,
+      "memory_wiki": 1,
+      "memory_scribe": 2
+    },
+    "first_request_ms": 1374.392,
+    "p95_roundtrip_ms": 1388.217,
+    "runtime_errors": 0
+  },
+  "paired_comparison_measured": true,
+  "speedup_claim_allowed": false,
+  "limitations": [
+    "synthetic_small_sample",
+    "no_end_to_end_fallback_measurement",
+    "native_peak_memory_not_measured",
+    "no_homelab_claim_from_this_report"
+  ],
+  "executed": false,
+  "activation_allowed": false,
+  "tool_calls_executed": 0,
+  "memory_writes": 0,
+  "successful_action_ledger_eligible": false
+}

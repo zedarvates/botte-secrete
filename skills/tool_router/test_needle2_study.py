@@ -171,3 +171,27 @@ def test_absent_generalist_remains_unmeasured_and_mismatch_rejected():
     assert not summary["paired_comparison_measured"] and not summary["activation_allowed"]
     with pytest.raises(ValueError, match="identical"):
         study.compare(needle, {**needle, "backend": "generalist", "dataset_sha256": "different"})
+
+
+def test_runtime_failure_stops_after_one_attempt_and_preserves_partial(tmp_path, monkeypatch):
+    protocol, sha, splits = study.load_protocol()
+    attempts = []
+    class Unavailable:
+        runtime = {"fixture": True}
+        last = {}
+        def __init__(self, config):
+            pass
+        def route(self, query, tools):
+            attempts.append(query)
+            raise OSError("fixture connection failure")
+    monkeypatch.setattr(study, "Generalist", Unavailable)
+    config_path = tmp_path / "config.json"
+    study.write_json(config_path, {})
+    args = argparse.Namespace(output=tmp_path / "run.json", split="calibration",
+                              backend="generalist", generalist_config=config_path)
+    report = study.collect(args, protocol, sha, splits)
+    assert len(attempts) == report["case_attempts"] == 1
+    assert not report["complete"] and report["summary"]["runtime_errors"] == 1
+    assert len(args.output.with_suffix(".json.jsonl").read_text(encoding="utf-8").splitlines()) == 2
+    with pytest.raises(ValueError, match="incomplete"):
+        study.checked_report(args.output, protocol, sha, splits)

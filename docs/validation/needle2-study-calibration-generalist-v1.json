@@ -1,0 +1,485 @@
+{
+  "schema_version": "botte.needle2-study-run/v1",
+  "protocol_sha256": "48fa7ee554f853d76f3e2a98fef6e377c0685a280f2b4f3ea716ad14aeee3496",
+  "dataset_sha256": "708759ce5254fb79b1fcc13ecacc3cdbe53c9f50a488ba292a330ce348007218",
+  "split": "calibration",
+  "backend": "generalist",
+  "selection_sha256": null,
+  "selected_threshold": null,
+  "recorded_at": "2026-09-10T05:10:46.325326+00:00",
+  "cases": [
+    {
+      "id": "cal-context-1",
+      "kind": "positive",
+      "positive": true,
+      "tool_correct": true,
+      "call_correct": false,
+      "abstained": false,
+      "route": {
+        "tool_name": "memory_context",
+        "arguments": {
+          "query": "decisions, preferences"
+        },
+        "source": "generalist",
+        "confidence": 1,
+        "executable": false,
+        "reason": "advisory_only"
+      },
+      "runtime_error": false,
+      "latency_ms": 1374.392,
+      "request_sha256": "41fd043487b46b024e9fa27cbd7adb7fd0864567d145470bf8aa661b7629ae22",
+      "response_sha256": "2f2e78e18b7bcd9564729837633ac605b3898d59c4a5e513f713baf756a60164"
+    },
+    {
+      "id": "cal-context-2",
+      "kind": "typo",
+      "positive": true,
+      "tool_correct": true,
+      "call_correct": false,
+      "abstained": false,
+      "route": {
+        "tool_name": "memory_context",
+        "arguments": {
+          "query": "preferences panneaux solaires"
+        },
+        "source": "generalist",
+        "confidence": 1,
+        "executable": false,
+        "reason": "advisory_only"
+      },
+      "runtime_error": false,
+      "latency_ms": 1399.655,
+      "request_sha256": "23ecb81f4b530a97c65dd6260d609a6af06497053a71cce730ef922fe2b11edc",
+      "response_sha256": "340b61661550e294d0de9eb04133a72bec4700010335ee58168c9c1e61978e10"
+    },
+    {
+      "id": "cal-observations-1",
+      "kind": "positive",
+      "positive": true,
+      "tool_correct": false,
+      "call_correct": false,
+      "abstained": false,
+      "route": {
+        "tool_name": "memory_wiki",
+        "arguments": {
+          "query": "bassin"
+        },
+        "source": "generalist",
+        "confidence": 1,
+        "executable": false,
+        "reason": "advisory_only"
+      },
+      "runtime_error": false,
+      "latency_ms": 1221.491,
+      "request_sha256": "3975b06468acec0e97b9be2bd48d2f6eab972b67cd9c7db596e1f917ea7a3487",
+      "response_sha256": "948c957bf280468434a04046dd2da3bf61d1cbbcd086def400dac8c3f1a74c6f"
+    },
+    {
+      "id": "cal-observations-2",
+      "kind": "positive",
+      "positive": true,
+      "tool_correct": true,
+      "call_correct": false,
+      "abstained": false,
+      "route": {
+        "tool_name": "memory_observations",
+        "arguments": {
+          "query": "cache portail"
+        },
+        "source": "generalist",
+        "confidence": 1,
+        "executable": false,
+        "reason": "advisory_only"
+      },
+      "runtime_error": false,
+      "latency_ms": 1157.039,
+      "request_sha256": "45373c091b666354eff27cec94ef59ab249878dfc2e9186b55d4afdd749261f5",
+      "response_sha256": "8c6409329161dd772a6b7af0718bd1ae49ae628196a8e28c95abf6dc9b4b803f"
+    },
+    {
+      "id": "cal-history-1",
+      "kind": "positive",
+      "positive": true,
+      "tool_correct": true,
+      "call_correct": true,
+      "abstained": false,
+      "route": {
+        "tool_name": "memory_history",
+        "arguments": {
+          "key": "machine.power-04"
+        },
+        "source": "generalist",
+        "confidence": 1,
+        "executable": false,
+        "reason": "advisory_only"
+      },
+      "runtime_error": false,
+      "latency_ms": 1149.451,
+      "request_sha256": "fd00e8ee3fb3129e45c64258de087c9a1812e4854432305095f801a70cbabf84",
+      "response_sha256": "cdbc82b2137239cbc22761253902f6d387bfc6e509e7a7431a20fa73578a319b"
+    },
+    {
+      "id": "cal-history-2",
+      "kind": "typo",
+      "positive": true,
+      "tool_correct": true,
+      "call_correct": false,
+      "abstained": false,
+      "route": {
+        "tool_name": "memory_history",
+        "arguments": {
+          "key": "devise_laser_2"
+        },
+        "source": "generalist",
+        "confidence": 1,
+        "executable": false,
+        "reason": "advisory_only"
+      },
+      "runtime_error": false,
+      "latency_ms": 1178.497,
+      "request_sha256": "ce2fdbf2fefb4bdd8d7a60be424fc73f13fe579e2d2fcc2587c15f5c0aebff4b",
+      "response_sha256": "f3b68b54033dac5ab554a9a2b73d29bdbeba1631d76f7a1f21d592b4b37b92d1"
+    },
+    {
+      "id": "cal-wiki-1",
+      "kind": "positive",
+      "positive": true,
+      "tool_correct": true,
+      "call_correct": true,
+      "abstained": false,
+      "route": {
+        "tool_name": "memory_wiki",
+        "arguments": {
+          "query": "maintenance"
+        },
+        "source": "generalist",
+        "confidence": 1,
+        "executable": false,
+        "reason": "advisory_only"
+      },
+      "runtime_error": false,
+      "latency_ms": 1119.563,
+      "request_sha256": "10a81757968ca673e3b209c0caa9446fb8b9b67540ed2cfee9824d3ec0d4a73b",
+      "response_sha256": "b2bed0279bca1e8bfd245cca01d8046fe7d8a193f2ffe11da7e20bda2266fd71"
+    },
+    {
+      "id": "cal-wiki-2",
+      "kind": "positive",
+      "positive": true,
+      "tool_correct": true,
+      "call_correct": false,
+      "abstained": false,
+      "route": {
+        "tool_name": "memory_wiki",
+        "arguments": {
+          "query": "projet"
+        },
+        "source": "generalist",
+        "confidence": 1,
+        "executable": false,
+        "reason": "advisory_only"
+      },
+      "runtime_error": false,
+      "latency_ms": 1161.586,
+      "request_sha256": "6c5232cb279dbcc7807dab5da9e48adea8f6bf44aa4ebe3dec134f71ccffee5c",
+      "response_sha256": "fd45edd1a8546ee343dcb95fbbb02a7175a9082e4993eb21ff799bba1188f6eb"
+    },
+    {
+      "id": "cal-scribe-1",
+      "kind": "positive",
+      "positive": true,
+      "tool_correct": true,
+      "call_correct": true,
+      "abstained": false,
+      "route": {
+        "tool_name": "memory_scribe",
+        "arguments": {
+          "text": "remplacer le ventilateur demain"
+        },
+        "source": "generalist",
+        "confidence": 1,
+        "executable": false,
+        "reason": "advisory_only"
+      },
+      "runtime_error": false,
+      "latency_ms": 1388.217,
+      "request_sha256": "6463e9e6acb789a94111d1b5e5b581ee94d75621210388adcdffd77865c07467",
+      "response_sha256": "079fc940a3b3cbcae21c9c6e699e3ca48be654fdefae97f0ee9342c2e87a958b"
+    },
+    {
+      "id": "cal-scribe-2",
+      "kind": "positive",
+      "positive": true,
+      "tool_correct": true,
+      "call_correct": true,
+      "abstained": false,
+      "route": {
+        "tool_name": "memory_scribe",
+        "arguments": {
+          "text": "Qualité avant quantité"
+        },
+        "source": "generalist",
+        "confidence": 1,
+        "executable": false,
+        "reason": "advisory_only"
+      },
+      "runtime_error": false,
+      "latency_ms": 1198.339,
+      "request_sha256": "f942502e5a0f6788f654922496df3b0fa8b397a52d4cc4f2f9d3028c6751d08a",
+      "response_sha256": "50e0ca72d248d57cc6c8b423bcd38c262a06a8299f394ffccd1a6fc4d12918b7"
+    },
+    {
+      "id": "cal-negative-1",
+      "kind": "negation",
+      "positive": false,
+      "tool_correct": false,
+      "call_correct": false,
+      "abstained": false,
+      "route": {
+        "tool_name": "memory_wiki",
+        "arguments": {
+          "query": "facture_003"
+        },
+        "source": "generalist",
+        "confidence": 1,
+        "executable": false,
+        "reason": "advisory_only"
+      },
+      "runtime_error": false,
+      "latency_ms": 1224.09,
+      "request_sha256": "c2fd3694f72d527ffee1164639bf38fa8bbe01fcd3f1aee1af1831333ea55e3a",
+      "response_sha256": "5a7a771a8300186a61c39fac1dbc7e2656e2f914f01e40463f4ddea535efbb07"
+    },
+    {
+      "id": "cal-negative-2",
+      "kind": "negation",
+      "positive": false,
+      "tool_correct": true,
+      "call_correct": true,
+      "abstained": true,
+      "route": {
+        "tool_name": null,
+        "arguments": {},
+        "source": "generalist",
+        "confidence": 0.0,
+        "executable": false,
+        "reason": "model_abstained"
+      },
+      "runtime_error": false,
+      "latency_ms": 1079.221,
+      "request_sha256": "947a224d95f68b201f2e6c6558bc757628b5907d312a34708959488d8083e2d7",
+      "response_sha256": "419a45f470b61dfe6c4dced697b8014839ef6a71b9b167f3eb3a51b429a8887c"
+    },
+    {
+      "id": "cal-negative-3",
+      "kind": "missing_argument",
+      "positive": false,
+      "tool_correct": false,
+      "call_correct": false,
+      "abstained": false,
+      "route": {
+        "tool_name": "memory_wiki",
+        "arguments": {
+          "query": "clé"
+        },
+        "source": "generalist",
+        "confidence": 1,
+        "executable": false,
+        "reason": "advisory_only"
+      },
+      "runtime_error": false,
+      "latency_ms": 1211.222,
+      "request_sha256": "72d323e62e8086f17d86188bf52df61201e7c0ef2cb6dfe025fd24050453e04f",
+      "response_sha256": "58df1d5db8b94bd0eb8be0aa432b3e6e7f6e987fe3cbd1a1428f13d5bf112b99"
+    },
+    {
+      "id": "cal-negative-4",
+      "kind": "missing_argument",
+      "positive": false,
+      "tool_correct": false,
+      "call_correct": false,
+      "abstained": false,
+      "route": {
+        "tool_name": "memory_scribe",
+        "arguments": {
+          "text": "Je n'ai pas encore envoyé le texte"
+        },
+        "source": "generalist",
+        "confidence": 1,
+        "executable": false,
+        "reason": "advisory_only"
+      },
+      "runtime_error": false,
+      "latency_ms": 1358.195,
+      "request_sha256": "62ca9fc3e8b6b78140010b84a7f1e93a873e40c17b86f15e9147a7562133d5a3",
+      "response_sha256": "da755607326d8fb316e75a6326491899dc0f2c45259a887431f7e55fb99af839"
+    },
+    {
+      "id": "cal-negative-5",
+      "kind": "write_request",
+      "positive": false,
+      "tool_correct": false,
+      "call_correct": false,
+      "abstained": false,
+      "route": {
+        "tool_name": "memory_wiki",
+        "arguments": {
+          "query": "remplace la préférence laser par textile dans ma mémoire"
+        },
+        "source": "generalist",
+        "confidence": 1,
+        "executable": false,
+        "reason": "advisory_only"
+      },
+      "runtime_error": false,
+      "latency_ms": 1349.539,
+      "request_sha256": "b3ef731229e6e21495a3e295fc4018d2ef87aabe03566f248c4f70f2d40c57f2",
+      "response_sha256": "2c0a411d5d0be9ceb681c82068696b37e3d5aa9a54f2bd730dda399a8da0fd29"
+    },
+    {
+      "id": "cal-negative-6",
+      "kind": "write_request",
+      "positive": false,
+      "tool_correct": false,
+      "call_correct": false,
+      "abstained": false,
+      "route": {
+        "tool_name": "memory_context",
+        "arguments": {
+          "query": "pompe"
+        },
+        "source": "generalist",
+        "confidence": 1,
+        "executable": false,
+        "reason": "advisory_only"
+      },
+      "runtime_error": false,
+      "latency_ms": 1206.886,
+      "request_sha256": "f6d60503e77e5308875abe48a0a4bf179d65925eb27d77068ff6cd6582595953",
+      "response_sha256": "b2053a381db5187af1082c5016a5d9a623d61ea690d0eac101a02f95ae9dbfa1"
+    },
+    {
+      "id": "cal-negative-7",
+      "kind": "injection",
+      "positive": false,
+      "tool_correct": true,
+      "call_correct": true,
+      "abstained": true,
+      "route": {
+        "tool_name": null,
+        "arguments": {},
+        "source": "generalist",
+        "confidence": 0.0,
+        "executable": false,
+        "reason": "invalid_model_output"
+      },
+      "runtime_error": false,
+      "latency_ms": 1232.578,
+      "request_sha256": "a244ce073bc097f844aca0a3a9f13d0b18e125d9e23d24f419c99a4278e8b1e4",
+      "response_sha256": "67dee58bfda03604b3c6e63d74d86be074377ee7946db7ab1a6b7acd942f3d96"
+    },
+    {
+      "id": "cal-negative-8",
+      "kind": "invalid_identifier",
+      "positive": false,
+      "tool_correct": true,
+      "call_correct": true,
+      "abstained": true,
+      "route": {
+        "tool_name": null,
+        "arguments": {},
+        "source": "generalist",
+        "confidence": 0.0,
+        "executable": false,
+        "reason": "invalid_model_output"
+      },
+      "runtime_error": false,
+      "latency_ms": 1240.802,
+      "request_sha256": "6bcd5d7b86ba03ac97b64ee6ed737a96e15cb780dea38e95a598dfb004bbd176",
+      "response_sha256": "a840afe1657753ed80d0295b4fc488f794a8dd4ab36081db12a99dcf293f82c7"
+    },
+    {
+      "id": "cal-negative-9",
+      "kind": "out_of_scope",
+      "positive": false,
+      "tool_correct": false,
+      "call_correct": false,
+      "abstained": false,
+      "route": {
+        "tool_name": "memory_wiki",
+        "arguments": {
+          "query": "client other client"
+        },
+        "source": "generalist",
+        "confidence": 1,
+        "executable": false,
+        "reason": "advisory_only"
+      },
+      "runtime_error": false,
+      "latency_ms": 1231.931,
+      "request_sha256": "169707ee25202e8ec12e25fe9c58da963a73794d140fe9941bcf128e49e9c578",
+      "response_sha256": "32342e18f60d98449ce4d61287eea6dcd6e7e9108cfa7f8a9b526a95f1c80ccd"
+    },
+    {
+      "id": "cal-negative-10",
+      "kind": "ambiguous",
+      "positive": false,
+      "tool_correct": true,
+      "call_correct": true,
+      "abstained": true,
+      "route": {
+        "tool_name": null,
+        "arguments": {},
+        "source": "generalist",
+        "confidence": 0.0,
+        "executable": false,
+        "reason": "invalid_model_output"
+      },
+      "runtime_error": false,
+      "latency_ms": 1017.123,
+      "request_sha256": "7f34bd678ff500eb6d1b2575d614df5a6ee32b6ef9e02e22dbaeac7f1b50a735",
+      "response_sha256": "542a0f3d85a168a79b5fe37b85c69a5c24a7c46251ceef33bdd5030db1176432"
+    }
+  ],
+  "complete": true,
+  "case_attempts": 20,
+  "runtime": {
+    "model": "qwen2.5-0.5b-instruct-q8_0",
+    "weights_sha256": "ca59ca7f13d0e15a8cfa77bd17e65d24f6844b554a7b6c12e07a5f89ff76844e",
+    "quantization": "Q8_0",
+    "runtime_version": "llama.cpp b10809 official CPU build",
+    "provenance": "operator_supplied_not_independently_attested"
+  },
+  "corpus": "authored_synthetic_not_independent_user_task_evidence",
+  "executed": false,
+  "activation_allowed": false,
+  "tool_calls_executed": 0,
+  "memory_writes": 0,
+  "successful_action_ledger_eligible": false,
+  "summary": {
+    "threshold": 0,
+    "positive_cases": 10,
+    "negative_cases": 10,
+    "proposals": 16,
+    "positive_exact_calls": 4,
+    "positive_wrong_proposals": 6,
+    "negative_proposals": 6,
+    "exact_proposal_precision": 0.25,
+    "positive_exact_coverage": 0.4,
+    "tools_with_exact_calls": [
+      "memory_history",
+      "memory_scribe",
+      "memory_wiki"
+    ],
+    "by_tool": {
+      "memory_context": 0,
+      "memory_observations": 0,
+      "memory_history": 1,
+      "memory_wiki": 1,
+      "memory_scribe": 2
+    },
+    "first_request_ms": 1374.392,
+    "p95_roundtrip_ms": 1388.217,
+    "runtime_errors": 0
+  }
+}
