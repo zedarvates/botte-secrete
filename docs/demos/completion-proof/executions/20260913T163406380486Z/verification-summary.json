@@ -1,0 +1,52 @@
+{
+  "avant": {
+    "schema_version": 1,
+    "status": "test_failed",
+    "verified": false,
+    "errors": [],
+    "source_files_checked": [
+      "moyenne.py",
+      "test_moyenne.py"
+    ],
+    "cloud_tokens": 0,
+    "scope": "recorded tests and listed files only",
+    "tests_run": 3,
+    "receipt_sha256": "774807fe261600a94301883c79a48671694369232d9ca3e1b56d229b70de963a"
+  },
+  "apres": {
+    "schema_version": 1,
+    "status": "verified_on_recorded_tests",
+    "verified": true,
+    "errors": [],
+    "source_files_checked": [
+      "moyenne.py",
+      "test_moyenne.py"
+    ],
+    "cloud_tokens": 0,
+    "scope": "recorded tests and listed files only",
+    "tests_run": 3,
+    "receipt_sha256": "8aa8f22d470cfb9ad3487a22ad07bb7309de4f2fec42d6c5c5ae48e26703d02d"
+  },
+  "source_changed": {
+    "schema_version": 1,
+    "status": "invalid_evidence",
+    "verified": false,
+    "errors": [
+      "source_hash_mismatch"
+    ],
+    "source_files_checked": [],
+    "cloud_tokens": 0,
+    "scope": "recorded tests and listed files only"
+  },
+  "missing": {
+    "schema_version": 1,
+    "status": "missing_evidence",
+    "verified": false,
+    "errors": [
+      "missing_receipt_reference"
+    ],
+    "source_files_checked": [],
+    "cloud_tokens": 0,
+    "scope": "recorded tests and listed files only"
+  }
+}

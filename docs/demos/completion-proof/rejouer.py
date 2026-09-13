@@ -138,6 +138,7 @@ if __name__ == "__main__":
         raise RuntimeError("Verification des preuves inattendue")
     save(run / "verification-summary.json", checks)
     strict_checks = {}
+    human_results = []
     for label, claim, source_dir, expected in (
         ("valid", "apres-claim-v1.json", "apres", 0),
         ("missing", "controle-limite.json", "apres", 3),
@@ -157,9 +158,16 @@ if __name__ == "__main__":
             write(marker, "Closure allowed after strict verification.\n")
         strict_checks[label] = {"exit_code": strict.returncode,
                                 "closure_marker_written": marker.exists()}
+        human = execute([sys.executable, "-m", "skills.completion_proof.cli", claim,
+                         "--verify", "--strict", "--lang", "fr", "--evidence-root", ".",
+                         "--source-root", source_dir, "--receipt-sha256", expected_pin],
+                        run, "human-" + label + ".txt")
+        if human.returncode != expected:
+            raise RuntimeError("La langue a modifie le resultat strict")
+        human_results.append((label, human.stdout))
     save(run / "strict-summary.json", strict_checks)
     sources = {}
-    for name in ("__init__.py", "audit.py", "cli.py", "test_completion_proof.py", "verify.py", "test_verify.py"):
+    for name in ("__init__.py", "audit.py", "cli.py", "test_completion_proof.py", "verify.py", "test_verify.py", "presentation.py"):
         path = repo / "skills/completion_proof" / name
         sources["skills/completion_proof/" + name] = digest(path)
     proof_log = (after / "../03-tests-apres.txt").resolve()
@@ -183,6 +191,14 @@ if __name__ == "__main__":
 <script>const cards=[...document.querySelectorAll('.card')];let step=-1;document.querySelector('#play').addEventListener('click',()=>{step=(step+1)%4;cards.forEach((c,i)=>c.style.outline=i===step?'3px solid #507452':'none');document.querySelector('#status').textContent=['1 / Une annonce de réalisation, sans preuve jointe.','2 / Botte détecte exactement une déclaration sans preuve.','3 / Le test échoue sur la liste vide ; le code est corrigé.','4 / Les trois tests réussissent ; leurs résultats sont consultables.'][step];document.querySelector('#play').textContent=step===3?'Revoir le parcours':'Étape suivante';cards[step].scrollIntoView({behavior:'smooth',block:'nearest'});});</script></html>'''
     page = page.replace('<details><summary>', '<section class="card"><h2>Nouveau : vérifier les pièces réelles</h2><p>Le vérificateur distinct contrôle le reçu, le journal et les empreintes du code et des tests, avec une empreinte de référence capturée séparément par cet exécuteur local.</p><p>Résultats réels : test initial en échec ; version corrigée vérifiée sur trois tests ; autre version du code refusée ; référence fictive refusée.</p><a href="RUN/verification-summary.json">Consulter les quatre vérifications</a><p>Cette intégrité dépend de la confiance dans l’exécuteur et son empreinte de référence. Elle ne certifie ni une machine compromise, ni les fichiers non listés.</p></section><details><summary>')
     page = page.replace('<details><summary>', '<section class="card"><h2>Mode strict : poursuivre seulement après validation</h2><p>La chaîne de démonstration écrit son marqueur de clôture uniquement après un code de succès. Preuve manquante, autre version du code et tests en échec interrompent cette étape.</p><a href="RUN/strict-summary.json">Voir les quatre résultats du mode strict</a><p>Ce mode doit être activé et son code de sortie respecté par la chaîne qui clôture la tâche. Il ne bloque pas une application qui ignore ce résultat.</p></section><details><summary>')
+    readable = '<section><h2>Comprendre le résultat et la prochaine action</h2><p>Messages produits par Botte lors de cette exécution, en français. Le résultat technique et le blocage strict restent inchangés.</p><div class="grid">'
+    for label, message in human_results:
+        lines = message.strip().splitlines()
+        readable += ('<article class="card"><h2>' + html.escape(lines[0]) + '</h2>'
+                     + ''.join('<p>' + html.escape(line) + '</p>' for line in lines[1:])
+                     + '<a href="RUN/human-' + label + '.txt">Lire le message enregistré</a></article>')
+    readable += '</div></section>'
+    page = page.replace('<aside class="limit">', readable + '<aside class="limit">')
     readme = (SCRIPT_DIR / "README.md").read_text(encoding="utf-8")
     start = readme.index("## Pièces de l'exécution publiée")
     end = readme.index("Les rapports sont conservés", start)
@@ -203,6 +219,10 @@ if __name__ == "__main__":
             ("Reçu de la version corrigée", "apres-receipt.json"),
             ("Empreinte capturée séparément par l'exécuteur", "apres-trusted-receipt.sha256"),
             ("Mode strict et clôture conditionnelle", "strict-summary.json"),
+            ("Message : vérifié sur ces tests", "human-valid.txt"),
+            ("Message : preuve manquante", "human-missing.txt"),
+            ("Message : code modifié", "human-wrong_version.txt"),
+            ("Message : test échoué", "human-failed_tests.txt"),
         )
     ) + "\n\n"
     rendered_readme = readme[:start] + evidence + readme[end:]

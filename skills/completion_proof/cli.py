@@ -33,6 +33,8 @@ def main(argv=None) -> int:
     p.add_argument("--json", action="store_true")
     p.add_argument("--verify", action="store_true", help="verify a v1 receipt (read-only)")
     p.add_argument("--strict", action="store_true", help="with --verify: exit nonzero unless verified")
+    p.add_argument("--lang", choices=("fr", "en"), default="fr",
+                   help="human verification output language (JSON is unchanged)")
     p.add_argument("--evidence-root")
     p.add_argument("--source-root")
     p.add_argument("--receipt-sha256", help="trusted digest obtained outside the report")
@@ -51,9 +53,8 @@ def main(argv=None) -> int:
         if args.json:
             print(json.dumps(result, ensure_ascii=False))
         else:
-            print(result["status"])
-            for error in result["errors"]:
-                print(f"  {error}")
+            from skills.completion_proof.presentation import format_result
+            print(format_result(result, args.lang))
         return strict_exit_code(result) if args.strict else 0
     if any(verification_args):
         p.error("evidence arguments require --verify")

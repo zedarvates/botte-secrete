@@ -36,6 +36,12 @@ mode rapport reste compatible. Pas de blocage généralisé activé par défaut.
 
 ## 3. Rendre le résultat plus clair
 
+**Réalisé pour la CLI et la démonstration** : messages français/anglais, cause et
+prochaine action, portée du contrôle, comptes lorsqu'ils sont disponibles, et
+messages réels consultables dans la page. JSON et codes stricts inchangés.
+La traduction de toute la présentation et une intégration au tableau de bord
+restent possibles ensuite.
+
 Afficher « annoncé », « preuve manquante », « test en échec » et « vérifié sur
 ces tests ». Donner accès à la preuve, à sa date et aux cas couverts. Montrer
 une comparaison avant/après et une version anglaise du parcours.

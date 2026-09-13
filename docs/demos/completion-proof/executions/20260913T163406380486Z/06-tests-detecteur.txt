@@ -1,0 +1,15 @@
+== completion_proof tests ==
+  [PASS] bare JSON completion is flagged
+  [PASS] JSON with test_id proof is NOT flagged
+  [PASS] agent_state completion with passed validation is NOT flagged
+  [PASS] markdown claim without proof is flagged
+  [PASS] markdown claim with 'N passed' is NOT flagged
+  [PASS] jsonl line without proof is flagged, proven line is not
+  [PASS] neutral text is not flagged
+  [PASS] finding carries the five policy fields
+  [PASS] result is JSON-serialisable
+  [PASS] cloud_tokens is zero
+  [PASS] missing path → error
+  [PASS] single proven file → empty findings
+
+RESULT: 12 passed, 0 failed

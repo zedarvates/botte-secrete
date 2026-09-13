@@ -66,6 +66,12 @@ arbitrary historical passing receipt.
 
 ## Results
 
+Human verification output defaults to French; use `--lang en` for English.
+It shows a status, an explanation, a next action and the scope of verification.
+Recorded test and checked-file counts appear when available. `--json` retains
+the same schema and machine statuses regardless of language, and strict exit
+codes do not change. Unknown or inconsistent results never display success.
+
 | Status | Meaning |
 |---|---|
 | `announced` | Input is not a supported completion claim |

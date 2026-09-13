@@ -241,6 +241,39 @@ class VerificationTests(unittest.TestCase):
             with patch("skills.completion_proof.verify.verify_report", return_value=result), contextlib.redirect_stdout(io.StringIO()):
                 self.assertEqual(cli(argv), 4)
 
+    def test_presentation_does_not_promote_unverified_result(self):
+        from skills.completion_proof.presentation import format_result
+        for result in ({"status": "verified_on_recorded_tests", "verified": False, "errors": []},
+                       {"status": "verified_on_recorded_tests", "verified": True, "errors": ["bad"]},
+                       {"status": "unknown", "verified": True, "errors": []}):
+            self.assertTrue(format_result(result).startswith("Preuve invalide"))
+
+    def test_presentation_explains_source_change_without_echoing_payload(self):
+        from skills.completion_proof.presentation import format_result
+        result = {"status": "invalid_evidence", "verified": False,
+                  "errors": ["source_hash_mismatch", "UNTRUSTED_PAYLOAD"]}
+        text = format_result(result)
+        self.assertIn("ont changé", text)
+        self.assertIn("Relancer les tests", text)
+        self.assertNotIn("UNTRUSTED_PAYLOAD", text)
+
+    def test_cli_language_preserves_json_and_strict_exit(self):
+        args = [str(self.root / "report.json"), "--verify", "--strict",
+                "--evidence-root", str(self.root), "--source-root", str(self.source),
+                "--receipt-sha256", self.pin]
+        results = []
+        for language in ("fr", "en"):
+            output = io.StringIO()
+            with contextlib.redirect_stdout(output):
+                self.assertEqual(cli(args + ["--lang", language, "--json"]), 0)
+            results.append(json.loads(output.getvalue()))
+        self.assertEqual(results[0], results[1])
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output):
+            self.assertEqual(cli(args + ["--lang", "fr"]), 0)
+        self.assertIn("Vérifié sur ces tests", output.getvalue())
+        self.assertIn("1 test(s)", output.getvalue())
+
 
 def main():
     suite = unittest.defaultTestLoader.loadTestsFromTestCase(VerificationTests)
