@@ -2,6 +2,9 @@
 
 # Botte Secrète
 
+[RC1 validation reports and reproduction](docs/validation/2.0.0rc1/README.md)
+— clean installation checks and a bounded public-source pilot.
+
 **Releases:** [1.9.0 — latest stable](https://github.com/zedarvates/botte-secrete/releases/tag/1.9.0)
 · [2.0.0rc1 — external-pilot pre-release](https://github.com/zedarvates/botte-secrete/releases/tag/v2.0.0rc1).
 The RC adds Factory Assurance, independent judging, and evidence gates. Start in
