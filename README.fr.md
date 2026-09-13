@@ -6,7 +6,7 @@
 — installation propre et pilote limité sur un projet public.
 
 **Versions :** [1.9.0 — dernière version stable](https://github.com/zedarvates/botte-secrete/releases/tag/1.9.0)
-· [2.0.0rc1 — préversion pour pilotes externes](https://github.com/zedarvates/botte-secrete/releases/tag/v2.0.0rc1).
+· [2.0.0rc2 — préversion pour pilotes externes](https://github.com/zedarvates/botte-secrete/releases/tag/v2.0.0rc2).
 La RC ajoute Factory Assurance, un juge indépendant et des critères de preuve.
 Commencer en mode observe, consultative ou shadow ; la validation sur un jeu
 privé/externe indépendant reste à établir. Les notes de version précisent les
