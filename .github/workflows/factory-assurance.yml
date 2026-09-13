@@ -1,0 +1,30 @@
+name: Factory Assurance
+
+on:
+  pull_request:
+    paths:
+      - "skills/factory_assurance/**"
+      - "examples/factory-assurance/**"
+      - ".github/workflows/factory-assurance.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  deterministic-assurance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Run assurance unit contract
+        run: python -m skills.factory_assurance.test_factory_assurance
+      - name: Positive control must pass
+        run: python -m skills.factory_assurance.cli examples/factory-assurance/run.json
+      - name: Record exact candidate identity
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD)" = "${GITHUB_SHA}"
+          printf 'source_sha=%s\nbuild_sha=%s\ntested_sha=%s\n' \
+            "${GITHUB_SHA}" "${GITHUB_SHA}" "${GITHUB_SHA}"
