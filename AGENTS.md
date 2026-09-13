@@ -49,11 +49,10 @@ generated files (e.g. `configs/llm-endpoints.json`, `.mcp.json` — both ignored
 
 ## Effects and reuse
 
-For a selected capability, consult its optional `effects.json` and the
-[effects contract](docs/capability-effects.md). Relate predictions to the actual
-task; report observed results, evidence, deviations and remaining uncertainty.
-Check plausible reuse in its target context. Declarations do not grant authority
-or verify outcomes; use existing task permissions and report schemas.
+Use the shared [effect review](skills/effect-review/SKILL.md) when assessing a
+selected operation or handing off its results. Conductor `--review-effects`
+returns compact cues; load capability-specific details only as needed. Authoring
+and evidence formats remain in the [effects contract](docs/capability-effects.md).
 
 ## Botte Secrète policy
 This project follows `.botte/policy.md` (prefer local models for cheap work, improve prompts locally, run `/checkup` after updates). Read it.

@@ -50,7 +50,8 @@ class Step:
         return asdict(self)
 
 
-def plan(goal: str, *, top_k: int = 6, include_effects: bool = False) -> dict:
+def plan(goal: str, *, top_k: int = 6, include_effects: bool = False,
+         review_effects: bool = False) -> dict:
     """Compose an ordered capability plan for a goal. 0 cloud tokens."""
     goal = (goal or "").strip()
     if not goal:
@@ -86,16 +87,21 @@ def plan(goal: str, *, top_k: int = 6, include_effects: bool = False) -> dict:
         effort = {"score": None, "tier": "UNKNOWN"}
 
     serialized_steps = [s.to_dict() for s in steps]
-    if include_effects:
+    if include_effects or review_effects:
         from skills.capabilities.effects import inspect_effects
         for step, (cap, _) in zip(serialized_steps, picked):
             # Inspect only selected capabilities, using the registry's actual
             # path rather than assuming the frontmatter name is a folder name.
             skill_path = REPO_ROOT / cap.path
-            step["effects"] = inspect_effects(skill_path.parent)
+            snapshot = inspect_effects(skill_path.parent)
+            if include_effects:
+                step["effects"] = snapshot
+            if review_effects:
+                from skills.capabilities.review import before
+                step["review_before"] = before(snapshot, source=cap.path)
 
     cloud_steps = [s.capability for s in steps if not s.local]
-    return {
+    result = {
         "goal": goal,
         "effort": effort,
         "steps": serialized_steps,
@@ -105,3 +111,7 @@ def plan(goal: str, *, top_k: int = 6, include_effects: bool = False) -> dict:
             + " may escalate to the cloud (auto_router decides)."),
         "cloud_tokens": 0,
     }
+    if review_effects:
+        from skills.capabilities.review import METHOD
+        result["review_method"] = METHOD
+    return result

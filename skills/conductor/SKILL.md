@@ -14,6 +14,7 @@ data; the optional executor runs the selected commands.
 python -m skills.conductor.cli "test my desktop app and report crashes"
 python -m skills.conductor.cli "reduce token cost and deploy on my project" --json
 python -m skills.conductor.cli "inspect verified outcome history" --effects --json
+python -m skills.conductor.cli "audit my project" --review-effects --json
 
 # Execute the plan (read-only steps run; mutating/cloud steps are gated):
 python -m skills.conductor.cli "audit my project and report metrics" --execute
@@ -62,38 +63,27 @@ reads local declarations; `--save` writes reports, and `--execute` launches
 commands whose effects depend on their capability and arguments. An allowlisted
 "safe" classification is not proof of no network access or cache writes.
 
-Use `--effects` or `plan(..., include_effects=True)` to attach declarations only
-for selected capabilities. MCP `conduct` and `execute_plan` expose
-`include_effects: true` too. Selected paths preserve the association even when
-names repeat; only canonical paths receive built-in command hints.
-Match their scope to the actual command and current task
-authorization. The executor carries the original snapshot as `effects_before`
-for comparison with results; it never uses a declaration to unlock a command.
-The snapshot itself remains unchanged. Review source or context
-changes before relying on it. JSON contains complete details; `--effects --save`
-also writes a JSON companion because Markdown/HTML tables abbreviate values.
+Use the shared [effect-review method](../effect-review/SKILL.md) for task-specific
+assessment. Choose the detail needed:
 
-After execution, distinguish a zero process exit from verified task success.
-Record actual changes, evidence, partial effects, deviations and the next
-action in the task report. A failed step does not stop later steps, and a
-timeout does not prove that no work happened. Inspect state before retrying;
-do not replay already successful mutations blindly. The orchestration's
-`cloud_tokens` value does not account for model calls made by child commands.
+| Option | Returned context |
+|---|---|
+| `--review-effects` | Compact `review_before` and, on execution, `review_after`; no automatic observation or LLM call. |
+| `--effects` | Complete selected declarations, retained as `effects_before` on execution. |
+| `--execute --observe-effects` | Complete declarations plus partial v2 runtime evidence; stored v1 evidence remains readable. |
 
-Treat reuse suggestions as candidates requiring a check in their target
-context. See the [common contract](../../docs/capability-effects.md).
+These options combine. Python uses `review_effects`, `include_effects` and
+`observe_effects`; MCP `conduct`/`execute_plan` expose the same applicable flags.
+`--save` with any of them preserves the returned JSON alongside abbreviated
+Markdown/HTML. A compact-only save keeps cues, not the deferred declaration prose.
+See the [integration contract](../../docs/capability-effects.md#compact-shared-review)
+for fields and coverage.
 
-Use `--execute --observe-effects --json` (MCP `observe_effects: true`) to add
-a separate v2 observation report and compare declaration freshness at instrumented
-call entry; stored v1 reports remain readable. Adapters link checkup/infra/backend/
-cluster calls, including discovery workers, registry/LRU writes and TCP/HTTP
-attempts. Follow parent IDs to assess inherited effects; `effects_summary` counts
-each attempt once and retains swallowed failures or unfinished calls. Supported
-write and transport-response facets are partial evidence; remote effects, task
-success and costs remain unverified. Dry-run provides no execution
-evidence. Add `--save both` to retain the full execution JSON for handoff. Inspect
-partial state before retrying after errors or timeout. See the common contract's
-observation section for coverage and schema details.
+Reviews never unlock commands or verify complete outcomes. A failed step does
+not stop later steps; the executor provides no transactional rollback. Its
+`cloud_tokens` excludes model calls made by child commands. Runtime observation
+covers enrolled checkup/infra/backend/cluster calls, writes and network attempts;
+other effects remain unassessed.
 
 Exposed via [[llm_mcp]] as `conduct` (plan) and `execute_plan` (plan + run safe
 steps). Built on [[capabilities]], [[auto_router]]; pairs with the [[control_loop]]

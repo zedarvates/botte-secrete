@@ -18,7 +18,7 @@ def _save_report(kind: str, report: dict, args) -> None:
     import tempfile
     from pathlib import Path
     from skills.report import save, timestamped_name
-    if args.effects:
+    if args.effects or args.review_effects:
         from skills.atomic_json import write_json
         directory = Path(".botte") / "reports"
         directory.mkdir(parents=True, exist_ok=True)
@@ -39,7 +39,7 @@ def _save_report(kind: str, report: dict, args) -> None:
 def _run_execute(args) -> int:
     r = run_goal(args.goal, confirm=args.confirm, dry_run=args.dry_run,
                  timeout=args.timeout, include_effects=args.effects,
-                 observe_effects=args.observe_effects)
+                 observe_effects=args.observe_effects, review_effects=args.review_effects)
     if "error" in r:
         print(f"ERROR: {r['error']}", file=sys.stderr)
         return 1
@@ -66,8 +66,11 @@ def _run_execute(args) -> int:
             print(f"        observed: {e['calls']} calls, {e['deviations']} write deviations, "
                   f"{e['unfinished_calls']} unfinished calls, "
                   f"{e['network_attempts']} network attempts; coverage partial (see --json)")
+        if "review_after" in s:
+            e = s["review_after"]
+            print(f"        review: {e['coverage']} · {e['task_outcome']} · {e['next_action']}")
     if "effects_json" in r:
-        print(f"   Complete effects report: {r['effects_json']}")
+        print(f"   Saved JSON report: {r['effects_json']}")
     # a failed step is a non-zero exit so callers/CI can react
     return 1 if c["failed"] else 0
 
@@ -79,6 +82,8 @@ def main(argv=None) -> int:
     p.add_argument("--json", action="store_true")
     p.add_argument("--effects", action="store_true",
                    help="include selected capabilities' effects declarations; no extra authority")
+    p.add_argument("--review-effects", action="store_true",
+                   help="add compact shared review cues before/after; no model call or automatic observation")
     p.add_argument("--observe-effects", action="store_true",
                    help="with --execute, collect partial effect evidence and call links; implies --effects")
     p.add_argument("--save", nargs="?", const="both", choices=["md", "html", "both"],
@@ -100,7 +105,7 @@ def main(argv=None) -> int:
     if args.execute:
         return _run_execute(args)
 
-    r = plan(args.goal, include_effects=args.effects)
+    r = plan(args.goal, include_effects=args.effects, review_effects=args.review_effects)
     if args.save and "error" not in r:
         _save_report("plan", r, args)
     if "error" in r:
@@ -120,8 +125,11 @@ def main(argv=None) -> int:
         if "effects" in s:
             print(f"        effects: {s['effects']['status']} "
                   "(declaration only; see --json for details)")
+        if "review_before" in s:
+            e = s["review_before"]
+            print(f"        review: {e['declaration']} · operation assessment deferred (see --json)")
     if "effects_json" in r:
-        print(f"\n   Complete effects report: {r['effects_json']}")
+        print(f"\n   Saved JSON report: {r['effects_json']}")
     print(f"\n   {r['local_first']}")
     return 0
 

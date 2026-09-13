@@ -58,11 +58,10 @@ Distinguish `missing`, `invalid`, `stale` and `declared`; the last only confirms
 structure, resolved identity and listed source hashes, including for drafts. It does not verify
 behavior or grant authority. Ordinary registry output remains unchanged.
 
-Relate expected effects to the current task and its existing authorization.
-After use, record observed effects, evidence, deviations, uncertainties and the
-next action through the task's existing report. For plausible reuse, state what
-transfers, adaptations and a check in the target context; do not inherit a prior
-validation or permission automatically.
+Use the shared [effect-review method](../effect-review/SKILL.md) for before/after
+assessment and a concrete reuse proposal. `skills.capabilities.review` generates
+compact deterministic cues for Conductor `--review-effects`, without an LLM call.
+Detailed operation prose stays in sidecars; the compact view defers its assessment.
 
 When creating or updating declarations, use the read-only `template` command and
 the [authoring contract](../../docs/capability-effects.md). Keep substantial

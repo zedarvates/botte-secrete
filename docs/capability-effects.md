@@ -130,22 +130,72 @@ With `--effects --save`, a complete JSON companion accompanies the abbreviated
 Markdown/HTML reports. Treat all these outputs according to the task's data
 scope before sharing them.
 
-Before using a selected capability, inspect its declaration when available and
-relate the relevant effects to the actual inputs, resources and existing task
-authority. Resolve material uncertainty with a proportional check. A missing
-declaration alone neither authorizes nor forbids an otherwise authorized task.
-
-After execution, report the observed result separately from the prediction:
-affected resources, partial or ongoing effects, evidence, deviations, remaining
-uncertainties and the next action. Keep the analysis concise and supported by
-observations. Assess each proposed reuse in its target context before promoting
-its status. Use the existing run-report or handoff mechanism for these facts.
+The shared [effect-review skill](../skills/effect-review/SKILL.md) contains the
+before/after method and target-context reuse assessment. Keep that procedure in
+one place; individual skills retain their operation-specific facts and limits.
 
 This migration adds capability declarations, authoring support and optional
 planning/execution-report context. It does not change command classification,
 permissions, scoring or learning. Do not
 insert these fields into strict mission/handoff v1 objects: attach a reference
 where their schema permits it, or introduce an explicit schema migration.
+
+## Compact shared review
+
+```bash
+python -m skills.conductor.cli "audit my project" --review-effects --json
+python -m skills.conductor.cli "audit my project" --execute --dry-run --review-effects --json --save both
+```
+
+`plan(..., review_effects=True)` inspects selected sidecars once, returning a
+compact `review_before` for each step and one shared `review_method` reference.
+`execute()` carries those cues by position and adds `review_after` from the result
+and any retained observation companion. `run_goal(..., review_effects=True)`
+connects both stages. MCP `conduct` and `execute_plan` expose `review_effects`.
+All defaults remain unchanged. The shared method guides the consuming agent;
+the code emits deterministic cues without invoking another model or executing
+the method's instructions. It does not automatically load the skill into an LLM.
+
+| Field | Meaning and limit |
+|---|---|
+| `review_before.source` | Actual selected `SKILL.md` path; its sibling `effects.json` holds the deferred detail. Names are not used to associate homonyms. |
+| `declaration`, `capability_id`, `declaration_sha256` | Inspector status, independently resolved identity when available, and canonical JSON digest of that planning declaration. The digest is not the raw sidecar file hash or an execution lock. |
+| `reversibility`, `retry`, `detail_counts` | Capability-wide labels and counts. They do not establish the consequences of one command or transfer reuse validation. |
+| `attention`, `operation_assessment` | Structural review cues; operation assessment remains `deferred`. No cue means no listed structural signal, not permission or verified suitability. |
+| `review_after.coverage`, `task_outcome` | `not_run`, `not_observed`, `partial` or `invalid_evidence` coverage; task outcome stays `unverified` for executed steps. |
+| `observed_counts`, `evidence_ref` | Nonzero counts from a validated observation companion; omitted counts are zero within that partial report. The reference points to the same step's `effects_observed`. |
+| `declaration_changed` | Comparison with all observed calls matching the planning identity: any changed digest/status gives true; no match gives null. |
+| `attention`, `next_action` after execution | Keep process failures, nested failures, unfinished calls/network attempts, write deviations, unknown facets and collection problems visible. Suggested next actions are advisory. |
+
+The v1 sidecars describe operations in prose. The compact projector does not
+guess operation matches from keywords, copy every effect into the plan or claim
+that omitted prose is irrelevant. Read the selected operation's prerequisites,
+scope and verification/recovery details when needed using the shared method.
+An `execute(..., review_effects=True)` call on a supplied plan with neither cues
+nor a declaration records `not_inspected`; it never invents a source from a name
+or opens a path from that plan. Supplied plans and snapshots remain caller data.
+
+`--review-effects` alone starts no observer. With execution it summarizes process
+results, leaving actual effects unobserved. Add `--effects` for complete planning
+declarations or `--execute --observe-effects` for the existing full evidence mode;
+these explicit options can increase context substantially. A nonzero exit or
+interrupted observation suggests checking state before retry; a zero exit or
+HTTP response never establishes complete task success or validated reuse.
+The compact review changes no execution gates, dependencies or retry behavior.
+
+`--review-effects --save` saves the returned compact report as JSON alongside the
+requested Markdown/HTML. Add `--effects` when the handoff must preserve complete
+planning declarations: a compact-only digest/reference cannot recover deleted
+or changed source prose. Observation mode retains its full companion as before.
+Neither source paths nor digests authenticate the caller or evidence.
+
+Measure three planning examples with `python scripts/measure_effect_review.py`.
+It reports ordinary, full-declaration and compact JSON UTF-8 byte sizes, including
+the shared skill once per workflow and the overhead compared to ordinary output.
+This measures serialized context only. Later detail reads add cost; model tokens,
+real task quality, execution overhead and general savings are not measured.
+Further blanket declaration rollout is paused in favor of this shared method and
+evaluation on concrete operations. Existing declarations remain available.
 
 ## Operation and dependency boundaries
 

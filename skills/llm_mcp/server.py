@@ -489,6 +489,8 @@ TOOLS = [
                        "local). The generalised router. 0 cloud tokens.",
         "inputSchema": {"type": "object", "properties": {
             "goal": {"type": "string"},
+            "review_effects": {"type": "boolean", "default": False,
+                               "description": "Add compact shared review cues; no model call or automatic observation."},
             "include_effects": {"type": "boolean", "default": False,
                                 "description": "Inspect selected declarations; grants no authority."}},
                         "required": ["goal"]},
@@ -504,6 +506,8 @@ TOOLS = [
             "goal": {"type": "string"},
             "confirm": {"type": "boolean"},
             "dry_run": {"type": "boolean"},
+            "review_effects": {"type": "boolean", "default": False,
+                               "description": "Add compact before/after review cues without changing execution authority."},
             "observe_effects": {"type": "boolean", "default": False,
                                 "description": "Include declarations and a partial observed-effects report with call links; no extra authority."},
             "include_effects": {"type": "boolean", "default": False,
@@ -1225,7 +1229,8 @@ def _tool_routing_stats(_args: dict) -> str:
 
 def _tool_conduct(args: dict) -> str:
     from skills.conductor import plan
-    return json.dumps(plan(args["goal"], include_effects=bool(args.get("include_effects", False))),
+    return json.dumps(plan(args["goal"], include_effects=bool(args.get("include_effects", False)),
+                           review_effects=bool(args.get("review_effects", False))),
                       ensure_ascii=False, indent=2)
 
 
@@ -1234,7 +1239,8 @@ def _tool_execute_plan(args: dict) -> str:
     r = run_goal(args["goal"], confirm=bool(args.get("confirm", False)),
                  dry_run=bool(args.get("dry_run", False)),
                  include_effects=bool(args.get("include_effects", False)),
-                 observe_effects=bool(args.get("observe_effects", False)))
+                 observe_effects=bool(args.get("observe_effects", False)),
+                 review_effects=bool(args.get("review_effects", False)))
     return json.dumps(r, ensure_ascii=False, indent=2)
 
 
