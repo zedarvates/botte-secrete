@@ -18,7 +18,7 @@ def _save_report(kind: str, report: dict, args) -> None:
     import tempfile
     from pathlib import Path
     from skills.report import save, timestamped_name
-    if args.effects or args.review_effects:
+    if args.effects or args.review_effects or args.stop_on_failure:
         from skills.atomic_json import write_json
         directory = Path(".botte") / "reports"
         directory.mkdir(parents=True, exist_ok=True)
@@ -40,7 +40,8 @@ def _save_report(kind: str, report: dict, args) -> None:
 def _run_execute(args) -> int:
     r = run_goal(args.goal, confirm=args.confirm, dry_run=args.dry_run,
                  timeout=args.timeout, include_effects=args.effects,
-                 observe_effects=args.observe_effects, review_effects=args.review_effects)
+                 observe_effects=args.observe_effects, review_effects=args.review_effects,
+                 stop_on_failure=args.stop_on_failure)
     if "error" in r:
         print(f"ERROR: {r['error']}", file=sys.stderr)
         return 1
@@ -95,9 +96,13 @@ def main(argv=None) -> int:
                    help="with --execute, also run the gated (mutating/cloud) steps")
     p.add_argument("--dry-run", action="store_true",
                    help="with --execute, classify every step but run nothing")
+    p.add_argument("--stop-on-failure", action="store_true",
+                   help="with --execute, skip all remaining steps after a nonzero exit; no output verification")
     p.add_argument("--timeout", type=int, default=120,
                    help="per-step timeout in seconds (default 120)")
     args = p.parse_args(argv)
+    if args.stop_on_failure and not args.execute:
+        p.error("--stop-on-failure requires --execute")
     if args.observe_effects:
         if not args.execute:
             p.error("--observe-effects requires --execute")

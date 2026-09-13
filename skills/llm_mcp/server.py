@@ -539,6 +539,8 @@ TOOLS = [
             "goal": {"type": "string"},
             "confirm": {"type": "boolean"},
             "dry_run": {"type": "boolean"},
+            "stop_on_failure": {"type": "boolean", "default": False,
+                                "description": "Skip remaining steps after a nonzero exit; no task verification or retry."},
             "review_effects": {"type": "boolean", "default": False,
                                "description": "Add compact before/after review cues without changing execution authority."},
             "observe_effects": {"type": "boolean", "default": False,
@@ -1290,6 +1292,7 @@ def _tool_execute_plan(args: dict) -> str:
     from skills.conductor import run_goal
     r = run_goal(args["goal"], confirm=bool(args.get("confirm", False)),
                  dry_run=bool(args.get("dry_run", False)),
+                 stop_on_failure=args.get("stop_on_failure", False),
                  include_effects=bool(args.get("include_effects", False)),
                  observe_effects=bool(args.get("observe_effects", False)),
                  review_effects=bool(args.get("review_effects", False)))

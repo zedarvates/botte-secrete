@@ -25,6 +25,7 @@ on its own. Pure stdlib, stdio JSON-RPC 2.0, no dependencies.
 | `qa_record` | Add an externally verified outcome without raw task storage |
 | `effect_details` | Read selected effects sections from a bundled skill, optionally matching a prior declaration digest |
 | `effect_evidence` | Overview saved execution steps, then index or select retained observations with run limits and digest checks |
+| `execute_plan` | Execute a goal's plan; optional `stop_on_failure` skips remaining steps after a nonzero exit |
 | `compress` | Compress context; reversible calls add deduplicated verified grounding labels |
 
 ## Register in Claude Code

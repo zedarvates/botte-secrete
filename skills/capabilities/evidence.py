@@ -136,6 +136,19 @@ def _execution_overview(document, source):
     if (not isinstance(counts, dict) or counts != states
             or any(type(value) is not int for value in counts.values())):
         return _unavailable("inconsistent_execution_summary")
+    policy = {}
+    if "stop_on_failure" in document or "stopped_after_result_index" in document:
+        expected_stop = next((i for i, step in enumerate(document["results"])
+                              if step["status"] == "failed"), None)
+        stopped = document.get("stopped_after_result_index")
+        if (document.get("stop_on_failure") is not True
+                or "stopped_after_result_index" not in document
+                or (stopped is not None and type(stopped) is not int)
+                or stopped != expected_stop
+                or (expected_stop is not None and any(step["status"] != "skipped"
+                    for step in document["results"][expected_stop + 1:]))):
+            return _unavailable("inconsistent_stop_policy")
+        policy = {"stop_on_failure": True, "stopped_after_result_index": stopped}
     try:
         raw = json.dumps(document, sort_keys=True, ensure_ascii=False, allow_nan=False,
                          separators=(",", ":")).encode("utf-8")
@@ -155,7 +168,7 @@ def _execution_overview(document, source):
                      ("capability", "command", "status", "exit_code")}, "review_after": review})
     return {"selection_status": "overview", "source": source,
             "document_sha256": hashlib.sha256(raw).hexdigest(), "review_method": METHOD,
-            "goal": document["goal"], "mode": document["mode"], "summary": states, "results": rows}
+            "goal": document["goal"], "mode": document["mode"], **policy, "summary": states, "results": rows}
 
 
 def _read_document(path):

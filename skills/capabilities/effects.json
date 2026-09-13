@@ -1,7 +1,7 @@
 {
   "schema": "botte.capability-effects/v1",
   "capability_id": "zedarvates/botte-secrete:skills/capabilities",
-  "contract_version": "0.8.1",
+  "contract_version": "0.9.0",
   "source_hashes": {
     "SKILL.md": "d719d492de6d3f6e23541496258cc029e38b518e288c3f2e56239d3fb587eddf",
     "__init__.py": "7d4d3e1854faec18d12335c4a1632b9fd59e5b22f774a8a9fc69467d1ddb75c5",
@@ -12,7 +12,7 @@
     "observation_schema.py": "f346c90c6979d9bab0608d32f08e3b86c39d3dfbcdfe2484118c530fe4e1bbd2",
     "network_observations.py": "c91421fb04df629dafcbe167f83f52336424c6750589854fa39578aefe7239a5",
     "review.py": "587f0c731d65faba80291310a3063d3552253c432f2807cc97c018c7a786cc2c",
-    "evidence.py": "cda8e0c230b04364f06d2c862263c541f63371d3bc2f524ef9ccaf90cd373d10"
+    "evidence.py": "8bf8385424cbfa38eb8df9979cb2398ea1120b94f96be41e383826b0ab4d2d6e"
   },
   "preconditions": [
     "Python 3.10+ and a readable skill tree; local discovery only.",
@@ -57,9 +57,9 @@
       "effect": "Index or select retained observation records and declarations; optionally overview all results of a saved execution with compact cues and evidence references.",
       "scope": "Caller-supplied companion or selected local report document; bounded to 16 MiB per document and 2 MiB per canonical companion. MCP accepts canonical .botte/reports/<file>.json paths in its working directory. Execution overviews accept at most 128 results.",
       "likelihood": "conditional",
-      "basis": "evidence.select_evidence validates a complete v1/v2 companion before projection; read_evidence accepts an explicit result position in saved Conductor reports. Changed digests, invalid evidence and absent IDs return no selected records. Resource paths and verification text inside reports are never followed. Explicit overview mode validates result metadata/counts and recomputes review cues rather than copying saved outcome verdicts. Each available companion gets a result-position/digest reference; invalid companions remain unknown in their own row.",
+      "basis": "evidence.select_evidence validates a complete v1/v2 companion before projection; read_evidence accepts an explicit result position in saved Conductor reports. Changed digests, invalid evidence and absent IDs return no selected records. Resource paths and verification text inside reports are never followed. Explicit overview mode validates result metadata/counts and recomputes review cues rather than copying saved outcome verdicts. Each available companion gets a result-position/digest reference; invalid companions remain unknown in their own row. When explicit stop metadata is present, overview validates its first-failure position and skipped suffix before returning the policy.",
       "impact": "May reduce later review context while retaining historical evidence. Reads and validates the full bounded input locally; index, limits and linked calls add overhead, so short reports can cost less to read whole. Reports retain resource paths and local metadata without proving current state or task completion. Overview defers output tails and detailed evidence. Metadata/observation conflicts remain explicit; neither the whole-document nor companion digest authenticates the producer.",
-      "verification": "Exercise revisions, nested failure, HTTP 202, historical declarations, v1 reports, escaped IDs, malformed/oversized input and file boundaries in test_evidence; measure both short and larger synthetic reports with measure_effect_evidence.py. Follow generated overview references through MCP and read an actual executor report saved by the CLI; preserve failed, blocked, skipped and homonymous steps and reject inconsistent result metadata."
+      "verification": "Exercise revisions, nested failure, HTTP 202, historical declarations, v1 reports, escaped IDs, malformed/oversized input and file boundaries in test_evidence; measure both short and larger synthetic reports with measure_effect_evidence.py. Follow generated overview references through MCP and read an actual executor report saved by the CLI; preserve failed, blocked, skipped and homonymous steps and reject inconsistent result metadata. Reject incomplete or contradictory stop metadata and follow a stop-only CLI save through the overview."
     }
   ],
   "downstream_effects": [

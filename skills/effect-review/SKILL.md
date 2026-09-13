@@ -51,8 +51,9 @@ State what is verified, what remains unknown and the next useful action.
 Before a dependent step, verify the prerequisite result it needs. After an
 interruption, check current outputs and still-active operations. Conflicting or
 invalid evidence cannot establish non-execution. Retain verified completed work
-and reassess only the remaining actions. Conductor provides no automatic retry,
-dependency enforcement or rollback; review cues do not grant permission.
+and reassess remaining actions. Use Conductor's `--stop-on-failure` to skip later
+steps after a nonzero exit; this does not verify prerequisites, retry or undo work.
+Review cues do not grant permission.
 
 ## Reuse and improvement
 

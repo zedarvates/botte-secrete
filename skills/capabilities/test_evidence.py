@@ -197,6 +197,38 @@ class EvidenceTests(unittest.TestCase):
                     saved["evidence_ref"] = "effects_observed"
                 self.assertEqual(saved, live)
 
+    def test_overview_preserves_explicit_stop_policy_and_its_actual_result_position(self):
+        document = self.execution()
+        document["results"][2]["status"] = "skipped"
+        document["summary"].update(blocked=0, skipped=2)
+        document.update(stop_on_failure=True, stopped_after_result_index=1)
+        self.save(document)
+        view = read_evidence(self.path, overview=True)
+        self.assertTrue(view["stop_on_failure"])
+        self.assertEqual(view["stopped_after_result_index"], 1)
+        self.assertEqual([r["status"] for r in view["results"]], ["ran", "failed", "skipped", "skipped"])
+        document["results"][1].update(status="ran", exit_code=0)
+        document["summary"].update(ran=2, failed=0)
+        document["stopped_after_result_index"] = None
+        self.save(document)
+        self.assertIsNone(read_evidence(self.path, overview=True)["stopped_after_result_index"])
+
+    def test_overview_rejects_stop_policy_inconsistent_with_retained_results(self):
+        valid = self.execution()
+        valid["results"][2]["status"] = "skipped"
+        valid["summary"].update(blocked=0, skipped=2)
+        valid.update(stop_on_failure=True, stopped_after_result_index=1)
+        cases = [{**valid, "stopped_after_result_index": index} for index in (None, 0, 2, True, "1")]
+        cases += [{**valid, "stop_on_failure": value} for value in (False, 1, "true")]
+        cases += [{k: v for k, v in valid.items() if k != field}
+                  for field in ("stop_on_failure", "stopped_after_result_index")]
+        cases.append({**self.execution(), "stop_on_failure": True, "stopped_after_result_index": 1})
+        for document in cases:
+            self.save(document)
+            view = read_evidence(self.path, overview=True)
+            self.assertEqual(view["selection_status"], "unavailable")
+            self.assertEqual(view["reason"], "inconsistent_stop_policy")
+
     def test_overview_reads_one_file_without_work_or_following_stored_paths(self):
         document = self.execution()
         document["effects_json"] = "/untrusted/redirect.json"

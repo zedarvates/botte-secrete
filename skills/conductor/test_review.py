@@ -269,6 +269,150 @@ class ReviewTests(unittest.TestCase):
         self.assertIn("process_evidence_mismatch", step["review_after"]["attention"])
         self.assertEqual(step["review_after"]["task_outcome"], "unverified")
 
+    def test_stop_after_partial_failure_retains_all_positions_and_observations(self):
+        from skills.capabilities.observations import _SESSION
+        source = plan("fixture", review_effects=True)["steps"][0]
+        steps = [{**source, "order": 7, "command": name} for name in ("first", "second", "third")]
+        calls = []
+        def runner(command, *_):
+            calls.append(command)
+            path = self.root / (command + ".txt")
+            with _SESSION.get().call(self.skill, command), observed_file_write(path, "/expected_effects/0"):
+                path.write_text("completed" if command == "first" else "partial", encoding="utf-8")
+                if command == "second":
+                    raise OSError("fixture failure after mutation")
+            return 0, "done"
+        result = execute({"steps": steps}, runner=runner, observe_effects=True, stop_on_failure=True)
+        self.assertEqual(calls, ["first", "second"])
+        self.assertEqual(result["stopped_after_result_index"], 1)
+        self.assertEqual(result["summary"], {"ran": 1, "failed": 1, "blocked": 0, "skipped": 1})
+        self.assertEqual([r["order"] for r in result["results"]], [7, 7, 7])
+        self.assertEqual((self.root / "first.txt").read_text(encoding="utf-8"), "completed")
+        self.assertEqual((self.root / "second.txt").read_text(encoding="utf-8"), "partial")
+        self.assertFalse((self.root / "third.txt").exists())
+        failed, pending = result["results"][1:]
+        self.assertEqual(failed["effects_summary"]["failed_writes"], 1)
+        self.assertEqual(failed["review_after"]["next_action"], "inspect_state_before_retry")
+        self.assertEqual(pending["effects_observed"]["process"], {"status": "not_run", "exit_code": None})
+        self.assertEqual(pending["effects_observed"]["calls"], [])
+        self.assertEqual(pending["review_after"]["task_outcome"], "not_run")
+        self.assertIn("index 1", pending["note"])
+        for row in result["results"]:
+            self.assertEqual(validate_report(row["effects_observed"]), [])
+            self.assertEqual(row["review_before"], source["review_before"])
+
+    def test_stopping_is_explicit_and_does_not_read_policy_from_plan_data(self):
+        steps = [{"capability": "metrics", "command": name} for name in ("first", "second")]
+        for options in ({}, {"stop_on_failure": False}, {"stop_on_failure": True}):
+            calls = []
+            result = execute({"steps": steps, "stop_on_failure": True},
+                             runner=lambda cmd, *_: (calls.append(cmd) or (1, "failed")), **options)
+            enabled = options.get("stop_on_failure", False)
+            self.assertEqual(calls, ["first"] if enabled else ["first", "second"])
+            self.assertEqual("stop_on_failure" in result, enabled)
+            self.assertEqual("stopped_after_result_index" in result, enabled)
+            if enabled:
+                self.assertEqual(result["stopped_after_result_index"], 0)
+
+    def test_stop_policy_preserves_dry_run_gates_and_placeholder_classification(self):
+        steps = [{"capability": "unknown", "command": "fixture write"},
+                 {"capability": "metrics", "command": "fixture <argument>"}]
+        for dry_run in (False, True):
+            with patch("skills.conductor.executor._default_runner") as runner, \
+                 patch("skills.conductor.observed_run.run_observed") as observer:
+                result = execute({"steps": steps}, stop_on_failure=True,
+                                 observe_effects=True, dry_run=dry_run)
+            runner.assert_not_called()
+            observer.assert_not_called()
+            self.assertEqual([r["status"] for r in result["results"]],
+                             ["skipped", "skipped"] if dry_run else ["blocked", "skipped"])
+            self.assertIsNone(result["stopped_after_result_index"])
+        with patch("skills.conductor.executor._default_runner", return_value=(1, "failed")) as runner:
+            result = execute({"steps": [steps[0], steps[0]]}, confirm=True, stop_on_failure=True)
+        runner.assert_called_once()
+        self.assertEqual([r["classification"] for r in result["results"]], ["gated", "gated"])
+        self.assertEqual([r["status"] for r in result["results"]], ["failed", "skipped"])
+
+    def test_non_boolean_stop_policy_fails_before_planning_or_execution(self):
+        with patch("skills.conductor.conductor.plan") as planner, \
+             patch("skills.conductor.executor.classify") as classifier:
+            for value in (None, 0, 1, "false", "true", []):
+                with self.subTest(value=value):
+                    with self.assertRaises(ValueError):
+                        run_goal("fixture", stop_on_failure=value)
+                    with self.assertRaises(ValueError):
+                        execute({"steps": [{}]}, stop_on_failure=value)
+        planner.assert_not_called()
+        classifier.assert_not_called()
+
+    def test_successful_exit_does_not_verify_a_required_json_output(self):
+        path = self.root / "required.json"
+        calls = []
+        def runner(command, *_):
+            calls.append(command)
+            if command == "producer":
+                path.write_text("incomplete JSON {", encoding="utf-8")
+            return 0, "returned"
+        steps = [{"capability": "metrics", "command": name} for name in ("producer", "consumer")]
+        result = execute({"steps": steps}, runner=runner, stop_on_failure=True, review_effects=True)
+        self.assertEqual(calls, ["producer", "consumer"])
+        self.assertIsNone(result["stopped_after_result_index"])
+        self.assertEqual(result["results"][0]["review_after"]["task_outcome"], "unverified")
+        with self.assertRaises(json.JSONDecodeError):
+            json.loads(path.read_text(encoding="utf-8"))
+
+    def test_stop_cli_saves_complete_report_without_enabling_reviews_or_observation(self):
+        from skills.capabilities.evidence import read_saved_evidence
+        steps = [{"capability": "metrics", "command": name} for name in ("first", "second")]
+        previous = Path.cwd()
+        try:
+            os.chdir(self.root)
+            with patch("skills.conductor.conductor.plan", return_value={"goal": "fixture", "steps": steps}), \
+                 patch("skills.conductor.executor._default_runner", return_value=(1, "failed")) as runner, \
+                 patch("skills.conductor.observed_run.run_observed") as observer, \
+                 contextlib.redirect_stdout(io.StringIO()) as output:
+                code = cli(["fixture", "--execute", "--stop-on-failure", "--json", "--save", "md"])
+            self.assertEqual(code, 1)
+            runner.assert_called_once()
+            observer.assert_not_called()
+            report = json.loads(output.getvalue())
+            self.assertNotIn("review_method", report)
+            self.assertNotIn("effects_before", report["results"][0])
+            saved = json.loads(Path(report["effects_json"]).read_text(encoding="utf-8"))
+            self.assertEqual(saved, report)
+            view = read_saved_evidence(report["effects_json"], overview=True)
+            self.assertEqual(view["selection_status"], "overview")
+            self.assertTrue(view["stop_on_failure"])
+            self.assertEqual(view["stopped_after_result_index"], 0)
+            self.assertEqual([r["status"] for r in view["results"]], ["failed", "skipped"])
+        finally:
+            os.chdir(previous)
+
+    def test_stop_cli_requires_execution_before_any_work(self):
+        with patch("skills.conductor.cli.plan") as planner, \
+             contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit) as error:
+            cli(["fixture", "--stop-on-failure"])
+        self.assertEqual(error.exception.code, 2)
+        planner.assert_not_called()
+
+    def test_stop_flag_reaches_real_mcp_execution_and_keeps_invalid_values_invalid(self):
+        from skills.llm_mcp.server import TOOLS, handle
+        definition = next(t for t in TOOLS if t["name"] == "execute_plan")
+        self.assertFalse(definition["inputSchema"]["properties"]["stop_on_failure"]["default"])
+        steps = [{"capability": "metrics", "command": name} for name in ("first", "second")]
+        for value in (False, True, "true"):
+            with patch("skills.conductor.conductor.plan", return_value={"goal": "fixture", "steps": steps}), \
+                 patch("skills.conductor.executor._default_runner", return_value=(1, "failed")) as runner:
+                response = handle({"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {
+                    "name": "execute_plan", "arguments": {"goal": "fixture", "stop_on_failure": value}}})
+            if isinstance(value, str):
+                self.assertTrue(response["result"]["isError"])
+                runner.assert_not_called()
+            else:
+                payload = json.loads(response["result"]["content"][0]["text"])
+                self.assertEqual(runner.call_count, 1 if value else 2)
+                self.assertEqual(payload["summary"]["failed"], 1 if value else 2)
+
     def test_mcp_opt_in_reaches_both_handlers(self):
         from skills.llm_mcp.server import TOOLS, handle
         for tool in ("conduct", "execute_plan"):

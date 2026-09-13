@@ -200,6 +200,45 @@ planning declarations: a compact-only digest/reference cannot recover deleted
 or changed source prose. Observation mode retains its full companion as before.
 Neither source paths nor digests authenticate the caller or evidence.
 
+### Stop a dependent sequence after a process failure
+
+```bash
+python -m skills.conductor.cli "audit my project" --execute --stop-on-failure --review-effects --json
+```
+
+Python `execute(..., stop_on_failure=True)` / `run_goal(...)` and MCP
+`execute_plan` expose the same boolean option. CLI requires `--execute`; invalid
+Python/MCP values are rejected before planning or execution. The default remains
+false, and a `stop_on_failure` field in a supplied plan does not enable the option.
+It is independent of review, observation and confirmation.
+
+After the first nonzero process exit, Conductor retains every remaining step as
+`skipped`, with its original classification, a null exit code and an explanation.
+No later runner or observer is started, including for otherwise confirmed steps.
+With observation enabled, those rows receive empty `not_run` companions. Earlier
+results and partial effects remain in the report. Both CLI output modes retain
+exit 1 when a step failed. `--stop-on-failure --save` also saves the complete JSON
+even without review/declaration/observation options.
+
+Only enabled reports add `stop_on_failure: true` and
+`stopped_after_result_index`: the actual zero-based position of the first failed
+result, or null if none failed. Saved overviews preserve this pair and check that
+the position matches the first failure and every later result is skipped;
+inconsistent metadata returns `unavailable` / `inconsistent_stop_policy`.
+The pair is covered by the whole-document digest; it does not change the scope
+of per-companion evidence references or authenticate the reported execution.
+
+This is a process-failure guard for the whole remaining sequence, including
+independent work. It does not infer dependencies, test required output contents,
+stop on blocked/skipped steps or swallowed errors with exit 0, cancel surviving
+descendants, roll back or resume work. It handles failures returned by the runner;
+an unhandled interpreter interruption can still prevent a complete report.
+Before consuming a required JSON artifact, for example, check that the artifact
+from this run parses and meets the consumer's required schema/content. A producer's
+exit 0 or observed file presence alone does not perform that check.
+
+### Measure review context
+
 Measure three planning examples with `python scripts/measure_effect_review.py`.
 It reports ordinary, full-declaration and compact JSON UTF-8 byte sizes, including
 the shared skill once per workflow and the overhead compared to ordinary output.
