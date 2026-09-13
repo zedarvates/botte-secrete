@@ -48,10 +48,11 @@ describes file access and limits; a saved observation is not a current-state che
 Process success, a written file and HTTP 200 support different, limited facts.
 State what is verified, what remains unknown and the next useful action.
 
-Before a dependent step, check the prerequisite result it actually needs. After
-interruption, inspect current state and still-active operations before retrying;
-retain completed work. The Conductor does not enforce all such dependencies or
-provide rollback. These cues never grant permission or restart work themselves.
+Before a dependent step, verify the prerequisite result it needs. After an
+interruption, check current outputs and still-active operations. Conflicting or
+invalid evidence cannot establish non-execution. Retain verified completed work
+and reassess only the remaining actions. Conductor provides no automatic retry,
+dependency enforcement or rollback; review cues do not grant permission.
 
 ## Reuse and improvement
 

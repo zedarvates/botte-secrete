@@ -189,6 +189,86 @@ class ReviewTests(unittest.TestCase):
         self.assertEqual(review["coverage"], "invalid_evidence")
         self.assertEqual(review["task_outcome"], "unverified")
 
+    def test_blocked_or_skipped_with_execution_evidence_is_not_reported_as_not_run(self):
+        with ObservationSession() as session, session.call(self.skill, "already attempted"):
+            pass
+        for status in ("blocked", "skipped"):
+            for process in ({"status": "exited", "exit_code": 0},
+                            {"status": "not_run", "exit_code": None}):
+                with self.subTest(status=status, process=process):
+                    session.report["process"] = process
+                    review = after({"status": status, "exit_code": None,
+                                    "effects_observed": session.report}, {})
+                    self.assertEqual(review["task_outcome"], "unverified")
+                    self.assertEqual(review["coverage"], "partial")
+                    self.assertIn("process_evidence_mismatch", review["attention"])
+                    self.assertEqual(review["evidence_ref"], "effects_observed")
+                    self.assertEqual(review["next_action"], "inspect_state_before_retry")
+
+    def test_review_compares_process_completion_and_codes_without_inventing_success(self):
+        cases = [("ran", 0, "exited", 0, False),
+                 ("ran", 0, "running", None, True),
+                 ("ran", 0, "not_run", None, True),
+                 ("failed", 1, "exited", 1, False),
+                 ("failed", -1, "timed_out", -1, False),
+                 ("failed", -1, "launch_failed", -1, False),
+                 ("failed", -1, "runner_error", -1, False),
+                 ("failed", 1, "exited", 0, True),
+                 ("failed", 1, "exited", 2, True),
+                 ("failed", 1, "running", 1, True),
+                 ("failed", 1, "not_run", 1, True),
+                 ("blocked", None, "not_run", None, False),
+                 ("skipped", None, "not_run", 1, True)]
+        for status, code, process_status, process_code, mismatch in cases:
+            with self.subTest(status=status, process=process_status, code=process_code):
+                observed = empty_report()
+                observed["process"] = {"status": process_status, "exit_code": process_code}
+                review = after({"status": status, "exit_code": code, "effects_observed": observed}, {})
+                self.assertEqual("process_evidence_mismatch" in review["attention"], mismatch)
+                if mismatch or status in {"ran", "failed"}:
+                    self.assertEqual(review["task_outcome"], "unverified")
+                if mismatch:
+                    self.assertEqual(review["next_action"], "inspect_state_before_retry")
+
+    def test_invalid_in_memory_evidence_never_claims_non_execution_or_breaks_review(self):
+        cyclic = {}
+        cyclic["cycle"] = cyclic
+        for observed in ({}, cyclic, {"value": object()}, {"value": float("nan")},
+                         {"value": "\ud800"}):
+            for status in ("ran", "failed", "blocked", "skipped"):
+                with self.subTest(status=status, type=type(observed)):
+                    review = after({"status": status, "effects_observed": observed}, {})
+                    self.assertEqual(review["coverage"], "invalid_evidence")
+                    self.assertEqual(review["task_outcome"], "unverified")
+                    self.assertEqual(review["next_action"], "inspect_state_before_retry")
+                    self.assertNotIn("evidence_ref", review)
+
+    def test_oversized_companion_is_rejected_before_graph_validation_without_mutation(self):
+        observed = empty_report()
+        original = deepcopy(observed)
+        with patch("skills.capabilities.review.MAX_REPORT_BYTES", 10), \
+             patch("skills.capabilities.review.validate_report") as validate:
+            review = after({"status": "blocked", "effects_observed": observed}, {})
+        validate.assert_not_called()
+        self.assertEqual(observed, original)
+        self.assertEqual(review["task_outcome"], "unverified")
+        self.assertIn("observation_report_too_large", review["attention"])
+        self.assertNotIn("evidence_ref", review)
+
+    def test_executor_keeps_conflicting_evidence_and_does_not_repeat_the_operation(self):
+        observed = empty_report()
+        observed["process"] = {"status": "exited", "exit_code": 0}
+        with patch("skills.conductor.observed_run.run_observed",
+                   return_value=(1, "partial", observed)) as runner:
+            result = execute(plan("fixture", review_effects=True), observe_effects=True)
+        runner.assert_called_once()
+        step = result["results"][0]
+        self.assertEqual(step["status"], "failed")
+        self.assertEqual(step["exit_code"], 1)
+        self.assertEqual(step["effects_observed"], observed)
+        self.assertIn("process_evidence_mismatch", step["review_after"]["attention"])
+        self.assertEqual(step["review_after"]["task_outcome"], "unverified")
+
     def test_mcp_opt_in_reaches_both_handlers(self):
         from skills.llm_mcp.server import TOOLS, handle
         for tool in ("conduct", "execute_plan"):

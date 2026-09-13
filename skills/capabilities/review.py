@@ -6,12 +6,14 @@ operation-specific prose to the shared effect-review skill and the actual task.
 
 from __future__ import annotations
 
+import hashlib
+import json
 import re
 from copy import deepcopy
 from pathlib import Path, PurePosixPath
 
 from skills.capabilities.effects import inspect_effects, validate_contract
-from skills.capabilities.observations import digest, summarize, validate_report
+from skills.capabilities.observations import MAX_REPORT_BYTES, digest, summarize, validate_report
 
 METHOD = "skills/effect-review/SKILL.md"
 _LIST_SECTIONS = {"preconditions", "expected_effects", "downstream_effects", "reuse"}
@@ -134,6 +136,25 @@ def before(snapshot: dict | None, *, source: str | None = None) -> dict:
     return result
 
 
+def _process_mismatch(result: dict, observed: dict) -> bool:
+    """Compare recorded process facts, without treating either source as proof."""
+    status, process = result.get("status"), observed["process"]
+    if status in {"blocked", "skipped"}:
+        return (process != {"status": "not_run", "exit_code": None}
+                or any(observed.get(group) for group in ("calls", "observations", "network"))
+                or result.get("exit_code") is not None)
+    if status == "ran":
+        return (process != {"status": "exited", "exit_code": 0}
+                or ("exit_code" in result and
+                    (type(result["exit_code"]) is not int or result["exit_code"] != 0)))
+    if status == "failed":
+        return (process["status"] not in {"exited", "timed_out", "launch_failed", "runner_error"}
+                or type(process["exit_code"]) is not int or process["exit_code"] == 0
+                or ("exit_code" in result and
+                    (type(result["exit_code"]) is not int or result["exit_code"] != process["exit_code"])))
+    return True
+
+
 def after(result: dict, prior: dict) -> dict:
     """Review a process result and any retained, validated observation companion.
 
@@ -155,12 +176,20 @@ def after(result: dict, prior: dict) -> dict:
     observed = result.get("effects_observed")
     if observed is None:
         return review
-    if validate_report(observed):
-        review["coverage"] = "invalid_evidence"
-        attention.append("invalid_observation_report")
+    try:
+        raw = json.dumps(observed, sort_keys=True, ensure_ascii=False, allow_nan=False,
+                         separators=(",", ":")).encode("utf-8")
+        problem = ("observation_report_too_large" if len(raw) > MAX_REPORT_BYTES else
+                   "invalid_observation_report" if validate_report(observed) else None)
+    except (ValueError, TypeError, RecursionError):
+        problem = "invalid_observation_report"
+    if problem:
+        review.update(coverage="invalid_evidence", task_outcome="unverified",
+                      next_action="inspect_state_before_retry")
+        attention.append(problem)
         return review
     review["evidence_ref"] = "effects_observed"  # sibling in the same result
-    review["evidence_sha256"] = digest(observed)
+    review["evidence_sha256"] = hashlib.sha256(raw).hexdigest()
     review["run_id"] = observed["run_id"]
     review["coverage"] = "not_run" if not_run else "partial"
     summary = summarize(observed)
@@ -178,6 +207,10 @@ def after(result: dict, prior: dict) -> dict:
         attention.append("unknown_write_facets")
     if summary["next_action"] == "inspect_partial_state_before_retry":
         review["next_action"] = "inspect_state_before_retry"
+    if _process_mismatch(result, observed):
+        attention.append("process_evidence_mismatch")
+        review.update(coverage="partial", task_outcome="unverified",
+                      next_action="inspect_state_before_retry")
     matches = [c for c in observed["calls"]
                if prior.get("capability_id") and c["capability_id"] == prior["capability_id"]]
     if matches:

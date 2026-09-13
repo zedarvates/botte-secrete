@@ -1,7 +1,7 @@
 {
   "schema": "botte.capability-effects/v1",
   "capability_id": "zedarvates/botte-secrete:skills/capabilities",
-  "contract_version": "0.8.0",
+  "contract_version": "0.8.1",
   "source_hashes": {
     "SKILL.md": "d719d492de6d3f6e23541496258cc029e38b518e288c3f2e56239d3fb587eddf",
     "__init__.py": "7d4d3e1854faec18d12335c4a1632b9fd59e5b22f774a8a9fc69467d1ddb75c5",
@@ -11,8 +11,8 @@
     "observations.py": "3f3538ce6f8b342b9c42e13c1560e77b9e350e8dd1f579b567fbc7763643ce97",
     "observation_schema.py": "f346c90c6979d9bab0608d32f08e3b86c39d3dfbcdfe2484118c530fe4e1bbd2",
     "network_observations.py": "c91421fb04df629dafcbe167f83f52336424c6750589854fa39578aefe7239a5",
-    "review.py": "e55e87b2fc4dc3ac6fc7005fbaffe4dd4562fd26d824720dd5b6c80f4620e5d0",
-    "evidence.py": "a3a908eb45fafb72883dfc7ffbc35d7ec3b79c7aa6d5b8fb18999018a6ed551f"
+    "review.py": "587f0c731d65faba80291310a3063d3552253c432f2807cc97c018c7a786cc2c",
+    "evidence.py": "cda8e0c230b04364f06d2c862263c541f63371d3bc2f524ef9ccaf90cd373d10"
   },
   "preconditions": [
     "Python 3.10+ and a readable skill tree; local discovery only.",
@@ -49,9 +49,9 @@
       "effect": "Project supplied declaration snapshots and process/observation results into compact shared review cues.",
       "scope": "Caller memory and the returned Conductor plan or report; source paths and digests remain visible.",
       "likelihood": "conditional",
-      "basis": "review.before retains source identity, digest, labels and structural attention cues. review.after validates an optional observation companion before summarizing it and retains its canonical digest/run ID. No model or operation is invoked.",
-      "impact": "Can reduce repeated declaration prose in context while deferring operation-specific assessment. A compact-only reference cannot recover changed or deleted detail; absent cues do not imply suitability.",
-      "verification": "Compare ordinary, full and compact plans with measure_effect_review.py; exercise missing/stale declarations, homonyms, swallowed failures, interruption, HTTP responses and malformed evidence in test_review."
+      "basis": "review.before retains source identity, digest, labels and structural attention cues. review.after serializes and bounds an optional companion before validating and summarizing it, retaining its canonical digest/run ID. Direct results and saved overviews share process reconciliation. No model or operation is invoked.",
+      "impact": "Can reduce repeated declaration prose while deferring operation-specific assessment. Invalid or oversized evidence and conflicting process facts keep the outcome unverified, including reported blocked/skipped steps; they suggest checking state before retry. A compact-only reference cannot recover changed or deleted detail.",
+      "verification": "Compare ordinary, full and compact plans with measure_effect_review.py; exercise missing/stale declarations, homonyms, swallowed failures, interruption, HTTP responses, malformed or oversized evidence, process conflicts and live/saved review agreement in test_review and test_evidence."
     },
     {
       "effect": "Index or select retained observation records and declarations; optionally overview all results of a saved execution with compact cues and evidence references.",

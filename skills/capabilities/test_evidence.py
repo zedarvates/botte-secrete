@@ -18,7 +18,7 @@ from skills.capabilities.effects import contract_template
 from skills.capabilities.evidence import read_evidence, read_saved_evidence, select_evidence
 from skills.capabilities.network_observations import network_attempt
 from skills.capabilities.observations import ObservationSession, digest, observed_file_write, validate_report
-from skills.capabilities.review import after, before
+from skills.capabilities.review import after, attach_results, before
 
 
 class EvidenceTests(unittest.TestCase):
@@ -133,7 +133,7 @@ class EvidenceTests(unittest.TestCase):
             self.assertEqual(review["task_outcome"], "unverified")
             self.assertEqual(view["results"][2]["review_after"]["task_outcome"], "unverified")
         self.save(self.execution())
-        with patch("skills.capabilities.evidence.MAX_REPORT_BYTES", 10):
+        with patch("skills.capabilities.review.MAX_REPORT_BYTES", 10):
             view = read_evidence(self.path, overview=True)
         review = view["results"][0]["review_after"]
         self.assertEqual(review["coverage"], "invalid_evidence")
@@ -177,6 +177,25 @@ class EvidenceTests(unittest.TestCase):
                 with self.subTest(kwargs=kwargs), self.assertRaises(ValueError):
                     read_evidence(self.path, **kwargs)
         reader.assert_not_called()
+
+    def test_live_and_saved_reviews_agree_on_invalid_and_conflicting_evidence(self):
+        for status, observed in (("ran", self.report), ("blocked", self.report),
+                                 ("blocked", {}), ("failed", self.report)):
+            with self.subTest(status=status, valid=bool(observed)):
+                document = self.execution()
+                step = document["results"][0]
+                step.update(status=status, exit_code={"ran": 0, "blocked": None, "failed": 1}[status],
+                            effects_observed=observed)
+                document["summary"]["ran"] -= 1
+                document["summary"][status] += 1
+                attach_results(document["results"], [row.get("review_before") for row in document["results"]])
+                self.save(document)
+                saved = read_evidence(self.path, overview=True)["results"][0]["review_after"]
+                live = step["review_after"]
+                if "evidence_ref" in saved:
+                    self.assertEqual(saved["evidence_ref"]["expected_sha256"], live["evidence_sha256"])
+                    saved["evidence_ref"] = "effects_observed"
+                self.assertEqual(saved, live)
 
     def test_overview_reads_one_file_without_work_or_following_stored_paths(self):
         document = self.execution()

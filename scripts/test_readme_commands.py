@@ -133,10 +133,13 @@ def main():
                 passed += 1
             else:
                 failed += 1
-                print(f"  FAIL {cmd[:80]}")
-        except Exception:
+                print(f"  FAIL {cmd[:80]} (exit {r.returncode})")
+        except subprocess.TimeoutExpired:
             failed += 1
-            print(f"  ERR  {cmd[:80]}")
+            print(f"  TIMEOUT {cmd[:80]} (limit {TIMEOUT}s; partial effects may remain)")
+        except Exception as exc:
+            failed += 1
+            print(f"  ERR  {cmd[:80]} ({type(exc).__name__})")
 
     print(f"{passed} passed, {failed} failed, {skipped} skipped")
     return 0 if failed == 0 else 1

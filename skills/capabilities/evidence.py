@@ -147,34 +147,10 @@ def _execution_overview(document, source):
         prior = ({key: value for key, value in prior.items() if isinstance(value, str)
                   and key in {"capability_id", "declaration_sha256", "declaration"}}
                  if isinstance(prior, dict) else {})
-        observed = step.get("effects_observed")
-        too_large = observed is not None and len(json.dumps(
-            observed, ensure_ascii=False, separators=(",", ":")).encode("utf-8")) > MAX_REPORT_BYTES
-        if too_large:
-            review = after({"status": step["status"]}, prior)
-            review["coverage"] = "invalid_evidence"
-            review["attention"].append("observation_report_too_large")
-        else:
-            try:
-                review = after(step, prior)
-            except (ValueError, TypeError, RecursionError):
-                review = after({"status": step["status"]}, prior)
-                review["coverage"] = "invalid_evidence"
-                review["attention"].append("invalid_observation_report")
-        if review["coverage"] == "invalid_evidence":
-            review["task_outcome"] = "unverified"
+        review = after(step, prior)
         if "evidence_ref" in review:
             review["evidence_ref"] = {"source": source, "result_index": position,
                                       "expected_sha256": review["evidence_sha256"]}
-            process = observed["process"]
-            not_run = step["status"] in {"blocked", "skipped"}
-            if (not_run != (process["status"] == "not_run")
-                    or (not_run and (observed["calls"] or observed["observations"] or observed.get("network")))
-                    or (step["status"] == "ran" and process != {"status": "exited", "exit_code": 0})
-                    or (step["status"] == "failed" and process["exit_code"] != step["exit_code"])):
-                review["attention"].append("process_evidence_mismatch")
-                review.update(coverage="partial", task_outcome="unverified",
-                              next_action="inspect_state_before_retry")
         rows.append({"result_index": position, **{key: step[key] for key in
                      ("capability", "command", "status", "exit_code")}, "review_after": review})
     return {"selection_status": "overview", "source": source,

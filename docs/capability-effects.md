@@ -162,7 +162,7 @@ the method's instructions. It does not automatically load the skill into an LLM.
 | `declaration`, `capability_id`, `declaration_sha256` | Inspector status, independently resolved identity when available, and canonical JSON digest of that planning declaration. The digest is not the raw sidecar file hash or an execution lock. |
 | `reversibility`, `retry`, `detail_counts` | Capability-wide labels and counts. They do not establish the consequences of one command or transfer reuse validation. |
 | `attention`, `operation_assessment` | Structural review cues; operation assessment remains `deferred`. No cue means no listed structural signal, not permission or verified suitability. |
-| `review_after.coverage`, `task_outcome` | `not_run`, `not_observed`, `partial` or `invalid_evidence` coverage; task outcome stays `unverified` for executed steps. |
+| `review_after.coverage`, `task_outcome` | `not_run`, `not_observed`, `partial` or `invalid_evidence` coverage; task outcome stays `unverified` for executed steps or conflicting/invalid evidence. |
 | `observed_counts`, `evidence_ref` | Nonzero counts from a validated observation companion; omitted counts are zero within that partial report. The reference points to the same step's `effects_observed`. |
 | `review_after.run_id`, `evidence_sha256` | Run identity and canonical digest of the validated companion, for subsequent targeted reads. They do not bind other execution-report fields or authenticate the evidence. |
 | `declaration_changed` | Comparison with all observed calls matching the planning identity: any changed digest/status gives true; no match gives null. |
@@ -183,6 +183,16 @@ these explicit options can increase context substantially. A nonzero exit or
 interrupted observation suggests checking state before retry; a zero exit or
 HTTP response never establishes complete task success or validated reuse.
 The compact review changes no execution gates, dependencies or retry behavior.
+
+Direct results and saved overviews use the same bounded companion validation and
+process reconciliation. Malformed, non-serializable or over-2-MiB companions give
+`invalid_evidence`, an unverified outcome and no evidence reference, including
+for steps reported blocked/skipped. Conflicting process status, exit code or
+activity in a supposedly unexecuted step gives `process_evidence_mismatch` while
+retaining valid evidence. Both cases suggest inspecting state before retrying.
+An interrupted or failed attempt can have completed effects: check current
+outputs and still-active work, retain verified completed results, and reassess
+the remaining actions and their prerequisites before resuming.
 
 `--review-effects --save` saves the returned compact report as JSON alongside the
 requested Markdown/HTML. Add `--effects` when the handoff must preserve complete
