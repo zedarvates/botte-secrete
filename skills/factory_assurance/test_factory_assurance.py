@@ -82,7 +82,30 @@ def main() -> int:
     identity_drift = _fixture()
     identity_drift["identity"]["tested_sha"] = "b" * 40
     result = evaluate_assurance(identity_drift)
-    _ok("exact-head mismatch is blocked", any("identity mismatch" in b for b in result["blockers"]), state)
+    _ok("commit mismatch without tree proof is blocked", any("identity mismatch" in b for b in result["blockers"]), state)
+
+    synthetic_merge = _fixture()
+    synthetic_merge["identity"].update({
+        "build_sha": "b" * 40,
+        "tested_sha": "b" * 40,
+        "source_tree": "c" * 40,
+        "build_tree": "c" * 40,
+        "tested_tree": "c" * 40,
+    })
+    result = evaluate_assurance(synthetic_merge)
+    _ok("synthetic PR merge checkout accepts exact tree identity", result["status"] == "review_ready", state)
+    _ok("tree-equivalent checkout is explicitly qualified", any("tree identity matches" in w for w in result["warnings"]), state)
+
+    tree_drift = _fixture()
+    tree_drift["identity"].update({
+        "build_sha": "b" * 40,
+        "tested_sha": "b" * 40,
+        "source_tree": "c" * 40,
+        "build_tree": "c" * 40,
+        "tested_tree": "d" * 40,
+    })
+    result = evaluate_assurance(tree_drift)
+    _ok("synthetic checkout with tree drift is blocked", any("identity mismatch" in b for b in result["blockers"]), state)
 
     failed_evidence = _fixture()
     failed_evidence["evidence"][0]["status"] = "fail"
