@@ -14,6 +14,7 @@ from skills.execution_harness import (
     HarnessInvariantError,
     VerificationResult,
 )
+from skills.execution_harness.atlas_seed import atlas_from_needle2_comparison
 
 
 def _raises(fn) -> bool:
@@ -148,6 +149,20 @@ def main() -> int:
                 )
             )
         ),
+    )
+
+    seeded = atlas_from_needle2_comparison()
+    seed_rows = seeded.comparable(task="memory-tool-selection-fr-calibration-v1", hardware="cpu-study-host")
+    check(
+        "existing real Needle/Qwen comparison seeds source-bound Atlas observations",
+        len(seed_rows) == 2
+        and {row.model for row in seed_rows} == {"Needle 2", "Qwen2.5-0.5B Instruct"}
+        and all(row.evidence_refs for row in seed_rows),
+    )
+    check(
+        "seed preserves harness distinction and non-promotion outcomes",
+        seed_rows[0].comparison_key != seed_rows[1].comparison_key
+        and all("promotion" in row.outcome or "stop_" in row.outcome for row in seed_rows),
     )
 
     harness.add_evidence(EvidenceRecord(kind="ci", ref="ci:1", verified=True))
