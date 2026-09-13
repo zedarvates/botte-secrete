@@ -12,6 +12,28 @@ prerequisites. Three skills share the name `memory`. The corpus tests private
 and project notes, RAM inspection, checkpoint inspection and image conversion.
 These are fictional candidates; the runner never executes their operations.
 
+## Choose the next operation
+
+Use the current run state to choose the operation. The
+[six-axis coverage review](tool-improvement-axes.md) maps these mechanisms to
+their evidence and remaining limits. Read the linked procedure before using
+its command.
+
+| Situation | Operation and prerequisites | Output, effects and next decision |
+| --- | --- | --- |
+| A distinct comparison is being prepared | [Preview](#prepare-and-execute) with trusted baseline/candidate checkouts and a corpus. | In-memory plan and source hashes; no writes or inference. Review the candidate, cases and runtime configuration before execution. |
+| A new comparison is ready to run | [Execute](#prepare-and-execute) with frozen sources/cases, explicit registry, backend, model, runtime identity and a new output directory. | Private manifest/checkpoint and up to 72 model calls; comparison and acceptance remain separate. Fictional operations are not executed. |
+| A comparison was interrupted | [Resume](#read-the-evidence-and-resume) with the original inputs, output directory and checkpoint, after inspecting current process/server state. | Rechecks completed observations and dispatches only unstarted work. Started or uncertain calls require reconciliation; a completed refused run needs no new calls. |
+| A retained comparison needs a decision | [Assess offline](#automated-acceptance-assessment) with its separately retained SHA-256 and bound corpus. | Recomputed results on stdout; no writes or model calls. Exit 3 identifies evidence gaps; exit 4 preserves the quality refusal. |
+| An assessment should be retained in memory | [Export](#retain-an-assessment-in-shared-memory) with project, visibility and a fixed assessment timestamp; save the exact emitted JSON. | A capture request on stdout, with the quality exit retained. The existing authenticated Memory Hub client performs the separate write and supplies the receipt. Retry only the identical saved request after uncertain transport. |
+| A recalled assessment may inform another task | [Review recall](#review-a-recalled-assessment-before-reuse) with a saved response, expected project, pinned comparison and caller-selected checkout. | Checks the supplied evidence and samples current sources without contacting a service. Incomplete recall or source drift returns 3; runtime, live service state and task prerequisites still need review. |
+
+Neither a prepared request nor an offline review is a memory-service receipt.
+Several assessments of one comparison remain one source of model evidence.
+These operations do not authorize task execution or automatic promotion.
+
+## Initial preparation
+
 The [initial preparation record](validation/skill-selection-preparation-v1.json)
 binds the starter corpus and harness to a preview with twelve cases and 24
 planned calls, zero inference and no measured quality or cost. The candidate
