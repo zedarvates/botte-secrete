@@ -293,3 +293,57 @@ capture/recall, receipt reuse after restart, private/project visibility,
 quarantine, changed-timestamp conflicts, input binding, redaction, size limits
 and CLI boundaries. They use temporary stores and synthetic identities; they
 establish no homelab transport or real-agent retrieval-quality gain.
+
+## Review a recalled assessment before reuse
+
+Save the existing client's `recall` response for the expected project, with
+`area=observations`, query `skill-selection` and `max_bytes=65536`. Then review
+that snapshot against the pinned comparison and a caller-selected checkout:
+
+```bash
+python scripts/benchmark_skill_selection.py \
+  --assess docs/validation/skill-selection-cpu-v1.json \
+  --report-sha256 7af98eadbd338dafbbb679e3b886082464b7a0b98535bf1de7de42aa7a584089 \
+  --memory-recall recall.json --memory-project botte-secrete \
+  --memory-target /absolute/path/to/current/checkout
+```
+
+This mode reads only caller-selected inputs and runs Git to sample that checkout's
+tracked source footprint. It opens no remembered path or reference, reads no
+credential, calls no service or model, writes nothing and executes no skill.
+It cannot be combined with inference or capture-export inputs.
+
+`memory_review` checks the retained assessment against freshly recomputed
+selection results and bound context. The original assessor hash is retained,
+with `assessor_changed` reported separately. It verifies the generated observation
+key, text digest, source and evidence references, and untrusted/non-executable
+labels. Altered scores remain invalid even with a new internally consistent key
+and digest. Expired entries, duplicate keys, wrong project/area and malformed or
+oversized input cannot silently become reusable evidence. Only matching entries
+count, and several assessments of this comparison still count as one report.
+
+`source_check` compares the measured candidate with the chosen checkout's commit,
+tracked source hash, scope, file count and committed-source flags. A changed or
+uncommitted footprint returns `source_changed`. The footprint includes tracked
+Python and skill declarations, not just the finder; a difference alone does not
+diagnose a finder regression. This is a sampled read, not an execution lock.
+
+CLI exit **3** requests review when the recall is missing/incomplete or sources
+differ, while retaining the original quality refusal in `acceptance`. If recall
+and recorded sources match, the ordinary quality exit applies (4 for this CPU
+comparison). Malformed input returns 2. A matching source footprint still leaves
+runtime, current memory-service state and task prerequisites unchecked. No
+execution, reuse, promotion or retry is authorized by a zero exit.
+
+All recall remains a bounded sample. Omitted entries, a truncated pool or a full
+20-entry response are marked incomplete; even an untruncated response does not
+establish exhaustive history. A saved response cannot prove the service still
+retains an entry or that an issuer is authentic. Hashes bind supplied bytes;
+they do not independently attest historical execution or oracle quality.
+
+The [recorded recall review](validation/skill-selection-memory-review-v1.json)
+uses the unchanged CPU evidence and the previously published `f01d212` checkout.
+It preserves the seven failures and reports source drift from measured candidate
+`8f2bd6e`. A temporary loopback HTTP service and two synthetic identities exercise
+private exclusion, project-visible recall and offline review. This is one-host
+transport evidence with no new model calls or production-memory ingestion.

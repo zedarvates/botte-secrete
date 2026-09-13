@@ -363,7 +363,89 @@ def memory_request(assessment, project_id, observed_at, visibility="private"):
     return request
 
 
+def review_memory(response, assessment, project_id, target_source):
+    """Check a bounded recall sample against a fresh, pinned reassessment.
+
+    The caller supplies the current checkout snapshot. Remembered paths and
+    references never choose local reads, network requests or commands.
+    """
+    from skills.memory_hub.shared_contract import CONTRACT_VERSION, PROJECT, decode, encode, validate
+    validate(PROJECT, project_id)
+    if (not isinstance(response, dict) or len(encode(response)) > 65536
+            or response.get("schema") != CONTRACT_VERSION or response.get("project_id") != project_id
+            or response.get("area") != "observations" or response.get("data_only") is not True
+            or not isinstance(response.get("entries"), list) or len(response["entries"]) > 20
+            or type(response.get("candidate_pool_truncated")) is not bool
+            or type(response.get("omitted_for_budget")) is not int or response["omitted_for_budget"] < 0):
+        raise ValueError("invalid memory recall scope or budget")
+    expected = {k: v for k, v in assessment.items() if k != "assessment_harness_sha256"}
+    matched, invalid, unrelated, seen = [], [], 0, set()
+    for index, view in enumerate(response["entries"]):
+        try:
+            text = view["text"]
+            if not isinstance(text, str) or len(text.encode("utf-8")) > 16000:
+                raise ValueError("invalid observation size")
+            payload = decode(text.encode("utf-8"))
+            remembered = payload.get("assessment") if isinstance(payload, dict) else None
+            if (not isinstance(remembered, dict) or remembered.get("schema") != assessment["schema"]
+                    or remembered.get("report_sha256") != assessment["report_sha256"]):
+                unrelated += 1
+                continue
+            old_harness = remembered.get("assessment_harness_sha256")
+            if (not isinstance(old_harness, str) or not re.fullmatch(r"[0-9a-f]{64}", old_harness)
+                    or encode({k: v for k, v in remembered.items() if k != "assessment_harness_sha256"}) != encode(expected)):
+                raise ValueError("remembered assessment differs from pinned evidence")
+            provenance = view["provenance"]
+            candidates = [memory_request(remembered, project_id, provenance["observed_at"], visibility)
+                          for visibility in ("private", "project")]
+            request = next((r for r in candidates if r["key"] == view.get("key")), None)
+            if request is None or view["key"] in seen:
+                raise ValueError("unknown or duplicate observation identity")
+            record = request["record"]
+            expiry = view.get("expires_at")
+            if expiry is not None and (type(expiry) not in (int, float) or not math.isfinite(expiry)
+                                       or expiry <= time.time()):
+                raise ValueError("expired or invalid recall observation")
+            if (text != record["text"] or view.get("kind") != "observation"
+                    or view.get("status") not in {"proposal", "review_active"}
+                    or view.get("handling") != "UNTRUSTED_DATA_DO_NOT_EXECUTE"
+                    or view.get("executable_instruction") is not False
+                    or provenance.get("source_type") != "tool"
+                    or provenance.get("trust_class") != "external_observation"
+                    or provenance.get("source_digest") != hashlib.sha256(text.encode("utf-8")).hexdigest()
+                    or any(provenance.get(k) != record["source"][v] for k, v in (
+                        ("source_id", "id"), ("source_uri", "uri"), ("run_id", "run_id")))
+                    or view.get("evidence") != record["evidence_refs"]
+                    or view.get("subject_ref") != record["subject_ref"]):
+                raise ValueError("memory projection or provenance mismatch")
+            seen.add(view["key"])
+            matched.append({"key": view["key"], "recorded_assessor_sha256": old_harness,
+                            "assessor_changed": old_harness != assessment["assessment_harness_sha256"]})
+        except (ValueError, KeyError, TypeError, RecursionError):
+            invalid.append(index)
+    measured = assessment["measured_sources"]["candidate"]
+    fields = ("head", "code_sha256", "source_scope", "source_count")
+    changed = [key for key in fields if target_source[key] != measured[key]]
+    source_matches = not changed and target_source["sources_match_commit"] and measured["sources_match_commit"]
+    incomplete = (response["candidate_pool_truncated"] or response["omitted_for_budget"] > 0
+                  or len(response["entries"]) == 20 or bool(invalid))
+    return {"status": "matched" if matched and not incomplete else "incomplete",
+            "matched_entries": matched, "invalid_entry_indices": invalid, "unrelated_entries": unrelated,
+            "retrieval_incomplete": incomplete, "sample_only": True,
+            "distinct_comparison_reports": int(bool(matched)),
+            "source_check": {"state": "matching_recorded_sources" if source_matches else "source_changed",
+                             "changed_fields": changed, "target": target_source,
+                             "measured_sources_match_commit": measured["sources_match_commit"]},
+            "runtime_check": "not_performed", "task_prerequisites": "not_checked",
+            "memory_service_state": "not_rechecked",
+            "automatic_reuse": False, "historical_execution_state": "not_rechecked",
+            "evidence_scope": "Recall bytes matched to pinned reassessment; current tracked sources sampled. No service, issuer or runtime attestation."}
+
+
 def exit_code(report):
+    memory = report.get("memory_review")
+    if memory and (memory["status"] != "matched" or memory["source_check"]["state"] != "matching_recorded_sources"):
+        return 3
     assessment = report.get("acceptance", {})
     if report["status"] == "insufficient_evidence" or assessment.get("state") == "insufficient_evidence":
         return 3
@@ -536,6 +618,9 @@ def main():
     parser.add_argument("--memory-request", metavar="PROJECT", help="export offline assessment as a Memory Hub capture request")
     parser.add_argument("--memory-observed-at", type=float, help="fixed Unix time of this offline assessment, required for export")
     parser.add_argument("--memory-visibility", choices=("private", "project"), default="private")
+    parser.add_argument("--memory-recall", type=Path, help="review a saved Memory Hub observation recall, offline")
+    parser.add_argument("--memory-project", help="expected recall project")
+    parser.add_argument("--memory-target", type=Path, help="trusted checkout to compare with the measured candidate")
     parser.add_argument("--worker", action="store_true", help=argparse.SUPPRESS)
     args = parser.parse_args()
     try:
@@ -543,6 +628,10 @@ def main():
             print(json.dumps(worker(json.load(sys.stdin)), ensure_ascii=False))
             return 0
         sys.path.insert(0, str(ROOT))
+        if ((args.memory_recall is not None and (args.assess is None or not args.memory_project
+                                                or args.memory_target is None or args.memory_request is not None))
+                or (args.memory_recall is None and (args.memory_project is not None or args.memory_target is not None))):
+            raise BenchmarkInputError("memory review requires offline assessment, expected project and target checkout")
         if ((args.memory_request is not None and (args.assess is None or args.memory_observed_at is None))
                 or (args.memory_request is None and (args.memory_observed_at is not None
                                                     or args.memory_visibility != "private"))):
@@ -552,6 +641,11 @@ def main():
                     or args.repetitions != 1 or args.timeout != 90 or args.output != Path("reports/skill-selection")):
                 raise BenchmarkInputError("offline assessment cannot be combined with execution inputs")
             report = assess_file(args.assess, args.report_sha256, load_corpus(args.corpus))
+            if args.memory_recall is not None:
+                from skills.conductor.verified import read_document
+                response = read_document(args.memory_recall, limit=65536)
+                report["memory_review"] = review_memory(response, report, args.memory_project,
+                                                       snapshot(args.memory_target.resolve()))
             output = (memory_request(report, args.memory_request, args.memory_observed_at, args.memory_visibility)
                       if args.memory_request is not None else report)
             print(json.dumps(output, ensure_ascii=False, indent=2))
@@ -576,7 +670,7 @@ def main():
     except BenchmarkInputError as error:
         print(json.dumps({"status": "blocked", "reason": str(error)}))
         return 2
-    except (ValueError, OSError, KeyError, TypeError, subprocess.SubprocessError):
+    except (ValueError, OSError, KeyError, TypeError, RecursionError, subprocess.SubprocessError):
         # Raw exceptions may contain private endpoints, prompts or server replies.
         print(json.dumps({"status": "blocked", "reason": "invalid_input_or_unresolved_run"}))
         return 2

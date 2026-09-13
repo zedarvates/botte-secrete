@@ -527,6 +527,133 @@ class MemoryExportTests(unittest.TestCase):
         self.assertEqual(proc.returncode, 2, proc.stdout)
 
 
+class MemoryReviewTests(unittest.TestCase):
+    def setUp(self):
+        MemoryExportTests.setUp(self)
+        from skills.memory_hub.shared_service import MemoryService, Principal
+        self.service = MemoryService(self.root / "hub")
+        self.principal = Principal("worker", frozenset({"pilot"}), frozenset({"read", "write"}))
+        # Retain the earlier assessor, not a freshly relabelled historical record.
+        saved = json.loads((bench.ROOT / "docs/validation/skill-selection-cpu-memory-request-v1.json").read_text(encoding="utf-8"))
+        self.remembered = json.loads(saved["record"]["text"])["assessment"]
+        self.request = bench.memory_request(self.remembered, "pilot", self.observed_at)
+        self.service.call("capture", self.request, self.principal)
+        self.query = {"project_id": "pilot", "area": "observations", "query": "skill-selection", "max_bytes": 65536}
+        self.response = self.service.call("recall", self.query, self.principal)
+        self.target = copy.deepcopy(self.assessment["measured_sources"]["candidate"])
+
+    def review(self, response=None, target=None):
+        return bench.review_memory(self.response if response is None else response, self.assessment, "pilot",
+                                   self.target if target is None else target)
+
+    def test_historical_assessor_and_quality_refusal_survive_http_recall(self):
+        from skills.memory_hub.cli import initialize
+        from skills.memory_hub.shared_http import AuthRegistry, MemoryHTTPClient, MemoryHTTPServer, read_token
+        from skills.memory_hub.shared_service import MemoryService
+        root = self.root / "http"
+        initialize(root, "pilot")
+        server = MemoryHTTPServer(("127.0.0.1", 0), MemoryService(root / "data"), AuthRegistry.load(root / "auth.json"))
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        try:
+            url = f"http://127.0.0.1:{server.server_port}"
+            producer = MemoryHTTPClient(url, read_token(root / "worker.secret"))
+            consumer = MemoryHTTPClient(url, read_token(root / "operator.secret"))
+            producer.call("capture", self.request)
+            self.assertEqual(consumer.call("recall", self.query)["entries"], [])
+            shared = bench.memory_request(self.remembered, "pilot", self.observed_at, "project")
+            producer.call("capture", shared)
+            response = consumer.call("recall", self.query)
+            self.assertEqual(len(response["entries"]), 1)
+            with patch.object(bench.subprocess, "run", side_effect=AssertionError("no execution")), \
+                    patch.object(MemoryHTTPClient, "call", side_effect=AssertionError("offline review")):
+                reviewed = self.review(response)
+            self.assertEqual(reviewed["status"], "matched")
+            self.assertTrue(reviewed["matched_entries"][0]["assessor_changed"])
+            self.assertEqual(reviewed["matched_entries"][0]["recorded_assessor_sha256"],
+                             self.remembered["assessment_harness_sha256"])
+            self.assertEqual(bench.exit_code({**self.assessment, "memory_review": reviewed}), 4)
+            self.assertFalse(reviewed["automatic_reuse"])
+            self.assertEqual(reviewed["runtime_check"], "not_performed")
+            self.assertEqual(reviewed["task_prerequisites"], "not_checked")
+        finally:
+            server.shutdown()
+            server.server_close()
+            thread.join(timeout=5)
+
+    def test_source_or_uncommitted_changes_require_review_without_losing_failures(self):
+        for change in ({"head": "0" * 40}, {"code_sha256": "0" * 64}, {"sources_match_commit": False}):
+            reviewed = self.review(target={**self.target, **change})
+            self.assertEqual(reviewed["source_check"]["state"], "source_changed")
+            result = {**self.assessment, "memory_review": reviewed}
+            self.assertEqual(bench.exit_code(result), 3)
+            self.assertEqual(len(result["acceptance"]["candidate_failures"]), 7)
+        actual = self.review(target=bench.snapshot(bench.ROOT))
+        self.assertIn("code_sha256", actual["source_check"]["changed_fields"])
+
+    def test_rewritten_scores_references_and_provenance_are_not_reusable(self):
+        for mutate in (
+            lambda v: v["provenance"].update(source_digest="0" * 64),
+            lambda v: v["provenance"].update(run_id="another-run"),
+            lambda v: v["provenance"].update(source_uri="file:///never-open-this"),
+            lambda v: v.update(handling="DATA_DO_NOT_EXECUTE"),
+            lambda v: v.update(executable_instruction=True),
+            lambda v: v.update(status="promoted"),
+            lambda v: v.update(expires_at=1),
+            lambda v: v.update(expires_at=True),
+            lambda v: v.update(evidence=[]),
+        ):
+            response = copy.deepcopy(self.response)
+            mutate(response["entries"][0])
+            self.assertEqual(self.review(response)["invalid_entry_indices"], [0])
+        # Even a self-consistent new key and digest cannot replace pinned scores.
+        changed = copy.deepcopy(self.remembered)
+        changed["acceptance"]["candidate_failures"] = []
+        self.service.call("capture", bench.memory_request(changed, "pilot", self.observed_at), self.principal)
+        reviewed = self.review(self.service.call("recall", self.query, self.principal))
+        self.assertEqual(len(reviewed["matched_entries"]), 1)
+        self.assertEqual(len(reviewed["invalid_entry_indices"]), 1)
+        self.assertEqual(reviewed["status"], "incomplete")
+
+    def test_empty_duplicate_truncated_or_foreign_samples_never_prove_complete_recall(self):
+        self.assertEqual(self.review({**self.response, "entries": []})["status"], "incomplete")
+        duplicate = {**self.response, "entries": self.response["entries"] * 2}
+        reviewed = self.review(duplicate)
+        self.assertEqual(reviewed["invalid_entry_indices"], [1])
+        self.assertEqual(reviewed["distinct_comparison_reports"], 1)
+        for change in ({"candidate_pool_truncated": True}, {"omitted_for_budget": 1}):
+            self.assertTrue(self.review({**self.response, **change})["retrieval_incomplete"])
+        for change in ({"project_id": "other"}, {"area": "context"}, {"data_only": False},
+                       {"omitted_for_budget": True}, {"entries": self.response["entries"] * 21},
+                       {"padding": "x" * 65536}):
+            with self.assertRaises(ValueError):
+                self.review({**self.response, **change})
+        unrelated = copy.deepcopy(self.response)
+        unrelated["entries"][0]["text"] = '{"schema":"another-observation"}'
+        self.assertEqual(self.review(unrelated)["unrelated_entries"], 1)
+
+    def test_cli_reads_only_caller_paths_and_rejects_unused_memory_inputs(self):
+        path = self.root / "recall.json"
+        path.write_text(json.dumps(self.response), encoding="utf-8")
+        before = path.read_bytes()
+        command = [sys.executable, str(Path(bench.__file__)), "--assess", str(self.path),
+                   "--report-sha256", bench.file_hash(self.path)]
+        args = ["--memory-recall", str(path), "--memory-project", "pilot", "--memory-target", str(bench.ROOT)]
+        proc = subprocess.run(command + args, capture_output=True, text=True, encoding="utf-8")
+        self.assertEqual(proc.returncode, 3, proc.stdout)
+        review = json.loads(proc.stdout)["memory_review"]
+        self.assertEqual(review["status"], "matched")
+        self.assertEqual(review["source_check"]["state"], "source_changed")
+        self.assertEqual(path.read_bytes(), before)
+        for extra in (["--memory-recall", str(path)], ["--memory-target", str(bench.ROOT)],
+                      args + ["--execute"], args + ["--memory-request", "pilot", "--memory-observed-at", "1"]):
+            proc = subprocess.run(command + extra, capture_output=True, text=True, encoding="utf-8")
+            self.assertEqual(proc.returncode, 2, proc.stdout)
+        path.write_text('{"schema":"one","schema":"two"}', encoding="utf-8")
+        proc = subprocess.run(command + args, capture_output=True, text=True, encoding="utf-8")
+        self.assertEqual(proc.returncode, 2, proc.stdout)
+
+
 if __name__ == "__main__":
     result = unittest.TextTestRunner().run(unittest.defaultTestLoader.loadTestsFromModule(sys.modules[__name__]))
     failed = len(result.errors) + len(result.failures)
