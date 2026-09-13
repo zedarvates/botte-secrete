@@ -14,6 +14,7 @@ from skills.capabilities.effects import _unique_object
 from skills.capabilities.observations import MAX_REPORT_BYTES, summarize, validate_report
 
 MAX_DOCUMENT_BYTES = 16 * 1024 * 1024
+MAX_OVERVIEW_RESULTS = 128
 _GROUPS = {"calls": "status", "observations": "comparison", "network": "status"}
 
 
@@ -110,6 +111,77 @@ def select_evidence(report: object, selectors: list[str] | None = None, *,
     return _project(report, _request(selectors, expected_sha256), expected_sha256)
 
 
+def _execution_overview(document, source):
+    """Recompute cues from retained results, never from a saved outcome verdict."""
+    from skills.capabilities.review import METHOD, after
+    states = {"ran": 0, "blocked": 0, "skipped": 0, "failed": 0}
+    if (not isinstance(document, dict) or not isinstance(document.get("goal"), str)
+            or document.get("mode") not in ("safe_only", "confirmed", "dry_run")
+            or not isinstance(document.get("results"), list)
+            or not 1 <= len(document["results"]) <= MAX_OVERVIEW_RESULTS):
+        return _unavailable("invalid_execution_report")
+    for step in document["results"]:
+        if (not isinstance(step, dict) or not isinstance(step.get("status"), str)
+                or step["status"] not in states
+                or any(not isinstance(step.get(field), str) for field in ("capability", "command"))):
+            return _unavailable("invalid_execution_result")
+        status, code = step["status"], step.get("exit_code")
+        if ("exit_code" not in step
+                or (status in {"ran", "failed"} and (type(code) is not int or (code == 0) != (status == "ran")))
+                or (status in {"blocked", "skipped"} and code is not None)
+                or (document["mode"] == "dry_run" and status != "skipped")):
+            return _unavailable("inconsistent_execution_status")
+        states[status] += 1
+    counts = document.get("summary")
+    if (not isinstance(counts, dict) or counts != states
+            or any(type(value) is not int for value in counts.values())):
+        return _unavailable("inconsistent_execution_summary")
+    try:
+        raw = json.dumps(document, sort_keys=True, ensure_ascii=False, allow_nan=False,
+                         separators=(",", ":")).encode("utf-8")
+    except (ValueError, TypeError, RecursionError):
+        return _unavailable("invalid_execution_report")
+    rows = []
+    for position, step in enumerate(document["results"]):
+        prior = step.get("review_before")
+        prior = ({key: value for key, value in prior.items() if isinstance(value, str)
+                  and key in {"capability_id", "declaration_sha256", "declaration"}}
+                 if isinstance(prior, dict) else {})
+        observed = step.get("effects_observed")
+        too_large = observed is not None and len(json.dumps(
+            observed, ensure_ascii=False, separators=(",", ":")).encode("utf-8")) > MAX_REPORT_BYTES
+        if too_large:
+            review = after({"status": step["status"]}, prior)
+            review["coverage"] = "invalid_evidence"
+            review["attention"].append("observation_report_too_large")
+        else:
+            try:
+                review = after(step, prior)
+            except (ValueError, TypeError, RecursionError):
+                review = after({"status": step["status"]}, prior)
+                review["coverage"] = "invalid_evidence"
+                review["attention"].append("invalid_observation_report")
+        if review["coverage"] == "invalid_evidence":
+            review["task_outcome"] = "unverified"
+        if "evidence_ref" in review:
+            review["evidence_ref"] = {"source": source, "result_index": position,
+                                      "expected_sha256": review["evidence_sha256"]}
+            process = observed["process"]
+            not_run = step["status"] in {"blocked", "skipped"}
+            if (not_run != (process["status"] == "not_run")
+                    or (not_run and (observed["calls"] or observed["observations"] or observed.get("network")))
+                    or (step["status"] == "ran" and process != {"status": "exited", "exit_code": 0})
+                    or (step["status"] == "failed" and process["exit_code"] != step["exit_code"])):
+                review["attention"].append("process_evidence_mismatch")
+                review.update(coverage="partial", task_outcome="unverified",
+                              next_action="inspect_state_before_retry")
+        rows.append({"result_index": position, **{key: step[key] for key in
+                     ("capability", "command", "status", "exit_code")}, "review_after": review})
+    return {"selection_status": "overview", "source": source,
+            "document_sha256": hashlib.sha256(raw).hexdigest(), "review_method": METHOD,
+            "goal": document["goal"], "mode": document["mode"], "summary": states, "results": rows}
+
+
 def _read_document(path):
     def identity(info):
         return info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns, info.st_ctime_ns
@@ -133,19 +205,27 @@ def _read_document(path):
 
 
 def read_evidence(path: Path, selectors: list[str] | None = None, *,
-                  result_index: int | None = None, expected_sha256: str | None = None) -> dict:
+                  result_index: int | None = None, expected_sha256: str | None = None,
+                  overview: bool = False) -> dict:
     """Read a standalone companion or an explicitly indexed saved execution step.
 
     The document is bounded to 16 MiB, the selected canonical companion to 2 MiB.
-    Other execution fields and all embedded paths are ignored, never followed.
+    overview=True reads all execution result cues without selection options.
+    Other execution fields and all embedded paths are never followed.
     """
     parsed = _request(selectors, expected_sha256)
     if result_index is not None and (type(result_index) is not int or result_index < 0):
         raise ValueError("result_index must be a non-negative integer")
+    if type(overview) is not bool:
+        raise ValueError("overview must be a boolean")
+    if overview and any(value is not None for value in (selectors, result_index, expected_sha256)):
+        raise ValueError("overview cannot be combined with selectors, result_index or expected_sha256")
     try:
         document = _read_document(Path(path))
     except (OSError, ValueError, TypeError, RecursionError, RuntimeError):
         return _unavailable("unreadable_document")
+    if overview:
+        return _execution_overview(document, str(path))
     report = document
     if result_index is not None:
         results = document.get("results") if isinstance(document, dict) else None
@@ -163,7 +243,8 @@ def read_evidence(path: Path, selectors: list[str] | None = None, *,
 
 
 def read_saved_evidence(source: str, selectors: list[str] | None = None, *,
-                        result_index: int | None = None, expected_sha256: str | None = None) -> dict:
+                        result_index: int | None = None, expected_sha256: str | None = None,
+                        overview: bool = False) -> dict:
     """MCP entry: canonical .botte/reports/<file>.json in the server working tree."""
     if not isinstance(source, str) or not source or "\\" in source or ":" in source:
         raise ValueError("source must be a canonical .botte/reports/<file>.json path")
@@ -177,6 +258,12 @@ def read_saved_evidence(source: str, selectors: list[str] | None = None, *,
             raise ValueError("report aliases are unsupported; use a canonical saved report")
     except (OSError, RuntimeError) as exc:
         raise ValueError("report source cannot be resolved") from exc
-    result = read_evidence(path, selectors, result_index=result_index, expected_sha256=expected_sha256)
+    result = read_evidence(path, selectors, result_index=result_index,
+                           expected_sha256=expected_sha256, overview=overview)
     result["source"] = source
+    if result["selection_status"] == "overview":
+        for step in result["results"]:
+            reference = step["review_after"].get("evidence_ref")
+            if reference is not None:
+                reference["source"] = source
     return result

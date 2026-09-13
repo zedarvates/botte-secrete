@@ -82,8 +82,9 @@ late completions cannot rewrite a closed report. There is no automatic tracing
 or execution of verification text. Keep whole effects and reuse unverified when
 only a write or transport-response facet was sampled.
 
-Read retained evidence with `evidence <report.json> --result 0` for a saved
-Conductor step, or omit `--result` for a standalone companion. An index precedes
+Start a saved execution handoff with `evidence <report.json> --overview` for all
+steps and evidence references. Use `--result 0` for one saved Conductor step,
+or omit both options for a standalone companion. An index precedes
 optional `--select /observations/o1` reads; carry `--expect-sha256` from that index
 or `review_after`. Python equivalents are in `skills.capabilities.evidence`.
 See the [evidence-reading guide](../../docs/capability-effects.md#read-retained-evidence).

@@ -76,6 +76,9 @@ These options combine. Python uses `review_effects`, `include_effects` and
 `observe_effects`; MCP `conduct`/`execute_plan` expose the same applicable flags.
 `--save` with any of them preserves the returned JSON alongside abbreviated
 Markdown/HTML. A compact-only save keeps cues, not the deferred declaration prose.
+`effects_json` is relative to the execution working directory. Pass that path to
+`capabilities evidence --overview` or MCP `effect_evidence` with `overview: true`
+for all saved step outcomes and evidence references, without rerunning the plan.
 See the [integration contract](../../docs/capability-effects.md#compact-shared-review)
 for fields and coverage.
 

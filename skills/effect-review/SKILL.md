@@ -36,8 +36,10 @@ Use `review_after` and the step result. When present, inspect the referenced
 `effects_observed` companion for affected resources, unfinished work or deviations.
 Inspect a short companion already in context directly; targeted lookups add
 exchange overhead and are useful when enough detail can remain deferred.
-For a retained report, use MCP `effect_evidence` with its saved `source` and
-zero-based `result_index`: omit selectors for an ID index, then request records
+For a saved execution, MCP `effect_evidence` with `source` and `overview: true`
+lists every step and its evidence read arguments under `review_after.evidence_ref`.
+Use those arguments without `overview` to read the step. Omit selectors for an ID
+index, then request records
 such as `/observations/o1` or `/network/n1`. Carry `evidence_sha256` from the review
 or index as `expected_sha256`; changed or incomplete selections return no records.
 Linked calls identify the retained declaration at `/declarations/DIGEST`.

@@ -26,7 +26,8 @@ def _save_report(kind: str, report: dict, args) -> None:
         fd, name = tempfile.mkstemp(prefix=prefix, suffix=".json", dir=directory)
         os.close(fd)
         target = Path(name)
-        report["effects_json"] = target.as_posix()
+        # tempfile may return an absolute path; consumers use a project-relative reference.
+        report["effects_json"] = (directory / target.name).as_posix()
         try:
             write_json(target, report)
         except BaseException:

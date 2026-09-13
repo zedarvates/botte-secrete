@@ -267,6 +267,11 @@ compact review and its companion digest. `--result` is the zero-based position i
 `results`, not the step's display order or capability name. A saved execution
 requires this explicit position, even if it has only one result. For a standalone
 v1/v2 observation companion, omit `--result`. No new report is saved by a read.
+New Conductor saves return `effects_json` as a canonical project-relative path,
+independently of the temporary-file helper's path format. Resolve it against the
+execution working directory; MCP must use that same working directory. Older
+absolute references still work in Python/CLI and require an explicit relative
+path for MCP. The destination and unique/atomic JSON write behavior are unchanged.
 
 Python `skills.capabilities.evidence.select_evidence(report, selectors=None,
 expected_sha256=None)` projects a supplied companion without I/O. `read_evidence`
@@ -332,6 +337,56 @@ method. The raw-full baseline has no retrieval overhead. Short reports can cost
 less to read whole; use targeted reads when their deferred detail justifies the
 extra exchange. These examples measure serialized bytes, not model tokens, task
 quality, runtime savings or a general cost threshold.
+
+### Review a saved execution
+
+```bash
+python -m skills.capabilities.cli evidence .botte/reports/execution-effects-example.json --overview
+```
+
+Python `read_evidence(path, overview=True)` and MCP `effect_evidence` with `source`
+and `overview: true` return all result positions, commands, process statuses and
+freshly computed after-review cues. This explicit mode cannot combine with
+`result_index`/`--result`, selectors or `expected_sha256`; mixed requests fail
+before reading. Normal reads still require a position for execution reports.
+
+The overview preserves repeated names and display orders by using actual array
+positions. It checks the goal, mode, each result's status/exit-code fields and the
+aggregate counts; malformed or inconsistent metadata returns `unavailable`
+without silently dropping steps. It accepts at most 128 results in the existing
+16 MiB document bound. Missing observation stays `not_observed` (or reported
+`not_run` for blocked/skipped steps). Invalid or oversized companions remain
+`invalid_evidence` in their own row, with an unverified outcome and no evidence
+reference, while other rows remain visible.
+
+Stored `review_after` verdicts are ignored. Cues are recomputed using the common
+review helper; valid companions remain partial evidence. A conflict between the
+step's process status and its observation is marked `process_evidence_mismatch`,
+with an unverified outcome and a suggestion to inspect state before retrying.
+When stored compact planning cues exist, their identity/digest/status support the
+existing declaration comparison; otherwise that comparison stays unknown.
+Those planning cues and all report metadata remain caller-supplied claims.
+
+Each available `review_after.evidence_ref` contains read arguments: `source`,
+`result_index` and `expected_sha256`. Pass this object to MCP `effect_evidence`
+without `overview`, or to `read_saved_evidence`, for an index; add selectors to
+retrieve records. Replaced or reordered companions cannot silently satisfy an
+old reference with a different digest. Python/CLI references to external files
+retain that explicit path and are not automatically made MCP-compatible.
+
+`document_sha256` describes the canonical whole execution document, including
+deferred fields; compare it separately if wrapper metadata changes matter.
+The `expected_sha256` in each read reference still binds only its companion.
+Neither digest authenticates a producer or locks the file. The overview defers
+stdout tails, planning prose, observation records and detailed run limits to the
+retained document and targeted reads. It creates no new journal, launches no
+command and provides no automatic retry or dependency enforcement. CLI exit 0
+means the overview was read successfully, even if it contains failed steps.
+
+The evidence measurement script also covers the complete overview → index →
+selection exchange for three-step synthetic executions, counting all requests,
+responses, method and tool schema. Overview context and further reads add cost;
+directly reading a short report can still be cheaper.
 
 ## Operation and dependency boundaries
 

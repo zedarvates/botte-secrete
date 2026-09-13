@@ -1,18 +1,18 @@
 {
   "schema": "botte.capability-effects/v1",
   "capability_id": "zedarvates/botte-secrete:skills/capabilities",
-  "contract_version": "0.7.0",
+  "contract_version": "0.8.0",
   "source_hashes": {
-    "SKILL.md": "a01d38952e1e07110df39a0ac37e4321210352539070796a0e493abe54c98770",
+    "SKILL.md": "d719d492de6d3f6e23541496258cc029e38b518e288c3f2e56239d3fb587eddf",
     "__init__.py": "7d4d3e1854faec18d12335c4a1632b9fd59e5b22f774a8a9fc69467d1ddb75c5",
     "registry.py": "5b35c77358bf7899d8bc3d2bbaacb5f933a2e18921378bebc7dfab42fa8d5b36",
-    "cli.py": "7b93b4adc699a93a62aad050ad45ae8d723331d882e9693b47edd002b75c5097",
+    "cli.py": "f8eaadf7ef1c670aaaffe42c3ead23947406875c7effa890a8d61d424e80398d",
     "effects.py": "3965c5d1f84f1ca1b932f12944493ffc14e3458062db54f098b5ccbb2741be47",
     "observations.py": "3f3538ce6f8b342b9c42e13c1560e77b9e350e8dd1f579b567fbc7763643ce97",
     "observation_schema.py": "f346c90c6979d9bab0608d32f08e3b86c39d3dfbcdfe2484118c530fe4e1bbd2",
     "network_observations.py": "c91421fb04df629dafcbe167f83f52336424c6750589854fa39578aefe7239a5",
     "review.py": "e55e87b2fc4dc3ac6fc7005fbaffe4dd4562fd26d824720dd5b6c80f4620e5d0",
-    "evidence.py": "6b582c7eb380aeebdb801f459972faf72a84f49cd09588ac7ab1a428ff92aaed"
+    "evidence.py": "a3a908eb45fafb72883dfc7ffbc35d7ec3b79c7aa6d5b8fb18999018a6ed551f"
   },
   "preconditions": [
     "Python 3.10+ and a readable skill tree; local discovery only.",
@@ -54,12 +54,12 @@
       "verification": "Compare ordinary, full and compact plans with measure_effect_review.py; exercise missing/stale declarations, homonyms, swallowed failures, interruption, HTTP responses and malformed evidence in test_review."
     },
     {
-      "effect": "Index or select retained observation records and declarations on explicit request, preserving linked calls and run-wide limits.",
-      "scope": "Caller-supplied companion or selected local report document; bounded to 16 MiB per document and 2 MiB per canonical companion. MCP accepts canonical .botte/reports/<file>.json paths in its working directory.",
+      "effect": "Index or select retained observation records and declarations; optionally overview all results of a saved execution with compact cues and evidence references.",
+      "scope": "Caller-supplied companion or selected local report document; bounded to 16 MiB per document and 2 MiB per canonical companion. MCP accepts canonical .botte/reports/<file>.json paths in its working directory. Execution overviews accept at most 128 results.",
       "likelihood": "conditional",
-      "basis": "evidence.select_evidence validates a complete v1/v2 companion before projection; read_evidence accepts an explicit result position in saved Conductor reports. Changed digests, invalid evidence and absent IDs return no selected records. Resource paths and verification text inside reports are never followed.",
-      "impact": "May reduce later review context while retaining historical evidence. Reads and validates the full bounded input locally; index, limits and linked calls add overhead, so short reports can cost less to read whole. Reports retain resource paths and local metadata without proving current state or task completion.",
-      "verification": "Exercise revisions, nested failure, HTTP 202, historical declarations, v1 reports, escaped IDs, malformed/oversized input and file boundaries in test_evidence; measure both short and larger synthetic reports with measure_effect_evidence.py."
+      "basis": "evidence.select_evidence validates a complete v1/v2 companion before projection; read_evidence accepts an explicit result position in saved Conductor reports. Changed digests, invalid evidence and absent IDs return no selected records. Resource paths and verification text inside reports are never followed. Explicit overview mode validates result metadata/counts and recomputes review cues rather than copying saved outcome verdicts. Each available companion gets a result-position/digest reference; invalid companions remain unknown in their own row.",
+      "impact": "May reduce later review context while retaining historical evidence. Reads and validates the full bounded input locally; index, limits and linked calls add overhead, so short reports can cost less to read whole. Reports retain resource paths and local metadata without proving current state or task completion. Overview defers output tails and detailed evidence. Metadata/observation conflicts remain explicit; neither the whole-document nor companion digest authenticates the producer.",
+      "verification": "Exercise revisions, nested failure, HTTP 202, historical declarations, v1 reports, escaped IDs, malformed/oversized input and file boundaries in test_evidence; measure both short and larger synthetic reports with measure_effect_evidence.py. Follow generated overview references through MCP and read an actual executor report saved by the CLI; preserve failed, blocked, skipped and homonymous steps and reject inconsistent result metadata."
     }
   ],
   "downstream_effects": [

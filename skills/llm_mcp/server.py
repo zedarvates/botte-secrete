@@ -513,9 +513,12 @@ TOOLS = [
         "name": "effect_evidence",
         "description": "Index or select retained execution observations by ID. Read a saved report, "
                        "then use its evidence_sha256 for subsequent reads without mixing runs. "
+                       "Use overview for all saved execution steps and their evidence references. "
                        "Preserves run limits and linked calls; no execution, model call or current-state check.",
         "inputSchema": {"type": "object", "additionalProperties": False, "properties": {
             "source": {"type": "string", "description": "Canonical .botte/reports/<file>.json in the server working directory."},
+            "overview": {"type": "boolean", "default": False,
+                         "description": "Return all execution results with compact cues and read arguments; cannot combine with selection options."},
             "result_index": {"type": "integer", "minimum": 0,
                              "description": "Required zero-based result position for Conductor reports; omit for a standalone companion."},
             "selectors": {"type": "array", "minItems": 1, "maxItems": 16,
@@ -1275,11 +1278,11 @@ def _tool_effect_details(args: dict) -> str:
 
 def _tool_effect_evidence(args: dict) -> str:
     from skills.capabilities.evidence import read_saved_evidence
-    if set(args) - {"source", "result_index", "selectors", "expected_sha256"}:
+    if set(args) - {"source", "result_index", "selectors", "expected_sha256", "overview"}:
         raise ValueError("unsupported effect_evidence argument")
     report = read_saved_evidence(args["source"], args.get("selectors"),
                                  result_index=args.get("result_index"),
-                                 expected_sha256=args.get("expected_sha256"))
+                                 expected_sha256=args.get("expected_sha256"), overview=args.get("overview", False))
     return json.dumps(report, ensure_ascii=False, separators=(",", ":"))
 
 

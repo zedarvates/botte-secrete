@@ -42,6 +42,8 @@ def main(argv=None) -> int:
     s.add_argument("--select", action="append", metavar="/GROUP/ID",
                    help="select complete calls, observations, network records or retained declarations")
     s.add_argument("--expect-sha256", help="canonical evidence digest from review_after or a prior index")
+    s.add_argument("--overview", action="store_true",
+                   help="summarize every saved execution result with evidence references; no selection options")
     s = sub.add_parser("template", help="print a draft effects declaration; does not write files")
     s.add_argument("skill_dir", type=Path)
     s.add_argument("--id", required=True, help="qualified identity, e.g. owner/repo:skills/name")
@@ -76,11 +78,11 @@ def main(argv=None) -> int:
         from skills.capabilities.evidence import read_evidence
         try:
             report = read_evidence(args.report, args.select, result_index=args.result_index,
-                                   expected_sha256=args.expect_sha256)
+                                   expected_sha256=args.expect_sha256, overview=args.overview)
         except ValueError as exc:
             p.error(str(exc))
         print(json.dumps(report, ensure_ascii=False, indent=2))
-        return 0 if report["selection_status"] in {"indexed", "selected"} else 1
+        return 0 if report["selection_status"] in {"indexed", "selected", "overview"} else 1
     elif args.cmd == "template":
         try:
             report = contract_template(args.skill_dir, args.id)

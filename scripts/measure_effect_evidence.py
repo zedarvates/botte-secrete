@@ -56,6 +56,51 @@ def fixture(writes, contract):
     return report
 
 
+def execution_measure(report, source, method_bytes, schema_bytes):
+    """Read overview, then follow its reference and the resulting record index."""
+    document = {"goal": "Synthetic multi-step execution", "mode": "safe_only",
+                "summary": {"ran": 1, "failed": 1, "blocked": 1, "skipped": 0},
+                "results": [{"capability": "worker", "command": "fixture write and POST",
+                             "status": "ran", "exit_code": 0, "effects_observed": report},
+                            {"capability": "worker", "command": "fixture failed step",
+                             "status": "failed", "exit_code": 1},
+                            {"capability": "worker", "command": "fixture gated step",
+                             "status": "blocked", "exit_code": None}]}
+    source.write_text(json.dumps(document, ensure_ascii=False), encoding="utf-8")
+    args = {"source": source.as_posix(), "overview": True}
+    exchanges = 0
+    overview_exchange = 0
+    reference = None
+    for number, status in enumerate(("overview", "indexed", "selected"), 1):
+        request = {"jsonrpc": "2.0", "id": number, "method": "tools/call",
+                   "params": {"name": "effect_evidence", "arguments": args}}
+        response = handle(request)
+        if response.get("error") or response["result"].get("isError"):
+            raise ValueError("execution overview read failed during measurement")
+        view = json.loads(response["result"]["content"][0]["text"])
+        if view["selection_status"] != status:
+            raise ValueError("execution report changed or became unavailable")
+        exchanges += size(request) + size(response)
+        if status == "overview":
+            overview_exchange = exchanges
+            reference = view["results"][0]["review_after"]["evidence_ref"]
+            args = reference
+        elif status == "indexed":
+            index = view["index"]
+            args = {**reference, "selectors": [
+                "/observations/" + index["observations"]["deviation"][0],
+                "/network/" + index["network"]["returned"][0],
+                "/declarations/" + index["declarations"][0]]}
+    full = size(document) + method_bytes
+    total = exchanges + schema_bytes + method_bytes
+    return {"results": len(document["results"]), "full_execution_bytes": size(document),
+            "full_with_method_bytes": full, "calls": 3,
+            "overview_exchange_bytes": overview_exchange,
+            "overview_with_method_bytes": overview_exchange + schema_bytes + method_bytes,
+            "request_response_bytes": exchanges, "with_selected_details_bytes": total,
+            "with_details_reduction_percent": round(100 * (1 - total / full), 1)}
+
+
 def measure():
     method_bytes = len((ROOT / METHOD).read_bytes())
     definition = next(tool for tool in TOOLS if tool["name"] == "effect_evidence")
@@ -95,12 +140,13 @@ def measure():
                 rows.append({"synthetic_writes": count, "full_companion_bytes": size(report),
                              "full_with_method_bytes": full, "calls": 2, "tool_schema_bytes": size(definition),
                              "request_response_bytes": exchanges, "targeted_with_method_bytes": targeted,
-                             "reduction_percent": round(100 * (1 - targeted / full), 1)})
+                             "reduction_percent": round(100 * (1 - targeted / full), 1),
+                             "execution_overview": execution_measure(report, source, method_bytes, size(definition))})
         finally:
             os.chdir(previous)
     return {"measurement": "UTF-8 serialized context; shared method included once in both paths",
             "method_bytes": method_bytes, "examples": rows,
-            "limits": "Two synthetic reports, read via real in-process MCP dispatch. Targeted cost includes index, selected write/network/declaration, linked calls, run limits, requests/responses and tool schema. Full baseline is raw companion JSON without retrieval overhead. No real workflow, model tokens, quality or runtime savings measured; further reads add cost."}
+            "limits": "Two synthetic companions and execution wrappers, read via real in-process MCP dispatch. Targeted cost includes index, selected write/network/declaration, linked calls, run limits, requests/responses and tool schema. Execution comparison also includes the initial overview. Full baselines are raw JSON without retrieval overhead. No real workflow, model tokens, quality or runtime savings measured; further reads add cost."}
 
 
 if __name__ == "__main__":

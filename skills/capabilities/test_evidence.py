@@ -59,6 +59,204 @@ class EvidenceTests(unittest.TestCase):
     def save(self, document):
         self.path.write_text(json.dumps(document, ensure_ascii=False), encoding="utf-8")
 
+    def execution(self):
+        return {"goal": "Fixture café", "mode": "safe_only",
+                "summary": {"ran": 1, "failed": 1, "blocked": 1, "skipped": 1},
+                "results": [{"order": 7, "capability": "worker", "command": "fixture operation",
+                             "status": "ran", "exit_code": 0, "effects_observed": self.report,
+                             "review_before": before({"status": "declared", "contract": self.contract}),
+                             "review_after": {"task_outcome": "verified", "attention": []},
+                             "note": "Deferred output tail."},
+                            {"order": 7, "capability": "worker", "command": "fixture failure",
+                             "status": "failed", "exit_code": 1},
+                            {"capability": "worker", "command": "fixture gated",
+                             "status": "blocked", "exit_code": None},
+                            {"capability": "worker", "command": "fixture <placeholder>",
+                             "status": "skipped", "exit_code": None}]}
+
+    def test_overview_preserves_every_position_and_recomputes_outcome_cues(self):
+        document = self.execution()
+        self.save(document)
+        original = self.path.read_bytes()
+        view = read_evidence(self.path, overview=True)
+        self.assertEqual(view["selection_status"], "overview")
+        self.assertEqual(view["summary"], document["summary"])
+        self.assertEqual([r["result_index"] for r in view["results"]], [0, 1, 2, 3])
+        self.assertEqual([r["status"] for r in view["results"]], ["ran", "failed", "blocked", "skipped"])
+        review = view["results"][0]["review_after"]
+        self.assertEqual(review["coverage"], "partial")
+        self.assertEqual(review["task_outcome"], "unverified")
+        self.assertIn("nested_failure", review["attention"])
+        self.assertFalse(review["declaration_changed"])
+        self.assertEqual(review["next_action"], "inspect_state_before_retry")
+        self.assertEqual(view["results"][1]["review_after"]["coverage"], "not_observed")
+        self.assertEqual(view["results"][1]["review_after"]["next_action"], "inspect_state_before_retry")
+        self.assertEqual(view["results"][2]["review_after"]["task_outcome"], "not_run")
+        for omitted in ("Deferred output tail", "Unrequested retained", str(self.output)):
+            self.assertNotIn(omitted, json.dumps(view))
+        self.assertEqual(self.path.read_bytes(), original)
+
+    def test_overview_rejects_invalid_metadata_without_omitting_steps(self):
+        cases = [self.report, {}, {**self.execution(), "results": []},
+                 {**self.execution(), "mode": "unknown"}, {**self.execution(), "goal": None},
+                 {**self.execution(), "mode": "dry_run"}]
+        for field, value in (("status", []), ("status", "success"), ("exit_code", True),
+                             ("exit_code", 2), ("command", None)):
+            document = self.execution()
+            document["results"][0][field] = value
+            cases.append(document)
+        for count in (True, 0):
+            document = self.execution()
+            document["summary"]["ran"] = count
+            cases.append(document)
+        document = self.execution()
+        document["results"] *= 33
+        cases.append(document)
+        for document in cases:
+            self.save(document)
+            view = read_evidence(self.path, overview=True)
+            self.assertEqual(view["selection_status"], "unavailable")
+            self.assertNotIn("results", view)
+
+    def test_overview_keeps_corrupt_or_oversized_evidence_unknown_per_step(self):
+        for observed in ({}, {**self.report, "observations": [
+                {**self.report["observations"][0], "effect_ref": "/expected_effects/" + "9" * 5000}]}):
+            document = self.execution()
+            document["results"][0]["effects_observed"] = observed
+            document["results"][2]["effects_observed"] = {}
+            self.save(document)
+            view = read_evidence(self.path, overview=True)
+            self.assertEqual(len(view["results"]), 4)
+            review = view["results"][0]["review_after"]
+            self.assertEqual(review["coverage"], "invalid_evidence")
+            self.assertNotIn("evidence_ref", review)
+            self.assertEqual(review["task_outcome"], "unverified")
+            self.assertEqual(view["results"][2]["review_after"]["task_outcome"], "unverified")
+        self.save(self.execution())
+        with patch("skills.capabilities.evidence.MAX_REPORT_BYTES", 10):
+            view = read_evidence(self.path, overview=True)
+        review = view["results"][0]["review_after"]
+        self.assertEqual(review["coverage"], "invalid_evidence")
+        self.assertIn("observation_report_too_large", review["attention"])
+        self.assertNotIn("evidence_ref", review)
+
+    def test_overview_fingerprints_wrapper_metadata_separately_from_evidence(self):
+        document = self.execution()
+        self.save(document)
+        first = read_evidence(self.path, overview=True)
+        self.assertEqual(first["document_sha256"], digest(document))
+        self.path.write_text(json.dumps(document, sort_keys=True, indent=4), encoding="utf-8")
+        self.assertEqual(read_evidence(self.path, overview=True)["document_sha256"], first["document_sha256"])
+        document["results"][0]["note"] = "Changed deferred metadata."
+        self.save(document)
+        second = read_evidence(self.path, overview=True)
+        self.assertNotEqual(first["document_sha256"], second["document_sha256"])
+        self.assertEqual(first["results"][0]["review_after"]["evidence_ref"],
+                         second["results"][0]["review_after"]["evidence_ref"])
+
+    def test_overview_exposes_conflicting_process_evidence_without_claiming_not_run(self):
+        document = self.execution()
+        document["results"][0].update(status="blocked", exit_code=None)
+        document["summary"].update(ran=0, blocked=2)
+        self.save(document)
+        review = read_evidence(self.path, overview=True)["results"][0]["review_after"]
+        self.assertIn("process_evidence_mismatch", review["attention"])
+        self.assertEqual(review["coverage"], "partial")
+        self.assertEqual(review["task_outcome"], "unverified")
+        self.assertEqual(review["next_action"], "inspect_state_before_retry")
+        self.assertIn("evidence_ref", review)
+
+    def test_overview_requires_explicit_mode_and_rejects_mixed_queries_before_read(self):
+        self.save(self.execution())
+        self.assertEqual(read_evidence(self.path)["reason"], "result_index_required")
+        with patch("skills.capabilities.evidence._read_document") as reader:
+            for kwargs in ({"overview": 1}, {"overview": "true"}, {"overview": None},
+                           {"overview": True, "selectors": ["/calls/c1"]},
+                           {"overview": True, "result_index": 0},
+                           {"overview": True, "expected_sha256": "0" * 64}):
+                with self.subTest(kwargs=kwargs), self.assertRaises(ValueError):
+                    read_evidence(self.path, **kwargs)
+        reader.assert_not_called()
+
+    def test_overview_reads_one_file_without_work_or_following_stored_paths(self):
+        document = self.execution()
+        document["effects_json"] = "/untrusted/redirect.json"
+        self.save(document)
+        with patch("skills.capabilities.evidence._read_document", wraps=evidence._read_document) as reader, \
+             patch("skills.capabilities.effects.inspect_effects", side_effect=AssertionError("source read")), \
+             patch("subprocess.run", side_effect=AssertionError("execution")), \
+             patch("socket.socket.connect", side_effect=AssertionError("network")), \
+             patch("pathlib.Path.write_text", side_effect=AssertionError("write")):
+            view = read_evidence(self.path, overview=True)
+        reader.assert_called_once_with(self.path)
+        self.assertEqual(view["selection_status"], "overview")
+        self.assertNotIn("untrusted/redirect", json.dumps(view))
+
+    def test_overview_mcp_references_roundtrip_and_detect_substitution(self):
+        from skills.llm_mcp.server import handle
+        self.save(self.execution())
+        def call(args):
+            response = handle({"jsonrpc": "2.0", "id": 1, "method": "tools/call",
+                               "params": {"name": "effect_evidence", "arguments": args}})
+            self.assertFalse(response["result"].get("isError", False))
+            return json.loads(response["result"]["content"][0]["text"])
+        with patch("pathlib.Path.cwd", return_value=self.root):
+            overview = call({"source": ".botte/reports/fixture.json", "overview": True})
+            ref = overview["results"][0]["review_after"]["evidence_ref"]
+            self.assertEqual(ref["source"], ".botte/reports/fixture.json")
+            self.assertEqual(ref["result_index"], 0)
+            self.assertEqual(call(ref)["selection_status"], "indexed")
+            detail = call({**ref, "selectors": ["/network/n1"]})
+            self.assertEqual(detail["selected"]["/network/n1"]["remote_effects"], "unknown")
+            document = self.execution()
+            replacement = deepcopy(self.report)
+            replacement["run_id"] = "0" * 32
+            document["results"][0]["effects_observed"] = replacement
+            self.save(document)
+            self.assertEqual(call(ref)["selection_status"], "changed")
+
+    def test_overview_cli_success_means_read_success_despite_recorded_failures(self):
+        self.save(self.execution())
+        with contextlib.redirect_stdout(io.StringIO()) as output:
+            self.assertEqual(cli(["evidence", str(self.path), "--overview"]), 0)
+        self.assertEqual(json.loads(output.getvalue())["summary"]["failed"], 1)
+        self.save({})
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(cli(["evidence", str(self.path), "--overview"]), 1)
+        with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit) as error:
+            cli(["evidence", str(self.path), "--overview", "--result", "0"])
+        self.assertEqual(error.exception.code, 2)
+
+    def test_overview_reads_a_real_executor_report_saved_by_the_cli(self):
+        from skills.capabilities.observations import _SESSION
+        from skills.conductor import execute
+        from skills.conductor.cli import main as conduct
+        steps = [{"order": 1, "capability": "metrics", "command": "fixture analysis"},
+                 {"order": 2, "capability": "unknown", "command": "fixture gated"}]
+        def runner(*_):
+            with _SESSION.get().call(self.skill, "fixture failure"):
+                pass
+            return 1, "fixture failure"
+        report = execute({"goal": "Fixture", "steps": steps}, observe_effects=True,
+                         review_effects=True, runner=runner)
+        previous = Path.cwd()
+        try:
+            os.chdir(self.root)
+            with patch("skills.conductor.cli.run_goal", return_value=report), \
+                 contextlib.redirect_stdout(io.StringIO()) as output:
+                self.assertEqual(conduct(["Fixture", "--execute", "--observe-effects",
+                                          "--review-effects", "--json", "--save", "md"]), 1)
+            saved = json.loads(output.getvalue())
+            view = read_saved_evidence(saved["effects_json"], overview=True)
+            self.assertEqual(view["summary"], {"ran": 0, "failed": 1, "blocked": 1, "skipped": 0})
+            for step in view["results"]:
+                ref = step["review_after"]["evidence_ref"]
+                evidence_view = read_saved_evidence(**ref)
+                self.assertEqual(evidence_view["selection_status"], "indexed")
+                self.assertEqual(evidence_view["run_id"], step["review_after"]["run_id"])
+        finally:
+            os.chdir(previous)
+
     def test_index_keeps_failures_limits_and_digest_without_full_records(self):
         view = select_evidence(self.report)
         self.assertEqual(view["selection_status"], "indexed")

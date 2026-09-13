@@ -24,7 +24,7 @@ on its own. Pure stdlib, stdio JSON-RPC 2.0, no dependencies.
 | `qa_advise` | Explain a shadow-only k-NN route suggestion or abstention |
 | `qa_record` | Add an externally verified outcome without raw task storage |
 | `effect_details` | Read selected effects sections from a bundled skill, optionally matching a prior declaration digest |
-| `effect_evidence` | Index or select records from a saved observation report, preserving run limits and matching its digest |
+| `effect_evidence` | Overview saved execution steps, then index or select retained observations with run limits and digest checks |
 | `compress` | Compress context; reversible calls add deduplicated verified grounding labels |
 
 ## Register in Claude Code
