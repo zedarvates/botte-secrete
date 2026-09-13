@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import os
 import secrets
+import sqlite3
 import sys
 from pathlib import Path
 
@@ -67,6 +68,14 @@ def main(argv=None):
     server = commands.add_parser("serve")
     server.add_argument("--directory", required=True)
     server.add_argument("--port", type=int, default=8766)
+    backup = commands.add_parser("backup", help="Snapshot one project into a new private directory")
+    backup.add_argument("--directory", required=True, help="Existing service directory")
+    backup.add_argument("--project", required=True)
+    backup.add_argument("--output", required=True)
+    restore = commands.add_parser("restore", help="Prepare a new data directory; current writers must be stopped")
+    restore.add_argument("--backup", required=True)
+    restore.add_argument("--current-directory", required=True, help="Authoritative service with current deletion ledger")
+    restore.add_argument("--output-data", required=True, help="New data directory; never an existing live store")
     for command in ("mcp", "call", "client-config", "smoke"):
         child = commands.add_parser(command)
         child.add_argument("--url", default="http://127.0.0.1:8766")
@@ -87,6 +96,12 @@ def main(argv=None):
             result = openapi()
         elif args.command == "client-config":
             result = client_config(args.url, args.token_file)
+        elif args.command == "backup":
+            from skills.memory_hub.recovery import backup_project
+            result = backup_project(args.directory, args.project, args.output)
+        elif args.command == "restore":
+            from skills.memory_hub.recovery import restore_project
+            result = restore_project(args.backup, args.current_directory, args.output_data)
         elif args.command == "smoke":
             from skills.memory_hub.smoke import run_smoke
             result = run_smoke(args.url, args.project, args.token_file, args.peer_token_file)
@@ -109,7 +124,15 @@ def main(argv=None):
         print(encode(result).decode("utf-8"))
         return 0
     except KeyboardInterrupt:
+        if args.command in {"backup", "restore"}:
+            print(encode({"error": "interrupted", "message": "Recovery operation interrupted"})
+                  .decode("utf-8"), file=sys.stderr)
+            return 130
         return 0
+    except sqlite3.Error:
+        print(encode({"error": "storage", "message": "SQLite operation failed; inspect storage before retrying"})
+              .decode("utf-8"), file=sys.stderr)
+        return 1
     except (OSError, ValueError, ServiceError) as error:
         print(encode({"error": getattr(error, "code", "configuration"),
                       "message": str(error)}).decode("utf-8"), file=sys.stderr)

@@ -154,7 +154,9 @@ keys. It is not a claim that a neural semantic encoder was executed.
   Deletion affects the live service; it cannot erase those copies or offline backups.
 - Tombstones prevent live-store replay resurrection. Restoring an older backup can
   also restore deleted data: reconcile a current deletion ledger before reopening
-  any restored store. Backup/restore automation has not been deployed.
+  any restored store. The [operator backup/restore commands](shared-memory-recovery.md)
+  prepare a fresh directory using the current deletion ledger; scheduled backups,
+  host recovery and automatic cutover have not been deployed.
 - Local operating-system access to the database/token files is privileged access.
   Do not share SQLite/WAL files between live writers using file synchronization.
 - Authenticated clients can store sensitive excerpts. Choose project scopes,
@@ -168,7 +170,7 @@ after the existing repository test runner.
 
 ```bash
 python -m pip install -e '.[memory-test]'
-python -m pytest --rootdir=. -q skills/memory_hub/test_shared_service.py skills/memory_hub/test_shared_transport.py skills/memory_hub/test_memory_hub.py
+python -m pytest --rootdir=. -q skills/memory_hub/test_shared_service.py skills/memory_hub/test_shared_transport.py skills/memory_hub/test_memory_hub.py skills/memory_hub/test_recovery.py
 python -m skills.memory_hub.test_quarantine
 ```
 
