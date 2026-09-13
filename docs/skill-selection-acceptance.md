@@ -218,3 +218,10 @@ measurement revisions and historical decision remain unchanged. This policy was
 implemented after observing those failures; this reassessment is development
 evidence, not a new model comparison or independent validation set. New inference
 runs must use their own source-bound manifest and output directory.
+
+Repository CI remains separate from model acceptance. Its README smoke wrapper
+allows 90 seconds for the full `skills.checkup.cli` audit and logs its elapsed
+time; other README commands retain their 30-second limit. The previous limit
+was exceeded under Python 3.10 in CI runs #310 and #315 while the code suites
+passed. Nonzero exits and timeouts still fail validation. This allowance does
+not claim a checkup speed improvement or identify its internal slow phase.
