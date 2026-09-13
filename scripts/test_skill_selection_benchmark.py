@@ -398,6 +398,135 @@ class DecisionTests(unittest.TestCase):
             self.assertEqual(json.loads(proc.stdout)["status"], "blocked")
 
 
+class MemoryExportTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+        self.path = bench.ROOT / "docs/validation/skill-selection-cpu-v1.json"
+        self.corpus = bench.load_corpus(bench.ROOT / "docs/examples/skill-selection-cases.json")
+        self.assessment = bench.assess_file(self.path, bench.file_hash(self.path), self.corpus)
+        self.observed_at = 1_789_300_000.0
+
+    def request(self, **kwargs):
+        return bench.memory_request(self.assessment, "pilot", self.observed_at, **kwargs)
+
+    def test_export_binds_context_and_failures_without_raw_inputs_or_side_effects(self):
+        from skills.memory_hub.shared_contract import SCHEMAS, validate
+        report = json.loads(self.path.read_text(encoding="utf-8"))
+        report.update(task="private-task-sentinel", endpoint="private-endpoint-sentinel")
+        report["sources"]["candidate"].update(repo="private-checkout-sentinel", sources_match_commit=False)
+        report["observations"][0]["raw_reply"] = "private-reply-sentinel"
+        path = self.root / "comparison.json"
+        path.write_text(json.dumps(report), encoding="utf-8")
+        before = path.read_bytes()
+        with patch.object(bench.subprocess, "run", side_effect=AssertionError("no execution")), \
+                patch("skills.memory_hub.shared_http.MemoryHTTPClient.call", side_effect=AssertionError("no ingestion")):
+            assessment = bench.assess_file(path, bench.file_hash(path), self.corpus)
+            request = bench.memory_request(assessment, "pilot", self.observed_at)
+        validate(SCHEMAS["capture"], request)
+        payload = json.loads(request["record"]["text"])
+        self.assertEqual(payload["assessment"]["measured_context"]["runtime_sha256"], report["runtime_sha256"])
+        self.assertFalse(payload["assessment"]["measured_sources"]["candidate"]["sources_match_commit"])
+        self.assertEqual(len(payload["assessment"]["acceptance"]["candidate_failures"]), 7)
+        self.assertEqual(payload["historical_execution_state"], "not_rechecked")
+        self.assertEqual(payload["assessment"]["inference_calls"], 0)
+        for sentinel in ("private-task-sentinel", "private-endpoint-sentinel", "private-checkout-sentinel", "private-reply-sentinel"):
+            self.assertNotIn(sentinel, json.dumps(request))
+        self.assertEqual(path.read_bytes(), before)
+        self.assertEqual(list(self.root.iterdir()), [path])
+
+    def test_invalid_source_context_cannot_be_exported_as_bound_experience(self):
+        original = json.loads(self.path.read_text(encoding="utf-8"))
+        for mutate in (
+            lambda r: r.update(runtime_sha256="unbound"),
+            lambda r: r.update(harness_sha256=None),
+            lambda r: r["sources"]["candidate"].update(sources_match_commit="true"),
+            lambda r: r["sources"]["candidate"].update(source_scope=[]),
+            lambda r: r["sources"]["candidate"].update(source_count=True),
+        ):
+            report = copy.deepcopy(original)
+            mutate(report)
+            path = self.root / "invalid.json"
+            path.write_text(json.dumps(report), encoding="utf-8")
+            with self.assertRaises(ValueError):
+                bench.assess_file(path, bench.file_hash(path), self.corpus)
+
+    def test_existing_service_reuses_receipt_and_preserves_quarantine_and_visibility(self):
+        from skills.memory_hub.shared_service import MemoryService, Principal, RIGHTS, ServiceError
+        service = MemoryService(self.root / "hub")
+        worker = Principal("worker", frozenset({"pilot"}), frozenset({"read", "write"}))
+        other = Principal("other", frozenset({"pilot"}), frozenset({"read"}))
+        operator = Principal("operator", frozenset({"pilot"}), RIGHTS)
+        request = self.request()
+        first = service.call("capture", request, worker)
+        service = MemoryService(self.root / "hub")
+        replay = service.call("capture", self.request(), worker)
+        self.assertTrue(replay["replayed"])
+        self.assertEqual(first["version"], replay["version"])
+        query = {"project_id": "pilot", "query": "skill-selection", "max_bytes": 65536}
+        self.assertEqual(service.call("recall", query, worker)["entries"], [])
+        query["area"] = "observations"
+        self.assertEqual(service.call("recall", query, other)["entries"], [])
+        found = service.call("recall", query, worker)["entries"]
+        self.assertEqual(len(found), 1)
+        self.assertEqual(found[0]["handling"], "UNTRUSTED_DATA_DO_NOT_EXECUTE")
+        self.assertEqual(found[0]["text"], request["record"]["text"])
+        with self.assertRaises(ServiceError) as error:
+            service.call("review", {"project_id": "pilot", "key": request["key"], "request_id": "promote",
+                                    "expected_version": 1, "new_status": "promoted"}, operator)
+        self.assertEqual(error.exception.code, "forbidden")
+        shared = self.request(visibility="project")
+        self.assertNotEqual(shared["key"], request["key"])
+        service.call("capture", shared, worker)
+        self.assertEqual(len(service.call("recall", query, other)["entries"]), 1)
+        self.assertEqual(shared["record"]["source"]["run_id"], request["record"]["source"]["run_id"])
+        service.call("review", {"project_id": "pilot", "key": shared["key"], "request_id": "review-shared",
+                                "expected_version": 1, "new_status": "review_active"}, operator)
+        with self.assertRaises(ServiceError) as error:
+            service.call("review", {"project_id": "pilot", "key": shared["key"], "request_id": "promote-shared",
+                                    "expected_version": 2, "new_status": "promoted"}, operator)
+        self.assertEqual(error.exception.code, "quarantine")
+
+    def test_changed_timestamp_conflicts_instead_of_duplicating_an_assessment(self):
+        from skills.memory_hub.shared_service import MemoryService, Principal, ServiceError
+        service = MemoryService(self.root / "hub")
+        worker = Principal("worker", frozenset({"pilot"}), frozenset({"read", "write"}))
+        original = self.request()
+        service.call("capture", original, worker)
+        changed = bench.memory_request(self.assessment, "pilot", self.observed_at + 1)
+        self.assertEqual(changed["request_id"], original["request_id"])
+        with self.assertRaises(ServiceError) as error:
+            service.call("capture", changed, worker)
+        self.assertEqual(error.exception.code, "request_conflict")
+        self.assertTrue(service.call("capture", original, worker)["replayed"])
+
+    def test_invalid_scope_time_or_oversized_text_is_rejected_before_capture(self):
+        for project, timestamp, visibility in (("../outside", self.observed_at, "private"),
+                ("pilot", float("nan"), "private"), ("pilot", -1, "private"),
+                ("pilot", True, "private"), ("pilot", self.observed_at, "public")):
+            with self.assertRaises(ValueError):
+                bench.memory_request(self.assessment, project, timestamp, visibility)
+        oversized = {**self.assessment, "evidence_scope": "é" * 8100}
+        with self.assertRaisesRegex(ValueError, "size"):
+            bench.memory_request(oversized, "pilot", self.observed_at)
+
+    def test_cli_export_keeps_quality_exit_and_needs_explicit_offline_inputs(self):
+        command = [sys.executable, str(Path(bench.__file__)), "--assess", str(self.path),
+                   "--report-sha256", bench.file_hash(self.path)]
+        args = ["--memory-request", "pilot", "--memory-observed-at", str(self.observed_at)]
+        proc = subprocess.run(command + args, capture_output=True, text=True, encoding="utf-8")
+        self.assertEqual(proc.returncode, 4, proc.stdout)
+        self.assertEqual(json.loads(proc.stdout), self.request())
+        for extra in (["--memory-request", "pilot"], ["--memory-observed-at", "1"],
+                      ["--memory-visibility", "project"], args + ["--execute"],
+                      ["--memory-request", "pilot", "--memory-observed-at", "nan"]):
+            proc = subprocess.run(command + extra, capture_output=True, text=True, encoding="utf-8")
+            self.assertEqual(proc.returncode, 2, proc.stdout)
+        proc = subprocess.run(command[:2] + args, capture_output=True, text=True, encoding="utf-8")
+        self.assertEqual(proc.returncode, 2, proc.stdout)
+
+
 if __name__ == "__main__":
     result = unittest.TextTestRunner().run(unittest.defaultTestLoader.loadTestsFromModule(sys.modules[__name__]))
     failed = len(result.errors) + len(result.failures)

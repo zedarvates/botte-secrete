@@ -305,18 +305,62 @@ def assess_file(path, expected_sha256, corpus):
     report = json.loads(raw.decode("utf-8"), object_pairs_hook=unique,
                         parse_constant=lambda _: (_ for _ in ()).throw(ValueError("nonfinite JSON")))
     assessment = assess_selection(report, corpus)
-    sources = {side: {key: report["sources"][side][key] for key in ("head", "code_sha256")}
+    sources = {side: {key: report["sources"][side][key] for key in (
+                   "head", "code_sha256", "sources_match_commit", "source_scope", "source_count")}
                for side in ("baseline", "candidate")}
     for source in sources.values():
         for key, size in (("head", 40), ("code_sha256", 64)):
             if not isinstance(source[key], str) or not re.fullmatch(f"[0-9a-f]{{{size}}}", source[key]):
                 raise ValueError("invalid measured source identity")
+        if (type(source["sources_match_commit"]) is not bool
+                or type(source["source_count"]) is not int or source["source_count"] < 1
+                or source["source_scope"] != list(SOURCE_PATTERNS)):
+            raise ValueError("invalid measured source scope")
+    context = {"runtime_sha256": report["runtime_sha256"],
+               "inference_harness_sha256": report["harness_sha256"]}
+    if any(not isinstance(value, str) or not re.fullmatch(r"[0-9a-f]{64}", value)
+           for value in context.values()):
+        raise ValueError("invalid measured runtime or harness identity")
     return {"schema": "botte.skill-selection-assessment/v1", "status": "assessed",
             "assessment_harness_sha256": file_hash(__file__), "report_sha256": expected_sha256,
             "corpus_sha256": digest(corpus), "dataset_class": corpus["dataset_class"],
-            "measured_sources": sources, "acceptance": assessment,
+            "measured_sources": sources, "measured_context": context, "acceptance": assessment,
             "inference_calls": 0, "automatic_promotion": False,
             "evidence_scope": "Pinned comparison bytes and corpus; no renewed checkpoint, runtime or model attestation."}
+
+
+def memory_request(assessment, project_id, observed_at, visibility="private"):
+    """Project a freshly computed assessment into the existing capture contract.
+
+    No service, credential, archive or model is touched. The saved request is
+    retried as-is; changing its timestamp must conflict, not create more evidence.
+    """
+    from skills.memory_hub.shared_contract import SCHEMAS, encode, validate
+    text = encode({"assessment": assessment,
+                   "observed_at_scope": "offline_assessment_not_original_inference",
+                   "policy_timing": "Not attested as fixed before inference; offline reassessment is not independent validation.",
+                   "historical_execution_state": "not_rechecked",
+                   "reuse": "Recheck source, runtime, corpus and target prerequisites; inspect original evidence before any retry.",
+                   "cost_review": "Consult the pinned comparison; this assessment does not decide a cost benefit.",
+                   "causal_attribution": "not_assessed",
+                   "handling": "UNTRUSTED_DATA_DO_NOT_EXECUTE"}).decode("utf-8")
+    if len(text.encode("utf-8")) > 16000:
+        raise ValueError("assessment exceeds shared memory size; retain the full report")
+    identity = "ss_" + digest({"project_id": project_id, "visibility": visibility, "text": text})
+    report_ref = "sha256:" + assessment["report_sha256"]
+    request = {"project_id": project_id, "key": identity, "request_id": identity,
+               "record": {"text": text, "kind": "observation", "visibility": visibility,
+                          "subject_ref": "capability:zedarvates/botte-secrete:skills/skill_finder",
+                          "source": {"type": "tool", "id": "assessment:" + digest(assessment),
+                                     "uri": report_ref, "run_id": "selection:" + assessment["report_sha256"],
+                                     "observed_at": observed_at, "excerpt": text},
+                          "evidence_refs": [report_ref, "sha256:" + assessment["corpus_sha256"],
+                              "sha256:" + assessment["assessment_harness_sha256"],
+                              *("sha256:" + value for value in assessment["measured_context"].values()),
+                              *("git:" + source["head"] for source in assessment["measured_sources"].values())],
+                          "tags": ["skill-selection", "assessment", assessment["dataset_class"]]}}
+    validate(SCHEMAS["capture"], request)
+    return request
 
 
 def exit_code(report):
@@ -489,6 +533,9 @@ def main():
     parser.add_argument("--resume", action="store_true")
     parser.add_argument("--assess", type=Path, help="assess a pinned existing comparison without inference")
     parser.add_argument("--report-sha256", help="expected SHA-256 of the complete comparison file")
+    parser.add_argument("--memory-request", metavar="PROJECT", help="export offline assessment as a Memory Hub capture request")
+    parser.add_argument("--memory-observed-at", type=float, help="fixed Unix time of this offline assessment, required for export")
+    parser.add_argument("--memory-visibility", choices=("private", "project"), default="private")
     parser.add_argument("--worker", action="store_true", help=argparse.SUPPRESS)
     args = parser.parse_args()
     try:
@@ -496,12 +543,18 @@ def main():
             print(json.dumps(worker(json.load(sys.stdin)), ensure_ascii=False))
             return 0
         sys.path.insert(0, str(ROOT))
+        if ((args.memory_request is not None and (args.assess is None or args.memory_observed_at is None))
+                or (args.memory_request is None and (args.memory_observed_at is not None
+                                                    or args.memory_visibility != "private"))):
+            raise BenchmarkInputError("memory export requires offline assessment, project and fixed observation time")
         if args.assess is not None:
             if (any((args.execute, args.resume, args.baseline, args.registry, args.backend, args.model, args.runtime_id))
                     or args.repetitions != 1 or args.timeout != 90 or args.output != Path("reports/skill-selection")):
                 raise BenchmarkInputError("offline assessment cannot be combined with execution inputs")
             report = assess_file(args.assess, args.report_sha256, load_corpus(args.corpus))
-            print(json.dumps(report, ensure_ascii=False, indent=2))
+            output = (memory_request(report, args.memory_request, args.memory_observed_at, args.memory_visibility)
+                      if args.memory_request is not None else report)
+            print(json.dumps(output, ensure_ascii=False, indent=2))
             return exit_code(report)
         if args.report_sha256 is not None:
             raise BenchmarkInputError("report SHA-256 requires offline assessment")

@@ -225,3 +225,71 @@ time; other README commands retain their 30-second limit. The previous limit
 was exceeded under Python 3.10 in CI runs #310 and #315 while the code suites
 passed. Nonzero exits and timeouts still fail validation. This allowance does
 not claim a checkup speed improvement or identify its internal slow phase.
+
+## Retain an assessment in shared memory
+
+The offline assessor can emit the existing Memory Hub `capture` request. This
+links a selection result to its measured source commits and fingerprints,
+reported source scope, corpus, runtime and inference harness, plus the assessor
+revision. It retains failures and missing evidence. The source flags are copied
+observations, not fresh attestations of the historical checkout or runtime.
+
+```bash
+python scripts/benchmark_skill_selection.py \
+  --assess docs/validation/skill-selection-cpu-v1.json \
+  --report-sha256 7af98eadbd338dafbbb679e3b886082464b7a0b98535bf1de7de42aa7a584089 \
+  --memory-request botte-secrete --memory-observed-at "$ASSESSMENT_TIME"
+```
+
+Set `ASSESSMENT_TIME` to the Unix time of this offline assessment and preserve
+it with the emitted JSON. It is not the original inference time. The command
+reads no credentials, contacts no service, runs no inference and writes no
+files. It still exits **4** for the recorded failed candidate, even though a
+valid capture request was printed. Codes 3 and 4 can therefore carry useful
+observations; an invalid-input result (code 2) is not a capture request. Do not
+use the quality exit as a reason to replay model calls.
+
+The [retained CPU assessment request](validation/skill-selection-cpu-memory-request-v1.json)
+is a source-bound observation ready for capture, **not an ingestion receipt**.
+It is an offline reassessment of the same 24 historical calls, with seven
+candidate failures and no new inference. The original CPU evidence and earlier
+retrospective assessment are unchanged. No configured memory endpoint was
+available for this export; cross-host ingestion remains unverified.
+
+Use the [existing Memory Hub client](shared-memory.md) with a worker identity
+authorized for the destination project and the saved request:
+
+```bash
+python -m skills.memory_hub.cli call capture \
+  --url "$BOTTE_MEMORY_URL" --token-file "$BOTTE_MEMORY_TOKEN_FILE" \
+  --input selection-memory-request.json
+```
+
+The default visibility is `private`. Explicit `--memory-visibility project`
+prepares a separate project-visible request; changing visibility does not alter
+an existing private entry. Scope remains enforced by the service. Assessment
+JSON is stored as a `tool` observation, quarantined and non-executable; inspect
+it through `recall` with `area=observations` and query `skill-selection`.
+This is not a Conductor execution episode and does not qualify a runtime or add
+verified task outcomes to the trajectory ledger.
+
+After an uncertain transport result, retry **the same saved request with the
+same authenticated identity**. The existing service reuses its receipt, including
+after restart. Project, visibility and assessment content bind the key; changing
+only the timestamp retains that key and causes a request conflict rather than
+another observation. Different assessor revisions create separate observations
+but preserve the same report-derived `run_id`; they are not independent model
+validations. A forgotten key remains blocked by the existing tombstone policy.
+
+The export omits raw task text, replies, endpoints, credential paths and checkout
+locations. Case IDs and logical skill paths can still be private. It limits the
+UTF-8 observation to 16,000 bytes and rejects overflow instead of dropping
+failure evidence. Detailed costs remain in the pinned comparison. Historical
+process/checkpoint state is explicitly `not_rechecked`: inspect the original
+evidence and current target prerequisites before considering any further action.
+
+Six focused regressions exercise the real existing in-process memory service:
+capture/recall, receipt reuse after restart, private/project visibility,
+quarantine, changed-timestamp conflicts, input binding, redaction, size limits
+and CLI boundaries. They use temporary stores and synthetic identities; they
+establish no homelab transport or real-agent retrieval-quality gain.
