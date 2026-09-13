@@ -164,6 +164,7 @@ the method's instructions. It does not automatically load the skill into an LLM.
 | `attention`, `operation_assessment` | Structural review cues; operation assessment remains `deferred`. No cue means no listed structural signal, not permission or verified suitability. |
 | `review_after.coverage`, `task_outcome` | `not_run`, `not_observed`, `partial` or `invalid_evidence` coverage; task outcome stays `unverified` for executed steps. |
 | `observed_counts`, `evidence_ref` | Nonzero counts from a validated observation companion; omitted counts are zero within that partial report. The reference points to the same step's `effects_observed`. |
+| `review_after.run_id`, `evidence_sha256` | Run identity and canonical digest of the validated companion, for subsequent targeted reads. They do not bind other execution-report fields or authenticate the evidence. |
 | `declaration_changed` | Comparison with all observed calls matching the planning identity: any changed digest/status gives true; no match gives null. |
 | `attention`, `next_action` after execution | Keep process failures, nested failures, unfinished calls/network attempts, write deviations, unknown facets and collection problems visible. Suggested next actions are advisory. |
 
@@ -252,6 +253,85 @@ They do not identify relevant operations automatically or replace the selected
 skill's complete instructions. Revalidate references across calls if the source
 changes; only explicitly bound source files are checked, with the existing
 snapshot/concurrency limits.
+
+### Read retained evidence
+
+```bash
+python -m skills.capabilities.cli evidence .botte/reports/execution-effects-example.json --result 0
+python -m skills.capabilities.cli evidence .botte/reports/execution-effects-example.json --result 0 --select /observations/o1 --select /network/n1 --expect-sha256 DIGEST_FROM_REVIEW_OR_INDEX
+```
+
+Use an actual JSON path returned by Conductor `--execute --observe-effects --save`;
+the example filename above is a placeholder. Add `--review-effects` to retain the
+compact review and its companion digest. `--result` is the zero-based position in
+`results`, not the step's display order or capability name. A saved execution
+requires this explicit position, even if it has only one result. For a standalone
+v1/v2 observation companion, omit `--result`. No new report is saved by a read.
+
+Python `skills.capabilities.evidence.select_evidence(report, selectors=None,
+expected_sha256=None)` projects a supplied companion without I/O. `read_evidence`
+takes a `Path`, the same options and optional `result_index`. MCP `effect_evidence`
+uses `source`, `selectors`, `result_index` and `expected_sha256`; discover it through
+`find_tool`. It stays outside the always-listed core. MCP sources are canonical
+`.botte/reports/<file>.json` paths relative to the server's working directory;
+traversal, subdirectories, absolute paths and file/directory aliases are rejected.
+CLI/Python can explicitly read other regular report files.
+
+Omitting selectors returns `selection_status: indexed`: an ID index grouped by
+call/network status and write comparison, plus retained declaration digests. Empty
+groups mean no such records were collected, not that no effects occurred. v1 has
+no network collection, so that index group is absent. Explicit selectors use
+record IDs, **not array indexes**:
+
+| Selector | Returned value |
+|---|---|
+| `/calls/c1` | Complete recorded call; ancestors are included under `linked_calls`. |
+| `/observations/o1` | Complete write sample/comparison, with its call and ancestors. |
+| `/network/n1` | Complete transport record, with its call and ancestors. HTTP 202 still leaves `remote_effects: unknown`. |
+| `/declarations/DIGEST` | Complete declaration retained in this run, including its historical conditions and verification text. |
+
+Use the actual IDs/digests from the index or linked call. For opaque IDs containing
+`~` or `/`, escape them as `~0` or `~1`. Request 1–16 selectors; duplicates collapse.
+No wildcards, nested field extraction or automatic selection of relevant effects
+is implemented. Every successful view preserves the run context, process state,
+problems, limitations and whole-companion summary, even if the chosen record
+succeeded while another call failed. Selected values are unchanged detached
+copies; `task_outcome` remains `unverified`. These views are projections, not
+standalone observation companions accepted by `validate_report`.
+
+Pass `review_after.evidence_sha256` or the initial index's `evidence_sha256` as
+`expected_sha256`. A changed companion returns `changed` without fragments or an
+index; a missing requested ID returns `not_found` without a partial selection.
+Unreadable, malformed, oversized or absent evidence returns `unavailable` with a
+reason. Invalid selectors/digests/result positions are rejected before document
+reading. CLI exits 0 for `indexed`/`selected`, 1 for other states and 2 for invalid
+arguments. An omitted expected digest means an initial read, not a comparison.
+
+The entire selected companion is validated, including declaration digests and call
+links, before projection. Its canonical digest ignores JSON formatting/key order
+but changes with run identity, records or limits. Reordered execution results
+therefore cannot silently substitute another run when the digest is supplied.
+The digest binds only the companion: other wrapper fields, current resources,
+source freshness and the author's identity are outside this check. Retained
+declarations remain historical; this reader does not reinspect today's sources.
+
+Reads are bounded to a 16 MiB document and a 2 MiB canonical companion. Special
+files, duplicate JSON keys, non-finite numbers and observed file changes during
+reading are rejected. Full local parsing/validation still occurs; index size,
+linked ancestors, retained declarations and run limits can themselves be large.
+Recorded resource paths, URLs, source paths and verification text are never opened
+or executed. File checks are not a lock against concurrent writers or an attestation.
+Existing execution output and saving behavior remain unchanged: targeted reads
+help later review of already retained evidence, not the initial execution payload.
+
+`python scripts/measure_effect_evidence.py` compares two explicitly synthetic
+reports (2 and 64 writes) using real in-process MCP reads: one index and one
+selection of the failed write, HTTP record and retained declaration. It includes
+linked calls, run limits, requests/responses, the tool schema and the common
+method. The raw-full baseline has no retrieval overhead. Short reports can cost
+less to read whole; use targeted reads when their deferred detail justifies the
+extra exchange. These examples measure serialized bytes, not model tokens, task
+quality, runtime savings or a general cost threshold.
 
 ## Operation and dependency boundaries
 

@@ -35,6 +35,13 @@ def main(argv=None) -> int:
     s.add_argument("--select", action="append", metavar="/SECTION[/INDEX]",
                    help="return an exact section or list entry; repeat for up to 16 selectors")
     s.add_argument("--expect-sha256", help="require the canonical declaration digest from review_before; requires --select")
+    s = sub.add_parser("evidence", help="index or select retained execution evidence (read-only)")
+    s.add_argument("report", type=Path)
+    s.add_argument("--result", type=int, dest="result_index",
+                   help="zero-based result position in a saved Conductor execution report")
+    s.add_argument("--select", action="append", metavar="/GROUP/ID",
+                   help="select complete calls, observations, network records or retained declarations")
+    s.add_argument("--expect-sha256", help="canonical evidence digest from review_after or a prior index")
     s = sub.add_parser("template", help="print a draft effects declaration; does not write files")
     s.add_argument("skill_dir", type=Path)
     s.add_argument("--id", required=True, help="qualified identity, e.g. owner/repo:skills/name")
@@ -65,6 +72,15 @@ def main(argv=None) -> int:
         report = inspect_effects(args.skill_dir, expected_id=args.id)
         print(json.dumps(report, ensure_ascii=False, indent=2))
         return 0 if report["status"] == "declared" else 1
+    elif args.cmd == "evidence":
+        from skills.capabilities.evidence import read_evidence
+        try:
+            report = read_evidence(args.report, args.select, result_index=args.result_index,
+                                   expected_sha256=args.expect_sha256)
+        except ValueError as exc:
+            p.error(str(exc))
+        print(json.dumps(report, ensure_ascii=False, indent=2))
+        return 0 if report["selection_status"] in {"indexed", "selected"} else 1
     elif args.cmd == "template":
         try:
             report = contract_template(args.skill_dir, args.id)

@@ -60,6 +60,7 @@ SUITES = [
     ("conductor_effects", [sys.executable, "-m", "skills.conductor.test_effects"], "skills/conductor/"),
     ("effects_review", [sys.executable, "-m", "skills.conductor.test_review"], "skills/"),
     ("effect_details", [sys.executable, "-m", "skills.capabilities.test_details"], "skills/"),
+    ("effect_evidence", [sys.executable, "-m", "skills.capabilities.test_evidence"], "skills/"),
     ("effects_operations", [sys.executable, "-m", "skills.capabilities.test_effects_operations"], "skills/capabilities/"),
     ("effect_observations", [sys.executable, "-m", "skills.conductor.test_observations"], "skills/conductor/"),
     ("network_observations", [sys.executable, "-m", "skills.conductor.test_network_observations"], "skills/conductor/"),

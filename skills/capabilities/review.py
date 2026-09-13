@@ -160,6 +160,8 @@ def after(result: dict, prior: dict) -> dict:
         attention.append("invalid_observation_report")
         return review
     review["evidence_ref"] = "effects_observed"  # sibling in the same result
+    review["evidence_sha256"] = digest(observed)
+    review["run_id"] = observed["run_id"]
     review["coverage"] = "not_run" if not_run else "partial"
     summary = summarize(observed)
     review["observed_counts"] = {key: value for key, value in summary.items()

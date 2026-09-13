@@ -510,6 +510,22 @@ TOOLS = [
             "required": ["source", "selectors"]},
     },
     {
+        "name": "effect_evidence",
+        "description": "Index or select retained execution observations by ID. Read a saved report, "
+                       "then use its evidence_sha256 for subsequent reads without mixing runs. "
+                       "Preserves run limits and linked calls; no execution, model call or current-state check.",
+        "inputSchema": {"type": "object", "additionalProperties": False, "properties": {
+            "source": {"type": "string", "description": "Canonical .botte/reports/<file>.json in the server working directory."},
+            "result_index": {"type": "integer", "minimum": 0,
+                             "description": "Required zero-based result position for Conductor reports; omit for a standalone companion."},
+            "selectors": {"type": "array", "minItems": 1, "maxItems": 16,
+                          "items": {"type": "string", "maxLength": 16416},
+                          "description": "Omit for an index; otherwise /calls/ID, /observations/ID, /network/ID or /declarations/DIGEST. Escape ~ as ~0 and / as ~1 in IDs."},
+            "expected_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$",
+                                "description": "Canonical companion digest from review_after or a previous index."}},
+            "required": ["source"]},
+    },
+    {
         "name": "execute_plan",
         "description": "Plan a goal AND run its read-only analysis steps (the conductor "
                        "executor). Mutating/generative/cloud steps are gated (run only with "
@@ -1257,6 +1273,16 @@ def _tool_effect_details(args: dict) -> str:
     return json.dumps(report, ensure_ascii=False, indent=2)
 
 
+def _tool_effect_evidence(args: dict) -> str:
+    from skills.capabilities.evidence import read_saved_evidence
+    if set(args) - {"source", "result_index", "selectors", "expected_sha256"}:
+        raise ValueError("unsupported effect_evidence argument")
+    report = read_saved_evidence(args["source"], args.get("selectors"),
+                                 result_index=args.get("result_index"),
+                                 expected_sha256=args.get("expected_sha256"))
+    return json.dumps(report, ensure_ascii=False, separators=(",", ":"))
+
+
 def _tool_execute_plan(args: dict) -> str:
     from skills.conductor import run_goal
     r = run_goal(args["goal"], confirm=bool(args.get("confirm", False)),
@@ -1501,6 +1527,7 @@ DISPATCH = {
     "routing_stats": _tool_routing_stats,
     "conduct": _tool_conduct,
     "effect_details": _tool_effect_details,
+    "effect_evidence": _tool_effect_evidence,
     "execute_plan": _tool_execute_plan,
     "security_scan": _tool_security_scan,
     "scan_malicious": _tool_scan_malicious,
