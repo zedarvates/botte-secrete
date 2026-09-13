@@ -15,24 +15,14 @@
     "judge": "factory-assurance-shadow-judge",
     "orchestrator": "conductor"
   },
-  "effects": {
-    "declared": ["source", "workflow"],
-    "observed": ["source", "workflow"],
-    "unresolved": []
-  },
+  "effects": {"declared": ["source", "workflow"], "observed": ["source", "workflow"], "unresolved": []},
   "evidence": [
     {"name": "musicplan-contract-python-3.10", "status": "pass", "required": true},
     {"name": "musicplan-contract-python-3.12", "status": "pass", "required": true},
     {"name": "controlled-negative-mutation-probe", "status": "pass", "required": true},
     {"name": "operator-private-holdout-16", "status": "pass", "required": true}
   ],
-  "controls": {
-    "positive_control": "pass",
-    "negative_control": "fail",
-    "holdout_scope": "private_external",
-    "historical_regressions_checked": false,
-    "adversarial_cases_checked": false
-  },
+  "controls": {"positive_control": "pass", "negative_control": "fail", "holdout_scope": "private_external", "historical_regressions_checked": false, "adversarial_cases_checked": false},
   "identity": {
     "source_sha": "385a2ea631c271bc44e0169d81b8062f2408bd9d",
     "build_sha": "507de61633e5df63b2b9c42781d4d43a03c713ef",
