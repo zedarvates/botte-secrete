@@ -33,6 +33,7 @@ os.environ.setdefault("BOTTE_NN_AUTO_LABELS", "0")
 # module_prefix is the skills/ directory prefix used for --changed matching.
 SUITES = [
     ("e2e", [sys.executable, "skills/test_e2e.py"], ""),
+    ("completion_proof", [sys.executable, "-m", "skills.completion_proof.test_completion_proof"], "skills/completion_proof/"),
     ("cli_router", [sys.executable, "-m", "skills.test_cli"], "skills/"),
     ("llm_backends", [sys.executable, "-m", "skills.llm_backends.test_llm_backends"], "skills/llm_backends/"),
     ("directives_audit", [sys.executable, "-m", "skills.directives_audit.test_directives_audit"], "skills/directives_audit/"),
