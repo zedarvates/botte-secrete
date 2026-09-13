@@ -20,6 +20,8 @@ jobs:
           python-version: "3.11"
       - name: Run assurance unit contract
         run: python -m skills.factory_assurance.test_factory_assurance
+      - name: Run assurance integration contract
+        run: python -m skills.factory_assurance.test_integrations
       - name: Positive control must pass
         run: python -m skills.factory_assurance.cli examples/factory-assurance/run.json
       - name: Record exact candidate identity
