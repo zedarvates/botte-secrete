@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Fixed
+- Exact response-cache identity preserves whitespace and indentation. Legacy
+  normalized entries cannot answer a different query; affected queries miss
+  safely until recached, while unchanged legacy identities remain usable.
+
 ### Added
 - Fail-closed, privacy-preserving local-worker benchmark for Granite 4.2 versus
   an existing worker, covering TTFT, throughput, quality, escalation, validator
