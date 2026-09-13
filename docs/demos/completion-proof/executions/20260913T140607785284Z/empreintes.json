@@ -1,0 +1,16 @@
+{
+  "01-audit-avant.json": "711603111ca7d1debc929e540063e7569f9ba19d99cae074909d73e8df4db565",
+  "02-tests-avant.txt": "85929699b2606febe233b3d6a46ddf55939156e4c432bcfecce0d0bbcc52e252",
+  "03-tests-apres.txt": "9a6e9b920f4813eda8caaa59b37ff9226972aadc4da80e4bfc16f20cbd8854d9",
+  "04-audit-apres.json": "168c4783d9856b6f96e38fa5f55632f2dc0153d4a990e279637b03373c0c8d3d",
+  "05-audit-limite.json": "5c30940f9db82bf32cd9e60a9fad21e9b710540bc5c9ded96fcbc5a92c254a29",
+  "06-tests-detecteur.txt": "325089c36e92014d5e5b2e9a80d6f83155bc11eabb6a4ccc18c409277e658f84",
+  "apres/moyenne.py": "b17904ab2890fb69231c349c826080d5754d62955aa08560127827a12b6cb846",
+  "apres/rapport-agent.json": "1adddc81056b9d382462430ce451201419e2c868ef0640a375418409a8958bc2",
+  "apres/test_moyenne.py": "20ef83fe5ff50ce4a51400552057a88f401e51f0830cec662391f800d4bc1bd9",
+  "avant/moyenne.py": "0e1d20fb92075992a28f447798e30ebc4d3609e466748d82903c06bd572e787a",
+  "avant/rapport-agent.json": "8149d1c9196a6c1424922152a1bc2042818ede809a8b98596acd67107e53f8a6",
+  "avant/test_moyenne.py": "20ef83fe5ff50ce4a51400552057a88f401e51f0830cec662391f800d4bc1bd9",
+  "controle-limite.json": "e213ecc700686dca88cbf93e3c730747dc835d9fd373c3cfb172d19eafdbb52a",
+  "resultats.json": "ad7de09bfb5c929196719e3e8d3e0b45dca2e8ff8038544f99bc0b6469552646"
+}

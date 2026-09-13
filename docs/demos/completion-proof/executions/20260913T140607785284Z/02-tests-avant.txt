@@ -1,0 +1,20 @@
+test_liste_vide (test_moyenne.TestMoyenne.test_liste_vide) ... ERROR
+test_valeurs_negatives (test_moyenne.TestMoyenne.test_valeurs_negatives) ... ok
+test_valeurs_positives (test_moyenne.TestMoyenne.test_valeurs_positives) ... ok
+
+======================================================================
+ERROR: test_liste_vide (test_moyenne.TestMoyenne.test_liste_vide)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<local-root>\avant\test_moyenne.py", line 10, in test_liste_vide
+    self.assertEqual(moyenne([]), 0)
+                     ~~~~~~~^^^^
+  File "<local-root>\avant\moyenne.py", line 2, in moyenne
+    return sum(valeurs) / len(valeurs)
+           ~~~~~~~~~~~~~^~~~~~~~~~~~~~
+ZeroDivisionError: division by zero
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.001s
+
+FAILED (errors=1)

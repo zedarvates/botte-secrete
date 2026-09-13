@@ -30,6 +30,14 @@ The project is in **beta**. Its core workflows run locally, but optional local
 LLM backends, cloud providers, hardware accelerators, and third-party agents
 remain external systems with their own setup and security boundaries.
 
+## See it in action: "done" needs evidence
+
+A prepared agent report claims completion. Botte flags the missing evidence;
+an actual test exposes a defect, and a prepared correction passes all three
+tests. [Follow the replayable demonstration](docs/demos/completion-proof/README.md)
+with recorded outputs and an explicit negative control: A11 detects evidence
+markers but does not authenticate them.
+
 ## Why Botte Secrète?
 
 Agent workflows often spend expensive model tokens on work that does not need a
