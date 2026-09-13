@@ -26,6 +26,14 @@ jobs:
         run: python -m skills.factory_assurance.test_roles
       - name: Positive control must pass
         run: python -m skills.factory_assurance.cli examples/factory-assurance/run.json
+      - name: Real StoryCore shadow dark lap must hold while evidence is incomplete
+        shell: bash
+        run: |
+          set +e
+          python -m skills.factory_assurance.cli examples/factory-assurance/storycore-pr57-shadow.json --pretty
+          rc=$?
+          set -e
+          test "$rc" -eq 2
       - name: Record exact candidate identity
         shell: bash
         run: |
