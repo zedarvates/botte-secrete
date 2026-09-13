@@ -42,6 +42,8 @@ the code in `skills/<name>/SKILL.md`.
   with explicit reproducibility limits.
 - [YuE2 weights source qualification](yue2-weights-qualification.md) — pinned
   checkpoint identities and the blocking commercial-use finding for PR #118.
+- [ACE-Step weights source qualification](acestep-weights-qualification.md) — a
+  permissive-licence candidate and constraints for a non-executing request preview.
 - [Quality Compass plan](plans/2026-08-25_quality-compass-plan.md) — active plan
   for verified QA memory, k-NN baselines, and specialized local workers.
 - [`plans/`](plans/) — proposed work and design explorations.
