@@ -137,6 +137,27 @@ if __name__ == "__main__":
             or checks["missing"]["status"] != "missing_evidence"):
         raise RuntimeError("Verification des preuves inattendue")
     save(run / "verification-summary.json", checks)
+    strict_checks = {}
+    for label, claim, source_dir, expected in (
+        ("valid", "apres-claim-v1.json", "apres", 0),
+        ("missing", "controle-limite.json", "apres", 3),
+        ("wrong_version", "apres-claim-v1.json", "avant", 4),
+        ("failed_tests", "avant-claim-v1.json", "avant", 5),
+    ):
+        expected_pin = (run / ("avant-trusted-receipt.sha256" if label == "failed_tests"
+                               else "apres-trusted-receipt.sha256")).read_text(encoding="utf-8").strip()
+        strict = execute([sys.executable, "-m", "skills.completion_proof.cli", claim,
+                          "--verify", "--strict", "--json", "--evidence-root", ".",
+                          "--source-root", source_dir, "--receipt-sha256", expected_pin],
+                         run, "strict-" + label + ".json")
+        if strict.returncode != expected:
+            raise RuntimeError("Code de sortie strict inattendu")
+        marker = run / ("closed-" + label + ".txt")
+        if strict.returncode == 0:
+            write(marker, "Closure allowed after strict verification.\n")
+        strict_checks[label] = {"exit_code": strict.returncode,
+                                "closure_marker_written": marker.exists()}
+    save(run / "strict-summary.json", strict_checks)
     sources = {}
     for name in ("__init__.py", "audit.py", "cli.py", "test_completion_proof.py", "verify.py", "test_verify.py"):
         path = repo / "skills/completion_proof" / name
@@ -161,6 +182,7 @@ if __name__ == "__main__":
 <details><summary>Consulter les pièces et rejouer</summary><p><a href="RUN/resultats.json">Résultats de l'exécution</a> · <a href="RUN/empreintes.json">Empreintes SHA-256</a> · <a href="RUN/06-tests-detecteur.txt">Tests du détecteur</a> · <a href="README.md">Mode d'emploi</a></p><p>Le bouton raconte l'exécution enregistrée. Pour relancer réellement les contrôles, utiliser le script fourni avec une installation locale de Botte Secrète.</p></details><footer>Aucun appel à un modèle dans le scénario. L'annonce et la correction sont préparées ; les audits et tests sont exécutés. Aucun dépôt n'est publié. Exécution : RUN.</footer></main>
 <script>const cards=[...document.querySelectorAll('.card')];let step=-1;document.querySelector('#play').addEventListener('click',()=>{step=(step+1)%4;cards.forEach((c,i)=>c.style.outline=i===step?'3px solid #507452':'none');document.querySelector('#status').textContent=['1 / Une annonce de réalisation, sans preuve jointe.','2 / Botte détecte exactement une déclaration sans preuve.','3 / Le test échoue sur la liste vide ; le code est corrigé.','4 / Les trois tests réussissent ; leurs résultats sont consultables.'][step];document.querySelector('#play').textContent=step===3?'Revoir le parcours':'Étape suivante';cards[step].scrollIntoView({behavior:'smooth',block:'nearest'});});</script></html>'''
     page = page.replace('<details><summary>', '<section class="card"><h2>Nouveau : vérifier les pièces réelles</h2><p>Le vérificateur distinct contrôle le reçu, le journal et les empreintes du code et des tests, avec une empreinte de référence capturée séparément par cet exécuteur local.</p><p>Résultats réels : test initial en échec ; version corrigée vérifiée sur trois tests ; autre version du code refusée ; référence fictive refusée.</p><a href="RUN/verification-summary.json">Consulter les quatre vérifications</a><p>Cette intégrité dépend de la confiance dans l’exécuteur et son empreinte de référence. Elle ne certifie ni une machine compromise, ni les fichiers non listés.</p></section><details><summary>')
+    page = page.replace('<details><summary>', '<section class="card"><h2>Mode strict : poursuivre seulement après validation</h2><p>La chaîne de démonstration écrit son marqueur de clôture uniquement après un code de succès. Preuve manquante, autre version du code et tests en échec interrompent cette étape.</p><a href="RUN/strict-summary.json">Voir les quatre résultats du mode strict</a><p>Ce mode doit être activé et son code de sortie respecté par la chaîne qui clôture la tâche. Il ne bloque pas une application qui ignore ce résultat.</p></section><details><summary>')
     readme = (SCRIPT_DIR / "README.md").read_text(encoding="utf-8")
     start = readme.index("## Pièces de l'exécution publiée")
     end = readme.index("Les rapports sont conservés", start)
@@ -180,6 +202,7 @@ if __name__ == "__main__":
             ("Nouveau : quatre vérifications des preuves", "verification-summary.json"),
             ("Reçu de la version corrigée", "apres-receipt.json"),
             ("Empreinte capturée séparément par l'exécuteur", "apres-trusted-receipt.sha256"),
+            ("Mode strict et clôture conditionnelle", "strict-summary.json"),
         )
     ) + "\n\n"
     rendered_readme = readme[:start] + evidence + readme[end:]

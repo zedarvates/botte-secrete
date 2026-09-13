@@ -74,9 +74,31 @@ arbitrary historical passing receipt.
 | `test_failed` | Artifacts match, but the recorded tests failed |
 | `verified_on_recorded_tests` | Artifacts and listed files match the trusted passing receipt |
 
-Consumers must inspect `verified` and `status`. The CLI remains report-only and
-returns zero for a completed verification, including invalid evidence. Missing
-CLI arguments are usage errors. A strict task-closing gate is a separate next step.
+Without `--strict`, consumers must inspect `verified` and `status`: the CLI
+returns zero for a completed verification, including invalid evidence.
+
+## Optional strict gate
+
+Append `--strict` to the verification command to use its exit status as a gate.
+It requires `--verify` and the same explicit roots and trusted receipt digest.
+The JSON result is identical in both modes. No global setting is changed.
+
+| Exit code | Meaning |
+|---|---|
+| 0 | Consistent verified result, no errors |
+| 2 | Incorrect CLI arguments |
+| 3 | Missing evidence |
+| 4 | Invalid evidence, unknown or inconsistent result |
+| 5 | Recorded test failure |
+| 6 | Not a supported completion claim |
+| 7 | Root/access/read error |
+
+The caller **must stop for every nonzero code**, including unexpected process
+errors. For example, a local orchestrator using `subprocess.run(argv, check=True)`
+must only close the task after that call succeeds, without swallowing its error.
+The verifier itself does not write task state or enforce anything in a caller
+that ignores its exit status. The replay demonstrates a local closure marker
+written only on a successful strict process exit.
 
 Run `python -m skills.completion_proof.test_verify` for adversarial cases and
 a real unittest run followed by a detected test-source change. Run the

@@ -203,6 +203,44 @@ class VerificationTests(unittest.TestCase):
         test_file.write_text("# tests removed\n", encoding="utf-8")
         self.rejected("source_hash_mismatch")
 
+    def test_strict_subprocess_gate(self):
+        cases = (("valid", 0), ("missing", 3), ("invalid", 4),
+                 ("failed", 5), ("announced", 6), ("io", 7))
+        for case, expected in cases:
+            with self.subTest(case=case):
+                self.report["status"] = "pending" if case == "announced" else "complete"
+                self.report["proof"]["receipt_ref"] = "absent.json" if case == "missing" else "receipt.json"
+                self.receipt["result"]["exit_code"] = 1 if case == "failed" else 0
+                self.save()
+                argv = [sys.executable, "-m", "skills.completion_proof.cli",
+                        str(self.root / "report.json"), "--verify", "--strict", "--json",
+                        "--evidence-root", str(self.root),
+                        "--source-root", str(self.source if case != "io" else self.root / "absent"),
+                        "--receipt-sha256", "0" * 64 if case == "invalid" else self.pin]
+                result = subprocess.run(argv, capture_output=True, text=True,
+                                        encoding="utf-8", timeout=30)
+                self.assertEqual(result.returncode, expected, result.stderr)
+                self.assertEqual(json.loads(result.stdout)["verified"], case == "valid")
+                marker = self.root / (case + "-closed.txt")
+                if result.returncode == 0:
+                    marker.write_text("closed", encoding="utf-8")
+                self.assertEqual(marker.exists(), case == "valid")
+
+    def test_strict_requires_verification(self):
+        with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit) as caught:
+            cli([str(self.root / "report.json"), "--strict"])
+        self.assertEqual(caught.exception.code, 2)
+
+    def test_strict_unknown_or_inconsistent_result_blocks(self):
+        argv = [str(self.root / "report.json"), "--verify", "--strict", "--json",
+                "--evidence-root", str(self.root), "--source-root", str(self.source),
+                "--receipt-sha256", self.pin]
+        for result in ({"status": "new_status", "verified": True, "errors": []},
+                       {"status": "verified_on_recorded_tests", "verified": False, "errors": []},
+                       {"status": "verified_on_recorded_tests", "verified": True, "errors": ["error"]}):
+            with patch("skills.completion_proof.verify.verify_report", return_value=result), contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(cli(argv), 4)
+
 
 def main():
     suite = unittest.defaultTestLoader.loadTestsFromTestCase(VerificationTests)

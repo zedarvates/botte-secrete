@@ -35,20 +35,21 @@ exécutions datées et les fichiers de présentation, qui sont actualisés.
 
 ## Pièces de l'exécution publiée
 
-- [Rapport initial](executions/20260913T141549166699Z/avant/rapport-agent.json)
-- [Anomalie détectée par Botte](executions/20260913T141549166699Z/01-audit-avant.json)
-- [Tests avant : une erreur](executions/20260913T141549166699Z/02-tests-avant.txt)
-- [Tests après : trois réussites](executions/20260913T141549166699Z/03-tests-apres.txt)
-- [Rapport corrigé avec références](executions/20260913T141549166699Z/apres/rapport-agent.json)
-- [Nouvel audit : zéro constat](executions/20260913T141549166699Z/04-audit-apres.json)
-- [Contre-exemple : référence fictive](executions/20260913T141549166699Z/controle-limite.json)
-- [Résultat du contre-exemple](executions/20260913T141549166699Z/05-audit-limite.json)
-- [Tests du détecteur](executions/20260913T141549166699Z/06-tests-detecteur.txt)
-- [Résultats et provenance](executions/20260913T141549166699Z/resultats.json)
-- [Empreintes des pièces](executions/20260913T141549166699Z/empreintes.json)
-- [Nouveau : quatre vérifications des preuves](executions/20260913T141549166699Z/verification-summary.json)
-- [Reçu de la version corrigée](executions/20260913T141549166699Z/apres-receipt.json)
-- [Empreinte capturée séparément par l'exécuteur](executions/20260913T141549166699Z/apres-trusted-receipt.sha256)
+- [Rapport initial](executions/20260913T160408788104Z/avant/rapport-agent.json)
+- [Anomalie détectée par Botte](executions/20260913T160408788104Z/01-audit-avant.json)
+- [Tests avant : une erreur](executions/20260913T160408788104Z/02-tests-avant.txt)
+- [Tests après : trois réussites](executions/20260913T160408788104Z/03-tests-apres.txt)
+- [Rapport corrigé avec références](executions/20260913T160408788104Z/apres/rapport-agent.json)
+- [Nouvel audit : zéro constat](executions/20260913T160408788104Z/04-audit-apres.json)
+- [Contre-exemple : référence fictive](executions/20260913T160408788104Z/controle-limite.json)
+- [Résultat du contre-exemple](executions/20260913T160408788104Z/05-audit-limite.json)
+- [Tests du détecteur](executions/20260913T160408788104Z/06-tests-detecteur.txt)
+- [Résultats et provenance](executions/20260913T160408788104Z/resultats.json)
+- [Empreintes des pièces](executions/20260913T160408788104Z/empreintes.json)
+- [Nouveau : quatre vérifications des preuves](executions/20260913T160408788104Z/verification-summary.json)
+- [Reçu de la version corrigée](executions/20260913T160408788104Z/apres-receipt.json)
+- [Empreinte capturée séparément par l'exécuteur](executions/20260913T160408788104Z/apres-trusted-receipt.sha256)
+- [Mode strict et clôture conditionnelle](executions/20260913T160408788104Z/strict-summary.json)
 
 Les rapports sont conservés avec des chemins relatifs. Les éventuels chemins
 absolus des journaux sont remplacés par `<local-root>` avant enregistrement.
@@ -78,6 +79,10 @@ les entrées et la limite de confiance dans l'exécuteur.
 
 ## Améliorations suivantes
 
-Le contrôle d'intégrité v1 est implémenté. Le blocage strict facultatif,
-l'intégration avec un exécuteur générique et une mesure de fiabilité sur corpus
+Le contrôle d'intégrité v1 et le mode `--verify --strict` sont implémentés.
+La démo écrit un marqueur de clôture uniquement après un contrôle strict réussi.
+La chaîne appelante doit respecter le code de sortie ; Botte ne change pas
+elle-même l'état des tâches d'autres applications.
+
+L'intégration avec un exécuteur générique et une mesure de fiabilité sur corpus
 restent à développer. Voir la [suite proposée](ameliorations.md).

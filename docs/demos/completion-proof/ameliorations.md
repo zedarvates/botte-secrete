@@ -21,6 +21,11 @@ contre-exemples correspondants au parcours public.
 
 ## 2. Permettre un contrôle bloquant explicite
 
+**Réalisé** : `--verify --strict`, codes de sortie documentés, tests de processus
+et démonstration d'une clôture conditionnelle. Seule une preuve vérifiée autorise
+la suite. La chaîne qui clôture les tâches doit respecter ce code ; aucune
+intégration globale ou application tierce n'est activée automatiquement.
+
 Conserver le mode rapport actuel. Proposer un mode strict opt-in pour la CI ou
 la clôture d'une tâche, basé sur le validateur, avec des codes distincts pour
 preuve invalide, preuve manquante et erreur de lecture. En cas d'incertitude,

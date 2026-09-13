@@ -22,7 +22,8 @@ No test execution, hash verification, or ingestion enforcement is performed.
 A separate opt-in `--verify` path now verifies receipt, log and source hashes
 against a trusted digest supplied outside the report. See the
 [v1 verification contract](VERIFICATION.md). This does not change the legacy
-marker audit or introduce a strict task-closing gate.
+marker audit. Add `--strict` to return nonzero unless verification succeeds;
+the calling workflow must honor that exit status before closing its task.
 
 The five finding fields describe evidence, estimated cost, expected benefit,
 risk, and a minimal suggested remedy. These are qualitative, not measurements.
