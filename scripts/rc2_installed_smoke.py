@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+import sysconfig
 import tempfile
 import skills
 
@@ -14,7 +15,7 @@ env = os.environ.copy()
 env.pop('PYTHONPATH', None)
 env.pop('PYTHONHOME', None)
 env.update(PYTHONUTF8='1', PYTHONIOENCODING='utf-8', BOTTE_NN_AUTO_LABELS='0')
-bindir = Path(sys.executable).parent
+bindir = Path(sysconfig.get_path('scripts'))
 suffix = '.exe' if os.name == 'nt' else ''
 commands = [[sys.executable, '-m', 'pip', 'check'],
     [str(bindir / ('botte' + suffix)), '--help'],
