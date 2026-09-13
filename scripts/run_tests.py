@@ -33,6 +33,7 @@ os.environ.setdefault("BOTTE_NN_AUTO_LABELS", "0")
 # module_prefix is the skills/ directory prefix used for --changed matching.
 SUITES = [
     ("e2e", [sys.executable, "skills/test_e2e.py"], ""),
+    ("runner_exit_verdict", [sys.executable, "scripts/test_runner_exit_verdict.py"], "scripts/"),
     ("cli_router", [sys.executable, "-m", "skills.test_cli"], "skills/"),
     ("llm_backends", [sys.executable, "-m", "skills.llm_backends.test_llm_backends"], "skills/llm_backends/"),
     ("directives_audit", [sys.executable, "-m", "skills.directives_audit.test_directives_audit"], "skills/directives_audit/"),
@@ -218,7 +219,8 @@ def main() -> int:
             if mm:
                 m = mm
         p, f = (int(m.group(1)), int(m.group(2))) if m else (0, 1)
-        if not m and proc.returncode != 0:
+        # A passing-looking summary cannot override a failed child process.
+        if proc.returncode != 0:
             f = max(f, 1)
         total_pass += p
         total_fail += f
