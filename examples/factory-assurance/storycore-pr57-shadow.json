@@ -23,22 +23,23 @@
   "evidence": [
     {"name": "musicplan-contract-python-3.10", "status": "pass", "required": true},
     {"name": "musicplan-contract-python-3.12", "status": "pass", "required": true},
+    {"name": "controlled-negative-mutation-probe", "status": "pass", "required": true},
     {"name": "private-holdout", "status": "missing", "required": true}
   ],
   "controls": {
     "positive_control": "pass",
-    "negative_control": "missing",
+    "negative_control": "fail",
     "holdout_scope": "private_external",
     "historical_regressions_checked": false,
     "adversarial_cases_checked": false
   },
   "identity": {
-    "source_sha": "ce7d71b402b028b5b69db3edef215157676d15f3",
-    "build_sha": "25d03dbbfc2344c12cabeea943b9d702416e3afb",
-    "tested_sha": "25d03dbbfc2344c12cabeea943b9d702416e3afb",
-    "source_tree": "9d937c2056367385d17bf0a9a3fecf1b7abeffeb",
-    "build_tree": "9d937c2056367385d17bf0a9a3fecf1b7abeffeb",
-    "tested_tree": "9d937c2056367385d17bf0a9a3fecf1b7abeffeb",
+    "source_sha": "189d3d15fc711b006405ecd997485a4583ab5e4c",
+    "build_sha": "27ec8319a25dea3c9167eb0cfb8402a1e3200d45",
+    "tested_sha": "27ec8319a25dea3c9167eb0cfb8402a1e3200d45",
+    "source_tree": "099c907f8e8272e9b7c0a24f2f0e011b33acd8cb",
+    "build_tree": "099c907f8e8272e9b7c0a24f2f0e011b33acd8cb",
+    "tested_tree": "099c907f8e8272e9b7c0a24f2f0e011b33acd8cb",
     "deployed_sha": null
   }
 }
