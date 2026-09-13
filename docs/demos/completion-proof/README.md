@@ -90,6 +90,11 @@ les entrées et la limite de confiance dans l'exécuteur.
 
 ## Améliorations suivantes
 
+La [mesure de fiabilité sur 20 scénarios](evaluation/20260913T173606016150Z/README.md)
+publie les labels, les pièces d'entrée et les résultats. Elle compte également
+les problèmes manqués dans les limites connues, sans les masquer dans un score
+portant uniquement sur les cas favorables.
+
 Les résultats se lisent maintenant en français (ou en anglais avec `--lang en`) :
 « Annoncé — pas encore vérifié », « Preuve manquante », « Preuve invalide »,
 « Test échoué », « Vérifié sur ces tests ». Une explication, la prochaine action

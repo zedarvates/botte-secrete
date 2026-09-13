@@ -65,6 +65,16 @@ accéder à des dépôts privés, à une clé ou à une infrastructure personnel
 
 ## 5. Mesurer l'utilité
 
+**Premier corpus synthétique réalisé** : 20 scénarios étiquetés, matrice de
+confusion, cas par cas et trois limites conservées dans le résultat global.
+Voir le [bilan daté](evaluation/20260913T173606016150Z/README.md).
+Ce corpus construit en connaissant le code n'est ni indépendant ni représentatif
+de la production ; une validation sur de vrais rapports reste à conduire.
+
+Rejouer : `python -m skills.completion_proof.evaluate`. Le résultat est écrit dans
+un nouveau sous-dossier de `.botte-cache/completion-evaluation/`. La commande
+mesure les résultats, sans changer le vérificateur et sans bloquer sur un score.
+
 Sur un corpus annoté de rapports synthétiques puis de cas publics : mesurer
 fausses alertes, déclarations non prouvées manquées et coût du contrôle. Le
 nombre d'anomalies détectées ne doit pas être présenté comme un nombre de bugs

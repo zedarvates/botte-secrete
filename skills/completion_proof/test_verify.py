@@ -294,6 +294,31 @@ class VerificationTests(unittest.TestCase):
         self.assertEqual(result["tests_executed"], 1)
         self.assertEqual(result["tests_skipped"], 1)
 
+    def test_evaluation_confusion_matrix_direction(self):
+        from skills.completion_proof.evaluate import metrics
+        rows = [{"safe_to_accept": safe, "observed_verified": accepted}
+                for safe, accepted in ((False, False), (False, True), (True, False), (True, True))]
+        result = metrics(rows)
+        for key in ("true_positive", "false_positive", "false_negative", "true_negative"):
+            self.assertEqual(result[key], 1)
+        self.assertEqual(result["false_alert_rate"], 0.5)
+        self.assertEqual(result["miss_rate"], 0.5)
+
+    def test_evaluation_empty_denominators_are_unknown(self):
+        from skills.completion_proof.evaluate import metrics
+        result = metrics([])
+        for key in ("false_alert_rate", "miss_rate", "precision", "recall"):
+            self.assertIsNone(result[key])
+
+    def test_evaluation_retains_limits_and_is_reproducible(self):
+        from skills.completion_proof.evaluate import evaluate
+        first = evaluate()
+        self.assertEqual(first, evaluate())
+        self.assertEqual(len(first["cases"]), 20)
+        self.assertEqual(first["overall"]["cases"], sum(m["cases"] for m in first["groups"].values()))
+        self.assertEqual(first["overall"]["false_negative"], sum(m["false_negative"] for m in first["groups"].values()))
+        self.assertTrue(all("input_files" in row and row["reason"] for row in first["cases"]))
+
 
 def main():
     suite = unittest.defaultTestLoader.loadTestsFromTestCase(VerificationTests)

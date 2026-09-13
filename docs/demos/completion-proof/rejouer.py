@@ -230,11 +230,13 @@ if __name__ == "__main__":
     if BASE != SCRIPT_DIR:
         rendered_readme = rendered_readme.replace("../../../skills/completion_proof/VERIFICATION.md", contract)
         rendered_readme = rendered_readme.replace("(real-fix.md)", "(" + os.path.relpath(SCRIPT_DIR / "real-fix.md", BASE).replace("\\", "/") + ")")
+        rendered_readme = rendered_readme.replace("(evaluation/", "(" + os.path.relpath(SCRIPT_DIR / "evaluation", BASE).replace("\\", "/") + "/")
     write(BASE / "README.md", rendered_readme)
     if BASE != SCRIPT_DIR:
         for name in ("ameliorations.md", "parcours.svg"):
             content = (SCRIPT_DIR / name).read_text(encoding="utf-8")
             content = content.replace("(real-fix.md)", "(" + os.path.relpath(SCRIPT_DIR / "real-fix.md", BASE).replace("\\", "/") + ")")
+            content = content.replace("(evaluation/", "(" + os.path.relpath(SCRIPT_DIR / "evaluation", BASE).replace("\\", "/") + "/")
             write(BASE / name, content.replace("../../../skills/completion_proof/VERIFICATION.md", contract))
     write(BASE / "demonstration.html", page.replace("RUN", html.escape(rel)))
     print(json.dumps({"execution": str(run), "page": str(BASE / "demonstration.html"), "before_findings": 1, "after_findings": 0, "tests": "3 passed", "limitation_confirmed": True}))

@@ -114,3 +114,18 @@ written only on a successful strict process exit.
 Run `python -m skills.completion_proof.test_verify` for adversarial cases and
 a real unittest run followed by a detected test-source change. Run the
 [demonstration](../../docs/demos/completion-proof/README.md) for published examples.
+
+## Synthetic reliability measurement
+
+Run `python -m skills.completion_proof.evaluate` to materialize 20 curated cases
+from `evaluation_cases.json`, verify them and write per-case inputs/results and
+confusion matrices. Positive means unsafe completion; detection means rejection.
+False alerts divide by valid cases, misses by unsafe cases. Missing denominators
+are `null`, not zero. Contract cases and assumption violations are shown separately
+and also included in the combined total. An unexpected evaluator error aborts the
+run; it is not counted as a successful detection. A completed measurement returns
+zero even with misses: this is not a score-based CI gate.
+
+Labels were authored with knowledge of the implementation. This is not a holdout,
+a production sample or an independent evaluation. Synthetic receipts do not prove
+that application tests ran. These limits must accompany any published numbers.

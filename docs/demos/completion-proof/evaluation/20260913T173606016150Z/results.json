@@ -1,0 +1,583 @@
+{
+  "schema_version": 1,
+  "corpus_type": "curated synthetic; not held out",
+  "positive_definition": "completion not justified by the scenario ground truth",
+  "groups": {
+    "contract": {
+      "true_positive": 12,
+      "false_positive": 0,
+      "false_negative": 0,
+      "true_negative": 5,
+      "cases": 17,
+      "false_alert_rate": 0.0,
+      "miss_rate": 0.0,
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    "limits": {
+      "true_positive": 0,
+      "false_positive": 0,
+      "false_negative": 3,
+      "true_negative": 0,
+      "cases": 3,
+      "false_alert_rate": null,
+      "miss_rate": 1.0,
+      "precision": null,
+      "recall": 0.0
+    }
+  },
+  "overall": {
+    "true_positive": 12,
+    "false_positive": 0,
+    "false_negative": 3,
+    "true_negative": 5,
+    "cases": 20,
+    "false_alert_rate": 0.0,
+    "miss_rate": 0.2,
+    "precision": 1.0,
+    "recall": 0.8
+  },
+  "cases": [
+    {
+      "id": "valid",
+      "group": "contract",
+      "safe_to_accept": true,
+      "reason": "Consistent passing receipt and unchanged listed source.",
+      "observed_verified": true,
+      "result": {
+        "schema_version": 1,
+        "status": "verified_on_recorded_tests",
+        "verified": true,
+        "errors": [],
+        "source_files_checked": [
+          "app.py"
+        ],
+        "cloud_tokens": 0,
+        "scope": "recorded tests and listed files only",
+        "tests_run": 1,
+        "tests_skipped": 0,
+        "tests_executed": 1,
+        "receipt_sha256": "b83299c2d74f1cad2964d5dee7ad06c17a807d613606de6b8dac5fe6a293046a"
+      },
+      "trusted_receipt_sha256": "b83299c2d74f1cad2964d5dee7ad06c17a807d613606de6b8dac5fe6a293046a",
+      "input_files": {
+        "app.py": "VALUE = 42\n",
+        "log.txt": "Synthetic evaluation fixture: one passing test is declared.\n",
+        "receipt.json": "{\"log\": {\"path\": \"log.txt\", \"sha256\": \"dcd911e495963efa2d38665ecd1a7c5cbbc2980a2b24d225be90b75f168768d2\"}, \"result\": {\"errors\": 0, \"exit_code\": 0, \"failures\": 0, \"skipped\": 0, \"tests_run\": 1}, \"run_id\": \"evaluation-run\", \"schema_version\": 1, \"sources\": [{\"path\": \"app.py\", \"sha256\": \"09cbf5ae13a643a9b023da1035c60c5018731d5d9633a86d61b19b4e3f3aa7eb\"}]}",
+        "report.json": "{\"proof\": {\"receipt_ref\": \"receipt.json\"}, \"run_id\": \"evaluation-run\", \"status\": \"complete\"}"
+      }
+    },
+    {
+      "id": "legacy_valid",
+      "group": "contract",
+      "safe_to_accept": true,
+      "reason": "No tests skipped in this scenario; legacy receipt omits the count.",
+      "observed_verified": true,
+      "result": {
+        "schema_version": 1,
+        "status": "verified_on_recorded_tests",
+        "verified": true,
+        "errors": [],
+        "source_files_checked": [
+          "app.py"
+        ],
+        "cloud_tokens": 0,
+        "scope": "recorded tests and listed files only",
+        "tests_run": 1,
+        "tests_skipped": 0,
+        "tests_executed": 1,
+        "receipt_sha256": "fe42f8bf17aa68af12e66399ba461de5609b84f182ad5f0639047bddcc097777"
+      },
+      "trusted_receipt_sha256": "fe42f8bf17aa68af12e66399ba461de5609b84f182ad5f0639047bddcc097777",
+      "input_files": {
+        "app.py": "VALUE = 42\n",
+        "log.txt": "Synthetic evaluation fixture: one passing test is declared.\n",
+        "receipt.json": "{\"log\": {\"path\": \"log.txt\", \"sha256\": \"dcd911e495963efa2d38665ecd1a7c5cbbc2980a2b24d225be90b75f168768d2\"}, \"result\": {\"errors\": 0, \"exit_code\": 0, \"failures\": 0, \"tests_run\": 1}, \"run_id\": \"evaluation-run\", \"schema_version\": 1, \"sources\": [{\"path\": \"app.py\", \"sha256\": \"09cbf5ae13a643a9b023da1035c60c5018731d5d9633a86d61b19b4e3f3aa7eb\"}]}",
+        "report.json": "{\"proof\": {\"receipt_ref\": \"receipt.json\"}, \"run_id\": \"evaluation-run\", \"status\": \"complete\"}"
+      }
+    },
+    {
+      "id": "mixed_skipped",
+      "group": "contract",
+      "safe_to_accept": true,
+      "reason": "One passed test and one explicitly skipped test, within declared scope.",
+      "observed_verified": true,
+      "result": {
+        "schema_version": 1,
+        "status": "verified_on_recorded_tests",
+        "verified": true,
+        "errors": [],
+        "source_files_checked": [
+          "app.py"
+        ],
+        "cloud_tokens": 0,
+        "scope": "recorded tests and listed files only",
+        "tests_run": 2,
+        "tests_skipped": 1,
+        "tests_executed": 1,
+        "receipt_sha256": "03564f3a29326f0d66b2131939f948a27bcb7addbef38e84e751d90f2e3c4066"
+      },
+      "trusted_receipt_sha256": "03564f3a29326f0d66b2131939f948a27bcb7addbef38e84e751d90f2e3c4066",
+      "input_files": {
+        "app.py": "VALUE = 42\n",
+        "log.txt": "Synthetic evaluation fixture: one passing test is declared.\n",
+        "receipt.json": "{\"log\": {\"path\": \"log.txt\", \"sha256\": \"dcd911e495963efa2d38665ecd1a7c5cbbc2980a2b24d225be90b75f168768d2\"}, \"result\": {\"errors\": 0, \"exit_code\": 0, \"failures\": 0, \"skipped\": 1, \"tests_run\": 2}, \"run_id\": \"evaluation-run\", \"schema_version\": 1, \"sources\": [{\"path\": \"app.py\", \"sha256\": \"09cbf5ae13a643a9b023da1035c60c5018731d5d9633a86d61b19b4e3f3aa7eb\"}]}",
+        "report.json": "{\"proof\": {\"receipt_ref\": \"receipt.json\"}, \"run_id\": \"evaluation-run\", \"status\": \"complete\"}"
+      }
+    },
+    {
+      "id": "unicode_source",
+      "group": "contract",
+      "safe_to_accept": true,
+      "reason": "Unchanged source with a Unicode filename.",
+      "observed_verified": true,
+      "result": {
+        "schema_version": 1,
+        "status": "verified_on_recorded_tests",
+        "verified": true,
+        "errors": [],
+        "source_files_checked": [
+          "calcul_é.py"
+        ],
+        "cloud_tokens": 0,
+        "scope": "recorded tests and listed files only",
+        "tests_run": 1,
+        "tests_skipped": 0,
+        "tests_executed": 1,
+        "receipt_sha256": "d5226befa376c842a333ed923c028a5c9bcd2e9f0e7b36950a77ac292b6ab201"
+      },
+      "trusted_receipt_sha256": "d5226befa376c842a333ed923c028a5c9bcd2e9f0e7b36950a77ac292b6ab201",
+      "input_files": {
+        "calcul_é.py": "VALUE = 42\n",
+        "log.txt": "Synthetic evaluation fixture: one passing test is declared.\n",
+        "receipt.json": "{\"log\": {\"path\": \"log.txt\", \"sha256\": \"dcd911e495963efa2d38665ecd1a7c5cbbc2980a2b24d225be90b75f168768d2\"}, \"result\": {\"errors\": 0, \"exit_code\": 0, \"failures\": 0, \"skipped\": 0, \"tests_run\": 1}, \"run_id\": \"evaluation-run\", \"schema_version\": 1, \"sources\": [{\"path\": \"calcul_é.py\", \"sha256\": \"09cbf5ae13a643a9b023da1035c60c5018731d5d9633a86d61b19b4e3f3aa7eb\"}]}",
+        "report.json": "{\"proof\": {\"receipt_ref\": \"receipt.json\"}, \"run_id\": \"evaluation-run\", \"status\": \"complete\"}"
+      }
+    },
+    {
+      "id": "two_sources",
+      "group": "contract",
+      "safe_to_accept": true,
+      "reason": "Both listed files match the passing receipt.",
+      "observed_verified": true,
+      "result": {
+        "schema_version": 1,
+        "status": "verified_on_recorded_tests",
+        "verified": true,
+        "errors": [],
+        "source_files_checked": [
+          "app.py",
+          "helper.py"
+        ],
+        "cloud_tokens": 0,
+        "scope": "recorded tests and listed files only",
+        "tests_run": 1,
+        "tests_skipped": 0,
+        "tests_executed": 1,
+        "receipt_sha256": "2f216839a53ef898d9ced4b01ba016f2088468d71129df505536613a158670dc"
+      },
+      "trusted_receipt_sha256": "2f216839a53ef898d9ced4b01ba016f2088468d71129df505536613a158670dc",
+      "input_files": {
+        "app.py": "VALUE = 42\n",
+        "log.txt": "Synthetic evaluation fixture: one passing test is declared.\n",
+        "helper.py": "OTHER = 1\n",
+        "receipt.json": "{\"log\": {\"path\": \"log.txt\", \"sha256\": \"dcd911e495963efa2d38665ecd1a7c5cbbc2980a2b24d225be90b75f168768d2\"}, \"result\": {\"errors\": 0, \"exit_code\": 0, \"failures\": 0, \"skipped\": 0, \"tests_run\": 1}, \"run_id\": \"evaluation-run\", \"schema_version\": 1, \"sources\": [{\"path\": \"app.py\", \"sha256\": \"09cbf5ae13a643a9b023da1035c60c5018731d5d9633a86d61b19b4e3f3aa7eb\"}, {\"path\": \"helper.py\", \"sha256\": \"a5d7f2bd592d568215665bb58be6bf2a027c4f9c7e1903e3c104ec7c6f4b8137\"}]}",
+        "report.json": "{\"proof\": {\"receipt_ref\": \"receipt.json\"}, \"run_id\": \"evaluation-run\", \"status\": \"complete\"}"
+      }
+    },
+    {
+      "id": "missing_receipt",
+      "group": "contract",
+      "safe_to_accept": false,
+      "reason": "Referenced receipt absent.",
+      "observed_verified": false,
+      "result": {
+        "schema_version": 1,
+        "status": "missing_evidence",
+        "verified": false,
+        "errors": [
+          "missing_file"
+        ],
+        "source_files_checked": [],
+        "cloud_tokens": 0,
+        "scope": "recorded tests and listed files only"
+      },
+      "trusted_receipt_sha256": "b83299c2d74f1cad2964d5dee7ad06c17a807d613606de6b8dac5fe6a293046a",
+      "input_files": {
+        "app.py": "VALUE = 42\n",
+        "log.txt": "Synthetic evaluation fixture: one passing test is declared.\n",
+        "report.json": "{\"proof\": {\"receipt_ref\": \"receipt.json\"}, \"run_id\": \"evaluation-run\", \"status\": \"complete\"}"
+      }
+    },
+    {
+      "id": "missing_log",
+      "group": "contract",
+      "safe_to_accept": false,
+      "reason": "Recorded log absent.",
+      "observed_verified": false,
+      "result": {
+        "schema_version": 1,
+        "status": "missing_evidence",
+        "verified": false,
+        "errors": [
+          "missing_file"
+        ],
+        "source_files_checked": [],
+        "cloud_tokens": 0,
+        "scope": "recorded tests and listed files only"
+      },
+      "trusted_receipt_sha256": "b83299c2d74f1cad2964d5dee7ad06c17a807d613606de6b8dac5fe6a293046a",
+      "input_files": {
+        "app.py": "VALUE = 42\n",
+        "receipt.json": "{\"log\": {\"path\": \"log.txt\", \"sha256\": \"dcd911e495963efa2d38665ecd1a7c5cbbc2980a2b24d225be90b75f168768d2\"}, \"result\": {\"errors\": 0, \"exit_code\": 0, \"failures\": 0, \"skipped\": 0, \"tests_run\": 1}, \"run_id\": \"evaluation-run\", \"schema_version\": 1, \"sources\": [{\"path\": \"app.py\", \"sha256\": \"09cbf5ae13a643a9b023da1035c60c5018731d5d9633a86d61b19b4e3f3aa7eb\"}]}",
+        "report.json": "{\"proof\": {\"receipt_ref\": \"receipt.json\"}, \"run_id\": \"evaluation-run\", \"status\": \"complete\"}"
+      }
+    },
+    {
+      "id": "missing_source",
+      "group": "contract",
+      "safe_to_accept": false,
+      "reason": "Listed source absent.",
+      "observed_verified": false,
+      "result": {
+        "schema_version": 1,
+        "status": "missing_evidence",
+        "verified": false,
+        "errors": [
+          "missing_file"
+        ],
+        "source_files_checked": [],
+        "cloud_tokens": 0,
+        "scope": "recorded tests and listed files only"
+      },
+      "trusted_receipt_sha256": "b83299c2d74f1cad2964d5dee7ad06c17a807d613606de6b8dac5fe6a293046a",
+      "input_files": {
+        "log.txt": "Synthetic evaluation fixture: one passing test is declared.\n",
+        "receipt.json": "{\"log\": {\"path\": \"log.txt\", \"sha256\": \"dcd911e495963efa2d38665ecd1a7c5cbbc2980a2b24d225be90b75f168768d2\"}, \"result\": {\"errors\": 0, \"exit_code\": 0, \"failures\": 0, \"skipped\": 0, \"tests_run\": 1}, \"run_id\": \"evaluation-run\", \"schema_version\": 1, \"sources\": [{\"path\": \"app.py\", \"sha256\": \"09cbf5ae13a643a9b023da1035c60c5018731d5d9633a86d61b19b4e3f3aa7eb\"}]}",
+        "report.json": "{\"proof\": {\"receipt_ref\": \"receipt.json\"}, \"run_id\": \"evaluation-run\", \"status\": \"complete\"}"
+      }
+    },
+    {
+      "id": "receipt_tampered",
+      "group": "contract",
+      "safe_to_accept": false,
+      "reason": "Receipt modified after trusted digest capture.",
+      "observed_verified": false,
+      "result": {
+        "schema_version": 1,
+        "status": "invalid_evidence",
+        "verified": false,
+        "errors": [
+          "receipt_hash_mismatch"
+        ],
+        "source_files_checked": [],
+        "cloud_tokens": 0,
+        "scope": "recorded tests and listed files only"
+      },
+      "trusted_receipt_sha256": "b83299c2d74f1cad2964d5dee7ad06c17a807d613606de6b8dac5fe6a293046a",
+      "input_files": {
+        "app.py": "VALUE = 42\n",
+        "log.txt": "Synthetic evaluation fixture: one passing test is declared.\n",
+        "receipt.json": "{\"log\": {\"path\": \"log.txt\", \"sha256\": \"dcd911e495963efa2d38665ecd1a7c5cbbc2980a2b24d225be90b75f168768d2\"}, \"result\": {\"errors\": 0, \"exit_code\": 0, \"failures\": 0, \"skipped\": 0, \"tests_run\": 1}, \"run_id\": \"evaluation-run\", \"schema_version\": 1, \"sources\": [{\"path\": \"app.py\", \"sha256\": \"09cbf5ae13a643a9b023da1035c60c5018731d5d9633a86d61b19b4e3f3aa7eb\"}]} ",
+        "report.json": "{\"proof\": {\"receipt_ref\": \"receipt.json\"}, \"run_id\": \"evaluation-run\", \"status\": \"complete\"}"
+      }
+    },
+    {
+      "id": "log_tampered",
+      "group": "contract",
+      "safe_to_accept": false,
+      "reason": "Log modified after receipt capture.",
+      "observed_verified": false,
+      "result": {
+        "schema_version": 1,
+        "status": "invalid_evidence",
+        "verified": false,
+        "errors": [
+          "log_hash_mismatch"
+        ],
+        "source_files_checked": [],
+        "cloud_tokens": 0,
+        "scope": "recorded tests and listed files only"
+      },
+      "trusted_receipt_sha256": "b83299c2d74f1cad2964d5dee7ad06c17a807d613606de6b8dac5fe6a293046a",
+      "input_files": {
+        "app.py": "VALUE = 42\n",
+        "log.txt": "Synthetic evaluation fixture: one passing test is declared.\nmodified",
+        "receipt.json": "{\"log\": {\"path\": \"log.txt\", \"sha256\": \"dcd911e495963efa2d38665ecd1a7c5cbbc2980a2b24d225be90b75f168768d2\"}, \"result\": {\"errors\": 0, \"exit_code\": 0, \"failures\": 0, \"skipped\": 0, \"tests_run\": 1}, \"run_id\": \"evaluation-run\", \"schema_version\": 1, \"sources\": [{\"path\": \"app.py\", \"sha256\": \"09cbf5ae13a643a9b023da1035c60c5018731d5d9633a86d61b19b4e3f3aa7eb\"}]}",
+        "report.json": "{\"proof\": {\"receipt_ref\": \"receipt.json\"}, \"run_id\": \"evaluation-run\", \"status\": \"complete\"}"
+      }
+    },
+    {
+      "id": "source_changed",
+      "group": "contract",
+      "safe_to_accept": false,
+      "reason": "Listed source changed after the recorded test.",
+      "observed_verified": false,
+      "result": {
+        "schema_version": 1,
+        "status": "invalid_evidence",
+        "verified": false,
+        "errors": [
+          "source_hash_mismatch"
+        ],
+        "source_files_checked": [],
+        "cloud_tokens": 0,
+        "scope": "recorded tests and listed files only"
+      },
+      "trusted_receipt_sha256": "b83299c2d74f1cad2964d5dee7ad06c17a807d613606de6b8dac5fe6a293046a",
+      "input_files": {
+        "app.py": "VALUE = 43\n",
+        "log.txt": "Synthetic evaluation fixture: one passing test is declared.\n",
+        "receipt.json": "{\"log\": {\"path\": \"log.txt\", \"sha256\": \"dcd911e495963efa2d38665ecd1a7c5cbbc2980a2b24d225be90b75f168768d2\"}, \"result\": {\"errors\": 0, \"exit_code\": 0, \"failures\": 0, \"skipped\": 0, \"tests_run\": 1}, \"run_id\": \"evaluation-run\", \"schema_version\": 1, \"sources\": [{\"path\": \"app.py\", \"sha256\": \"09cbf5ae13a643a9b023da1035c60c5018731d5d9633a86d61b19b4e3f3aa7eb\"}]}",
+        "report.json": "{\"proof\": {\"receipt_ref\": \"receipt.json\"}, \"run_id\": \"evaluation-run\", \"status\": \"complete\"}"
+      }
+    },
+    {
+      "id": "wrong_run",
+      "group": "contract",
+      "safe_to_accept": false,
+      "reason": "Report references a different run identity.",
+      "observed_verified": false,
+      "result": {
+        "schema_version": 1,
+        "status": "invalid_evidence",
+        "verified": false,
+        "errors": [
+          "run_id_mismatch"
+        ],
+        "source_files_checked": [],
+        "cloud_tokens": 0,
+        "scope": "recorded tests and listed files only"
+      },
+      "trusted_receipt_sha256": "b83299c2d74f1cad2964d5dee7ad06c17a807d613606de6b8dac5fe6a293046a",
+      "input_files": {
+        "app.py": "VALUE = 42\n",
+        "log.txt": "Synthetic evaluation fixture: one passing test is declared.\n",
+        "receipt.json": "{\"log\": {\"path\": \"log.txt\", \"sha256\": \"dcd911e495963efa2d38665ecd1a7c5cbbc2980a2b24d225be90b75f168768d2\"}, \"result\": {\"errors\": 0, \"exit_code\": 0, \"failures\": 0, \"skipped\": 0, \"tests_run\": 1}, \"run_id\": \"evaluation-run\", \"schema_version\": 1, \"sources\": [{\"path\": \"app.py\", \"sha256\": \"09cbf5ae13a643a9b023da1035c60c5018731d5d9633a86d61b19b4e3f3aa7eb\"}]}",
+        "report.json": "{\"proof\": {\"receipt_ref\": \"receipt.json\"}, \"run_id\": \"other-run\", \"status\": \"complete\"}"
+      }
+    },
+    {
+      "id": "all_skipped",
+      "group": "contract",
+      "safe_to_accept": false,
+      "reason": "Receipt explicitly declares that all tests were skipped.",
+      "observed_verified": false,
+      "result": {
+        "schema_version": 1,
+        "status": "invalid_evidence",
+        "verified": false,
+        "errors": [
+          "no_tests_executed"
+        ],
+        "source_files_checked": [],
+        "cloud_tokens": 0,
+        "scope": "recorded tests and listed files only"
+      },
+      "trusted_receipt_sha256": "c7edcf3df502877d6a76a77c89bb2f29c0c383757f8e2b5b45cbff251e9905be",
+      "input_files": {
+        "app.py": "VALUE = 42\n",
+        "log.txt": "Synthetic evaluation fixture: one passing test is declared.\n",
+        "receipt.json": "{\"log\": {\"path\": \"log.txt\", \"sha256\": \"dcd911e495963efa2d38665ecd1a7c5cbbc2980a2b24d225be90b75f168768d2\"}, \"result\": {\"errors\": 0, \"exit_code\": 0, \"failures\": 0, \"skipped\": 1, \"tests_run\": 1}, \"run_id\": \"evaluation-run\", \"schema_version\": 1, \"sources\": [{\"path\": \"app.py\", \"sha256\": \"09cbf5ae13a643a9b023da1035c60c5018731d5d9633a86d61b19b4e3f3aa7eb\"}]}",
+        "report.json": "{\"proof\": {\"receipt_ref\": \"receipt.json\"}, \"run_id\": \"evaluation-run\", \"status\": \"complete\"}"
+      }
+    },
+    {
+      "id": "failed_test",
+      "group": "contract",
+      "safe_to_accept": false,
+      "reason": "Recorded test failed.",
+      "observed_verified": false,
+      "result": {
+        "schema_version": 1,
+        "status": "test_failed",
+        "verified": false,
+        "errors": [],
+        "source_files_checked": [
+          "app.py"
+        ],
+        "cloud_tokens": 0,
+        "scope": "recorded tests and listed files only",
+        "tests_run": 1,
+        "tests_skipped": 0,
+        "tests_executed": 1,
+        "receipt_sha256": "1d9ffdd53250820076710566cea18aaf6d2ba1fdb9a98410d7312379ac2d1aef"
+      },
+      "trusted_receipt_sha256": "1d9ffdd53250820076710566cea18aaf6d2ba1fdb9a98410d7312379ac2d1aef",
+      "input_files": {
+        "app.py": "VALUE = 42\n",
+        "log.txt": "Synthetic evaluation fixture: one passing test is declared.\n",
+        "receipt.json": "{\"log\": {\"path\": \"log.txt\", \"sha256\": \"dcd911e495963efa2d38665ecd1a7c5cbbc2980a2b24d225be90b75f168768d2\"}, \"result\": {\"errors\": 0, \"exit_code\": 1, \"failures\": 1, \"skipped\": 0, \"tests_run\": 1}, \"run_id\": \"evaluation-run\", \"schema_version\": 1, \"sources\": [{\"path\": \"app.py\", \"sha256\": \"09cbf5ae13a643a9b023da1035c60c5018731d5d9633a86d61b19b4e3f3aa7eb\"}]}",
+        "report.json": "{\"proof\": {\"receipt_ref\": \"receipt.json\"}, \"run_id\": \"evaluation-run\", \"status\": \"complete\"}"
+      }
+    },
+    {
+      "id": "bad_counts",
+      "group": "contract",
+      "safe_to_accept": false,
+      "reason": "Skipped count exceeds discovered tests.",
+      "observed_verified": false,
+      "result": {
+        "schema_version": 1,
+        "status": "invalid_evidence",
+        "verified": false,
+        "errors": [
+          "invalid_test_counts"
+        ],
+        "source_files_checked": [],
+        "cloud_tokens": 0,
+        "scope": "recorded tests and listed files only"
+      },
+      "trusted_receipt_sha256": "5e0f63344cdfaddec6fcd805c1dc10f7c87378cec10255d4adbada4a5cde2e14",
+      "input_files": {
+        "app.py": "VALUE = 42\n",
+        "log.txt": "Synthetic evaluation fixture: one passing test is declared.\n",
+        "receipt.json": "{\"log\": {\"path\": \"log.txt\", \"sha256\": \"dcd911e495963efa2d38665ecd1a7c5cbbc2980a2b24d225be90b75f168768d2\"}, \"result\": {\"errors\": 0, \"exit_code\": 0, \"failures\": 0, \"skipped\": 2, \"tests_run\": 1}, \"run_id\": \"evaluation-run\", \"schema_version\": 1, \"sources\": [{\"path\": \"app.py\", \"sha256\": \"09cbf5ae13a643a9b023da1035c60c5018731d5d9633a86d61b19b4e3f3aa7eb\"}]}",
+        "report.json": "{\"proof\": {\"receipt_ref\": \"receipt.json\"}, \"run_id\": \"evaluation-run\", \"status\": \"complete\"}"
+      }
+    },
+    {
+      "id": "traversal",
+      "group": "contract",
+      "safe_to_accept": false,
+      "reason": "Log reference exits the allowed evidence root.",
+      "observed_verified": false,
+      "result": {
+        "schema_version": 1,
+        "status": "invalid_evidence",
+        "verified": false,
+        "errors": [
+          "unsafe_reference"
+        ],
+        "source_files_checked": [],
+        "cloud_tokens": 0,
+        "scope": "recorded tests and listed files only"
+      },
+      "trusted_receipt_sha256": "3951940cb3e79c4cc018af29d6a86e71fbaa08691f88955a4761454dd7af7294",
+      "input_files": {
+        "app.py": "VALUE = 42\n",
+        "log.txt": "Synthetic evaluation fixture: one passing test is declared.\n",
+        "receipt.json": "{\"log\": {\"path\": \"../outside.txt\", \"sha256\": \"dcd911e495963efa2d38665ecd1a7c5cbbc2980a2b24d225be90b75f168768d2\"}, \"result\": {\"errors\": 0, \"exit_code\": 0, \"failures\": 0, \"skipped\": 0, \"tests_run\": 1}, \"run_id\": \"evaluation-run\", \"schema_version\": 1, \"sources\": [{\"path\": \"app.py\", \"sha256\": \"09cbf5ae13a643a9b023da1035c60c5018731d5d9633a86d61b19b4e3f3aa7eb\"}]}",
+        "report.json": "{\"proof\": {\"receipt_ref\": \"receipt.json\"}, \"run_id\": \"evaluation-run\", \"status\": \"complete\"}"
+      }
+    },
+    {
+      "id": "zero_tests",
+      "group": "contract",
+      "safe_to_accept": false,
+      "reason": "Receipt records no tests.",
+      "observed_verified": false,
+      "result": {
+        "schema_version": 1,
+        "status": "invalid_evidence",
+        "verified": false,
+        "errors": [
+          "invalid_test_counts"
+        ],
+        "source_files_checked": [],
+        "cloud_tokens": 0,
+        "scope": "recorded tests and listed files only"
+      },
+      "trusted_receipt_sha256": "fcaa8831c2455fbb0eec4539e09d4ffeee568c36349680991583166c3cde34bb",
+      "input_files": {
+        "app.py": "VALUE = 42\n",
+        "log.txt": "Synthetic evaluation fixture: one passing test is declared.\n",
+        "receipt.json": "{\"log\": {\"path\": \"log.txt\", \"sha256\": \"dcd911e495963efa2d38665ecd1a7c5cbbc2980a2b24d225be90b75f168768d2\"}, \"result\": {\"errors\": 0, \"exit_code\": 0, \"failures\": 0, \"skipped\": 0, \"tests_run\": 0}, \"run_id\": \"evaluation-run\", \"schema_version\": 1, \"sources\": [{\"path\": \"app.py\", \"sha256\": \"09cbf5ae13a643a9b023da1035c60c5018731d5d9633a86d61b19b4e3f3aa7eb\"}]}",
+        "report.json": "{\"proof\": {\"receipt_ref\": \"receipt.json\"}, \"run_id\": \"evaluation-run\", \"status\": \"complete\"}"
+      }
+    },
+    {
+      "id": "skips_omitted",
+      "group": "limits",
+      "safe_to_accept": false,
+      "reason": "Scenario truth: all tests skipped, but the producer omits skipped and reports success.",
+      "observed_verified": true,
+      "result": {
+        "schema_version": 1,
+        "status": "verified_on_recorded_tests",
+        "verified": true,
+        "errors": [],
+        "source_files_checked": [
+          "app.py"
+        ],
+        "cloud_tokens": 0,
+        "scope": "recorded tests and listed files only",
+        "tests_run": 1,
+        "tests_skipped": 0,
+        "tests_executed": 1,
+        "receipt_sha256": "fe42f8bf17aa68af12e66399ba461de5609b84f182ad5f0639047bddcc097777"
+      },
+      "trusted_receipt_sha256": "fe42f8bf17aa68af12e66399ba461de5609b84f182ad5f0639047bddcc097777",
+      "input_files": {
+        "app.py": "VALUE = 42\n",
+        "log.txt": "Synthetic evaluation fixture: one passing test is declared.\n",
+        "receipt.json": "{\"log\": {\"path\": \"log.txt\", \"sha256\": \"dcd911e495963efa2d38665ecd1a7c5cbbc2980a2b24d225be90b75f168768d2\"}, \"result\": {\"errors\": 0, \"exit_code\": 0, \"failures\": 0, \"tests_run\": 1}, \"run_id\": \"evaluation-run\", \"schema_version\": 1, \"sources\": [{\"path\": \"app.py\", \"sha256\": \"09cbf5ae13a643a9b023da1035c60c5018731d5d9633a86d61b19b4e3f3aa7eb\"}]}",
+        "report.json": "{\"proof\": {\"receipt_ref\": \"receipt.json\"}, \"run_id\": \"evaluation-run\", \"status\": \"complete\"}"
+      }
+    },
+    {
+      "id": "unlisted_change",
+      "group": "limits",
+      "safe_to_accept": false,
+      "reason": "Scenario truth: a relevant dependency changed, but it was omitted from receipt scope.",
+      "observed_verified": true,
+      "result": {
+        "schema_version": 1,
+        "status": "verified_on_recorded_tests",
+        "verified": true,
+        "errors": [],
+        "source_files_checked": [
+          "app.py"
+        ],
+        "cloud_tokens": 0,
+        "scope": "recorded tests and listed files only",
+        "tests_run": 1,
+        "tests_skipped": 0,
+        "tests_executed": 1,
+        "receipt_sha256": "b83299c2d74f1cad2964d5dee7ad06c17a807d613606de6b8dac5fe6a293046a"
+      },
+      "trusted_receipt_sha256": "b83299c2d74f1cad2964d5dee7ad06c17a807d613606de6b8dac5fe6a293046a",
+      "input_files": {
+        "app.py": "VALUE = 42\n",
+        "log.txt": "Synthetic evaluation fixture: one passing test is declared.\n",
+        "receipt.json": "{\"log\": {\"path\": \"log.txt\", \"sha256\": \"dcd911e495963efa2d38665ecd1a7c5cbbc2980a2b24d225be90b75f168768d2\"}, \"result\": {\"errors\": 0, \"exit_code\": 0, \"failures\": 0, \"skipped\": 0, \"tests_run\": 1}, \"run_id\": \"evaluation-run\", \"schema_version\": 1, \"sources\": [{\"path\": \"app.py\", \"sha256\": \"09cbf5ae13a643a9b023da1035c60c5018731d5d9633a86d61b19b4e3f3aa7eb\"}]}",
+        "report.json": "{\"proof\": {\"receipt_ref\": \"receipt.json\"}, \"run_id\": \"evaluation-run\", \"status\": \"complete\"}",
+        "unlisted_dependency.py": "# scenario: dependency modified after the test\n"
+      }
+    },
+    {
+      "id": "dishonest_executor",
+      "group": "limits",
+      "safe_to_accept": false,
+      "reason": "Scenario truth: no test occurred; dishonest executor provides consistent fabricated artifacts and the matching trust digest.",
+      "observed_verified": true,
+      "result": {
+        "schema_version": 1,
+        "status": "verified_on_recorded_tests",
+        "verified": true,
+        "errors": [],
+        "source_files_checked": [
+          "app.py"
+        ],
+        "cloud_tokens": 0,
+        "scope": "recorded tests and listed files only",
+        "tests_run": 1,
+        "tests_skipped": 0,
+        "tests_executed": 1,
+        "receipt_sha256": "b83299c2d74f1cad2964d5dee7ad06c17a807d613606de6b8dac5fe6a293046a"
+      },
+      "trusted_receipt_sha256": "b83299c2d74f1cad2964d5dee7ad06c17a807d613606de6b8dac5fe6a293046a",
+      "input_files": {
+        "app.py": "VALUE = 42\n",
+        "log.txt": "Synthetic evaluation fixture: one passing test is declared.\n",
+        "receipt.json": "{\"log\": {\"path\": \"log.txt\", \"sha256\": \"dcd911e495963efa2d38665ecd1a7c5cbbc2980a2b24d225be90b75f168768d2\"}, \"result\": {\"errors\": 0, \"exit_code\": 0, \"failures\": 0, \"skipped\": 0, \"tests_run\": 1}, \"run_id\": \"evaluation-run\", \"schema_version\": 1, \"sources\": [{\"path\": \"app.py\", \"sha256\": \"09cbf5ae13a643a9b023da1035c60c5018731d5d9633a86d61b19b4e3f3aa7eb\"}]}",
+        "report.json": "{\"proof\": {\"receipt_ref\": \"receipt.json\"}, \"run_id\": \"evaluation-run\", \"status\": \"complete\"}"
+      }
+    }
+  ],
+  "source_sha256": {
+    "verify.py": "fc916d268e0b5f2b08e21ffceea44c100d8f5b53c7fa19d245205da7be58c656",
+    "evaluate.py": "80f38db6b71f38a9ee4e010a0060ea11cb5f73eb63a7299b164b62f6b8f34e0f",
+    "evaluation_cases.json": "0269dfd1bd87bae5fc421f787d097b159e400f815a146d3da8ece905d0424741"
+  }
+}
