@@ -210,9 +210,11 @@ python scripts/generate_docs_visuals.py
 python scripts/benchmark_full.py --json
 ```
 
-La compression de code est volontairement prudente et rend l’entrée originale
-si une transformation l’agrandit. La restauration est conservée en mémoire par
-défaut ; sa persistance exige un stockage borné explicite.
+Le code reste intact. Le JSON conserve toutes ses valeurs et les logs gardent
+leurs lignes distinctes dans l'ordre. Les tailles sont des octets UTF-8, pas des
+tokens facturés. Les originaux restent en mémoire du processus jusqu'à son arrêt
+ou au vidage du stockage ; la CLI ne fournit pas de restauration persistante.
+Voir le [protocole de comparaison](docs/plans/2026-09-13-compression-integrity.md).
 
 ## Architecture résumée
 
