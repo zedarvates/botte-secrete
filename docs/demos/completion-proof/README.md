@@ -35,17 +35,20 @@ exécutions datées et les fichiers de présentation, qui sont actualisés.
 
 ## Pièces de l'exécution publiée
 
-- [Rapport initial](executions/20260913T140607785284Z/avant/rapport-agent.json)
-- [Anomalie détectée par Botte](executions/20260913T140607785284Z/01-audit-avant.json)
-- [Tests avant : une erreur](executions/20260913T140607785284Z/02-tests-avant.txt)
-- [Tests après : trois réussites](executions/20260913T140607785284Z/03-tests-apres.txt)
-- [Rapport corrigé avec références](executions/20260913T140607785284Z/apres/rapport-agent.json)
-- [Nouvel audit : zéro constat](executions/20260913T140607785284Z/04-audit-apres.json)
-- [Contre-exemple : référence fictive](executions/20260913T140607785284Z/controle-limite.json)
-- [Résultat du contre-exemple](executions/20260913T140607785284Z/05-audit-limite.json)
-- [Tests du détecteur](executions/20260913T140607785284Z/06-tests-detecteur.txt)
-- [Résultats et provenance](executions/20260913T140607785284Z/resultats.json)
-- [Empreintes des pièces](executions/20260913T140607785284Z/empreintes.json)
+- [Rapport initial](executions/20260913T141549166699Z/avant/rapport-agent.json)
+- [Anomalie détectée par Botte](executions/20260913T141549166699Z/01-audit-avant.json)
+- [Tests avant : une erreur](executions/20260913T141549166699Z/02-tests-avant.txt)
+- [Tests après : trois réussites](executions/20260913T141549166699Z/03-tests-apres.txt)
+- [Rapport corrigé avec références](executions/20260913T141549166699Z/apres/rapport-agent.json)
+- [Nouvel audit : zéro constat](executions/20260913T141549166699Z/04-audit-apres.json)
+- [Contre-exemple : référence fictive](executions/20260913T141549166699Z/controle-limite.json)
+- [Résultat du contre-exemple](executions/20260913T141549166699Z/05-audit-limite.json)
+- [Tests du détecteur](executions/20260913T141549166699Z/06-tests-detecteur.txt)
+- [Résultats et provenance](executions/20260913T141549166699Z/resultats.json)
+- [Empreintes des pièces](executions/20260913T141549166699Z/empreintes.json)
+- [Nouveau : quatre vérifications des preuves](executions/20260913T141549166699Z/verification-summary.json)
+- [Reçu de la version corrigée](executions/20260913T141549166699Z/apres-receipt.json)
+- [Empreinte capturée séparément par l'exécuteur](executions/20260913T141549166699Z/apres-trusted-receipt.sha256)
 
 Les rapports sont conservés avec des chemins relatifs. Les éventuels chemins
 absolus des journaux sont remplacés par `<local-root>` avant enregistrement.
@@ -64,9 +67,17 @@ sources du détecteur. Elles ne constituent pas une signature indépendante.
   de bugs. La moyenne d'une liste vide vaut zéro uniquement par convention ici.
 - Les résultats sont une capture datée, pas une télémétrie en direct.
 
-## Améliorations proposées
+## Vérification réelle ajoutée
 
-Priorité à une vérification indépendante des preuves : existence du fichier cité,
-empreinte correspondante, résultat de test enregistré et association à la bonne
-version du code. Voir la [suite proposée](ameliorations.md), qui distingue les
-évolutions envisagées de ce que cette démonstration implémente aujourd'hui.
+Le nouveau mode `--verify`, distinct du détecteur A11, contrôle le reçu,
+le journal et les empreintes du code et des tests. La démonstration capture
+l'empreinte de référence séparément du rapport et montre quatre résultats :
+test en échec, version corrigée vérifiée, autre version refusée, référence fictive
+refusée. Le [contrat v1](../../../skills/completion_proof/VERIFICATION.md) précise
+les entrées et la limite de confiance dans l'exécuteur.
+
+## Améliorations suivantes
+
+Le contrôle d'intégrité v1 est implémenté. Le blocage strict facultatif,
+l'intégration avec un exécuteur générique et une mesure de fiabilité sur corpus
+restent à développer. Voir la [suite proposée](ameliorations.md).

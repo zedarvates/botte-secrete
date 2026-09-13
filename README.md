@@ -38,6 +38,10 @@ tests. [Follow the replayable demonstration](docs/demos/completion-proof/README.
 with recorded outputs and an explicit negative control: A11 detects evidence
 markers but does not authenticate them.
 
+The separate opt-in [receipt verifier](skills/completion_proof/VERIFICATION.md)
+checks actual artifacts and source hashes against a digest supplied by the
+trusted test executor; it does not rely on a hash asserted by the agent report.
+
 ## Why Botte Secrète?
 
 Agent workflows often spend expensive model tokens on work that does not need a

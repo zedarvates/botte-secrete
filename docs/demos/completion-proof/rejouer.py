@@ -74,8 +74,14 @@ if __name__ == "__main__":
         write(folder / "test_moyenne.py", tests)
     save(before / "rapport-agent.json", {"status": "complete", "message": "La fonction moyenne est terminee.", "scenario": "Declaration mise en scene pour la demonstration; aucun agent autonome execute."})
     initial = audit(before / "rapport-agent.json", "01-audit-avant.json")
+    snapshots = {folder.name: {name: digest(folder / name)
+                             for name in ("moyenne.py", "test_moyenne.py")}
+                 for folder in (before, after)}
     failed = execute([sys.executable, "-m", "unittest", "-v", "test_moyenne"], before, "02-tests-avant.txt")
     passed = execute([sys.executable, "-m", "unittest", "-v", "test_moyenne"], after, "03-tests-apres.txt")
+    if any(digest(folder / name) != value for folder in (before, after)
+           for name, value in snapshots[folder.name].items()):
+        raise RuntimeError("Source ou tests modifies pendant l'execution")
     if initial["summary"]["total"] != 1 or failed.returncode == 0 or passed.returncode != 0:
         raise RuntimeError("Le scenario ne produit pas les resultats attendus.")
     if "Ran 3 tests" not in passed.stderr or "OK" not in passed.stderr:
@@ -90,8 +96,49 @@ if __name__ == "__main__":
     module_tests = execute([sys.executable, "-m", "skills.completion_proof.test_completion_proof"], repo, "06-tests-detecteur.txt")
     if module_tests.returncode != 0:
         raise RuntimeError("Les tests du detecteur echouent.")
+    # This demo executor captures the trusted digest outside the agent report.
+    # It is a local integrity anchor, not an independently signed attestation.
+    def verify(claim, source_dir, pin, output):
+        result = execute([sys.executable, "-m", "skills.completion_proof.cli",
+                          claim, "--verify", "--json", "--evidence-root", ".",
+                          "--source-root", source_dir, "--receipt-sha256", pin],
+                         run, output)
+        if result.returncode:
+            raise RuntimeError("Verification non executee")
+        return json.loads(result.stdout)
+
+    checks = {}
+    for folder, outcome, log in ((before, failed, "02-tests-avant.txt"),
+                                 (after, passed, "03-tests-apres.txt")):
+        run_id = run.name + "-" + folder.name
+        receipt_name = folder.name + "-receipt.json"
+        claim_name = folder.name + "-claim-v1.json"
+        save(run / receipt_name, {
+            "schema_version": 1, "run_id": run_id,
+            "result": {"exit_code": outcome.returncode, "tests_run": 3,
+                       "failures": 0, "errors": 1 if folder == before else 0},
+            "log": {"path": log, "sha256": digest(run / log)},
+            "sources": [{"path": name, "sha256": value}
+                        for name, value in snapshots[folder.name].items()],
+        })
+        pin = digest(run / receipt_name)
+        write(run / (folder.name + "-trusted-receipt.sha256"), pin + "\n")
+        save(run / claim_name, {"status": "complete", "run_id": run_id,
+                               "proof": {"receipt_ref": receipt_name}})
+        checks[folder.name] = verify(claim_name, folder.name, pin,
+                                     folder.name + "-verification.json")
+    checks["source_changed"] = verify("apres-claim-v1.json", "avant", pin,
+                                       "source-changed-verification.json")
+    checks["missing"] = verify("controle-limite.json", "apres", pin,
+                                "missing-verification.json")
+    if (checks["avant"]["status"] != "test_failed"
+            or not checks["apres"]["verified"]
+            or checks["source_changed"]["verified"]
+            or checks["missing"]["status"] != "missing_evidence"):
+        raise RuntimeError("Verification des preuves inattendue")
+    save(run / "verification-summary.json", checks)
     sources = {}
-    for name in ("__init__.py", "audit.py", "cli.py", "test_completion_proof.py"):
+    for name in ("__init__.py", "audit.py", "cli.py", "test_completion_proof.py", "verify.py", "test_verify.py"):
         path = repo / "skills/completion_proof" / name
         sources["skills/completion_proof/" + name] = digest(path)
     proof_log = (after / "../03-tests-apres.txt").resolve()
@@ -113,6 +160,7 @@ if __name__ == "__main__":
 </div><aside class="limit"><h2>Ce que cette démonstration prouve</h2><p>Botte détecte ici une annonce sans preuve associée. Les tests exécutés séparément établissent la correction sur trois cas précis.</p><p><strong>Une référence présente n'est pas une preuve authentifiée.</strong> Un contrôle supplémentaire montre qu'A11 accepte aussi une référence fictive. Ce détecteur seul ne garantit donc ni la vérité du rapport, ni l'absence de bugs.</p><a href="RUN/05-audit-limite.json">Consulter ce contrôle de limite</a></aside>
 <details><summary>Consulter les pièces et rejouer</summary><p><a href="RUN/resultats.json">Résultats de l'exécution</a> · <a href="RUN/empreintes.json">Empreintes SHA-256</a> · <a href="RUN/06-tests-detecteur.txt">Tests du détecteur</a> · <a href="README.md">Mode d'emploi</a></p><p>Le bouton raconte l'exécution enregistrée. Pour relancer réellement les contrôles, utiliser le script fourni avec une installation locale de Botte Secrète.</p></details><footer>Aucun appel à un modèle dans le scénario. L'annonce et la correction sont préparées ; les audits et tests sont exécutés. Aucun dépôt n'est publié. Exécution : RUN.</footer></main>
 <script>const cards=[...document.querySelectorAll('.card')];let step=-1;document.querySelector('#play').addEventListener('click',()=>{step=(step+1)%4;cards.forEach((c,i)=>c.style.outline=i===step?'3px solid #507452':'none');document.querySelector('#status').textContent=['1 / Une annonce de réalisation, sans preuve jointe.','2 / Botte détecte exactement une déclaration sans preuve.','3 / Le test échoue sur la liste vide ; le code est corrigé.','4 / Les trois tests réussissent ; leurs résultats sont consultables.'][step];document.querySelector('#play').textContent=step===3?'Revoir le parcours':'Étape suivante';cards[step].scrollIntoView({behavior:'smooth',block:'nearest'});});</script></html>'''
+    page = page.replace('<details><summary>', '<section class="card"><h2>Nouveau : vérifier les pièces réelles</h2><p>Le vérificateur distinct contrôle le reçu, le journal et les empreintes du code et des tests, avec une empreinte de référence capturée séparément par cet exécuteur local.</p><p>Résultats réels : test initial en échec ; version corrigée vérifiée sur trois tests ; autre version du code refusée ; référence fictive refusée.</p><a href="RUN/verification-summary.json">Consulter les quatre vérifications</a><p>Cette intégrité dépend de la confiance dans l’exécuteur et son empreinte de référence. Elle ne certifie ni une machine compromise, ni les fichiers non listés.</p></section><details><summary>')
     readme = (SCRIPT_DIR / "README.md").read_text(encoding="utf-8")
     start = readme.index("## Pièces de l'exécution publiée")
     end = readme.index("Les rapports sont conservés", start)
@@ -129,12 +177,20 @@ if __name__ == "__main__":
             ("Tests du détecteur", "06-tests-detecteur.txt"),
             ("Résultats et provenance", "resultats.json"),
             ("Empreintes des pièces", "empreintes.json"),
+            ("Nouveau : quatre vérifications des preuves", "verification-summary.json"),
+            ("Reçu de la version corrigée", "apres-receipt.json"),
+            ("Empreinte capturée séparément par l'exécuteur", "apres-trusted-receipt.sha256"),
         )
     ) + "\n\n"
-    write(BASE / "README.md", readme[:start] + evidence + readme[end:])
+    rendered_readme = readme[:start] + evidence + readme[end:]
+    contract = os.path.relpath(repo / "skills/completion_proof/VERIFICATION.md", BASE).replace("\\", "/")
+    if BASE != SCRIPT_DIR:
+        rendered_readme = rendered_readme.replace("../../../skills/completion_proof/VERIFICATION.md", contract)
+    write(BASE / "README.md", rendered_readme)
     if BASE != SCRIPT_DIR:
         for name in ("ameliorations.md", "parcours.svg"):
-            write(BASE / name, (SCRIPT_DIR / name).read_text(encoding="utf-8"))
+            content = (SCRIPT_DIR / name).read_text(encoding="utf-8")
+            write(BASE / name, content.replace("../../../skills/completion_proof/VERIFICATION.md", contract))
     write(BASE / "demonstration.html", page.replace("RUN", html.escape(rel)))
     print(json.dumps({"execution": str(run), "page": str(BASE / "demonstration.html"), "before_findings": 1, "after_findings": 0, "tests": "3 passed", "limitation_confirmed": True}))
 

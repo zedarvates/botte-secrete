@@ -40,6 +40,10 @@ tests. [Découvrir la démonstration rejouable](docs/demos/completion-proof/READ
 ses résultats et sa limite : A11 détecte des marqueurs de preuve sans en vérifier
 l'authenticité.
 
+Le [vérificateur de reçus](skills/completion_proof/VERIFICATION.md), activable
+séparément, contrôle les fichiers et leurs empreintes à partir d'une référence
+fournie par l'exécuteur de confiance, hors du rapport de l'agent.
+
 ## Pourquoi Botte Secrète ?
 
 Les agents consomment souvent des tokens coûteux pour des opérations qui ne

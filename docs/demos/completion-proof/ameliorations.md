@@ -1,8 +1,15 @@
-# Suite proposée — pas encore implémentée
+# Avancement et suite proposée
 
 ## 1. Vérifier la preuve, pas seulement sa présence
 
-Ajouter un validateur distinct du détecteur déclaratif A11. Définir une racine de
+**Réalisé en v1** : validateur distinct, empreinte de référence externe au rapport,
+existence et empreinte des pièces, lien avec les fichiers de code et de test,
+résultat enregistré, tests adversariaux et démonstration rejouée. Voir le
+[contrat et ses limites](../../../skills/completion_proof/VERIFICATION.md).
+L'exécuteur doit rester de confiance ; un reçu cohérent n'est pas une signature
+indépendante. Un exécuteur générique reste à construire.
+
+Le périmètre initial était : ajouter un validateur distinct du détecteur déclaratif A11. Définir une racine de
 preuves et refuser les références absentes, les chemins qui en sortent et les
 empreintes non concordantes. Une empreinte seule ne prouve pas un test réussi :
 associer résultat, commande autorisée, sortie, version du code et identifiant
