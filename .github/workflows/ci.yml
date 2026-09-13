@@ -2,7 +2,7 @@ name: Botte Secrète CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, feat/execution-harness-atlas-v1]
   pull_request:
     branches: [main, feat/shared-memory-scribe-v1, feat/needle2-readonly-pilot]
 
