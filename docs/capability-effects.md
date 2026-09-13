@@ -192,10 +192,66 @@ Neither source paths nor digests authenticate the caller or evidence.
 Measure three planning examples with `python scripts/measure_effect_review.py`.
 It reports ordinary, full-declaration and compact JSON UTF-8 byte sizes, including
 the shared skill once per workflow and the overhead compared to ordinary output.
-This measures serialized context only. Later detail reads add cost; model tokens,
+It also includes a fixed recovery-detail example, requesting prerequisites, task
+scope and retry conditions for each declared selected skill, including the new
+tool schema once and the serialized requests/responses. These fields are chosen
+for a cost example, not automatically judged sufficient for a real operation.
+This measures serialized context only. Other detail reads add cost; model tokens,
 real task quality, execution overhead and general savings are not measured.
 Further blanket declaration rollout is paused in favor of this shared method and
 evaluation on concrete operations. Existing declarations remain available.
+
+### Read deferred details
+
+```bash
+python -m skills.capabilities.cli effects skills/checkup --select /retry
+python -m skills.capabilities.cli effects skills/checkup --select /preconditions --select /expected_effects/0 --expect-sha256 DIGEST_FROM_REVIEW
+```
+
+Python: `skills.capabilities.review.read_details(skill_dir, selectors,
+expected_id=None, expected_sha256=None)`. MCP: discover `effect_details` with
+`find_tool`, then pass the review's `source`, explicit `selectors` and its
+`declaration_sha256` as `expected_sha256`. It stays outside the always-listed
+core tools. MCP accepts canonical bundled `skills/<...>/SKILL.md` paths only;
+absolute paths, traversal and directory aliases are rejected. Python/CLI support
+external trees with the caller's independently supplied `expected_id` / `--id`.
+The MCP caller cannot replace that identity with a sidecar claim.
+
+Selectors name whole sections: `/preconditions`, `/expected_effects`,
+`/downstream_effects`, `/reversibility`, `/retry`, `/required_scope`, `/analysis`
+or `/reuse`. For the four list sections, `/section/0` selects a zero-based entry.
+An effect entry retains all its scope, likelihood, basis, impact and verification
+fields; a reuse entry retains its target context and evidence. No substring
+matching, arbitrary nested fields or wildcards are implemented. Request 1–16
+selectors; duplicate selectors are collapsed. Invalid selectors/digests fail
+before declaration inspection. Whole sections can still be large.
+
+The tool reads and validates the full bounded declaration and its source bindings
+locally, then returns only the requested values under `selected`. It reduces
+returned context, not those filesystem reads. The response also includes the
+current inspector `status`, identity, canonical digest, `matches_expected` and
+`error_count`. It does not execute evidence/verification text or perform inference.
+
+| `selection_status` | Returned detail |
+|---|---|
+| `selected` | Every requested value, unchanged. An empty list remains an available empty section, not evidence that no effects exist. |
+| `changed` | No fragments: the supplied digest differs from the current declaration. Obtain a fresh review and reassess; do not silently drop the expected digest to combine revisions. |
+| `unavailable` | No fragments: missing, invalid or stale declaration. Use the ordinary full inspector/source for diagnosis; a matching declaration digest cannot make changed source files current. |
+| `not_found` | No fragments: at least one list index is absent. `missing_selectors` identifies them; no partial selection is presented as complete. |
+
+Without an expected digest, `matches_expected` is null: this is an initial current
+read, with no comparison to a prior review. Missing/invalid declarations also
+leave that comparison unknown. Canonical JSON digests ignore formatting and key
+order; array positions and changed content affect them. The digest is neither a
+raw-file hash nor an authenticated or immutable execution snapshot. CLI exits 0
+only for `selected`, 1 for unavailable/changed/not-found selections, and 2 for
+invalid arguments. The legacy `effects <skill_dir>` output remains unchanged.
+
+Selected fragments do not verify applicability, task outcomes or authorization.
+They do not identify relevant operations automatically or replace the selected
+skill's complete instructions. Revalidate references across calls if the source
+changes; only explicitly bound source files are checked, with the existing
+snapshot/concurrency limits.
 
 ## Operation and dependency boundaries
 

@@ -18,6 +18,13 @@ applicability.
 Start with Conductor's `review_before`. It is a compact index: operation-specific
 assessment is deferred. Read the relevant sections of that source's `effects.json`
 for expected changes, downstream dependencies and recovery/retry conditions.
+Fetch just those details with MCP `effect_details`: copy `source` and
+`declaration_sha256` from the review into `source` and `expected_sha256`, then
+request selectors such as `/retry` or `/expected_effects/0`. CLI/Python equivalents
+are in the [detail-reading guide](../../docs/capability-effects.md#read-deferred-details).
+Require `selection_status: selected`; a changed or unavailable declaration or
+missing entry returns no fragments. Refresh the review and reassess changed
+conditions before combining detail reads. Array indexes belong to that digest.
 The capability-wide reversal/retry labels may cover several different operations.
 Missing, invalid or stale declarations call for checking the relevant source;
 they do not create a new approval requirement. An empty attention list is not a

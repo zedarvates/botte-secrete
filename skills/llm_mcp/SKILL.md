@@ -23,6 +23,7 @@ on its own. Pure stdlib, stdio JSON-RPC 2.0, no dependencies.
 | `qa_task_status` | Export a passive, non-terminal status observation for a task plane |
 | `qa_advise` | Explain a shadow-only k-NN route suggestion or abstention |
 | `qa_record` | Add an externally verified outcome without raw task storage |
+| `effect_details` | Read selected effects sections from a bundled skill, optionally matching a prior declaration digest |
 | `compress` | Compress context; reversible calls add deduplicated verified grounding labels |
 
 ## Register in Claude Code

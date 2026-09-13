@@ -62,6 +62,9 @@ Use the shared [effect-review method](../effect-review/SKILL.md) for before/afte
 assessment and a concrete reuse proposal. `skills.capabilities.review` generates
 compact deterministic cues for Conductor `--review-effects`, without an LLM call.
 Detailed operation prose stays in sidecars; the compact view defers its assessment.
+Use `effects <skill_dir> --select /retry` or Python `review.read_details` to fetch
+selected sections. Pass `--expect-sha256` / `expected_sha256` from the review to
+detect changed declarations. See the [detail-reading guide](../../docs/capability-effects.md#read-deferred-details).
 
 When creating or updating declarations, use the read-only `template` command and
 the [authoring contract](../../docs/capability-effects.md). Keep substantial

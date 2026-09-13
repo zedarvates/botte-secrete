@@ -32,6 +32,9 @@ def main(argv=None) -> int:
     s = sub.add_parser("effects", help="inspect one skill's effects declaration (read-only)")
     s.add_argument("skill_dir", type=Path)
     s.add_argument("--id", help="expected qualified identity; required for an external tree")
+    s.add_argument("--select", action="append", metavar="/SECTION[/INDEX]",
+                   help="return an exact section or list entry; repeat for up to 16 selectors")
+    s.add_argument("--expect-sha256", help="require the canonical declaration digest from review_before; requires --select")
     s = sub.add_parser("template", help="print a draft effects declaration; does not write files")
     s.add_argument("skill_dir", type=Path)
     s.add_argument("--id", required=True, help="qualified identity, e.g. owner/repo:skills/name")
@@ -48,6 +51,17 @@ def main(argv=None) -> int:
                 suffix = f" [effects: {c.effects['status']}]" if c.effects else ""
                 print(f"  [{c.layer:8}] {c.name:24} {c.description[:64]}{suffix}")
     elif args.cmd == "effects":
+        if args.expect_sha256 is not None and args.select is None:
+            p.error("--expect-sha256 requires --select")
+        if args.select is not None:
+            from skills.capabilities.review import read_details
+            try:
+                report = read_details(args.skill_dir, args.select, expected_id=args.id,
+                                      expected_sha256=args.expect_sha256)
+            except ValueError as exc:
+                p.error(str(exc))
+            print(json.dumps(report, ensure_ascii=False, indent=2))
+            return 0 if report["selection_status"] == "selected" else 1
         report = inspect_effects(args.skill_dir, expected_id=args.id)
         print(json.dumps(report, ensure_ascii=False, indent=2))
         return 0 if report["status"] == "declared" else 1

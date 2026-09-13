@@ -496,6 +496,20 @@ TOOLS = [
                         "required": ["goal"]},
     },
     {
+        "name": "effect_details",
+        "description": "Read selected effects declaration sections or list entries for a bundled skill. "
+                       "Use review_before.source and its declaration_sha256 to retrieve deferred details "
+                       "without mixing versions. Read-only; no execution or model call.",
+        "inputSchema": {"type": "object", "additionalProperties": False, "properties": {
+            "source": {"type": "string", "description": "Canonical skills/<name>/SKILL.md path from review_before."},
+            "selectors": {"type": "array", "minItems": 1, "maxItems": 16,
+                          "items": {"type": "string", "maxLength": 64},
+                          "description": "Exact /section or /list_section/index paths, e.g. /retry or /expected_effects/0."},
+            "expected_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$",
+                                "description": "Canonical declaration digest from review_before; changed declarations return no fragments."}},
+            "required": ["source", "selectors"]},
+    },
+    {
         "name": "execute_plan",
         "description": "Plan a goal AND run its read-only analysis steps (the conductor "
                        "executor). Mutating/generative/cloud steps are gated (run only with "
@@ -1234,6 +1248,15 @@ def _tool_conduct(args: dict) -> str:
                       ensure_ascii=False, indent=2)
 
 
+def _tool_effect_details(args: dict) -> str:
+    from skills.capabilities.review import read_bundled_details
+    if set(args) - {"source", "selectors", "expected_sha256"}:
+        raise ValueError("unsupported effect_details argument")
+    report = read_bundled_details(args["source"], args["selectors"],
+                                  expected_sha256=args.get("expected_sha256"))
+    return json.dumps(report, ensure_ascii=False, indent=2)
+
+
 def _tool_execute_plan(args: dict) -> str:
     from skills.conductor import run_goal
     r = run_goal(args["goal"], confirm=bool(args.get("confirm", False)),
@@ -1477,6 +1500,7 @@ DISPATCH = {
     "list_reports": _tool_list_reports,
     "routing_stats": _tool_routing_stats,
     "conduct": _tool_conduct,
+    "effect_details": _tool_effect_details,
     "execute_plan": _tool_execute_plan,
     "security_scan": _tool_security_scan,
     "scan_malicious": _tool_scan_malicious,

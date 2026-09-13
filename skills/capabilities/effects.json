@@ -1,17 +1,17 @@
 {
   "schema": "botte.capability-effects/v1",
   "capability_id": "zedarvates/botte-secrete:skills/capabilities",
-  "contract_version": "0.5.0",
+  "contract_version": "0.6.0",
   "source_hashes": {
-    "SKILL.md": "5eee4eafe7f42300290ad03a354e0c0b22b7e5dbdbe4ab00c7ffafbccbbeac86",
+    "SKILL.md": "8da9c4a645d402dc1fa2e3d7053b71d50fc3fddca61da7ef40444067e178d7f4",
     "__init__.py": "7d4d3e1854faec18d12335c4a1632b9fd59e5b22f774a8a9fc69467d1ddb75c5",
     "registry.py": "5b35c77358bf7899d8bc3d2bbaacb5f933a2e18921378bebc7dfab42fa8d5b36",
-    "cli.py": "7624a0ef72921a285ba3a69bf4965ffa086b27628df362499d2093c00f1e7976",
+    "cli.py": "c9366ed7e3522d647dfb2d1d887053dd1551d265d52b5318b08ee98ddeda22eb",
     "effects.py": "3965c5d1f84f1ca1b932f12944493ffc14e3458062db54f098b5ccbb2741be47",
     "observations.py": "3f3538ce6f8b342b9c42e13c1560e77b9e350e8dd1f579b567fbc7763643ce97",
     "observation_schema.py": "f346c90c6979d9bab0608d32f08e3b86c39d3dfbcdfe2484118c530fe4e1bbd2",
     "network_observations.py": "c91421fb04df629dafcbe167f83f52336424c6750589854fa39578aefe7239a5",
-    "review.py": "8e333240d1cf9ef653ac9a3332ff09d177007414e5b0812fe37d1e8383f9c4d7"
+    "review.py": "e981ee967068abcd36bad56418ce1cad3c721ef5abe1496a14495fb56bc5dc51"
   },
   "preconditions": [
     "Python 3.10+ and a readable skill tree; local discovery only.",
@@ -29,12 +29,12 @@
       "verification": "Compare the output to a controlled fixture tree; confirm default JSON keys remain unchanged and no fixture files change."
     },
     {
-      "effect": "Read the optional effects.json and bound files when effects inspection is requested.",
+      "effect": "Read the optional effects.json and bound files when inspection is requested; optionally return explicit sections or list entries.",
       "scope": "Selected skill directories; at most 64 KiB per sidecar and 8 MiB per bound source.",
       "likelihood": "conditional",
-      "basis": "effects.inspect_effects bounds reads, validates structure, matches the caller-resolved identity and compares explicitly listed source hashes.",
-      "impact": "Makes missing, invalid and stale declarations visible; matching hashes do not prove the described behavior.",
-      "verification": "Change a bound fixture source or its claimed identity; check stale or invalid respectively. Duplicate folder paths remain visible in effects-aware discovery."
+      "basis": "effects.inspect_effects bounds reads, validates structure, matches independently resolved identity and compares listed source hashes. review.read_details validates selectors before inspection and returns no fragments on a changed digest, stale/unavailable declaration or absent index; read_bundled_details limits MCP sources to canonical bundled paths.",
+      "impact": "Makes missing, invalid and stale declarations visible. Targeted reads can reduce returned prose while retaining complete selected values; they still inspect the full bounded declaration locally and do not verify suitability or behavior.",
+      "verification": "Exercise exact selectors, homonyms, stale sources, changed content versus JSON formatting, invalid requests, external identity, symlink boundaries and CLI/MCP transport in test_details; measure explicit recovery-detail requests with measure_effect_review.py."
     },
     {
       "effect": "When ObservationSession is explicitly enabled, collect instrumented call links, bounded file samples and TCP/HTTP response metadata; optionally persist caller-owned checkpoints.",
@@ -100,7 +100,8 @@
       "effects.py:inspect_effects",
       "observations.py:validate_report",
       "network_observations.py:network_attempt",
-      "review.py:before/after"
+      "review.py:before/after",
+      "review.py:read_details/read_bundled_details"
     ]
   },
   "reuse": [

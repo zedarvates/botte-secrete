@@ -6,12 +6,91 @@ operation-specific prose to the shared effect-review skill and the actual task.
 
 from __future__ import annotations
 
+import re
 from copy import deepcopy
+from pathlib import Path, PurePosixPath
 
-from skills.capabilities.effects import validate_contract
+from skills.capabilities.effects import inspect_effects, validate_contract
 from skills.capabilities.observations import digest, summarize, validate_report
 
 METHOD = "skills/effect-review/SKILL.md"
+_LIST_SECTIONS = {"preconditions", "expected_effects", "downstream_effects", "reuse"}
+_SECTIONS = _LIST_SECTIONS | {"reversibility", "retry", "required_scope", "analysis"}
+_INDEX = re.compile(r"0|[1-9][0-9]{0,8}")
+
+
+def read_details(skill_dir: Path, selectors: list[str], *,
+                 expected_id: str | None = None, expected_sha256: str | None = None) -> dict:
+    """Read exact sections/list entries from one freshly inspected declaration.
+
+    Selectors are explicit /section or /list_section/index paths, not searches.
+    Invalid selectors/digests are rejected before inspection. A supplied digest
+    must match; unavailable, stale or incomplete selections return no fragments.
+    """
+    if not isinstance(selectors, list) or not 1 <= len(selectors) <= 16:
+        raise ValueError("selectors must be a list of 1 to 16 explicit section paths")
+    parsed = {}
+    for selector in selectors:
+        if not isinstance(selector, str) or len(selector) > 64:
+            raise ValueError("invalid effects selector")
+        parts = selector.split("/")
+        if (len(parts) not in (2, 3) or parts[0] or parts[1] not in _SECTIONS
+                or (len(parts) == 3 and (parts[1] not in _LIST_SECTIONS
+                                         or not _INDEX.fullmatch(parts[2])))):
+            raise ValueError("select /section or /list_section/index; wildcards and nested fields are unsupported")
+        parsed[selector] = (parts[1], int(parts[2]) if len(parts) == 3 else None)
+    if expected_sha256 is not None and (not isinstance(expected_sha256, str)
+                                        or not re.fullmatch(r"[0-9a-f]{64}", expected_sha256)):
+        raise ValueError("expected_sha256 must be a lowercase SHA-256 hex digest")
+
+    snapshot = inspect_effects(skill_dir, expected_id=expected_id)
+    contract = snapshot.get("contract")
+    actual = digest(contract) if contract is not None else None
+    matches = actual == expected_sha256 if actual is not None and expected_sha256 is not None else None
+    result = {"status": snapshot["status"], "selection_status": "unavailable",
+              "capability_id": contract["capability_id"] if contract else None,
+              "declaration_sha256": actual, "matches_expected": matches,
+              "error_count": len(snapshot["errors"]), "selected": {}}
+    if matches is False:
+        result["selection_status"] = "changed"
+        return result
+    if snapshot["status"] != "declared":
+        return result
+    missing = [selector for selector, (section, index) in parsed.items()
+               if index is not None and index >= len(contract[section])]
+    if missing:
+        result["selection_status"] = "not_found"
+        result["missing_selectors"] = missing
+        return result
+    result["selected"] = {selector: deepcopy(contract[section] if index is None else contract[section][index])
+                          for selector, (section, index) in parsed.items()}
+    result["selection_status"] = "selected"
+    return result
+
+
+def read_bundled_details(source: str, selectors: list[str], *,
+                         expected_sha256: str | None = None) -> dict:
+    """MCP entry: only canonical bundled skills/<...>/SKILL.md paths.
+
+    External trees use the Python/CLI entry with a caller-supplied expected ID.
+    This entry independently derives identity; sidecar claims never choose it.
+    """
+    from skills.capabilities.registry import REPO_ROOT
+    if not isinstance(source, str) or not source or "\\" in source or ":" in source:
+        raise ValueError("source must be a canonical bundled SKILL.md path")
+    path = PurePosixPath(source)
+    if (path.is_absolute() or len(path.parts) < 3 or path.parts[0] != "skills"
+            or path.name != "SKILL.md" or ".." in path.parts or path.as_posix() != source):
+        raise ValueError("source must be a canonical skills/<name>/SKILL.md path")
+    root = REPO_ROOT.resolve()
+    directory = root.joinpath(*path.parts[:-1])
+    try:
+        if directory.resolve() != directory:
+            raise ValueError("source directory aliases are unsupported; use its canonical bundled path")
+    except (OSError, RuntimeError) as exc:
+        raise ValueError("source directory cannot be resolved") from exc
+    identity = "zedarvates/botte-secrete:" + path.parent.as_posix()
+    return read_details(directory, selectors, expected_id=identity, expected_sha256=expected_sha256)
 
 
 def before(snapshot: dict | None, *, source: str | None = None) -> dict:
