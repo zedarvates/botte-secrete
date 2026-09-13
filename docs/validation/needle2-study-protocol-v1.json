@@ -1,0 +1,50 @@
+{
+  "schema_version": "botte.needle2-study-protocol/v1",
+  "pilot_source_commit": "4be4f8a486500dc7363f0915dc1e5bcf2193aea7",
+  "source_sha256": {
+    "skills/cli.py": "51009aeec3dc1363c1f905620a05e82fd89138d4595f218a5b9fbdd5616fa421",
+    "skills/memory_hub/shared_contract.py": "72be81aa648ce24810bf09fcb529d2fc0cd26756978decf575101665b2875a81",
+    "skills/tool_router/base.py": "35447fb653a951edafc08c3b0022e0921175b1f54d04b1f87bbfe3ccfe9750fc",
+    "skills/tool_router/memory_pilot.py": "e5fed4ca9ca94b12af25745fb24a26412aa719e61d922a3b7921474a2d806a2d",
+    "skills/tool_router/needle2_adapter.py": "e84b68b003470a8aacc73c9df53efa4cb4afc053cf39f1b4fcdd8c23022b44aa",
+    "skills/tool_router/needle2_cli.py": "0c22e4aeb31b6d60c95b7b68e051eb23825c27ebcd9413ca6a44d77697a9c454",
+    "skills/tool_router/needle2_worker.py": "55008548f055baa3de7b7c534af7915dd7c5af6992a407216ad988f68734d53c",
+    "skills/tool_router/needle2_study.py": "0bb78adbe76720f5dc753b2457e694c331240fc6002b522c896ca76e474f2f93"
+  },
+  "catalog_sha256": "30cd0f60145a7a9729eebbe038f1b8f2c7e0e725f3824f5b70d39697cc5e459f",
+  "needle_library_sha256": "9fa5386d3e3a8ee17914fb23643bc5f5c906b683fa33561e79c5445dd78bc389",
+  "splits": {
+    "calibration": {
+      "path": "skills/tool_router/needle2_calibration_fr_v1.jsonl",
+      "sha256": "708759ce5254fb79b1fcc13ecacc3cdbe53c9f50a488ba292a330ce348007218",
+      "cases": 20,
+      "positives": 10,
+      "negatives": 10
+    },
+    "validation": {
+      "path": "skills/tool_router/needle2_validation_fr_v1.jsonl",
+      "sha256": "aa2968e6e4977569a2b6f7fc001c5ea405a0a3549b1e2b3ab5e459dc38426093",
+      "cases": 20,
+      "positives": 10,
+      "negatives": 10
+    }
+  },
+  "thresholds": [
+    0,
+    0.1,
+    0.2,
+    0.4,
+    0.6,
+    0.65,
+    0.8,
+    0.9
+  ],
+  "selection_rule": "Zero incorrect proposals; maximize exact positives, break ties with the highest threshold. Continue only with at least 5/10 exact positives covering at least 3/5 tools. This is an experimental usefulness rule, never an activation gate.",
+  "budget": "20 cases per backend per split, no retries. Validation only after a frozen qualifying calibration selection.",
+  "maximum_model_case_attempts": 80,
+  "corpus": "authored_synthetic_workflow_proxies_not_independent_user_tasks",
+  "separation": "Calibration and validation have disjoint IDs and exact queries. Same author and catalog: not an independent production evaluation.",
+  "activation_allowed": false,
+  "executed": false,
+  "frozen_at_utc": "2026-09-10T05:04:14.051219+00:00"
+}

@@ -1,0 +1,91 @@
+{
+  "schema_version": "botte.needle2-study-validation/v1",
+  "recorded_at": "2026-09-10T05:15:19.364285+00:00",
+  "pilot_source_commit": "4be4f8a486500dc7363f0915dc1e5bcf2193aea7",
+  "frozen_local_commit_before_inference": "17fff9a1cbbb10755ddc2107b30d6c9a0b44128d",
+  "frozen_local_tree": "b2ab6a080566044193d47eb50447a8b804031d24",
+  "evidence_sha256": {
+    "docs/validation/needle2-study-protocol-v1.json": "48fa7ee554f853d76f3e2a98fef6e377c0685a280f2b4f3ea716ad14aeee3496",
+    "docs/validation/needle2-study-calibration-native-v1.json": "300fe14f8727b8372170838d98bee38550c0c875e598c812dafb9b9b4f397122",
+    "docs/validation/needle2-study-calibration-generalist-v1.json": "6f863f9cfcca83362591cc0ac7f73cca8a71cb2704ca388fd940febf0e22b01c",
+    "docs/validation/needle2-study-selection-v1.json": "bd91186b84c3018c61d47ad47d4c168f77316ac89e48f65ffba7f46342346376",
+    "docs/validation/needle2-study-comparison-v1.json": "00eb9c49e2aaa014c04d767794ad8d49cdc9ba6aa91088be06d73f7a333e8403",
+    "skills/tool_router/test_needle2_study.py": "650d9bb9b1ff830477c25d80ed1c65fb70ec83b78ae24cdb1c8e5296ec9d3edd",
+    "docs/needle2-calibration-study.md": "423f8a25b860e05cd487a2ca59d997794a618cea843954d4a674c0ecf52451c2"
+  },
+  "native_needle_case_attempts": 20,
+  "real_generalist_case_attempts": 20,
+  "validation_case_attempts": 0,
+  "runtime_errors": 0,
+  "selection_decision": "stop_insufficient_safe_coverage",
+  "validation_not_run_reason": "predeclared coverage and breadth condition failed on calibration",
+  "generalist": {
+    "repo": "Qwen/Qwen2.5-0.5B-Instruct-GGUF",
+    "revision": "9217f5db79a29953eb74d5343926648285ec7e67",
+    "artifact": "qwen2.5-0.5b-instruct-q8_0.gguf",
+    "weights_sha256": "ca59ca7f13d0e15a8cfa77bd17e65d24f6844b554a7b6c12e07a5f89ff76844e",
+    "weights_bytes": 675710816,
+    "runtime": "ggml-org/llama.cpp b10809",
+    "archive_sha256": "5e34434ddc6d03cd1584f403201aff0d4bd1a5793a72ff7e286532dfd1e4b941",
+    "server_binary_sha256": "07723ae07835bdf11cf0d00d68eb4df8308df0603f689c64c9f841a626cad01d",
+    "hashes_checked_before_execution": true,
+    "cpu_threads": 4,
+    "parallel_slots": 1,
+    "context_tokens": 4096,
+    "gpu_layers": 0,
+    "prompt_cache": false,
+    "weights_loaded_before_requests": true,
+    "server_shutdown_completed": true
+  },
+  "checks": [
+    {
+      "command": "python -m pytest --rootdir=. -q skills/tool_router/test_needle2_study.py skills/tool_router/test_needle2.py skills/tool_router/test_tool_router.py",
+      "passed": 80,
+      "exit_code": 0,
+      "seconds": 1.76,
+      "scope": "fixture and integration tests, not model quality"
+    },
+    {
+      "command": "python -m skills.checkup.cli .",
+      "exit_code": 0,
+      "directives_score": 95,
+      "infra_score": 24,
+      "remaining_limitation": "MCP not wired in this workspace"
+    },
+    {
+      "command": "git diff --check",
+      "exit_code": 0
+    },
+    {
+      "command": "python scripts/check_docs_links.py",
+      "exit_code": 0,
+      "markdown_files": 66,
+      "broken_local_links": 0
+    },
+    {
+      "command": "python scripts/test_readme_commands.py",
+      "exit_code": 0,
+      "passed": 11,
+      "failed": 0,
+      "skipped": 11
+    },
+    {
+      "command": "python scripts/pre-commit-check.py --fast",
+      "exit_code": 0,
+      "staged_python_files": 1
+    }
+  ],
+  "executed": false,
+  "activation_allowed": false,
+  "memory_writes": 0,
+  "tool_calls_executed": 0,
+  "successful_action_ledger_eligible": false,
+  "limitations": [
+    "authored synthetic calibration sample, not independent user-task evaluation",
+    "reserved validation split has not been run",
+    "small 0.5B generalist is not representative of every local model",
+    "different native and HTTP paths; no end-to-end speedup claim",
+    "no homelab or Windows qualification",
+    "no native peak-memory or power measurement"
+  ]
+}
