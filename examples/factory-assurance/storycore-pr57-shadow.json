@@ -24,7 +24,7 @@
     {"name": "musicplan-contract-python-3.10", "status": "pass", "required": true},
     {"name": "musicplan-contract-python-3.12", "status": "pass", "required": true},
     {"name": "controlled-negative-mutation-probe", "status": "pass", "required": true},
-    {"name": "private-holdout", "status": "missing", "required": true}
+    {"name": "operator-private-holdout-16", "status": "pass", "required": true}
   ],
   "controls": {
     "positive_control": "pass",
@@ -34,12 +34,21 @@
     "adversarial_cases_checked": false
   },
   "identity": {
-    "source_sha": "189d3d15fc711b006405ecd997485a4583ab5e4c",
-    "build_sha": "27ec8319a25dea3c9167eb0cfb8402a1e3200d45",
-    "tested_sha": "27ec8319a25dea3c9167eb0cfb8402a1e3200d45",
-    "source_tree": "099c907f8e8272e9b7c0a24f2f0e011b33acd8cb",
-    "build_tree": "099c907f8e8272e9b7c0a24f2f0e011b33acd8cb",
-    "tested_tree": "099c907f8e8272e9b7c0a24f2f0e011b33acd8cb",
+    "source_sha": "385a2ea631c271bc44e0169d81b8062f2408bd9d",
+    "build_sha": "507de61633e5df63b2b9c42781d4d43a03c713ef",
+    "tested_sha": "507de61633e5df63b2b9c42781d4d43a03c713ef",
+    "source_tree": "b5f6028444b1257d5c3fa7b9e6cc084fc3197c7d",
+    "build_tree": "b5f6028444b1257d5c3fa7b9e6cc084fc3197c7d",
+    "tested_tree": "b5f6028444b1257d5c3fa7b9e6cc084fc3197c7d",
     "deployed_sha": null
+  },
+  "holdout_attestation": {
+    "schema": "botte.factory-holdout-attestation/v1",
+    "set_id": "storycore-musicplan-operator-private-v1",
+    "set_digest_sha256": "e9a25bab1eb4d1b343ff651502d8f763721b256630b07bd212e36d368fddb513",
+    "candidate_sha": "385a2ea631c271bc44e0169d81b8062f2408bd9d",
+    "case_count": 16,
+    "status": "pass",
+    "contains_cases": false
   }
 }
