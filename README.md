@@ -2,6 +2,13 @@
 
 # Botte Secrète
 
+**Releases:** [1.9.0 — latest stable](https://github.com/zedarvates/botte-secrete/releases/tag/1.9.0)
+· [2.0.0rc1 — external-pilot pre-release](https://github.com/zedarvates/botte-secrete/releases/tag/v2.0.0rc1).
+The RC adds Factory Assurance, independent judging, and evidence gates. Start in
+observe, consultative, or shadow mode; the private/external holdout remains
+unproven. See the release notes for limits and installation at the validated
+commit. The version badge below identifies the stable line on `main`.
+
 [![CI](https://github.com/zedarvates/botte-secrete/actions/workflows/ci.yml/badge.svg)](https://github.com/zedarvates/botte-secrete/actions)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![Version](https://img.shields.io/badge/version-1.9.0-55d6be)](pyproject.toml)

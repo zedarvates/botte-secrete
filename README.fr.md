@@ -2,6 +2,14 @@
 
 # Botte Secrète
 
+**Versions :** [1.9.0 — dernière version stable](https://github.com/zedarvates/botte-secrete/releases/tag/1.9.0)
+· [2.0.0rc1 — préversion pour pilotes externes](https://github.com/zedarvates/botte-secrete/releases/tag/v2.0.0rc1).
+La RC ajoute Factory Assurance, un juge indépendant et des critères de preuve.
+Commencer en mode observe, consultative ou shadow ; la validation sur un jeu
+privé/externe indépendant reste à établir. Les notes de version précisent les
+limites et l'installation au commit validé. Le badge ci-dessous indique la
+version stable sur `main`.
+
 [![CI](https://github.com/zedarvates/botte-secrete/actions/workflows/ci.yml/badge.svg)](https://github.com/zedarvates/botte-secrete/actions)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![Version](https://img.shields.io/badge/version-1.9.0-55d6be)](pyproject.toml)
