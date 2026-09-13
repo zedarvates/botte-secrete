@@ -39,15 +39,25 @@ def simulate_full_loop(steps: Iterable[BaselineStep]) -> dict[str, int | bool]:
 
 
 def compare(baseline: dict, optimized: dict) -> dict[str, int | float | bool]:
-    """Compare two reports without inventing savings for a failed run."""
-    base_tokens = max(0, int(baseline.get("tokens_total", 0)))
-    optimized_tokens = max(0, int(optimized.get("tokens_total", 0)))
-    comparable = bool(baseline.get("success")) == bool(optimized.get("success"))
+    """Compare supplied counts only when both runs explicitly report success.
+
+    The caller must establish the same task and acceptance checks. These counts
+    alone do not prove agent quality, actual model usage or provider billing.
+    """
+    counts_complete = all(
+        type(report.get(name)) is int and report[name] >= 0
+        for report in (baseline, optimized)
+        for name in ("tokens_total", "iterations")
+    )
+    comparable = (counts_complete and baseline.get("success") is True
+                  and optimized.get("success") is True)
+    base_tokens = baseline["tokens_total"] if counts_complete else 0
+    optimized_tokens = optimized["tokens_total"] if counts_complete else 0
     saved = base_tokens - optimized_tokens if comparable else 0
     return {
         "comparable": comparable,
         "tokens_saved": saved,
         "savings_pct": round(saved * 100 / base_tokens, 1) if base_tokens else 0.0,
-        "iterations_saved": max(0, int(baseline.get("iterations", 0))
-                                - int(optimized.get("iterations", 0))),
+        "iterations_saved": (baseline["iterations"] - optimized["iterations"]
+                             if comparable else 0),
     }
