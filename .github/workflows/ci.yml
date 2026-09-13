@@ -2,9 +2,9 @@ name: Botte Secrète CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, feat/execution-harness-atlas-v1]
   pull_request:
-    branches: [main, feat/shared-memory-scribe-v1]
+    branches: [main, feat/shared-memory-scribe-v1, feat/needle2-readonly-pilot]
 
 permissions:
   contents: read
@@ -34,6 +34,8 @@ jobs:
           python -m pytest --rootdir=. -q skills/memory_hub/test_shared_service.py skills/memory_hub/test_shared_transport.py skills/memory_hub/test_memory_hub.py skills/memory_hub/test_recovery.py
           python -m pytest --rootdir=. -q skills/tool_router/test_tool_router.py skills/tool_router/test_needle2.py skills/tool_router/test_needle2_study.py skills/tool_router/test_needle2_evidence.py skills/tool_router/test_needle2_diagnostics.py skills/tool_router/test_argument_spans.py
         timeout-minutes: 10
+      - name: Prove execution harness contracts and shadow trajectory bridge
+        run: python -m skills.execution_harness.test_execution_harness
       - name: Validate GitHub documentation
         id: docs
         run: |
