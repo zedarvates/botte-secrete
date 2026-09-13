@@ -4,13 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "botte-secrete"
-version = "1.9.0"
-description = "Multi-agent token optimization platform — local-first routing, micro-NN belt, code audit, MCP server. 0 cloud tokens by default."
+version = "2.0.0rc1"
+description = "Multi-agent local-first orchestration with deterministic Factory Assurance, independent judging, evidence gates, and external-pilot support."
 readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">=3.10"
 authors = [{ name = "zedarvates" }]
-keywords = ["llm", "tokens", "routing", "mcp", "local-first", "agents"]
+keywords = ["llm", "tokens", "routing", "mcp", "local-first", "agents", "assurance", "multi-agent"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
