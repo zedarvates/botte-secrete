@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "action_id": "storycore-pr57-shadow-dark-lap-001",
+  "stage": "shadow",
+  "requested_autonomy": "shadow",
+  "mission": {
+    "goals": ["assess the bounded MusicPlan contract candidate without promotion"],
+    "invariants": ["no model activation", "no merge", "no silent provider degradation"],
+    "non_goals": ["real audio generation", "provider deployment", "automatic promotion"],
+    "forbidden_transformations": ["disable validation", "treat missing evidence as pass"],
+    "within_mission": true
+  },
+  "actors": {
+    "builder": "storycore-pr57-builder",
+    "judge": "factory-assurance-shadow-judge",
+    "orchestrator": "conductor"
+  },
+  "effects": {
+    "declared": ["source", "workflow"],
+    "observed": ["source", "workflow"],
+    "unresolved": []
+  },
+  "evidence": [
+    {"name": "musicplan-contract-python-3.10", "status": "pass", "required": true},
+    {"name": "musicplan-contract-python-3.12", "status": "pass", "required": true},
+    {"name": "private-holdout", "status": "missing", "required": true}
+  ],
+  "controls": {
+    "positive_control": "pass",
+    "negative_control": "missing",
+    "holdout_scope": "private_external",
+    "historical_regressions_checked": false,
+    "adversarial_cases_checked": false
+  },
+  "identity": {
+    "source_sha": "ce7d71b402b028b5b69db3edef215157676d15f3",
+    "build_sha": "25d03dbbfc2344c12cabeea943b9d702416e3afb",
+    "tested_sha": "25d03dbbfc2344c12cabeea943b9d702416e3afb",
+    "source_tree": "9d937c2056367385d17bf0a9a3fecf1b7abeffeb",
+    "build_tree": "9d937c2056367385d17bf0a9a3fecf1b7abeffeb",
+    "tested_tree": "9d937c2056367385d17bf0a9a3fecf1b7abeffeb",
+    "deployed_sha": null
+  }
+}
