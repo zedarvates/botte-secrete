@@ -21,6 +21,8 @@ from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE_PATTERNS = ("*.py", "skills/**/SKILL.md", "skills/**/effects.json")
+OBSERVATION_FIELDS = {"job_sha256", "paths", "shortlist", "review_status", "review_reason", "tier", "measurements"}
+ACCEPTANCE_POLICY = "exact-selection-and-abstention/v1"
 
 
 class BenchmarkInputError(ValueError):
@@ -146,18 +148,31 @@ def worker(job):
 
 
 def validate_observation(value, job):
-    required = {"job_sha256", "paths", "shortlist", "review_status", "review_reason", "tier", "measurements"}
-    if not isinstance(value, dict) or set(value) != required or value["job_sha256"] != digest(job):
+    validate_observation_fields(value, job["skills"], digest(job))
+
+
+def validate_observation_fields(value, skills, expected_job_hash):
+    if (not isinstance(value, dict) or set(value) != OBSERVATION_FIELDS
+            or value["job_sha256"] != expected_job_hash
+            or not isinstance(expected_job_hash, str) or not re.fullmatch(r"[0-9a-f]{64}", expected_job_hash)):
         raise ValueError("invalid observation binding or fields")
     for key in ("paths", "shortlist"):
         paths = value[key]
-        if (not isinstance(paths, list) or len(paths) > len(job["skills"])
-                or any(not isinstance(p, str) or p not in job["skills"] for p in paths)
+        if (not isinstance(paths, list) or len(paths) > len(skills)
+                or any(not isinstance(p, str) or p not in skills for p in paths)
                 or len(set(paths)) != len(paths)):
             raise ValueError("invalid observation paths")
+    if not set(value["paths"]) <= set(value["shortlist"]):
+        raise ValueError("returned path was not retrieved")
     if (value["review_status"] not in {"selected", "abstained", "unavailable", "legacy_unspecified"}
             or value["tier"] not in {"free-lexical", "local-llm-reranked"}):
         raise ValueError("invalid review state")
+    if value["review_status"] in {"selected", "abstained"}:
+        if (value["tier"] != "local-llm-reranked"
+                or bool(value["paths"]) != (value["review_status"] == "selected")):
+            raise ValueError("review state contradicts returned paths")
+    if value["review_status"] == "unavailable" and value["tier"] != "free-lexical":
+        raise ValueError("unavailable review cannot be reranked")
     reason = value["review_reason"]
     if reason is not None and (not isinstance(reason, str) or not re.fullmatch(r"[a-z_]{1,80}", reason)):
         raise ValueError("invalid review reason")
@@ -175,6 +190,140 @@ def validate_observation(value, job):
         types = (int, float) if key == "latency_ms" else (int,)
         if number is not None and (type(number) not in types or not math.isfinite(number) or number < 0):
             raise ValueError("invalid numeric measurement")
+
+
+def assess_selection(report, corpus):
+    """Recompute a conservative review boundary; never authorize an operation.
+
+    The caller supplies trusted observations. An offline file hash binds bytes,
+    not the truth of a model identity, oracle or remote execution claim.
+    """
+    if (not isinstance(report, dict) or report.get("schema") != "botte.skill-selection-comparison/v1"
+            or report.get("dataset_class") != corpus["dataset_class"]
+            or report.get("corpus_sha256") != digest(corpus)
+            or report.get("status") not in {"measurement_complete", "insufficient_evidence"}
+            or not isinstance(report.get("gaps"), list)):
+        raise ValueError("assessment report or corpus mismatch")
+    cases = {case["id"]: set(case["expected_paths"]) for case in corpus["cases"]}
+    planned, started = report.get("planned_calls"), report.get("attempts_started")
+    if (type(planned) is not int or planned % (2 * len(cases))
+            or not 1 <= planned // (2 * len(cases)) <= 3
+            or type(started) is not int or not 0 <= started <= planned
+            or not isinstance(report.get("observations"), list)
+            or len(report["observations"]) > started):
+        raise ValueError("invalid assessment coverage")
+    repeats = planned // (2 * len(cases))
+    expected_jobs = {f"r{repeat}-{case}-{side}": (case, repeat, side)
+                     for repeat in range(repeats) for case in cases for side in ("baseline", "candidate")}
+    rows, exact, metric_gaps = {}, {}, []
+    for row in report["observations"]:
+        if not isinstance(row, dict) or not isinstance(row.get("job"), str):
+            raise ValueError("invalid assessment row")
+        key = row["job"]
+        if (key not in expected_jobs or key in rows or type(row.get("repeat")) is not int
+                or (row.get("case_id"), row["repeat"], row.get("side")) != expected_jobs[key]):
+            raise ValueError("duplicate or mispaired assessment row")
+        observation = {field: row[field] for field in OBSERVATION_FIELDS}
+        validate_observation_fields(observation, corpus["skills"], row["job_sha256"])
+        measure = row["measurements"]
+        comparable = measure["calls"] == 1 and measure["response_model_matches"] and not measure["truncated"]
+        if not comparable or any(measure[k] is None for k in ("latency_ms", "prompt_tokens", "completion_tokens")):
+            metric_gaps.append(key)
+        available = row["tier"] == "local-llm-reranked" and row["review_status"] != "unavailable"
+        # Recompute from paths and flags: stored totals and exact_selection are not an oracle.
+        exact[key] = comparable and available and set(row["paths"]) == cases[row["case_id"]]
+        rows[key] = row
+    failures, excluded, new_excluded, lost_exact, lost_paths = [], [], [], [], []
+    totals = {side: {"observed": 0, "exact": 0, "positive_exact": 0, "correct_abstentions": 0,
+                     "negative_with_selection": 0, "lexical_fallback": 0}
+              for side in ("baseline", "candidate")}
+    for key, row in rows.items():
+        expected, actual = cases[row["case_id"]], set(row["paths"])
+        total = totals[row["side"]]
+        total["observed"] += 1
+        total["exact"] += int(exact[key])
+        total["positive_exact"] += int(bool(expected) and exact[key])
+        total["correct_abstentions"] += int(not expected and exact[key])
+        total["negative_with_selection"] += int(not expected and bool(actual))
+        total["lexical_fallback"] += int(row["tier"] == "free-lexical")
+        if row["side"] != "candidate":
+            continue
+        baseline_key = f"r{row['repeat']}-{row['case_id']}-baseline"
+        baseline = rows.get(baseline_key)
+        if not exact[key]:
+            failures.append(key)
+        if not expected and actual:
+            excluded.append(key)
+            if baseline is not None and not baseline["paths"]:
+                new_excluded.append(key)
+        if baseline is not None:
+            if exact[baseline_key] and not exact[key]:
+                lost_exact.append(key)
+            missing = (set(baseline["paths"]) & expected) - actual
+            if missing:
+                lost_paths.append({"job": key, "paths": sorted(missing)})
+    missing_jobs = sorted(set(expected_jobs) - set(rows))
+    coverage_gaps = [label for label, present in (
+        ("no_positive_cases", any(cases.values())), ("no_negative_cases", any(not v for v in cases.values()))) if not present]
+    incomplete = (missing_jobs or metric_gaps or report["gaps"] or started != planned
+                  or report["status"] != "measurement_complete")
+    if incomplete:
+        state, decision = "insufficient_evidence", "reconcile_run"
+    elif failures or lost_paths:
+        state, decision = "not_accepted", "do_not_promote"
+    elif coverage_gaps:
+        state, decision = "insufficient_evidence", "collect_representative_cases"
+    elif corpus["dataset_class"] == "fixture":
+        state, decision = "fixture_only", "collect_held_out_evidence"
+    else:
+        state, decision = "review_required", "review_results"
+    return {"policy": ACCEPTANCE_POLICY, "state": state, "decision": decision,
+            "automatic_promotion": False, "operation_quality": "unmeasured",
+            "counts_are_repeated_observations": True, "repetitions": repeats, "totals": totals,
+            "candidate_failures": sorted(failures), "candidate_excluded_selections": sorted(excluded),
+            "new_excluded_selections": sorted(new_excluded), "lost_reviewed_selections": sorted(lost_exact),
+            "lost_required_paths": sorted(lost_paths, key=lambda item: item["job"]),
+            "missing_jobs": missing_jobs, "metric_gaps": sorted(metric_gaps),
+            "reported_evidence_gaps": bool(report["gaps"]), "coverage_gaps": coverage_gaps}
+
+
+def assess_file(path, expected_sha256, corpus):
+    """Read one pinned report, without contacting a backend or changing a run."""
+    if not isinstance(expected_sha256, str) or not re.fullmatch(r"[0-9a-f]{64}", expected_sha256):
+        raise BenchmarkInputError("offline assessment needs the expected report SHA-256")
+    with path.open("rb") as handle:
+        raw = handle.read(2 * 1024 * 1024 + 1)
+    if len(raw) > 2 * 1024 * 1024 or hashlib.sha256(raw).hexdigest() != expected_sha256:
+        raise BenchmarkInputError("report size or SHA-256 mismatch")
+    def unique(pairs):
+        value = {}
+        for key, item in pairs:
+            if key in value:
+                raise ValueError("duplicate JSON key")
+            value[key] = item
+        return value
+    report = json.loads(raw.decode("utf-8"), object_pairs_hook=unique,
+                        parse_constant=lambda _: (_ for _ in ()).throw(ValueError("nonfinite JSON")))
+    assessment = assess_selection(report, corpus)
+    sources = {side: {key: report["sources"][side][key] for key in ("head", "code_sha256")}
+               for side in ("baseline", "candidate")}
+    for source in sources.values():
+        for key, size in (("head", 40), ("code_sha256", 64)):
+            if not isinstance(source[key], str) or not re.fullmatch(f"[0-9a-f]{{{size}}}", source[key]):
+                raise ValueError("invalid measured source identity")
+    return {"schema": "botte.skill-selection-assessment/v1", "status": "assessed",
+            "assessment_harness_sha256": file_hash(__file__), "report_sha256": expected_sha256,
+            "corpus_sha256": digest(corpus), "dataset_class": corpus["dataset_class"],
+            "measured_sources": sources, "acceptance": assessment,
+            "inference_calls": 0, "automatic_promotion": False,
+            "evidence_scope": "Pinned comparison bytes and corpus; no renewed checkpoint, runtime or model attestation."}
+
+
+def exit_code(report):
+    assessment = report.get("acceptance", {})
+    if report["status"] == "insufficient_evidence" or assessment.get("state") == "insufficient_evidence":
+        return 3
+    return 4 if assessment.get("state") == "not_accepted" else 0
 
 
 def make_spec(args, corpus):
@@ -269,7 +418,7 @@ def summarize(spec, corpus, execution, output):
             planned = sum(job["side"] == side for job in spec["jobs"].values())
             totals[side][token] = sum(values) if len(values) == planned and all(v is not None for v in values) else None
     complete = len(rows) == len(spec["jobs"]) and not gaps
-    return {"schema": "botte.skill-selection-comparison/v1",
+    report = {"schema": "botte.skill-selection-comparison/v1",
             "status": "measurement_complete" if complete else "insufficient_evidence",
             "dataset_class": corpus["dataset_class"], "corpus_sha256": spec["corpus_sha256"],
             "harness_sha256": spec["harness_sha256"], "sources": spec["sources"],
@@ -277,9 +426,10 @@ def summarize(spec, corpus, execution, output):
             "gaps": gaps, "planned_calls": len(spec["jobs"]),
             "attempts_started": sum(row["started"] for row in execution.get("results", [])),
             "automatic_promotion": False,
-            "operation_quality": "unmeasured", "energy_kwh": None, "monetary_cost": None,
-            "decision": "reconcile_run" if not complete else
-                        "collect_held_out_evidence" if corpus["dataset_class"] == "fixture" else "review_results"}
+            "operation_quality": "unmeasured", "energy_kwh": None, "monetary_cost": None}
+    report["acceptance"] = assess_selection(report, corpus)
+    report["decision"] = report["acceptance"]["decision"]
+    return report
 
 
 def run(spec, corpus, output, *, resume=False):
@@ -337,6 +487,8 @@ def main():
     parser.add_argument("--timeout", type=int, default=90)
     parser.add_argument("--execute", action="store_true")
     parser.add_argument("--resume", action="store_true")
+    parser.add_argument("--assess", type=Path, help="assess a pinned existing comparison without inference")
+    parser.add_argument("--report-sha256", help="expected SHA-256 of the complete comparison file")
     parser.add_argument("--worker", action="store_true", help=argparse.SUPPRESS)
     args = parser.parse_args()
     try:
@@ -344,6 +496,15 @@ def main():
             print(json.dumps(worker(json.load(sys.stdin)), ensure_ascii=False))
             return 0
         sys.path.insert(0, str(ROOT))
+        if args.assess is not None:
+            if (any((args.execute, args.resume, args.baseline, args.registry, args.backend, args.model, args.runtime_id))
+                    or args.repetitions != 1 or args.timeout != 90 or args.output != Path("reports/skill-selection")):
+                raise BenchmarkInputError("offline assessment cannot be combined with execution inputs")
+            report = assess_file(args.assess, args.report_sha256, load_corpus(args.corpus))
+            print(json.dumps(report, ensure_ascii=False, indent=2))
+            return exit_code(report)
+        if args.report_sha256 is not None:
+            raise BenchmarkInputError("report SHA-256 requires offline assessment")
         if args.baseline is None or (args.resume and not args.execute):
             raise BenchmarkInputError("baseline required; resume requires execute")
         corpus = load_corpus(args.corpus)
@@ -358,7 +519,7 @@ def main():
                       "harness_sha256": spec["harness_sha256"], "inference_calls": 0,
                       "quality": "unmeasured", "local_cost": None, "automatic_promotion": False}
         print(json.dumps(report, ensure_ascii=False, indent=2))
-        return 0 if report["status"] != "insufficient_evidence" else 3
+        return exit_code(report)
     except BenchmarkInputError as error:
         print(json.dumps({"status": "blocked", "reason": str(error)}))
         return 2

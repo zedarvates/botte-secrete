@@ -150,8 +150,9 @@ promoted into a new routing rule.
 
 `measurement_complete` means every planned observation has comparable model
 identity and token/latency evidence; it does not mean every selection passed.
-The public starter remains `dataset_class: fixture` and always asks for held-out
-evidence. Before judging model or skill quality, independently review a separate
+The separate `acceptance` result applies the criteria below. The public starter
+remains `dataset_class: fixture` and cannot qualify a runtime. Before judging
+model or skill quality, independently review a separate
 corpus of actual target situations, freeze its labels and rationale before
 running, and identify its review references with `reviewed_holdout`. That label
 records a declaration; the runner does not authenticate those references.
@@ -162,3 +163,58 @@ then compare latency and reported tokens. Count repeated trials as repeated
 measurements, not independent tasks. Retain the baseline when evidence is
 incomplete or contradictory. Neither fixture success nor a green CI changes
 the active version automatically.
+
+## Automated acceptance assessment
+
+The existing runner now applies `exact-selection-and-abstention/v1` after
+collecting its observations. This conservative policy requires exact reviewed
+selection on every candidate observation, including explicit abstention on
+negative cases. It names all candidate failures, new excluded selections, lost
+correct reviewed selections (including abstentions), and lost required paths.
+The latter also catches the two-destination regression hidden by the baseline's
+lexical fallback. One failed repetition is not averaged away.
+
+Scores are recomputed from returned paths, review availability and model flags
+against the bound corpus. Stored totals and `exact_selection` labels are not
+trusted as an oracle. Duplicate or mispaired observations, inconsistent review
+states and paths outside the retrieved shortlist are invalid. Missing rows,
+unmatched models, truncation and absent token/latency measurements remain gaps.
+
+| Condition | Decision | CLI exit |
+| --- | --- | ---: |
+| Invalid input or mismatched report/corpus | Block input | 2 |
+| Incomplete comparable observations | Reconcile the existing run | 3 |
+| Complete measurements with candidate selection failures | Do not promote | 4 |
+| No failures, but positive or negative cases absent | Collect representative cases | 3 |
+| All fixture cases pass | Collect independently reviewed held-out evidence | 0 |
+| All reviewed held-out cases pass | Review results, costs and applicability | 0 |
+
+Exit zero does not authorize execution, establish a cost benefit or select a
+winner. An exit of four means the measured candidate fails the criteria; it
+does not request another inference attempt. The comparison and checkpoint
+remain available, and resuming a completed run retains the quality refusal
+without new calls. The policy never promotes a runtime or executes an operation.
+
+An existing comparison can also be assessed offline. Supply its expected file
+SHA-256 from a separately retained record. For the first CPU pass:
+
+```bash
+python scripts/benchmark_skill_selection.py \
+  --assess docs/validation/skill-selection-cpu-v1.json \
+  --report-sha256 7af98eadbd338dafbbb679e3b886082464b7a0b98535bf1de7de42aa7a584089
+```
+
+This prints a separate assessment and exits **4**. It reads the bounded report
+and corpus, performs zero inference and leaves both inputs unchanged. Execution
+and backend arguments are rejected in this mode. A matching hash identifies the
+retained bytes; it does not independently attest the original runtime, private
+checkpoint or corpus review. Those remain the original evidence's boundaries.
+
+The [recorded retrospective assessment](validation/skill-selection-cpu-assessment-v1.json)
+binds this assessor's source hash to the original report and corpus. It identifies
+seven failing candidate observations: the six unwanted negative selections and
+the incomplete two-destination selection. The original report, model scores,
+measurement revisions and historical decision remain unchanged. This policy was
+implemented after observing those failures; this reassessment is development
+evidence, not a new model comparison or independent validation set. New inference
+runs must use their own source-bound manifest and output directory.

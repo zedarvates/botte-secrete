@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import copy
 import json
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -89,7 +90,8 @@ class AcceptanceTests(unittest.TestCase):
         self.assertEqual(len(self.calls), 2)
         self.assertEqual(before, after)
         self.assertEqual(after["status"], "measurement_complete")
-        self.assertEqual(after["decision"], "collect_held_out_evidence")
+        self.assertEqual(after["decision"], "collect_representative_cases")
+        self.assertEqual(after["acceptance"]["coverage_gaps"], ["no_negative_cases"])
         self.assertFalse(after["automatic_promotion"])
 
     def test_interruption_remains_uncertain_and_is_never_replayed(self):
@@ -103,6 +105,16 @@ class AcceptanceTests(unittest.TestCase):
         checkpoint = json.loads((self.root / "run/checkpoint.json").read_text(encoding="utf-8"))
         self.assertEqual(checkpoint["results"][0]["id"], first)
         self.assertEqual(checkpoint["results"][0]["status"], "uncertain")
+
+    def test_quality_refusal_is_retained_on_resume_without_new_calls(self):
+        self.small = {**self.corpus, "cases": [self.corpus["cases"][0], self.corpus["cases"][6]]}
+        self.spec = bench.make_spec(self.args, self.small)
+        before = self.execute()
+        self.assertEqual(before["status"], "measurement_complete")
+        self.assertEqual(before["decision"], "do_not_promote")
+        self.assertEqual(bench.exit_code(before), 4)
+        self.assertEqual(self.execute(resume=True), before)
+        self.assertEqual(len(self.calls), 4)
 
     def test_mutated_observation_is_not_consumed_or_replayed(self):
         self.execute()
@@ -247,8 +259,147 @@ class AcceptanceTests(unittest.TestCase):
             thread.join(timeout=2)
 
 
+class DecisionTests(unittest.TestCase):
+    def setUp(self):
+        self.corpus = bench.load_corpus(bench.ROOT / "docs/examples/skill-selection-cases.json")
+        self.path = bench.ROOT / "docs/validation/skill-selection-cpu-v1.json"
+        self.report = json.loads(self.path.read_text(encoding="utf-8"))
+
+    def perfect(self):
+        report = copy.deepcopy(self.report)
+        cases = {c["id"]: c["expected_paths"] for c in self.corpus["cases"]}
+        for row in report["observations"]:
+            row["paths"] = list(cases[row["case_id"]])
+            row["review_status"] = "selected" if row["paths"] else "abstained"
+            row["tier"] = "local-llm-reranked"
+        return report
+
+    def test_real_failures_are_reassessed_without_inference_or_mutation(self):
+        before = self.path.read_bytes()
+        with patch.object(bench.subprocess, "run", side_effect=AssertionError("no execution")):
+            result = bench.assess_file(self.path, bench.file_hash(self.path), self.corpus)
+        self.assertEqual(self.path.read_bytes(), before)
+        self.assertEqual(result["inference_calls"], 0)
+        self.assertEqual(bench.exit_code(result), 4)
+        assessment = result["acceptance"]
+        self.assertEqual(assessment["state"], "not_accepted")
+        self.assertEqual(len(assessment["candidate_excluded_selections"]), 6)
+        self.assertEqual(len(assessment["candidate_failures"]), 7)
+        self.assertEqual(assessment["totals"]["baseline"]["exact"], 2)
+        self.assertEqual(assessment["totals"]["candidate"]["exact"], 5)
+        self.assertEqual(assessment["lost_reviewed_selections"], [])
+        self.assertEqual(assessment["lost_required_paths"], [{
+            "job": "r0-two-destinations-candidate", "paths": ["team/memory/SKILL.md"]}])
+
+    def test_stored_scores_cannot_override_observed_paths(self):
+        original = bench.assess_selection(self.report, self.corpus)
+        self.report["totals"]["candidate"]["exact_selections"] = 12
+        for row in self.report["observations"]:
+            row["exact_selection"] = True
+            row["false_selections"] = 0
+        self.assertEqual(bench.assess_selection(self.report, self.corpus), original)
+
+    def test_perfect_fixture_and_reviewed_corpus_never_promote(self):
+        for kind, state in (("fixture", "fixture_only"), ("reviewed_holdout", "review_required")):
+            corpus = {**self.corpus, "dataset_class": kind, "review_evidence": ["test-only-review-reference"]}
+            report = self.perfect()
+            report.update(dataset_class=kind, corpus_sha256=bench.digest(corpus))
+            assessment = bench.assess_selection(report, corpus)
+            self.assertEqual(assessment["state"], state)
+            self.assertFalse(assessment["automatic_promotion"])
+            self.assertEqual(assessment["operation_quality"], "unmeasured")
+
+    def test_new_exclusion_and_lost_reviewed_selection_are_named(self):
+        report = self.perfect()
+        for row in report["observations"]:
+            if row["side"] == "candidate" and row["case_id"] in {"wrong-owner", "private-note"}:
+                row["paths"] = ["team/memory/SKILL.md"]
+                row["review_status"] = "selected"
+        assessment = bench.assess_selection(report, self.corpus)
+        self.assertEqual(assessment["new_excluded_selections"], ["r0-wrong-owner-candidate"])
+        self.assertEqual(assessment["lost_reviewed_selections"], ["r0-private-note-candidate", "r0-wrong-owner-candidate"])
+        self.assertEqual(assessment["state"], "not_accepted")
+
+    def test_missing_or_uncomparable_observation_requires_reconciliation(self):
+        for mutate in (
+            lambda r: r["observations"].pop(),
+            lambda r: r["observations"][0]["measurements"].update(prompt_tokens=None),
+            lambda r: r["observations"][0]["measurements"].update(response_model_matches=False),
+            lambda r: r["observations"][0]["measurements"].update(truncated=True),
+            lambda r: r["gaps"].append({"job": "fixture", "reason": "unresolved"}),
+        ):
+            report = self.perfect()
+            mutate(report)
+            assessment = bench.assess_selection(report, self.corpus)
+            self.assertEqual(assessment["state"], "insufficient_evidence")
+            self.assertEqual(assessment["decision"], "reconcile_run")
+            self.assertEqual(bench.exit_code({"status": "assessed", "acceptance": assessment}), 3)
+
+    def test_duplicate_mispaired_or_invalid_rows_are_rejected(self):
+        for mutate in (
+            lambda r: r["observations"].__setitem__(1, r["observations"][0]),
+            lambda r: r["observations"][0].update(side="candidate"),
+            lambda r: r["observations"][0].update(repeat=True),
+            lambda r: r["observations"][0].update(shortlist=[]),
+            lambda r: r["observations"][0]["measurements"].update(prompt_tokens=True),
+            lambda r: r["observations"][0]["measurements"].update(latency_ms=float("nan")),
+            lambda r: r.update(planned_calls=23),
+            lambda r: r.update(attempts_started=23),
+        ):
+            report = self.perfect()
+            mutate(report)
+            with self.assertRaises(ValueError):
+                bench.assess_selection(report, self.corpus)
+
+    def test_unavailable_or_inconsistent_abstention_cannot_pass(self):
+        report = self.perfect()
+        row = next(r for r in report["observations"] if r["job"] == "r0-wrong-owner-candidate")
+        row.update(review_status="unavailable", tier="free-lexical")
+        assessment = bench.assess_selection(report, self.corpus)
+        self.assertIn(row["job"], assessment["candidate_failures"])
+        self.assertEqual(assessment["state"], "not_accepted")
+        row.update(review_status="abstained", tier="local-llm-reranked", paths=["personal/memory/SKILL.md"])
+        with self.assertRaises(ValueError):
+            bench.assess_selection(report, self.corpus)
+
+    def test_one_bad_repetition_is_not_averaged_away(self):
+        report = self.perfect()
+        repeated = copy.deepcopy(report["observations"])
+        for row in repeated:
+            row["repeat"] = 1
+            row["job"] = row["job"].replace("r0-", "r1-", 1)
+            if row["job"] == "r1-wrong-owner-candidate":
+                row.update(paths=["personal/memory/SKILL.md"], review_status="selected")
+        report["observations"].extend(repeated)
+        report.update(planned_calls=48, attempts_started=48)
+        assessment = bench.assess_selection(report, self.corpus)
+        self.assertEqual(assessment["candidate_excluded_selections"], ["r1-wrong-owner-candidate"])
+        self.assertEqual(assessment["repetitions"], 2)
+        self.assertEqual(assessment["state"], "not_accepted")
+
+    def test_changed_report_hash_or_corpus_rejects_offline_assessment(self):
+        with self.assertRaises(ValueError):
+            bench.assess_file(self.path, "0" * 64, self.corpus)
+        changed = copy.deepcopy(self.corpus)
+        changed["cases"][0]["expected_paths"] = []
+        with self.assertRaises(ValueError):
+            bench.assess_file(self.path, bench.file_hash(self.path), changed)
+
+    def test_offline_cli_returns_quality_refusal_and_rejects_execution_flags(self):
+        command = [sys.executable, str(Path(bench.__file__)), "--assess", str(self.path),
+                   "--report-sha256", bench.file_hash(self.path)]
+        proc = subprocess.run(command, capture_output=True, text=True, encoding="utf-8")
+        self.assertEqual(proc.returncode, 4, proc.stdout)
+        self.assertEqual(json.loads(proc.stdout)["acceptance"]["decision"], "do_not_promote")
+        for extra in (["--execute"], ["--resume"], ["--repetitions", "2"], ["--timeout", "1"],
+                      ["--output", "unused-output"], ["--backend", "unused-backend"]):
+            proc = subprocess.run(command + extra, capture_output=True, text=True, encoding="utf-8")
+            self.assertEqual(proc.returncode, 2, proc.stdout)
+            self.assertEqual(json.loads(proc.stdout)["status"], "blocked")
+
+
 if __name__ == "__main__":
-    result = unittest.TextTestRunner().run(unittest.defaultTestLoader.loadTestsFromTestCase(AcceptanceTests))
+    result = unittest.TextTestRunner().run(unittest.defaultTestLoader.loadTestsFromModule(sys.modules[__name__]))
     failed = len(result.errors) + len(result.failures)
     print(f"RESULT: {max(0, result.testsRun - failed)} passed, {failed} failed, 0 skipped")
     raise SystemExit(0 if result.wasSuccessful() else 1)
