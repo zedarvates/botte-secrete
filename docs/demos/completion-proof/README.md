@@ -1,5 +1,12 @@
 # « Terminé » mérite une preuve
 
+## Nouveau : un vrai correctif de Botte
+
+Le vérificateur acceptait un reçu malgré des tests tous ignorés. Le défaut est
+reproduit avec une vraie exécution de unittest et l'ancienne version extraite
+d'un commit public. Le correctif refuse ce reçu. [Voir le correctif réel et le
+rejouer](real-fix.md). Le scénario pédagogique initial reste disponible ci-dessous.
+
 **Botte Secrète repère une annonce sans preuve associée.** Cette démonstration
 montre ensuite un vrai test en échec, une correction préparée et trois tests
 réussis. Elle est locale, sans appel à un modèle, et rejouable avec Python 3.10+.

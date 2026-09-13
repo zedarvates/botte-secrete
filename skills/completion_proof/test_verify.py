@@ -274,6 +274,26 @@ class VerificationTests(unittest.TestCase):
         self.assertIn("Vérifié sur ces tests", output.getvalue())
         self.assertIn("1 test(s)", output.getvalue())
 
+    def test_all_skipped_tests_are_not_verified(self):
+        self.receipt["result"]["skipped"] = 1
+        self.save()
+        self.rejected("no_tests_executed")
+
+    def test_skipped_counts_are_validated(self):
+        for skipped in (True, -1, 2, "1"):
+            with self.subTest(skipped=skipped):
+                self.receipt["result"]["skipped"] = skipped
+                self.save()
+                self.rejected("invalid_test_counts")
+
+    def test_mixed_skipped_and_passed_tests(self):
+        self.receipt["result"].update(tests_run=2, skipped=1)
+        self.save()
+        result = self.verify()
+        self.assertTrue(result["verified"])
+        self.assertEqual(result["tests_executed"], 1)
+        self.assertEqual(result["tests_skipped"], 1)
+
 
 def main():
     suite = unittest.defaultTestLoader.loadTestsFromTestCase(VerificationTests)

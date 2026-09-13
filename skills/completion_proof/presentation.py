@@ -15,6 +15,8 @@ COPY = {
         "scope": "Portée : uniquement les tests enregistrés et les fichiers listés ; exécuteur de confiance requis.",
         "counts": "{tests} test(s) enregistré(s) ; {files} fichier(s) contrôlé(s).",
         "next": "Suite : ",
+        "no_tests_executed": ("Tous les tests ont été ignorés : aucun test n'a été exécuté.", "Exécuter au moins un test réel et produire un nouveau reçu."),
+        "skipped": "{executed} test(s) exécuté(s) ; {skipped} ignoré(s).",
     },
     "en": {
         "announced": ("Announced — not yet verified", "This report is not a supported completion claim.", "Provide the completion report and its execution receipt."),
@@ -30,6 +32,8 @@ COPY = {
         "scope": "Scope: recorded tests and listed files only; a trusted executor is required.",
         "counts": "{tests} recorded test(s); {files} checked file(s).",
         "next": "Next: ",
+        "no_tests_executed": ("All tests were skipped: no test was executed.", "Execute at least one actual test and capture a new receipt."),
+        "skipped": "{executed} executed test(s); {skipped} skipped.",
     },
 }
 
@@ -49,7 +53,7 @@ def format_result(result: dict, language: str = "fr") -> str:
     title, reason, action = copy[status]
     for code in errors:
         if code in {"source_hash_mismatch", "log_hash_mismatch",
-                    "receipt_hash_mismatch", "run_id_mismatch"}:
+                    "receipt_hash_mismatch", "run_id_mismatch", "no_tests_executed"}:
             reason, action = copy[code]
             break
     lines = [title, reason]
@@ -57,4 +61,7 @@ def format_result(result: dict, language: str = "fr") -> str:
         lines.append(copy["counts"].format(tests=result["tests_run"],
                                             files=len(result.get("source_files_checked", []))))
     lines.extend([copy["next"] + action, copy["scope"]])
+    if type(result.get("tests_skipped")) is int and result["tests_skipped"] > 0:
+        lines.insert(-2, copy["skipped"].format(executed=result.get("tests_executed", 0),
+                                               skipped=result["tests_skipped"]))
     return "\n".join(lines)

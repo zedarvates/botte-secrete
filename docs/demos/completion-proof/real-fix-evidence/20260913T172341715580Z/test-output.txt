@@ -1,0 +1,6 @@
+test_optional_backend (demo_optional.OptionalTest.test_optional_backend) ... skipped 'optional backend unavailable'
+
+----------------------------------------------------------------------
+Ran 1 test in 0.000s
+
+OK (skipped=1)

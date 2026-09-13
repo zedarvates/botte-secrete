@@ -29,7 +29,7 @@ Receipt shape (replace placeholders with actual SHA-256 values):
 {
   "schema_version": 1,
   "run_id": "run-1",
-  "result": {"exit_code": 0, "tests_run": 3, "failures": 0, "errors": 0},
+  "result": {"exit_code": 0, "tests_run": 3, "failures": 0, "errors": 0, "skipped": 0},
   "log": {"path": "tests.txt", "sha256": "LOG_SHA256"},
   "sources": [
     {"path": "app.py", "sha256": "SOURCE_SHA256"},
@@ -53,6 +53,11 @@ service or signing system in this change.
   the same bytes as recorded. This detects code or test changes after the run.
 - Counts are typed integers with at least one test. Nonzero exit code, errors
   or failures produce `test_failed`, never success.
+- When `skipped` is supplied, it must be a nonnegative integer consistent with
+  the totals. Fully skipped runs are rejected as `no_tests_executed`; mixed runs
+  report `tests_executed` and `tests_skipped`. For legacy v1 compatibility, an
+  omitted `skipped` means zero. New producers must capture this count: the
+  verifier cannot infer undisclosed skips from arbitrary logs.
 - Relative paths reject traversal, absolute paths, links/junctions and alternate
   stream syntax. JSON rejects duplicate keys and non-finite constants. Reads
   are bounded: 1 MB JSON, 8 MB per artifact, 32 MB aggregate log/source content,

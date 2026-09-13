@@ -50,6 +50,11 @@ Critère : le lecteur comprend qui a exécuté chaque étape et ce qui reste inc
 
 ## 4. Passer à un scénario issu d'un vrai correctif
 
+**Réalisé sur le nouveau vérificateur de cette proposition** : test unittest
+réellement ignoré, ancien code extrait d'un commit public, même reçu comparé
+avant/après et test de non-régression. Voir le [correctif réel](real-fix.md).
+Il ne s'agit pas d'un incident en production ni d'un agent autonome.
+
 Choisir un petit défaut public de Botte, conserver le test de non-régression
 et le correctif, puis enregistrer une exécution reproductible. Un essai avec
 un agent réel serait une expérience séparée, avec modèle, coût et intervention

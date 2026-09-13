@@ -127,15 +127,10 @@ def verify_report(report: str | Path, *, evidence_root: str | Path,
         for key in ("exit_code", "tests_run", "failures", "errors"):
             if type(outcome.get(key)) is not int:
                 raise EvidenceError("invalid_test_result")
-        skipped = outcome.get("skipped", 0)  # legacy v1 producers did not emit this field
-        if type(skipped) is not int or skipped < 0:
-            raise EvidenceError("invalid_test_counts")
         if (outcome["tests_run"] <= 0 or outcome["failures"] < 0
                 or outcome["errors"] < 0
-                or outcome["failures"] + outcome["errors"] + skipped > outcome["tests_run"]):
+                or outcome["failures"] + outcome["errors"] > outcome["tests_run"]):
             raise EvidenceError("invalid_test_counts")
-        if skipped == outcome["tests_run"]:
-            raise EvidenceError("no_tests_executed")
         log = receipt.get("log")
         if not isinstance(log, dict):
             raise EvidenceError("missing_log")
@@ -161,8 +156,6 @@ def verify_report(report: str | Path, *, evidence_root: str | Path,
                 raise EvidenceError("source_hash_mismatch")
             result["source_files_checked"].append(entry["path"])
         result["tests_run"] = outcome["tests_run"]
-        result["tests_skipped"] = skipped
-        result["tests_executed"] = outcome["tests_run"] - skipped
         result["receipt_sha256"] = pin
         if outcome["exit_code"] != 0 or outcome["failures"] or outcome["errors"]:
             result["status"] = "test_failed"
