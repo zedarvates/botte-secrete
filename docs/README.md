@@ -22,6 +22,7 @@ the code in `skills/<name>/SKILL.md`.
 | Evaluate a Hermes integration | [Hermes](integrations/hermes.md) |
 | Evaluate Needle 2 for memory tools | [Consultative CPU pilot](needle2-memory-pilot.md) |
 | Inspect the frozen Needle/Qwen errors | [Offline calibration diagnostics](needle2-error-diagnostics.md) |
+| Try exact argument copying without executing tools | [Source-span candidate](memory-argument-spans.md) |
 | Use the Loop Optimizer safely | [Loop Optimizer](loop-optimizer.md) |
 | Build and capture the public dashboard | [Dashboard capture](dashboard-capture.md) |
 | Regenerate README visuals | [Documentation visuals](screenshots-plan.md) |

@@ -1,0 +1,32 @@
+{
+  "schema_version": "botte.memory-argument-spans-result/v1",
+  "mode": "candidate_advisory",
+  "input_sha256": "57cc85430b9f1fecd9e1ef8812ffa477a2e0502624dc7c86d6b35aced6b11bef",
+  "binder_source_sha256": "9bf9f4f4e9b8d534d689f0bfceecc3a6107016a26d3bf4f6ebb8f8c067792166",
+  "catalog_sha256": "30cd0f60145a7a9729eebbe038f1b8f2c7e0e725f3824f5b70d39697cc5e459f",
+  "valid_proposal": true,
+  "route": {
+    "tool_name": "memory_history",
+    "arguments": {
+      "key": "lot_MOTEUR-8"
+    },
+    "source": "argument_spans_candidate",
+    "confidence": 0.0,
+    "executable": false,
+    "reason": "advisory_only"
+  },
+  "confidence_kind": "not_measured",
+  "new_inference_attempts": 0,
+  "model_quality_measured": false,
+  "limitations": [
+    "producer_must_use_unicode_code_point_offsets",
+    "span_and_tool_selection_correctness_not_established",
+    "negation_and_user_authorization_not_evaluated",
+    "no_integration_with_the_frozen_model_adapters"
+  ],
+  "executed": false,
+  "activation_allowed": false,
+  "tool_calls_executed": 0,
+  "memory_writes": 0,
+  "successful_action_ledger_eligible": false
+}
