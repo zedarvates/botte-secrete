@@ -28,14 +28,20 @@ jobs:
         run: python -m skills.factory_assurance.test_private_holdout
       - name: Positive control must pass
         run: python -m skills.factory_assurance.cli examples/factory-assurance/run.json
-      - name: Real StoryCore shadow dark lap must hold while evidence is incomplete
-        shell: bash
+      - name: Real StoryCore dark lap must become review-ready without promotion authority
         run: |
-          set +e
-          python -m skills.factory_assurance.cli examples/factory-assurance/storycore-pr57-shadow.json --pretty
-          rc=$?
-          set -e
-          test "$rc" -eq 2
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from skills.factory_assurance.assurance import evaluate_assurance
+
+          run = json.loads(Path('examples/factory-assurance/storycore-pr57-shadow.json').read_text(encoding='utf-8'))
+          decision = evaluate_assurance(run)
+          assert decision['status'] == 'review_ready', decision
+          assert decision['may_merge_automatically'] is False, decision
+          assert decision['may_deploy_automatically'] is False, decision
+          print(json.dumps(decision, indent=2, sort_keys=True))
+          PY
       - name: Record exact candidate identity
         shell: bash
         run: |
