@@ -194,9 +194,10 @@ def main() -> int:
             and envelope["acted"] is False,
         )
         check(
-            "trajectory bridge uses verified harness evidence by default",
+            "trajectory bridge passes verified harness evidence without self-promoting it",
             envelope["evidence_refs"] == ["ci:1"]
-            and envelope["verification_state"] == "unverified",
+            and envelope["verification_state"] == "rejected"
+            and envelope["verified"] is False,
         )
 
     proposal = build_checkpoint_proposal(
