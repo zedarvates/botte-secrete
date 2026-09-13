@@ -11,6 +11,7 @@ import re
 import shlex
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -21,6 +22,9 @@ force_utf8()
 
 REPO = Path(__file__).resolve().parent.parent
 TIMEOUT = 30
+# This smoke check traverses the whole project. Two Python 3.10 CI runs
+# exceeded 30s; keep a bounded audit allowance and log its actual duration.
+CHECKUP_TIMEOUT = 90
 SAFE_BOTTE_COMMANDS = {
     "--help", "belt", "checkup", "discover", "doctor", "gain", "harvest",
     "upstreams",
@@ -124,10 +128,13 @@ def main():
         if argv is None:
             skipped += 1
             continue
+        full_checkup = argv[1:3] == ["-m", "skills.checkup.cli"]
+        timeout = CHECKUP_TIMEOUT if full_checkup else TIMEOUT
+        started = time.monotonic()
         try:
             r = subprocess.run(argv, shell=False, cwd=REPO, capture_output=True,
                                text=True, encoding="utf-8", errors="replace",
-                               timeout=TIMEOUT,
+                               timeout=timeout,
                                env={**os.environ, "PYTHONPATH": str(REPO)})
             if r.returncode == 0:
                 passed += 1
@@ -140,6 +147,9 @@ def main():
         except Exception as exc:
             failed += 1
             print(f"  ERR  {cmd[:80]} ({type(exc).__name__}: {exc})")
+        finally:
+            if full_checkup:
+                print(f"  CHECK {cmd[:80]} ({time.monotonic() - started:.2f}s; limit={timeout}s)", flush=True)
 
     print(f"{passed} passed, {failed} failed, {skipped} skipped")
     return 0 if failed == 0 else 1

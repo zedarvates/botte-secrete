@@ -125,21 +125,48 @@ des réponses ou des versions de skills. Sans données adaptées, son résultat
 
 ## État de couverture examiné
 
-Ce point de départ concerne le commit
-`ce0593e9d42f428a4e97cf0c8c4df36a85c83620`, avant l'ajout de ce guide. Les
-[preuves d'intégration](validation/action-consequence-memory-v1.json) et du
-[pilote local](validation/action-memory-host-pilot-v1.json) précisent chacune
-leur propre version, environnement et périmètre. Elles restent des observations
-historiques ; elles ne valident pas d'office une modification ultérieure.
+Synthèse du 2026-09-13 : mécanismes examinés au commit
+`099efb9f203fd1666cb6707d34d4fb5a2be9152d`, après le point de départ
+`ce0593e9d42f428a4e97cf0c8c4df36a85c83620`. Les
+[preuves d'intégration](validation/action-consequence-memory-v1.json), du
+[pilote local](validation/action-memory-host-pilot-v1.json) et de sélection
+ci-dessous conservent chacune leur version, leur environnement et leur
+périmètre. Un résultat historique ne valide pas d'office le commit examiné.
 
 | Axe | Mécanisme présent | Limite ou travail restant |
 |---|---|---|
-| Choisir correctement | Registre avec chemins distincts, présélection lexicale, inspection optionnelle des effets ; lecture des instructions demandée à l'agent. | Le planificateur ne vérifie pas automatiquement l'adéquation sémantique ni la lecture complète. Étayer les choix par opération et évaluer les faux positifs, exclusions et prérequis manquants. |
-| Constater les conséquences | Rapports avec conditions et observations de fichiers, archives immuables et capture mémoire séparée. | Observation bornée et coopérative ; effets externes, coûts des modèles et qualité métier non établis par ces seuls rapports. |
-| Fiabiliser les pipelines | Plans explicites, contrôles avant consommation et blocage des descendants invalides. | Couverture actuelle par prédicats de fichiers locaux ; les critères métier restent à définir pour chaque tâche. |
-| Reprendre après interruption | Checkpoints, verrou local, revalidation, réconciliation des opérations incertaines et reçus de capture idempotents. | Aucun suivi exhaustif des processus distants ni transaction distribuée. Le pilote simule une réponse perdue côté client après capture, sans panne réelle du serveur. |
-| Capitaliser l'expérience | Épisodes liés aux empreintes, au contexte et aux preuves ; rappel borné avec contrôles courants et propositions de revue. | Le rappel échantillonne l'historique ; aucune généralisation causale ou promotion automatique. Le passage entre machines du homelab reste à vérifier. |
-| Améliorer avec mesure | Benchmark ciblé de routage et tests de régression des mécanismes. | La comparaison générale actuelle/candidate sur des tâches métier représentatives reste à réaliser ; aucun gain global de qualité n'est établi ici. |
+| Choisir correctement | La [revue locale](skill-selection-review.md) charge les `SKILL.md` complets dans une limite globale de 64 Kio, conserve chemins, sous-ensemble et ordre, puis distingue sélection, abstention et indisponibilité. | Avis consultatif. Les ressources référencées restent à lire par l'agent ; la présélection lexicale peut manquer un candidat. Le modèle CPU testé échoue aux six cas exigeant l'abstention. |
+| Constater les conséquences | Rapports de fichiers et archives existants ; le [bilan CPU](validation/skill-selection-cpu-execution-v1.json) relie 24 observations vérifiées aux ressources touchées, appels terminés, serveur arrêté, échecs, jetons et durées mesurés. | Observation bornée. Aucune opération sélectionnée n'a été exécutée ; qualité métier, énergie, coût monétaire et effets externes restent non mesurés. |
+| Fiabiliser les pipelines | Plans explicites et blocage des descendants invalides ; le [banc de sélection](skill-selection-acceptance.md) vérifie empreintes et observations du checkpoint avant consommation, puis recalcule les scores depuis les chemins et états de revue. | Un résultat complet peut rester refusé. Les critères métier propres aux opérations et l'authenticité du runtime ne sont pas établis par ces contrôles locaux. |
+| Reprendre après interruption | Checkpoints, verrou local et revalidation ; seules les opérations jamais démarrées peuvent repartir. Une capture incertaine se reprend avec la même requête conservée et la même identité. | Réconcilier les appels démarrés ou incertains avant toute suite. Aucun suivi exhaustif des processus distants ni transaction distribuée ; la perte de réponse du pilote reste simulée côté client. |
+| Capitaliser l'expérience | Épisodes existants ; [export du bilan de sélection](validation/skill-selection-cpu-memory-request-v1.json) lié aux versions, contexte et preuves, puis [revue du rappel](validation/skill-selection-memory-review-v1.json) qui conserve les sept échecs et signale les sources modifiées. | L'export est une requête, pas un reçu d'ingestion ni un épisode d'exécution. Le rappel est un échantillon ; plusieurs bilans du même essai ne sont pas des validations indépendantes. Le transport entre machines reste à vérifier. |
+| Améliorer avec mesure | Comparaison CPU de deux versions figées sur douze situations synthétiques, avec résultats complets et [évaluation rétrospective](validation/skill-selection-cpu-assessment-v1.json). | Sélection exacte avec revue disponible : 2/12 → 5/12 ; abstention correcte : 0/6 → 0/6 ; jetons de prompt : 1 423 → 4 199. Runtime non qualifié. Une évaluation indépendante sur les tâches cibles et les coûts reste nécessaire. |
+
+L'essai réel compare la référence `6651335` à la candidate `8f2bd6e`, avec
+Qwen2.5-0.5B-Instruct Q8_0 et llama.cpp b10809. Les ajouts ultérieurs évaluent ou
+rappellent ses preuves sans produire de nouveaux appels modèle. La politique
+d'acceptation a été écrite après observation des échecs ; cette évaluation est
+rétrospective. La CI vérifie les mécanismes et leurs régressions, sans qualifier
+le modèle pour les tâches réelles.
+
+## Reprendre à partir de cette synthèse
+
+- **Essai CPU terminé :** conserver ses 24 observations et son refus de
+  qualification. Pour examiner ces résultats, utiliser l'évaluation hors ligne
+  du [guide d'acceptation](skill-selection-acceptance.md), sans rejouer l'essai.
+  Une autre hypothèse demande une candidate distincte, figée, et un nouveau
+  protocole ; une qualification demande des cas cibles évalués séparément des
+  cas de développement.
+- **Mémoire vérifiée localement :** la preuve HTTP utilise deux identités sur
+  une seule machine. L'export conservé ne prouve aucune ingestion dans un
+  service configuré. Pour vérifier le passage entre machines, reprendre le
+  [pilote existant](action-memory-homelab-pilot.md) avec service, identités,
+  transport et révisions effectivement disponibles.
+- **Réutilisation à examiner :** la revue enregistrée compare les sources de
+  `f01d212` à la candidate mesurée `8f2bd6e` et signale leur différence. Ce
+  constat ne diagnostique pas une régression du finder. Recontrôler les sources
+  du checkout visé, le runtime et les prérequis de la tâche ; garder visibles
+  les échecs historiques et les limites du rappel.
 
 ## Bilan à transmettre
 

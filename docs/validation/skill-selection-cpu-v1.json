@@ -1,0 +1,753 @@
+{
+  "schema": "botte.skill-selection-comparison/v1",
+  "status": "measurement_complete",
+  "dataset_class": "fixture",
+  "corpus_sha256": "15f7870cf8add3672a8625decb2e3fe8f5c09d98a05eb1cc9a2c74d72cffd8ff",
+  "harness_sha256": "5416a65cfa1fe794a047248516f7ad0fb5ac845f2fcf9949d3dc4dae4b63b874",
+  "sources": {
+    "baseline": {
+      "head": "6651335fa0d96a39d14f3b95c10d8a30763fc835",
+      "code_sha256": "3a9187d8bf96716524c9f6b2503e264f77a5d9f3a2002033a3461116e37e6d42",
+      "source_count": 589,
+      "sources_match_commit": true,
+      "source_scope": [
+        "*.py",
+        "skills/**/SKILL.md",
+        "skills/**/effects.json"
+      ]
+    },
+    "candidate": {
+      "head": "8f2bd6e7031785a294baa53bf642b73f994d3205",
+      "code_sha256": "b47f866966c6891c8081d3b3a992d3cc290fe3da3dcee2df66a447dd1fbf51d1",
+      "source_count": 593,
+      "sources_match_commit": true,
+      "source_scope": [
+        "*.py",
+        "skills/**/SKILL.md",
+        "skills/**/effects.json"
+      ]
+    }
+  },
+  "runtime_sha256": "97e082bbe225e45fb0bd2256a989b3ef890653b8b63d2b0a82f9312b5d427371",
+  "totals": {
+    "baseline": {
+      "observed": 12,
+      "exact_selections": 2,
+      "false_selections": 12,
+      "latency_p95_ms": 443.49736900039716,
+      "prompt_tokens": 1423,
+      "completion_tokens": 24
+    },
+    "candidate": {
+      "observed": 12,
+      "exact_selections": 5,
+      "false_selections": 6,
+      "latency_p95_ms": 1218.5623489995123,
+      "prompt_tokens": 4199,
+      "completion_tokens": 24
+    }
+  },
+  "observations": [
+    {
+      "job": "r0-private-note-baseline",
+      "side": "baseline",
+      "case_id": "private-note",
+      "repeat": 0,
+      "exact_selection": false,
+      "false_selections": 1,
+      "required_candidates_retrieved": true,
+      "job_sha256": "6dab4d7d4576033143cd90058726a7b90aef3f9d7d080bd3fbce95bf38efbebc",
+      "paths": [
+        "personal/memory/SKILL.md",
+        "team/memory/SKILL.md"
+      ],
+      "shortlist": [
+        "personal/memory/SKILL.md",
+        "team/memory/SKILL.md"
+      ],
+      "review_status": "legacy_unspecified",
+      "review_reason": null,
+      "tier": "local-llm-reranked",
+      "measurements": {
+        "calls": 1,
+        "latency_ms": 443.49736900039716,
+        "prompt_tokens": 120,
+        "completion_tokens": 2,
+        "response_model_matches": true,
+        "truncated": false,
+        "prompt_bytes": 407
+      }
+    },
+    {
+      "job": "r0-private-note-candidate",
+      "side": "candidate",
+      "case_id": "private-note",
+      "repeat": 0,
+      "exact_selection": true,
+      "false_selections": 0,
+      "required_candidates_retrieved": true,
+      "job_sha256": "340365312add5a1680f88917c0101350e91498653ff11c7c9ab80540300b15fd",
+      "paths": [
+        "personal/memory/SKILL.md"
+      ],
+      "shortlist": [
+        "personal/memory/SKILL.md",
+        "team/memory/SKILL.md"
+      ],
+      "review_status": "selected",
+      "review_reason": null,
+      "tier": "local-llm-reranked",
+      "measurements": {
+        "calls": 1,
+        "latency_ms": 1213.392894000208,
+        "prompt_tokens": 398,
+        "completion_tokens": 2,
+        "response_model_matches": true,
+        "truncated": false,
+        "prompt_bytes": 1695
+      }
+    },
+    {
+      "job": "r0-project-decision-candidate",
+      "side": "candidate",
+      "case_id": "project-decision",
+      "repeat": 0,
+      "exact_selection": true,
+      "false_selections": 0,
+      "required_candidates_retrieved": true,
+      "job_sha256": "1fcbbc98db98f3aada4e074435ad5270830f9b7d2a0cdb48ff2fe4b5e370226f",
+      "paths": [
+        "team/memory/SKILL.md"
+      ],
+      "shortlist": [
+        "team/memory/SKILL.md",
+        "personal/memory/SKILL.md"
+      ],
+      "review_status": "selected",
+      "review_reason": null,
+      "tier": "local-llm-reranked",
+      "measurements": {
+        "calls": 1,
+        "latency_ms": 923.388272000011,
+        "prompt_tokens": 395,
+        "completion_tokens": 2,
+        "response_model_matches": true,
+        "truncated": false,
+        "prompt_bytes": 1701
+      }
+    },
+    {
+      "job": "r0-project-decision-baseline",
+      "side": "baseline",
+      "case_id": "project-decision",
+      "repeat": 0,
+      "exact_selection": false,
+      "false_selections": 1,
+      "required_candidates_retrieved": true,
+      "job_sha256": "e6c64c0d9e16bb1fe01be05db0f1747df5f0339e2a7917994a37973fd80e03f5",
+      "paths": [
+        "team/memory/SKILL.md",
+        "personal/memory/SKILL.md"
+      ],
+      "shortlist": [
+        "team/memory/SKILL.md",
+        "personal/memory/SKILL.md"
+      ],
+      "review_status": "legacy_unspecified",
+      "review_reason": null,
+      "tier": "local-llm-reranked",
+      "measurements": {
+        "calls": 1,
+        "latency_ms": 345.2009860002363,
+        "prompt_tokens": 119,
+        "completion_tokens": 2,
+        "response_model_matches": true,
+        "truncated": false,
+        "prompt_bytes": 413
+      }
+    },
+    {
+      "job": "r0-inspect-checkpoint-baseline",
+      "side": "baseline",
+      "case_id": "inspect-checkpoint",
+      "repeat": 0,
+      "exact_selection": true,
+      "false_selections": 0,
+      "required_candidates_retrieved": true,
+      "job_sha256": "22e24f36b43200f09f929334498dff5117d475639f8d669352c42260be47b6d4",
+      "paths": [
+        "runs/checkpoint/SKILL.md"
+      ],
+      "shortlist": [
+        "runs/checkpoint/SKILL.md"
+      ],
+      "review_status": "legacy_unspecified",
+      "review_reason": null,
+      "tier": "local-llm-reranked",
+      "measurements": {
+        "calls": 1,
+        "latency_ms": 344.89623199988273,
+        "prompt_tokens": 104,
+        "completion_tokens": 2,
+        "response_model_matches": true,
+        "truncated": false,
+        "prompt_bytes": 350
+      }
+    },
+    {
+      "job": "r0-inspect-checkpoint-candidate",
+      "side": "candidate",
+      "case_id": "inspect-checkpoint",
+      "repeat": 0,
+      "exact_selection": true,
+      "false_selections": 0,
+      "required_candidates_retrieved": true,
+      "job_sha256": "c7e456e9957b44a20ece1b08b04c60374a26ba8e2b565ea3c2911f968b8c0feb",
+      "paths": [
+        "runs/checkpoint/SKILL.md"
+      ],
+      "shortlist": [
+        "runs/checkpoint/SKILL.md"
+      ],
+      "review_status": "selected",
+      "review_reason": null,
+      "tier": "local-llm-reranked",
+      "measurements": {
+        "calls": 1,
+        "latency_ms": 696.1786740002935,
+        "prompt_tokens": 274,
+        "completion_tokens": 2,
+        "response_model_matches": true,
+        "truncated": false,
+        "prompt_bytes": 1157
+      }
+    },
+    {
+      "job": "r0-new-png-candidate",
+      "side": "candidate",
+      "case_id": "new-png",
+      "repeat": 0,
+      "exact_selection": true,
+      "false_selections": 0,
+      "required_candidates_retrieved": true,
+      "job_sha256": "4b7160b9bfe3d5aa83905602618dd56bd9da1bd5cbee837aca40859367cbbe26",
+      "paths": [
+        "images/convert/SKILL.md"
+      ],
+      "shortlist": [
+        "images/convert/SKILL.md"
+      ],
+      "review_status": "selected",
+      "review_reason": null,
+      "tier": "local-llm-reranked",
+      "measurements": {
+        "calls": 1,
+        "latency_ms": 705.1217019998148,
+        "prompt_tokens": 280,
+        "completion_tokens": 2,
+        "response_model_matches": true,
+        "truncated": false,
+        "prompt_bytes": 1176
+      }
+    },
+    {
+      "job": "r0-new-png-baseline",
+      "side": "baseline",
+      "case_id": "new-png",
+      "repeat": 0,
+      "exact_selection": true,
+      "false_selections": 0,
+      "required_candidates_retrieved": true,
+      "job_sha256": "1f9c14d2eeeb531f24591caf61e8abee7670f12ec05f53cd568be7e9e61555a6",
+      "paths": [
+        "images/convert/SKILL.md"
+      ],
+      "shortlist": [
+        "images/convert/SKILL.md"
+      ],
+      "review_status": "legacy_unspecified",
+      "review_reason": null,
+      "tier": "local-llm-reranked",
+      "measurements": {
+        "calls": 1,
+        "latency_ms": 325.92800699967484,
+        "prompt_tokens": 110,
+        "completion_tokens": 2,
+        "response_model_matches": true,
+        "truncated": false,
+        "prompt_bytes": 359
+      }
+    },
+    {
+      "job": "r0-ram-usage-baseline",
+      "side": "baseline",
+      "case_id": "ram-usage",
+      "repeat": 0,
+      "exact_selection": false,
+      "false_selections": 2,
+      "required_candidates_retrieved": true,
+      "job_sha256": "f7537f9291215d2f0d8912d9d5efd25d8434375ce38763b14d48b1b0e4273ef6",
+      "paths": [
+        "machine/memory/SKILL.md",
+        "personal/memory/SKILL.md",
+        "team/memory/SKILL.md"
+      ],
+      "shortlist": [
+        "machine/memory/SKILL.md",
+        "personal/memory/SKILL.md",
+        "team/memory/SKILL.md"
+      ],
+      "review_status": "legacy_unspecified",
+      "review_reason": null,
+      "tier": "local-llm-reranked",
+      "measurements": {
+        "calls": 1,
+        "latency_ms": 346.4708139999857,
+        "prompt_tokens": 129,
+        "completion_tokens": 2,
+        "response_model_matches": true,
+        "truncated": false,
+        "prompt_bytes": 443
+      }
+    },
+    {
+      "job": "r0-ram-usage-candidate",
+      "side": "candidate",
+      "case_id": "ram-usage",
+      "repeat": 0,
+      "exact_selection": true,
+      "false_selections": 0,
+      "required_candidates_retrieved": true,
+      "job_sha256": "340cad34eef9a77edc1bc595967aff1015d5b58e14e3406f2aecaf3ff675d3c8",
+      "paths": [
+        "machine/memory/SKILL.md"
+      ],
+      "shortlist": [
+        "machine/memory/SKILL.md",
+        "personal/memory/SKILL.md",
+        "team/memory/SKILL.md"
+      ],
+      "review_status": "selected",
+      "review_reason": null,
+      "tier": "local-llm-reranked",
+      "measurements": {
+        "calls": 1,
+        "latency_ms": 1218.5623489995123,
+        "prompt_tokens": 497,
+        "completion_tokens": 2,
+        "response_model_matches": true,
+        "truncated": false,
+        "prompt_bytes": 2114
+      }
+    },
+    {
+      "job": "r0-two-destinations-candidate",
+      "side": "candidate",
+      "case_id": "two-destinations",
+      "repeat": 0,
+      "exact_selection": false,
+      "false_selections": 0,
+      "required_candidates_retrieved": true,
+      "job_sha256": "2b91c8ec24964687ca836f9ceaa13fdb1f1ed934555a7e4baa46c3d4a03a8d96",
+      "paths": [
+        "personal/memory/SKILL.md"
+      ],
+      "shortlist": [
+        "personal/memory/SKILL.md",
+        "team/memory/SKILL.md"
+      ],
+      "review_status": "selected",
+      "review_reason": null,
+      "tier": "local-llm-reranked",
+      "measurements": {
+        "calls": 1,
+        "latency_ms": 988.0493190003108,
+        "prompt_tokens": 412,
+        "completion_tokens": 2,
+        "response_model_matches": true,
+        "truncated": false,
+        "prompt_bytes": 1781
+      }
+    },
+    {
+      "job": "r0-two-destinations-baseline",
+      "side": "baseline",
+      "case_id": "two-destinations",
+      "repeat": 0,
+      "exact_selection": false,
+      "false_selections": 0,
+      "required_candidates_retrieved": true,
+      "job_sha256": "a91c27d4648b8ed46c349e27930265abe790860ffe10f8e726bd93d5c55e648e",
+      "paths": [
+        "personal/memory/SKILL.md",
+        "team/memory/SKILL.md"
+      ],
+      "shortlist": [
+        "personal/memory/SKILL.md",
+        "team/memory/SKILL.md"
+      ],
+      "review_status": "legacy_unspecified",
+      "review_reason": null,
+      "tier": "free-lexical",
+      "measurements": {
+        "calls": 1,
+        "latency_ms": 331.95063099992694,
+        "prompt_tokens": 134,
+        "completion_tokens": 2,
+        "response_model_matches": true,
+        "truncated": false,
+        "prompt_bytes": 493
+      }
+    },
+    {
+      "job": "r0-wrong-owner-baseline",
+      "side": "baseline",
+      "case_id": "wrong-owner",
+      "repeat": 0,
+      "exact_selection": false,
+      "false_selections": 2,
+      "required_candidates_retrieved": true,
+      "job_sha256": "02420ce3c2d24b91a4ac7c384f054cb333789818a48e4f9461584a73034ba609",
+      "paths": [
+        "personal/memory/SKILL.md",
+        "team/memory/SKILL.md"
+      ],
+      "shortlist": [
+        "personal/memory/SKILL.md",
+        "team/memory/SKILL.md"
+      ],
+      "review_status": "legacy_unspecified",
+      "review_reason": null,
+      "tier": "local-llm-reranked",
+      "measurements": {
+        "calls": 1,
+        "latency_ms": 329.72609599983116,
+        "prompt_tokens": 128,
+        "completion_tokens": 2,
+        "response_model_matches": true,
+        "truncated": false,
+        "prompt_bytes": 444
+      }
+    },
+    {
+      "job": "r0-wrong-owner-candidate",
+      "side": "candidate",
+      "case_id": "wrong-owner",
+      "repeat": 0,
+      "exact_selection": false,
+      "false_selections": 1,
+      "required_candidates_retrieved": true,
+      "job_sha256": "78dc52ac51e6565f62f61314c23cfd895c072f516f748072ac57456a44ab898c",
+      "paths": [
+        "personal/memory/SKILL.md"
+      ],
+      "shortlist": [
+        "personal/memory/SKILL.md",
+        "team/memory/SKILL.md"
+      ],
+      "review_status": "selected",
+      "review_reason": null,
+      "tier": "local-llm-reranked",
+      "measurements": {
+        "calls": 1,
+        "latency_ms": 1200.5944050006292,
+        "prompt_tokens": 398,
+        "completion_tokens": 2,
+        "response_model_matches": true,
+        "truncated": false,
+        "prompt_bytes": 1732
+      }
+    },
+    {
+      "job": "r0-read-permission-only-candidate",
+      "side": "candidate",
+      "case_id": "read-permission-only",
+      "repeat": 0,
+      "exact_selection": false,
+      "false_selections": 1,
+      "required_candidates_retrieved": true,
+      "job_sha256": "97c1ede002331328e57c58cc6efb38f868f0edcaef8d086b9eccd7489fe32cc6",
+      "paths": [
+        "team/memory/SKILL.md"
+      ],
+      "shortlist": [
+        "team/memory/SKILL.md",
+        "personal/memory/SKILL.md"
+      ],
+      "review_status": "selected",
+      "review_reason": null,
+      "tier": "local-llm-reranked",
+      "measurements": {
+        "calls": 1,
+        "latency_ms": 1184.300928999619,
+        "prompt_tokens": 401,
+        "completion_tokens": 2,
+        "response_model_matches": true,
+        "truncated": false,
+        "prompt_bytes": 1725
+      }
+    },
+    {
+      "job": "r0-read-permission-only-baseline",
+      "side": "baseline",
+      "case_id": "read-permission-only",
+      "repeat": 0,
+      "exact_selection": false,
+      "false_selections": 2,
+      "required_candidates_retrieved": true,
+      "job_sha256": "a106a539738c17c0ba53087614a67683eadb89cec69605b8dc4899ee6316a8e9",
+      "paths": [
+        "team/memory/SKILL.md",
+        "personal/memory/SKILL.md"
+      ],
+      "shortlist": [
+        "team/memory/SKILL.md",
+        "personal/memory/SKILL.md"
+      ],
+      "review_status": "legacy_unspecified",
+      "review_reason": null,
+      "tier": "local-llm-reranked",
+      "measurements": {
+        "calls": 1,
+        "latency_ms": 270.1929550003115,
+        "prompt_tokens": 123,
+        "completion_tokens": 2,
+        "response_model_matches": true,
+        "truncated": false,
+        "prompt_bytes": 437
+      }
+    },
+    {
+      "job": "r0-delete-notes-baseline",
+      "side": "baseline",
+      "case_id": "delete-notes",
+      "repeat": 0,
+      "exact_selection": false,
+      "false_selections": 1,
+      "required_candidates_retrieved": true,
+      "job_sha256": "363789f8c322135c039faf2c381ace86686f909a42745f203a8cc739ae44ee00",
+      "paths": [
+        "personal/memory/SKILL.md"
+      ],
+      "shortlist": [
+        "personal/memory/SKILL.md"
+      ],
+      "review_status": "legacy_unspecified",
+      "review_reason": null,
+      "tier": "local-llm-reranked",
+      "measurements": {
+        "calls": 1,
+        "latency_ms": 333.7877579997439,
+        "prompt_tokens": 112,
+        "completion_tokens": 2,
+        "response_model_matches": true,
+        "truncated": false,
+        "prompt_bytes": 406
+      }
+    },
+    {
+      "job": "r0-delete-notes-candidate",
+      "side": "candidate",
+      "case_id": "delete-notes",
+      "repeat": 0,
+      "exact_selection": false,
+      "false_selections": 1,
+      "required_candidates_retrieved": true,
+      "job_sha256": "b5c4f8c3281e23d26ecadac74a25391bc14cd1fd33f07e324d79e686ca2e2393",
+      "paths": [
+        "personal/memory/SKILL.md"
+      ],
+      "shortlist": [
+        "personal/memory/SKILL.md"
+      ],
+      "review_status": "selected",
+      "review_reason": null,
+      "tier": "local-llm-reranked",
+      "measurements": {
+        "calls": 1,
+        "latency_ms": 767.0602850002979,
+        "prompt_tokens": 287,
+        "completion_tokens": 2,
+        "response_model_matches": true,
+        "truncated": false,
+        "prompt_bytes": 1233
+      }
+    },
+    {
+      "job": "r0-restart-uncertain-candidate",
+      "side": "candidate",
+      "case_id": "restart-uncertain",
+      "repeat": 0,
+      "exact_selection": false,
+      "false_selections": 1,
+      "required_candidates_retrieved": true,
+      "job_sha256": "d5a7045dd5fe1d90727847203905e16cee8ef794511a149d18f9c06798d7666b",
+      "paths": [
+        "runs/checkpoint/SKILL.md"
+      ],
+      "shortlist": [
+        "runs/checkpoint/SKILL.md"
+      ],
+      "review_status": "selected",
+      "review_reason": null,
+      "tier": "local-llm-reranked",
+      "measurements": {
+        "calls": 1,
+        "latency_ms": 606.8111519998638,
+        "prompt_tokens": 284,
+        "completion_tokens": 2,
+        "response_model_matches": true,
+        "truncated": false,
+        "prompt_bytes": 1232
+      }
+    },
+    {
+      "job": "r0-restart-uncertain-baseline",
+      "side": "baseline",
+      "case_id": "restart-uncertain",
+      "repeat": 0,
+      "exact_selection": false,
+      "false_selections": 1,
+      "required_candidates_retrieved": true,
+      "job_sha256": "94982c1cb380cf144ea34b7f6b50c45cbba27c337fc78956bcd3979050ccb0d0",
+      "paths": [
+        "runs/checkpoint/SKILL.md"
+      ],
+      "shortlist": [
+        "runs/checkpoint/SKILL.md"
+      ],
+      "review_status": "legacy_unspecified",
+      "review_reason": null,
+      "tier": "free-lexical",
+      "measurements": {
+        "calls": 1,
+        "latency_ms": 335.32499500051927,
+        "prompt_tokens": 114,
+        "completion_tokens": 2,
+        "response_model_matches": true,
+        "truncated": false,
+        "prompt_bytes": 425
+      }
+    },
+    {
+      "job": "r0-missing-image-baseline",
+      "side": "baseline",
+      "case_id": "missing-image",
+      "repeat": 0,
+      "exact_selection": false,
+      "false_selections": 1,
+      "required_candidates_retrieved": true,
+      "job_sha256": "ff45c56caa4f4cd0320da62e5290db6a23ce168c04d94856b9829fcc1040d3e7",
+      "paths": [
+        "images/convert/SKILL.md"
+      ],
+      "shortlist": [
+        "images/convert/SKILL.md"
+      ],
+      "review_status": "legacy_unspecified",
+      "review_reason": null,
+      "tier": "local-llm-reranked",
+      "measurements": {
+        "calls": 1,
+        "latency_ms": 349.66603799966833,
+        "prompt_tokens": 118,
+        "completion_tokens": 2,
+        "response_model_matches": true,
+        "truncated": false,
+        "prompt_bytes": 390
+      }
+    },
+    {
+      "job": "r0-missing-image-candidate",
+      "side": "candidate",
+      "case_id": "missing-image",
+      "repeat": 0,
+      "exact_selection": false,
+      "false_selections": 1,
+      "required_candidates_retrieved": true,
+      "job_sha256": "2d93ff3316d7651231e34ac6bb251d3a1969fb3debd7e3ee3bd3a8ff4aa605a2",
+      "paths": [
+        "images/convert/SKILL.md"
+      ],
+      "shortlist": [
+        "images/convert/SKILL.md"
+      ],
+      "review_status": "selected",
+      "review_reason": null,
+      "tier": "local-llm-reranked",
+      "measurements": {
+        "calls": 1,
+        "latency_ms": 622.1482649998507,
+        "prompt_tokens": 290,
+        "completion_tokens": 2,
+        "response_model_matches": true,
+        "truncated": false,
+        "prompt_bytes": 1207
+      }
+    },
+    {
+      "job": "r0-overwrite-image-candidate",
+      "side": "candidate",
+      "case_id": "overwrite-image",
+      "repeat": 0,
+      "exact_selection": false,
+      "false_selections": 1,
+      "required_candidates_retrieved": true,
+      "job_sha256": "9ee4c8132b0d5be2e8c52f91e53f6d9984becaff2555a0d0dd46b6c4e388cd95",
+      "paths": [
+        "images/convert/SKILL.md"
+      ],
+      "shortlist": [
+        "images/convert/SKILL.md"
+      ],
+      "review_status": "selected",
+      "review_reason": null,
+      "tier": "local-llm-reranked",
+      "measurements": {
+        "calls": 1,
+        "latency_ms": 711.8849890002821,
+        "prompt_tokens": 283,
+        "completion_tokens": 2,
+        "response_model_matches": true,
+        "truncated": false,
+        "prompt_bytes": 1190
+      }
+    },
+    {
+      "job": "r0-overwrite-image-baseline",
+      "side": "baseline",
+      "case_id": "overwrite-image",
+      "repeat": 0,
+      "exact_selection": false,
+      "false_selections": 1,
+      "required_candidates_retrieved": true,
+      "job_sha256": "72eb2cf700eccef489c6ee3b69bf2a3339c7acd83c132ebf0d15b142abac6ef1",
+      "paths": [
+        "images/convert/SKILL.md"
+      ],
+      "shortlist": [
+        "images/convert/SKILL.md"
+      ],
+      "review_status": "legacy_unspecified",
+      "review_reason": null,
+      "tier": "local-llm-reranked",
+      "measurements": {
+        "calls": 1,
+        "latency_ms": 287.1843249995436,
+        "prompt_tokens": 112,
+        "completion_tokens": 2,
+        "response_model_matches": true,
+        "truncated": false,
+        "prompt_bytes": 373
+      }
+    }
+  ],
+  "gaps": [],
+  "planned_calls": 24,
+  "attempts_started": 24,
+  "automatic_promotion": false,
+  "operation_quality": "unmeasured",
+  "energy_kwh": null,
+  "monetary_cost": null,
+  "decision": "collect_held_out_evidence"
+}
