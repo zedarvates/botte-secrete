@@ -38,6 +38,7 @@ SUITES = [
     ("universal_compressor", [sys.executable, "-m", "skills.universal_compressor.test_universal_compressor"], "skills/universal_compressor/"),
     ("compression_benchmark", [sys.executable, "-m", "skills.universal_compressor.test_benchmark"], "skills/universal_compressor/"),
     ("caveman", [sys.executable, "-m", "skills.caveman.test_caveman"], "skills/caveman/"),
+    ("loop_cost_reporting", [sys.executable, "-m", "skills.loop_optimizer.test_cost_reporting"], "skills/loop_optimizer/"),
     ("cli_router", [sys.executable, "-m", "skills.test_cli"], "skills/"),
     ("llm_backends", [sys.executable, "-m", "skills.llm_backends.test_llm_backends"], "skills/llm_backends/"),
     ("directives_audit", [sys.executable, "-m", "skills.directives_audit.test_directives_audit"], "skills/directives_audit/"),
