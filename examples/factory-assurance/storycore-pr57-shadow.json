@@ -49,6 +49,8 @@
     "candidate_sha": "385a2ea631c271bc44e0169d81b8062f2408bd9d",
     "case_count": 16,
     "status": "pass",
-    "contains_cases": false
+    "contains_cases": false,
+    "issuer_kind": "operator-private-session",
+    "independent_third_party": false
   }
 }
