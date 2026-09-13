@@ -49,6 +49,34 @@ def _add(blockers: list[str], condition: bool, message: str) -> None:
         blockers.append(message)
 
 
+def _identity_ok(identity: dict[str, Any], warnings: list[str]) -> tuple[bool, str]:
+    """Verify exact candidate identity across direct or synthetic PR checkouts.
+
+    Direct CI normally has source/build/tested commit equality. GitHub pull_request
+    workflows may instead test a synthetic merge commit; in that case we require
+    the source/build/tested Git tree SHA to be explicitly supplied and identical.
+    Tree equivalence proves tested repository content, not commit ancestry.
+    """
+    source_sha = str(identity.get("source_sha") or "").strip()
+    build_sha = str(identity.get("build_sha") or "").strip()
+    tested_sha = str(identity.get("tested_sha") or "").strip()
+    if not source_sha or not build_sha or not tested_sha:
+        return False, "source/build/tested commit identity is incomplete"
+    if len({source_sha, build_sha, tested_sha}) == 1:
+        return True, "commit"
+
+    source_tree = str(identity.get("source_tree") or "").strip()
+    build_tree = str(identity.get("build_tree") or "").strip()
+    tested_tree = str(identity.get("tested_tree") or "").strip()
+    if source_tree and build_tree and tested_tree and len({source_tree, build_tree, tested_tree}) == 1:
+        warnings.append(
+            "commit IDs differ but source/build/tested Git tree identity matches; "
+            "synthetic PR checkout content is exact"
+        )
+        return True, "tree"
+    return False, "source/build/tested identity mismatch"
+
+
 def evaluate_assurance(run: dict[str, Any]) -> dict[str, Any]:
     """Evaluate a run record and return a stable, auditable decision.
 
@@ -89,9 +117,7 @@ def evaluate_assurance(run: dict[str, Any]) -> dict[str, Any]:
     _add(blockers, not builder, "builder identity is missing")
     _add(blockers, not judge, "independent judge identity is missing")
     if builder and judge:
-        for blocker in validate_assignment(
-            builder=builder, judge=judge, orchestrator=orchestrator
-        ):
+        for blocker in validate_assignment(builder=builder, judge=judge, orchestrator=orchestrator):
             if blocker not in blockers:
                 blockers.append(blocker)
 
@@ -143,19 +169,10 @@ def evaluate_assurance(run: dict[str, Any]) -> dict[str, Any]:
         warnings.append("randomized/adversarial cases not checked")
 
     identity = run.get("identity") or {}
-    source_sha = str(identity.get("source_sha") or "").strip()
-    build_sha = str(identity.get("build_sha") or "").strip()
-    tested_sha = str(identity.get("tested_sha") or "").strip()
-    _add(blockers, not source_sha, "source_sha is missing")
-    _add(blockers, not build_sha, "build_sha is missing")
-    _add(blockers, not tested_sha, "tested_sha is missing")
-    if source_sha and build_sha and tested_sha:
-        _add(
-            blockers,
-            len({source_sha, build_sha, tested_sha}) != 1,
-            "source/build/tested identity mismatch",
-        )
+    identity_valid, identity_reason = _identity_ok(identity, warnings)
+    _add(blockers, not identity_valid, identity_reason)
 
+    source_sha = str(identity.get("source_sha") or "").strip()
     deployed_sha = str(identity.get("deployed_sha") or "").strip()
     if deployed_sha:
         _add(
