@@ -94,6 +94,17 @@ surrounding implementation is permissively licensed. Record the actual weights
 licence in the execution context and fail closed when commercial use conflicts
 with it.
 
+`validate_commercial_weights_policy` checks a caller-supplied declaration. For
+commercial use, it recognizes `NonCommercial` and `BY-NC` across case, whitespace,
+hyphen and underscore variants. It rejects empty declarations and placeholders
+`unknown`, `unspecified`, `unqualified`, `tbd`, `n/a`, `none` and `NOASSERTION`.
+
+Treat a return without an exception only as absence of those declared blockers,
+never as legal clearance. Qualify the actual weight terms against their sources
+before any future use, including custom terms and licence expressions: this
+helper performs no licence discovery or permission verification. With
+`commercial_use=False`, it makes no rights decision either.
+
 ## Asymmetric budget guidance
 
 Context ingestion, retrieval, deliberation, and final generation need not use the

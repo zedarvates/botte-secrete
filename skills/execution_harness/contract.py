@@ -7,6 +7,7 @@ which candidate may become the last-known-good artifact.
 
 from __future__ import annotations
 
+import re
 from dataclasses import asdict, dataclass, field
 from typing import Any, Iterable
 
@@ -221,9 +222,24 @@ class ExecutionHarness:
         commercial_use: bool,
         weights_license: str,
     ) -> None:
-        normalized = weights_license.lower().replace("_", "-")
-        noncommercial = "noncommercial" in normalized or "by-nc" in normalized
-        if commercial_use and noncommercial:
+        """Reject declared non-commercial terms and missing/unknown declarations.
+
+        This checks a caller-supplied string, not the actual weight licence.
+        Returning None never establishes rights: custom terms and other licence
+        declarations still require source-backed qualification before use.
+        """
+        if not commercial_use:
+            return
+
+        normalized = re.sub(r"[\s_-]+", "", weights_license.casefold())
+        if normalized in {
+            "", "unknown", "unspecified", "unqualified", "tbd", "n/a", "none",
+            "noassertion",
+        }:
+            raise HarnessInvariantError(
+                "commercial use requires a known weights licence declaration"
+            )
+        if "noncommercial" in normalized or "bync" in normalized:
             raise HarnessInvariantError(
                 "non-commercial model weights cannot be promoted into a commercial workflow"
             )

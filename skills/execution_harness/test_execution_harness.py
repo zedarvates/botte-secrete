@@ -224,15 +224,67 @@ def main() -> int:
         and "status" not in proposal["arguments"],
     )
 
-    check(
-        "non-commercial weights are blocked for commercial promotion",
-        _raises(
-            lambda: harness.validate_commercial_weights_policy(
+    for declaration in (
+        "CC-BY-NC-4.0",
+        "CC BY-NC 4.0",
+        "CC_BY_NC_4.0",
+        "CC BY NC 4.0",
+        "NonCommercial",
+        "non-commercial",
+        "non commercial",
+        " \tNoN_Commercial\n",
+    ):
+        check(
+            f"commercial use rejects non-commercial declaration {declaration!r}",
+            _raises(
+                lambda: harness.validate_commercial_weights_policy(
+                    commercial_use=True,
+                    weights_license=declaration,
+                )
+            ),
+        )
+
+    for declaration in (
+        "",
+        " \t\n",
+        "unknown",
+        " UNKNOWN ",
+        "unspecified",
+        "unqualified",
+        "tbd",
+        "n/a",
+        "none",
+        "NOASSERTION",
+    ):
+        check(
+            f"commercial use rejects missing/unknown declaration {declaration!r}",
+            _raises(
+                lambda: harness.validate_commercial_weights_policy(
+                    commercial_use=True,
+                    weights_license=declaration,
+                )
+            ),
+        )
+
+    # These are declarations, not verified licences or commercial approvals.
+    # Custom terms still need source-backed qualification outside this helper.
+    for declaration in ("Apache-2.0", "MIT", "LicenseRef-custom"):
+        check(
+            f"declaration check returns no approval value for {declaration!r}",
+            harness.validate_commercial_weights_policy(
                 commercial_use=True,
-                weights_license="CC-BY-NC-4.0",
-            )
-        ),
-    )
+                weights_license=declaration,
+            ) is None,
+        )
+
+    for declaration in ("CC-BY-NC-4.0", "unknown", ""):
+        check(
+            f"commercial-only guard adds no decision for non-commercial use: {declaration!r}",
+            harness.validate_commercial_weights_policy(
+                commercial_use=False,
+                weights_license=declaration,
+            ) is None,
+        )
 
     print(f"\nRESULT: {passed} passed, {failed} failed")
     return 0 if failed == 0 else 1
