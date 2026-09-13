@@ -1,0 +1,36 @@
+name: RC1 report reproduction
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'scripts/release_validation/**'
+      - 'docs/validation/**'
+      - '.github/workflows/rc1-reproduction.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  reproduce:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - name: Install pinned candidate and reproduce reports
+        run: python scripts/release_validation/run.py --output rc1-public-reports
+      - name: Upload public-safe results
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: rc1-reports-${{ matrix.os }}
+          path: rc1-public-reports/*.json
+          if-no-files-found: error
+          retention-days: 30

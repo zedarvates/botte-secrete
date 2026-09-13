@@ -1,0 +1,29 @@
+{
+  "upstream_commit": "fee5aa338d3bd7a9e36c269e33b496a7848edc44",
+  "scope": "slugify package and upstream test.py",
+  "mutations": {
+    "baseline": null,
+    "lowercase_removed": [
+      "text = text.lower()",
+      "text = text"
+    ],
+    "length_limit_removed": [
+      "if max_length > 0:",
+      "if False:"
+    ],
+    "stopwords_removed": [
+      "if stopwords:",
+      "if False:"
+    ]
+  },
+  "expected_tests": {
+    "baseline": "pass",
+    "lowercase_removed": "fail",
+    "length_limit_removed": "fail",
+    "stopwords_removed": "fail"
+  },
+  "expected_assurance": "hold for every case: no private/external holdout",
+  "judge": "upstream public unittest assertions executed in separate processes",
+  "independent_human_judge": false,
+  "private_external_holdout": false
+}

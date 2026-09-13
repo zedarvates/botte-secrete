@@ -2,6 +2,9 @@
 
 # Botte Secrète
 
+[Rapports RC1 et reproduction](docs/validation/2.0.0rc1/README.md)
+— installation propre et pilote limité sur un projet public.
+
 **Versions :** [1.9.0 — dernière version stable](https://github.com/zedarvates/botte-secrete/releases/tag/1.9.0)
 · [2.0.0rc1 — préversion pour pilotes externes](https://github.com/zedarvates/botte-secrete/releases/tag/v2.0.0rc1).
 La RC ajoute Factory Assurance, un juge indépendant et des critères de preuve.
