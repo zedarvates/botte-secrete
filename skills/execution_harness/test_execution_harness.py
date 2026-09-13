@@ -17,6 +17,7 @@ from skills.execution_harness import (
     VerificationResult,
 )
 from skills.execution_harness.atlas_seed import atlas_from_needle2_comparison
+from skills.execution_harness.memory_adapter import build_checkpoint_proposal
 from skills.execution_harness.trajectory_adapter import emit_harness_outcome
 
 
@@ -169,6 +170,7 @@ def main() -> int:
     )
 
     harness.add_evidence(EvidenceRecord(kind="ci", ref="ci:1", verified=True))
+    harness.add_evidence(EvidenceRecord(kind="note", ref="unverified:note", verified=False))
     handoff = harness.build_handoff(completed=("contract",), remaining=("integration",))
     check("handoff carries recovery and execution deltas", bool(handoff["recovery_point"]) and len(handoff["execution_deltas"]) == 1)
 
@@ -196,6 +198,30 @@ def main() -> int:
             envelope["evidence_refs"] == ["ci:1"]
             and envelope["verification_state"] == "unverified",
         )
+
+    proposal = build_checkpoint_proposal(
+        harness,
+        project_id="test-project",
+        key="harness.checkpoint.v1",
+        request_id="req-harness-1",
+        run_id="run-harness-1",
+        observed_at=1_800_000_000.0,
+    )
+    check(
+        "memory adapter produces a validated non-executing checkpoint proposal",
+        proposal["operation"] == "checkpoint"
+        and proposal["executed"] is False
+        and proposal["memory_write_performed"] is False
+        and proposal["activation_allowed"] is False
+        and proposal["review_required"] is True,
+    )
+    check(
+        "memory proposal carries only verified evidence and no injected authority",
+        proposal["arguments"]["record"]["evidence_refs"] == ["ci:1"]
+        and "agent_id" not in proposal["arguments"]
+        and "trust_class" not in proposal["arguments"]
+        and "status" not in proposal["arguments"],
+    )
 
     check(
         "non-commercial weights are blocked for commercial promotion",
