@@ -40,6 +40,8 @@ the code in `skills/<name>/SKILL.md`.
 - [Local model benchmark note](local-model-benchmarks.md) — historical evidence
 - [Local worker benchmark](local-worker-benchmark.md) — comparable Granite 4.2 evidence
   with explicit reproducibility limits.
+- [YuE2 weights source qualification](yue2-weights-qualification.md) — pinned
+  checkpoint identities and the blocking commercial-use finding for PR #118.
 - [Quality Compass plan](plans/2026-08-25_quality-compass-plan.md) — active plan
   for verified QA memory, k-NN baselines, and specialized local workers.
 - [`plans/`](plans/) — proposed work and design explorations.
