@@ -7,7 +7,9 @@ import json
 import tempfile
 from pathlib import Path
 
-from .private_holdout import PrivateHoldoutError, load_private_set, run_private_holdout
+from .private_holdout import (
+    PrivateHoldoutError, load_private_set, run_private_holdout, write_attestation,
+)
 
 
 def _ok(label: str, condition: bool, state: list[int]) -> None:
@@ -16,6 +18,8 @@ def _ok(label: str, condition: bool, state: list[int]) -> None:
 
 
 def _write(root: Path, payload: dict) -> Path:
+    """Write public synthetic fixtures only, never operator-owned holdout data."""
+    # CodeQL #9: the literal canaries below intentionally test non-disclosure.
     path = root / "private.json"
     path.write_text(json.dumps(payload), encoding="utf-8")
     return path
@@ -55,6 +59,26 @@ def main() -> int:
         )
         _ok("one failed private case fails whole attestation", failing["status"] == "fail", state)
 
+        # The public contract applies to failures and to the persisted artifact.
+        public_fields = {
+            "schema", "set_id", "set_digest_sha256", "candidate_sha",
+            "case_count", "status", "contains_cases",
+        }
+        for verdict, result in (("pass", attestation), ("fail", failing)):
+            _ok(f"{verdict} attestation uses only public fields", set(result) == public_fields, state)
+            _ok(f"{verdict} attestation declares no cases", result.get("contains_cases") is False, state)
+            public_path = root / f"attestation-{verdict}.json"
+            write_attestation(result, public_path)
+            persisted = public_path.read_text(encoding="utf-8")
+            _ok(f"{verdict} persisted attestation matches result", json.loads(persisted) == result, state)
+            _ok(
+                f"{verdict} persisted attestation excludes case data",
+                all(marker not in persisted for marker in (
+                    secret, "ANOTHER-PRIVATE-CASE", "h-001", "h-002",
+                )),
+                state,
+            )
+
         duplicate = _write(root, {
             "set_id": "bad",
             "cases": [{"id": "same", "input": 1}, {"id": "same", "input": 2}],
@@ -85,6 +109,8 @@ def main() -> int:
         except PrivateHoldoutError:
             dual_eval_blocked = True
         _ok("ambiguous dual evaluator configuration fails closed", dual_eval_blocked, state)
+
+    _ok("synthetic fixture directory is removed after use", not root.exists(), state)
 
     passed, failed = state
     print(f"\nRESULT: {passed} passed, {failed} failed")
