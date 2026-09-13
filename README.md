@@ -6,7 +6,7 @@
 — clean installation checks and a bounded public-source pilot.
 
 **Releases:** [1.9.0 — latest stable](https://github.com/zedarvates/botte-secrete/releases/tag/1.9.0)
-· [2.0.0rc1 — external-pilot pre-release](https://github.com/zedarvates/botte-secrete/releases/tag/v2.0.0rc1).
+· [2.0.0rc2 — external-pilot pre-release](https://github.com/zedarvates/botte-secrete/releases/tag/v2.0.0rc2).
 The RC adds Factory Assurance, independent judging, and evidence gates. Start in
 observe, consultative, or shadow mode; the private/external holdout remains
 unproven. See the release notes for limits and installation at the validated
