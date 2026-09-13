@@ -32,11 +32,11 @@ Good fit: compare Factory Assurance with an AI software-factory workflow on a bo
 
 Suggested boundary: read-only/shadow first; no merge/deploy. Cole and collaborators rerun their own tests and decide independently whether any observation is valid.
 
-### Stefan 3D AI
+### Stefan Vaskevich / Stefan 3D AI (@Stefan_3D_AI)
 
-Good fit once the exact public account/repository is confirmed: 3D/game asset or geometry workflows where visual/structural correctness can diverge from tests. A pilot should combine deterministic asset/mesh checks with maintainer-side visual inspection and their own engine/tool tests.
+Good fit: 3D/game asset and geometry workflows where visual/structural correctness can diverge from conventional tests. A pilot should combine deterministic asset/mesh checks with Stefan-side visual inspection and his own Blender/Unreal/Unity/tool tests.
 
-Do not contact an account merely because the name resembles "Stefan". Resolve the public identity first.
+Suggested first scope: one public asset or bounded 3D workflow, read-only/shadow, with explicit geometry/material/rigging checks and no claim that Botte's result replaces artistic or engine-side validation.
 
 ## Public invitation wording
 
@@ -44,7 +44,7 @@ Keep outreach short, transparent, and non-promotional. Do not imply endorsement,
 
 Example:
 
-> Hi — I am testing an open-source, evidence-gated agent orchestration project called Botte Secrete / Factory Assurance. I would be interested in running a small read-only or shadow pilot against one bounded part of your project, mainly to test our own tooling on a real external codebase. Any findings would be experimental, and you should reproduce/verify them with your own tests and review before relying on anything we report. We would not merge, deploy, publish private data, or activate anything on your behalf. If that sounds useful, I can keep the pilot narrow and send back the exact evidence and limits rather than a generic AI review.
+> Hi — I am testing an open-source, evidence-gated agent orchestration project called Botte Secrete / Factory Assurance. I would be interested in running a small read-only or shadow pilot against one bounded part of your project, mainly to test our own tooling on a real external codebase or asset workflow. Any findings would be experimental, and you should reproduce/verify them with your own tests and review before relying on anything we report. We would not merge, deploy, publish private data, or activate anything on your behalf. If that sounds useful, I can keep the pilot narrow and send back the exact evidence and limits rather than a generic AI review.
 
 ## Success criteria
 
