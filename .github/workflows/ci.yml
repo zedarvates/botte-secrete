@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main, feat/shared-memory-scribe-v1]
+    branches: [main, feat/shared-memory-scribe-v1, feat/needle2-readonly-pilot]
 
 permissions:
   contents: read
@@ -33,6 +33,7 @@ jobs:
           python scripts/run_tests.py -q
           python -m pytest --rootdir=. -q skills/memory_hub/test_shared_service.py skills/memory_hub/test_shared_transport.py skills/memory_hub/test_memory_hub.py
           python -m pytest --rootdir=. -q skills/tool_router/test_tool_router.py skills/tool_router/test_needle2.py skills/tool_router/test_needle2_study.py
+          python -m skills.execution_harness.test_execution_harness
         timeout-minutes: 10
       - name: Validate GitHub documentation
         id: docs
