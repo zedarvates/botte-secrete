@@ -10,6 +10,8 @@ import json
 from pathlib import Path
 from typing import Any
 
+from .roles import validate_assignment
+
 
 REQUIRED_TOP_LEVEL = {
     "schema_version",
@@ -68,11 +70,7 @@ def evaluate_assurance(run: dict[str, Any]) -> dict[str, Any]:
     mission = run.get("mission") or {}
     _add(blockers, not _non_empty_strings(mission.get("goals")), "mission.goals must be non-empty")
     _add(blockers, not _non_empty_strings(mission.get("invariants")), "mission.invariants must be non-empty")
-    _add(
-        blockers,
-        not isinstance(mission.get("non_goals"), list),
-        "mission.non_goals must be a list",
-    )
+    _add(blockers, not isinstance(mission.get("non_goals"), list), "mission.non_goals must be a list")
     _add(
         blockers,
         not isinstance(mission.get("forbidden_transformations"), list),
@@ -87,9 +85,15 @@ def evaluate_assurance(run: dict[str, Any]) -> dict[str, Any]:
     actors = run.get("actors") or {}
     builder = str(actors.get("builder") or "").strip()
     judge = str(actors.get("judge") or "").strip()
+    orchestrator = str(actors.get("orchestrator") or "").strip() or None
     _add(blockers, not builder, "builder identity is missing")
     _add(blockers, not judge, "independent judge identity is missing")
-    _add(blockers, bool(builder and judge and builder == judge), "builder and judge must be independent")
+    if builder and judge:
+        for blocker in validate_assignment(
+            builder=builder, judge=judge, orchestrator=orchestrator
+        ):
+            if blocker not in blockers:
+                blockers.append(blocker)
 
     effects = run.get("effects") or {}
     declared = set(effects.get("declared") or [])
@@ -122,11 +126,7 @@ def evaluate_assurance(run: dict[str, Any]) -> dict[str, Any]:
                 blockers.append(f"required evidence did not pass: {name or '<unnamed>'}")
 
     controls = run.get("controls") or {}
-    _add(
-        blockers,
-        controls.get("positive_control") != "pass",
-        "positive control must pass",
-    )
+    _add(blockers, controls.get("positive_control") != "pass", "positive control must pass")
     _add(
         blockers,
         controls.get("negative_control") != "fail",
@@ -167,7 +167,7 @@ def evaluate_assurance(run: dict[str, Any]) -> dict[str, Any]:
         warnings.append("deployment identity not supplied; merge and deployment remain separate")
 
     requested_autonomy = run.get("requested_autonomy", "consultative")
-    if requested_autonomy not in {"observe", "consultative", "shadow", "gated", "bounded"}:
+    if requested_autonomy not in VALID_STAGES:
         blockers.append("requested autonomy exceeds supported bounded modes")
     if requested_autonomy == "bounded" and stage != "bounded":
         blockers.append("bounded autonomy requires an explicit bounded stage")
@@ -185,9 +185,5 @@ def _result(run: dict[str, Any], blockers: list[str], warnings: list[str]) -> di
         "may_deploy_automatically": False,
         "blockers": blockers,
         "warnings": warnings,
-        "next_action": (
-            "independent_human_review"
-            if ready
-            else "repair_evidence_and_re_evaluate"
-        ),
+        "next_action": "independent_human_review" if ready else "repair_evidence_and_re_evaluate",
     }
