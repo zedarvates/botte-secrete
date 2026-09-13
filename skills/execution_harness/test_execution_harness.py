@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+import tempfile
+
 from skills.execution_harness import (
     ArtifactRecord,
     CapabilityAtlas,
@@ -15,6 +17,7 @@ from skills.execution_harness import (
     VerificationResult,
 )
 from skills.execution_harness.atlas_seed import atlas_from_needle2_comparison
+from skills.execution_harness.trajectory_adapter import emit_harness_outcome
 
 
 def _raises(fn) -> bool:
@@ -168,6 +171,31 @@ def main() -> int:
     harness.add_evidence(EvidenceRecord(kind="ci", ref="ci:1", verified=True))
     handoff = harness.build_handoff(completed=("contract",), remaining=("integration",))
     check("handoff carries recovery and execution deltas", bool(handoff["recovery_point"]) and len(handoff["execution_deltas"]) == 1)
+
+    with tempfile.TemporaryDirectory() as project:
+        emitted = emit_harness_outcome(
+            harness,
+            task="verify harness bridge",
+            route="local",
+            status="UNCERTAIN",
+            project_root=project,
+            execution_id="execution-harness-test-1",
+            task_type="harness-contract",
+            tags=("shadow", "test"),
+            model="none",
+        )
+        envelope = emitted["envelope"]
+        check(
+            "trajectory bridge remains shadow-only and non-activating",
+            envelope["shadow_only"] is True
+            and envelope["activation_allowed"] is False
+            and envelope["acted"] is False,
+        )
+        check(
+            "trajectory bridge uses verified harness evidence by default",
+            envelope["evidence_refs"] == ["ci:1"]
+            and envelope["verification_state"] == "unverified",
+        )
 
     check(
         "non-commercial weights are blocked for commercial promotion",
