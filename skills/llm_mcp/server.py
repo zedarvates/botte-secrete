@@ -487,8 +487,46 @@ TOOLS = [
         "description": "Route a high-level goal to an ordered, local-first plan of "
                        "botte-secrète capabilities (which tools, in what order, what stays "
                        "local). The generalised router. 0 cloud tokens.",
-        "inputSchema": {"type": "object", "properties": {"goal": {"type": "string"}},
+        "inputSchema": {"type": "object", "properties": {
+            "goal": {"type": "string"},
+            "review_effects": {"type": "boolean", "default": False,
+                               "description": "Add compact shared review cues; no model call or automatic observation."},
+            "include_effects": {"type": "boolean", "default": False,
+                                "description": "Inspect selected declarations; grants no authority."}},
                         "required": ["goal"]},
+    },
+    {
+        "name": "effect_details",
+        "description": "Read selected effects declaration sections or list entries for a bundled skill. "
+                       "Use review_before.source and its declaration_sha256 to retrieve deferred details "
+                       "without mixing versions. Read-only; no execution or model call.",
+        "inputSchema": {"type": "object", "additionalProperties": False, "properties": {
+            "source": {"type": "string", "description": "Canonical skills/<name>/SKILL.md path from review_before."},
+            "selectors": {"type": "array", "minItems": 1, "maxItems": 16,
+                          "items": {"type": "string", "maxLength": 64},
+                          "description": "Exact /section or /list_section/index paths, e.g. /retry or /expected_effects/0."},
+            "expected_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$",
+                                "description": "Canonical declaration digest from review_before; changed declarations return no fragments."}},
+            "required": ["source", "selectors"]},
+    },
+    {
+        "name": "effect_evidence",
+        "description": "Index or select retained execution observations by ID. Read a saved report, "
+                       "then use its evidence_sha256 for subsequent reads without mixing runs. "
+                       "Use overview for all saved execution steps and their evidence references. "
+                       "Preserves run limits and linked calls; no execution, model call or current-state check.",
+        "inputSchema": {"type": "object", "additionalProperties": False, "properties": {
+            "source": {"type": "string", "description": "Canonical .botte/reports/<file>.json in the server working directory."},
+            "overview": {"type": "boolean", "default": False,
+                         "description": "Return all execution results with compact cues and read arguments; cannot combine with selection options."},
+            "result_index": {"type": "integer", "minimum": 0,
+                             "description": "Required zero-based result position for Conductor reports; omit for a standalone companion."},
+            "selectors": {"type": "array", "minItems": 1, "maxItems": 16,
+                          "items": {"type": "string", "maxLength": 16416},
+                          "description": "Omit for an index; otherwise /calls/ID, /observations/ID, /network/ID or /declarations/DIGEST. Escape ~ as ~0 and / as ~1 in IDs."},
+            "expected_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$",
+                                "description": "Canonical companion digest from review_after or a previous index."}},
+            "required": ["source"]},
     },
     {
         "name": "execute_plan",
@@ -500,7 +538,15 @@ TOOLS = [
         "inputSchema": {"type": "object", "properties": {
             "goal": {"type": "string"},
             "confirm": {"type": "boolean"},
-            "dry_run": {"type": "boolean"}},
+            "dry_run": {"type": "boolean"},
+            "stop_on_failure": {"type": "boolean", "default": False,
+                                "description": "Skip remaining steps after a nonzero exit; no task verification or retry."},
+            "review_effects": {"type": "boolean", "default": False,
+                               "description": "Add compact before/after review cues without changing execution authority."},
+            "observe_effects": {"type": "boolean", "default": False,
+                                "description": "Include declarations and a partial observed-effects report with call links; no extra authority."},
+            "include_effects": {"type": "boolean", "default": False,
+                                "description": "Retain planning declarations as effects_before; not observations."}},
             "required": ["goal"]},
     },
     {
@@ -1218,13 +1264,38 @@ def _tool_routing_stats(_args: dict) -> str:
 
 def _tool_conduct(args: dict) -> str:
     from skills.conductor import plan
-    return json.dumps(plan(args["goal"]), ensure_ascii=False, indent=2)
+    return json.dumps(plan(args["goal"], include_effects=bool(args.get("include_effects", False)),
+                           review_effects=bool(args.get("review_effects", False))),
+                      ensure_ascii=False, indent=2)
+
+
+def _tool_effect_details(args: dict) -> str:
+    from skills.capabilities.review import read_bundled_details
+    if set(args) - {"source", "selectors", "expected_sha256"}:
+        raise ValueError("unsupported effect_details argument")
+    report = read_bundled_details(args["source"], args["selectors"],
+                                  expected_sha256=args.get("expected_sha256"))
+    return json.dumps(report, ensure_ascii=False, indent=2)
+
+
+def _tool_effect_evidence(args: dict) -> str:
+    from skills.capabilities.evidence import read_saved_evidence
+    if set(args) - {"source", "result_index", "selectors", "expected_sha256", "overview"}:
+        raise ValueError("unsupported effect_evidence argument")
+    report = read_saved_evidence(args["source"], args.get("selectors"),
+                                 result_index=args.get("result_index"),
+                                 expected_sha256=args.get("expected_sha256"), overview=args.get("overview", False))
+    return json.dumps(report, ensure_ascii=False, separators=(",", ":"))
 
 
 def _tool_execute_plan(args: dict) -> str:
     from skills.conductor import run_goal
     r = run_goal(args["goal"], confirm=bool(args.get("confirm", False)),
-                 dry_run=bool(args.get("dry_run", False)))
+                 dry_run=bool(args.get("dry_run", False)),
+                 stop_on_failure=args.get("stop_on_failure", False),
+                 include_effects=bool(args.get("include_effects", False)),
+                 observe_effects=bool(args.get("observe_effects", False)),
+                 review_effects=bool(args.get("review_effects", False)))
     return json.dumps(r, ensure_ascii=False, indent=2)
 
 
@@ -1461,6 +1532,8 @@ DISPATCH = {
     "list_reports": _tool_list_reports,
     "routing_stats": _tool_routing_stats,
     "conduct": _tool_conduct,
+    "effect_details": _tool_effect_details,
+    "effect_evidence": _tool_effect_evidence,
     "execute_plan": _tool_execute_plan,
     "security_scan": _tool_security_scan,
     "scan_malicious": _tool_scan_malicious,

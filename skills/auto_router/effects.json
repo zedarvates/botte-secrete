@@ -1,0 +1,129 @@
+{
+  "schema": "botte.capability-effects/v1",
+  "capability_id": "zedarvates/botte-secrete:skills/auto_router",
+  "contract_version": "0.1.1",
+  "source_hashes": {
+    "SKILL.md": "7264943a6ecc5406cf252d4ba3a33621d504e4929732a8e62feeda83345caa20",
+    "__init__.py": "f17b490b7fc37455101fae4472d397345f8cdc48b7accaff0a07ec0f382abcec",
+    "cli.py": "787b8ff4e18347bb6e54f229903e8321ec9e4d8e8432f3c3941acffd3f0d6ac4",
+    "router.py": "eac6ff04e0823ba8735859440a70e28cb4ef33b23890ad5bc85b5c87ee2d9d0e",
+    "effort.py": "b879ad42b3e1eefc53cef5bb36133410e883f64eafe774efa3dd5d9c63ce8951",
+    "providers.py": "27040da5e909f776541bba1d74622510bde44aa4c2cbc7d03354981553e7b8e0",
+    "fusion.py": "30bf58eda2b1e38d77d29563378afdcc4ed7c0637cf2424d0d998efdc3c04e5a",
+    "nn_belt.py": "6020b7aba21aca549d529c3e999f840226831557ab1f6f11ea353581b0c8bde9",
+    "nn_belt2.py": "c0f19a90ffeb234fff02f6c99364698ca11afad7256885bab41d6eaa9d91d035"
+  },
+  "preconditions": [
+    "Select decision-only, execution or fusion mode; identify actual input data, recipients and project scope.",
+    "Use the registry and provider configuration authorized for this task; key availability is not authorization or endpoint health.",
+    "Separate estimated tiers, costs and confidence from measured usage and independently verified task results."
+  ],
+  "expected_effects": [
+    {
+      "effect": "route/decide, explain and providers read routing state and return a proposal without an inference call.",
+      "scope": "Backend registry, environment-key availability, local thresholds/policy, learned weights/calibration and CLI output.",
+      "likelihood": "conditional",
+      "basis": "decide reads the registry and consults heuristics and optional belts; providers resolves catalog entries by key presence. explain includes a prompt excerpt and recomputes the decision. The effort reader validates finite ordered thresholds in [0, 1]; malformed configuration falls back to defaults without rewriting it.",
+      "impact": "Can expose prompt excerpts or host/model metadata; a selected tier can influence a later paid request. Explicit FREE is retained but can still select local inference.",
+      "verification": "Use controlled registry/provider fixtures; assert no inference calls and distinguish the selected route from actual execution."
+    },
+    {
+      "effect": "run transmits prompt/system data to the selected kind of model on a cache miss.",
+      "scope": "Local or cloud inference endpoints, consumed compute and returned text/usage.",
+      "likelihood": "conditional",
+      "basis": "LocalLLMClient.chat or _cloud_chat performs the request. No usable route returns an error; a local failure returns an error without automatic cloud fallback, while cloud exceptions propagate.",
+      "impact": "May disclose sensitive context, incur cost and return an incorrect answer. CLI run exits 1 for returned errors; successful text remains unverified.",
+      "verification": "Capture fixture request arguments, returned errors and exit codes; obtain independent target-task evidence and actual provider usage for a real run."
+    },
+    {
+      "effect": "run consults and writes the shared response cache and its statistics, including on a cache hit.",
+      "scope": "ResponseCache files under its configured directory, initially .botte-cache relative to import-time working directory; plaintext prompts and answers.",
+      "likelihood": "conditional",
+      "basis": "Exact prompt SHA-256, resolved project, selected endpoint/transport, model, system, task type, mode and max_tokens participate in reuse. Lookup disables semantic fallback; a hit still updates cache/statistics. An unresolved scope skips caching.",
+      "impact": "Old unscoped entries miss; a miss can incur fresh inference. Shared storage, credentials, changing model weights and project contents are not isolated or automatically invalidated.",
+      "verification": "Replay identical prompts and variants in temporary caches; compare endpoint/project/whitespace cases, retained entries and actual backend-call counts."
+    },
+    {
+      "effect": "run attempts route, learning-observation, control-loop and quality-outcome writes and updates in-memory cloud spending counters.",
+      "scope": "Project events, private active-learning state, control-loop history, project_root quality ledger and router-instance budget.",
+      "likelihood": "conditional",
+      "basis": "Logging is best-effort. Outcomes mark returned/cache text PARTIAL, no route ABSTAINED and backend errors FAIL. execution_id deduplicates the outcome ledger only; cloud accounting uses reported total tokens and static tier rates.",
+      "impact": "Telemetry can contain task text or private model/host context outside the hashed outcome fields. Retries can still duplicate inference, telemetry and costs; failures can leave partial evidence.",
+      "verification": "Compare temporary ledgers and call counts across success, cache hit, failure and replay; do not infer verified labels or actual billing from these records."
+    },
+    {
+      "effect": "fusion may transmit one task to several backends, including a local draft in a cloud refinement request.",
+      "scope": "All selected inference recipients, intermediate answers, ballots, aggregate compute and provider-side records.",
+      "likelihood": "conditional",
+      "basis": "cascade can escalate by a phrase/length heuristic; draft_refine forwards question plus draft; vote loops over all available cloud catalog candidates. Direct fusion calls bypass AutoRouter budget accounting and caching.",
+      "impact": "Costs and disclosures multiply. Normalized/truncated answer agreement and fluent text can conceal common errors; no aggregate budget cap is enforced.",
+      "verification": "Use fixture call captures for draft/refine and each ballot; independently evaluate final answers and real aggregate usage before target deployment."
+    }
+  ],
+  "downstream_effects": [
+    {
+      "effect": "Cached or generated answers and routing telemetry may shape later agent actions and routing policy.",
+      "scope": "Consumers of answers, control-loop history and explicit feedback/learning workflows.",
+      "likelihood": "plausible",
+      "basis": "run returns text to callers and records telemetry; explicit verified corrections can later become learning inputs.",
+      "impact": "Stale context or unverified output can propagate into decisions or mislabeled training data.",
+      "verification": "Trace evidence from the actual source and task; require independent verification before labeling or accepting reuse."
+    },
+    {
+      "effect": "A timeout or cache miss after a context change can cause repeated paid work when retried.",
+      "scope": "Remote requests, retained cache/outcomes and cumulative spending across instances.",
+      "likelihood": "plausible",
+      "basis": "There is no provider idempotency key or cancellation handshake, and outcome deduplication is separate from execution.",
+      "impact": "Remote work may finish after the caller fails; a new instance resets budget counters without reconciling earlier spend.",
+      "verification": "Check provider-side completion where available, inspect partial artifacts and reconcile actual usage before repeating an uncertain request."
+    }
+  ],
+  "reversibility": {
+    "status": "partial",
+    "strategy": "Reconcile requests and retained artifacts; restore authorized local snapshots only after checking later writers. Reverting local files cannot undo inference or disclosure.",
+    "residual_effects": [
+      "Sent prompts/drafts, provider logs and consumed compute cannot be recalled by this module.",
+      "Cache and telemetry writes span separate resources without a transaction or automatic rollback."
+    ]
+  },
+  "retry": {
+    "semantics": "conditional",
+    "check_before_retry": "Distinguish a decision-only read from inference, fusion, cache access and telemetry. Check existing results and incomplete remote requests; execution_id is not execution idempotency.",
+    "stop_condition": "Resolve unknown completion, unsuitable recipients, repeated endpoint errors or uncertain available budget before issuing another costly or sensitive request."
+  },
+  "required_scope": "Existing task authority must cover prompt/system/draft disclosure to each actual recipient, local state writes and any paid inference. A key, tier, cache entry or declaration grants no additional authority.",
+  "analysis": {
+    "summary": "Documented AutoRouter, CLI and fusion entry points combine advisory decisions with inference, cache reuse and best-effort telemetry. Fixture checks demonstrate specific requests, errors and reuse boundaries, not model quality or production savings.",
+    "uncertainties": [
+      "Budget estimates omit some real prompt/output details; there is no calendar reset, reservation or hard end-to-end cost/latency guarantee.",
+      "LocalLLMClient selects its backend again: the selected endpoint in the cache context is not an execution lock. Credentials and model weights can change behind the same endpoint.",
+      "Imported response_cache, llm_backends, tiered_router, events, trajectory, control_loop and botte_nn implementations/state are outside these skill-local source bindings.",
+      "Router/fusion operations lack a complete observation adapter; dependency observations cannot attest remote effects or success.",
+      "Other entry points such as composite, speculative, dry_cloud, session_budget and diagnostic scripts require their own operation review.",
+      "Valid threshold structure is not evidence of a useful policy. Falling back from malformed user configuration can change subsequent routing decisions; control_loop evidence must be assessed separately."
+    ],
+    "evidence_refs": [
+      "router.py:AutoRouter.decide",
+      "router.py:AutoRouter.run",
+      "router.py:_attach_outcome",
+      "cli.py:main",
+      "fusion.py:draft_refine",
+      "fusion.py:vote",
+      "test_routing_effects.py"
+    ]
+  },
+  "reuse": [
+    {
+      "target": "Evaluate local/cloud routing and exact response reuse for another scoped agent workflow.",
+      "rationale": "Decisions, outcomes and injectable clients/caches allow controlled comparison before real inference.",
+      "adaptations": [
+        "Define permitted recipients, target-specific freshness rules and isolated cache storage where required.",
+        "Track actual aggregate usage across instances/fusion and verify outputs independently before learning from them."
+      ],
+      "validation": "Replay representative tasks with changed prompts, projects, endpoints and failures; then compare authorized target-model quality, actual usage and retained data.",
+      "status": "adaptation_to_test",
+      "validated_context": null,
+      "evidence_refs": []
+    }
+  ]
+}

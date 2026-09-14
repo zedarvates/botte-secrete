@@ -168,6 +168,29 @@ The legacy `capture`, `search`, `load`, and `get_stats` API remains available fo
 existing deterministic solver integrations; do not put secrets in that legacy
 store.
 
+## Consequences, analysis and reuse
+
+Read [effects.json](effects.json) for the operation being considered. Advice
+remains advisory but emits a local event. Recording an outcome can write both
+the private outcome ledger and verified support; legacy capture stores raw
+task/parameter/result fields. The legacy read helpers can also initialize an
+empty store. Hashed tasks do not anonymize caller-supplied tags or evidence
+references: review these fields before persistence or export.
+
+Preserve the execution identity when reconciling an interrupted outcome write.
+Check both ledgers after a partial failure; multi-file writes are not one
+transaction, and rotation limits the deduplication history. Direct calls to
+`record_verified` without an outcome identity may append duplicate rows even
+though recall deduplicates their support.
+
+Explain the observed status, supporting evidence, prediction differences and
+remaining uncertainties in the task's report. Verifier-family and reference
+validation does not fetch or authenticate the underlying proof. Keep plausible
+reuse separate from validated performance in a named target context; replay or
+holdout evidence is needed before promoting a reuse claim. Use the existing
+strict outcome/agent-run fields rather than adding arbitrary analysis keys.
+See the [common contract](../../docs/capability-effects.md).
+
 ## Why k-NN comes before another micro-NN
 
 k-NN updates immediately when a verified example arrives, has no training job,

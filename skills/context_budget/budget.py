@@ -1,18 +1,16 @@
-"""Context budget — pick the optimal set of context to load under a token budget.
+"""Select a lexical shortlist within a conservatively quantized token budget.
 
-The OR-Tools principle, applied to the agent's always-on cost: choosing *which*
-skills/docs to load is a **0/1 knapsack** — maximize total relevance while the
-summed token cost stays under a budget. That's an exact deterministic solver
-(stdlib DP), not an LLM "decide what's relevant" call, so it costs **0 tokens**
-and beats the greedy "take the top matches until full" heuristic.
+  knapsack(items, budget)        exact 0/1 knapsack over rounded-up token costs
+  select_skills(query, budget)   rank skills (skill_finder) → knapsack → proposal
 
-  knapsack(items, budget)        exact 0/1 knapsack over token cost
-  select_skills(query, budget)   rank skills (skill_finder) → knapsack → load set
+Quantization can exclude combinations that fit the original budget. Relevance
+and token costs are estimates; callers still need to read selected instructions.
 """
 
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
+import math
 from typing import Optional
 
 
@@ -28,19 +26,32 @@ class Item:
         return asdict(self)
 
 
+def _require_int(value, name: str, minimum: int = 0) -> None:
+    if isinstance(value, bool) or not isinstance(value, int) or value < minimum:
+        raise ValueError(f"{name} must be an integer >= {minimum}")
+
+
 def knapsack(items: list, budget: int, *, unit: int = 20):
-    """Exact 0/1 knapsack: maximize summed relevance s.t. summed tokens ≤ budget.
+    """Exact 0/1 knapsack for rounded-up costs, not for the original token costs.
 
     Token costs are scaled by ``unit`` to bound the DP table (a budget of a few
     thousand tokens → a few hundred cells). Deterministic. Returns
     (chosen_indices, total_tokens, total_relevance).
     """
+    _require_int(budget, "budget")
+    _require_int(unit, "unit", 1)
+    for it in items:
+        _require_int(it.tokens, "item tokens")
+        if (isinstance(it.relevance, bool) or not isinstance(it.relevance, (int, float))
+                or not math.isfinite(it.relevance)):
+            raise ValueError("item relevance must be a finite number")
+
     n = len(items)
-    cap = max(0, budget // unit)
+    w = [max(1, -(-it.tokens // unit)) for it in items]  # ceil(tokens/unit), at least one unit
+    cap = min(budget // unit, sum(w))
     if n == 0 or cap == 0:
         return [], 0, 0.0
 
-    w = [max(1, -(-it.tokens // unit)) for it in items]  # ceil(tokens/unit)
     v = [it.relevance for it in items]
 
     dp = [[0.0] * (cap + 1) for _ in range(n + 1)]
@@ -69,29 +80,34 @@ def knapsack(items: list, budget: int, *, unit: int = 20):
 
 def select_skills(query: str, *, budget: int = 4000, roots: Optional[list] = None,
                   pool: int = 40) -> dict:
-    """Choose the best skills to load for a task within a token budget. 0 tokens.
+    """Propose skills using a lexical shortlist and a rounded token budget.
 
     Ranks the catalog lexically ([[skill_finder]]), then knapsacks the top ``pool``
-    candidates so the loaded set maximizes relevance under the budget — instead of
-    loading the whole catalog every turn.
+    candidates. This returns references; it does not load instructions into an
+    agent, verify applicability, or resolve dependencies between skills.
     """
     query = (query or "").strip()
     if not query:
         return {"error": "empty query"}
+    try:
+        _require_int(budget, "budget")
+        _require_int(pool, "pool")
+    except ValueError as exc:
+        return {"error": str(exc)}
     try:
         from skills.skill_finder import rank, load_catalog
     except ImportError:
         return {"error": "skill_finder unavailable"}
 
     catalog = load_catalog(roots)
-    matches = rank(query, catalog)[:pool]
+    matches = rank(query, catalog, top_k=pool)
     items = [Item(name=m.skill.name, kind="skill", tokens=m.skill.tokens_est,
                   relevance=m.score, ref=m.skill.path) for m in matches]
 
     idx, toks, rel = knapsack(items, budget)
     chosen = [items[i] for i in idx]
-    chosen_names = {it.name for it in chosen}
-    dropped = [it for it in items if it.name not in chosen_names]
+    chosen_indices = set(idx)
+    dropped = [it for i, it in enumerate(items) if i not in chosen_indices]
     catalog_tokens = sum(s.tokens_est for s in catalog)
 
     return {

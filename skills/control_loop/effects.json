@@ -1,0 +1,107 @@
+{
+  "schema": "botte.capability-effects/v1",
+  "capability_id": "zedarvates/botte-secrete:skills/control_loop",
+  "contract_version": "0.1.0",
+  "source_hashes": {
+    "SKILL.md": "6982ef6fad020466671127f7b093f9e17ca7ea75e0b6807d9c976b7972644f6e",
+    "__init__.py": "fe9f2d0e22c101069a282e0e79cdbbc83bcf074a4a60c9765ba6a850b94f84e5",
+    "control_loop.py": "374ec85b371f661561be967c152b0d0c1aafd97ccbb6e7ea5a44d94de084e338",
+    "cli.py": "549351b3b93cffd758ea478d63efb551339e1aba685ac5def3b65e2b9546dc18"
+  },
+  "preconditions": [
+    "Identify record, read/propose, apply or reset mode and the actual ledger/configuration path.",
+    "Review representative telemetry and independent task evidence before treating aggregate rates as grounds for a shared routing change.",
+    "For a configuration write, provide four finite ordered numeric thresholds in the score range and preserve an appropriate prior snapshot when recovery matters."
+  ],
+  "expected_effects": [
+    {
+      "effect": "record appends caller-supplied telemetry; load/analyze aggregate retained lines.",
+      "scope": "User ~/.botte/control-ledger.jsonl or the explicit path; task excerpt, timestamp, routing fields and returned statistics.",
+      "likelihood": "conditional",
+      "basis": "record creates parents and appends UTF-8 JSON best-effort. load skips malformed JSON lines; analyze sums fields and uses success=True when absent.",
+      "impact": "Can retain private task text and duplicate records on retry. Missing/partial/unrepresentative data or unsupported shapes can bias statistics or prevent analysis.",
+      "verification": "Inspect the actual ledger, origin of fields, missing failures and repeated execution identities; compare against independent task/usage evidence."
+    },
+    {
+      "effect": "adapt returns a heuristic threshold proposal without writing the configuration.",
+      "scope": "Explicit aggregate statistics or the shared ledger and current threshold values.",
+      "likelihood": "conditional",
+      "basis": "At least ten aggregate samples permit a small LOCAL-boundary step based on success/escalation rates. Explicit thresholds are validated; a step that would break ordering is left unchanged. MCP routing_stats only reads/proposes.",
+      "impact": "The rationale can appear stronger than the underlying telemetry: aggregate returned-text success is not verified local reliability or a causal comparison.",
+      "verification": "Capture the input statistics and current configuration; compare candidates on representative target tasks while confirming proposal-only mode made no writes."
+    },
+    {
+      "effect": "apply, adapt --apply and reset atomically replace the routing-threshold configuration after validation.",
+      "scope": "User ~/.botte/routing-thresholds.json or the explicit destination and subsequent auto_router.effort decisions.",
+      "likelihood": "conditional",
+      "basis": "Four finite numeric boundaries must satisfy 0 <= free < local < cheap < standard <= 1 before filesystem mutation. write_json writes a same-directory temporary file, fsyncs and replaces the destination. reset writes defaults.",
+      "impact": "Changes later model choices across consumers of the shared file. Failed replacement preserves the previous file, but there is no lock or conflict check; reset is not restoration of previous custom values.",
+      "verification": "Use temporary destinations to test rejected inputs, failed replacement and live-reader/reset behavior; inspect the actual version before and after a real authorized write."
+    }
+  ],
+  "downstream_effects": [
+    {
+      "effect": "Later tasks can route differently, changing model quality, latency, data recipients and cost.",
+      "scope": "All auto-router consumers sharing the user-level threshold file.",
+      "likelihood": "conditional",
+      "basis": "The effort reader loads thresholds at each decision; malformed configuration falls back to defaults without repairing the file.",
+      "impact": "Valid thresholds can still be a poor policy; restoring a file does not reverse decisions already made under earlier values.",
+      "verification": "Compare old/new policies against independently evaluated target tasks and measured usage; retain configuration versions and observed decisions."
+    },
+    {
+      "effect": "Repeated or unverified telemetry can reinforce an unsuitable routing proposal.",
+      "scope": "Future aggregates, repeated adaptation steps and downstream policy choices.",
+      "likelihood": "plausible",
+      "basis": "Ledger entries are neither project/model-version scoped nor independently authenticated; missing success defaults true and some router failures/cache hits are absent.",
+      "impact": "An apparent improvement can reflect sample selection or repeated events rather than better task completion.",
+      "verification": "Use scoped, deduplicated evidence and independent success labels before accepting a candidate or reusing it elsewhere."
+    }
+  ],
+  "reversibility": {
+    "status": "partial",
+    "strategy": "Reconcile later writers and restore the intended retained configuration within task scope; reconcile duplicate telemetry and downstream actions separately.",
+    "residual_effects": [
+      "No configuration history archive, cross-resource transaction or automatic rollback is provided.",
+      "Consumed inference, disclosed data and decisions already made cannot be undone by resetting thresholds.",
+      "An interrupted write can leave a temporary file; ledger append and configuration replacement are separate operations."
+    ]
+  },
+  "retry": {
+    "semantics": "conditional",
+    "check_before_retry": "Reads/proposals can be repeated against stable inputs. record appends again; apply/reset replace state and timestamps; a new adapt run can propose a further step. Inspect partial state and concurrent changes first.",
+    "stop_condition": "Resolve invalid input, unknown writer state, persistence failures or unsupported telemetry before repeating a mutation or treating a proposal as evidence of improvement."
+  },
+  "required_scope": "Existing task authority for the ledger data, output recipients and a shared routing-policy change when applying/resetting. Read-only statistics and returned proposals grant no authority for deployment, training or model activation.",
+  "analysis": {
+    "summary": "The module records telemetry and offers heuristic changes with explicit application. Input and replacement checks protect configuration structure, not the empirical quality of a policy or its underlying labels.",
+    "uncertainties": [
+      "AutoRouter telemetry is best-effort and does not include every attempt; returned-text success and local token totals are not independent quality/savings measurements.",
+      "Ledgers are shared by user account and have no automatic retention, provenance verification, deduplication or complete record-shape validation.",
+      "auto_router.effort validation/defaults, atomic_json writing, executing consumers and runtime state are outside these skill-local source bindings.",
+      "Atomic replacement has no compare-and-swap, snapshot archive or full observation adapter; successful persistence does not prove which later decisions read it.",
+      "Atomic replacement uses temporary-file permissions and replaces a destination symlink; existing file metadata and cross-account access are not preserved automatically."
+    ],
+    "evidence_refs": [
+      "control_loop.py:record",
+      "control_loop.py:analyze",
+      "control_loop.py:adapt",
+      "control_loop.py:apply",
+      "cli.py:main",
+      "test_effects.py"
+    ]
+  },
+  "reuse": [
+    {
+      "target": "Evaluate a threshold proposal offline for another task-scoped routing policy.",
+      "rationale": "Explicit records, statistics, thresholds and paths allow a controlled candidate/current comparison before shared configuration changes.",
+      "adaptations": [
+        "Bind evidence to task/model/configuration versions and independent success labels; include failures and deduplicate executions.",
+        "Use isolated destinations, preserve rollback state and measure actual quality, usage and recipients."
+      ],
+      "validation": "Replay representative tasks for current and candidate thresholds, record independently assessed outcomes and measured costs, and verify persistence/failure/recovery behavior in the target context.",
+      "status": "adaptation_to_test",
+      "validated_context": null,
+      "evidence_refs": []
+    }
+  ]
+}

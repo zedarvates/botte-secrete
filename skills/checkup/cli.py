@@ -24,9 +24,11 @@ import re
 import sys
 from skills.console_utf8 import force_utf8
 from pathlib import Path
+from skills.capabilities.observations import observed_operation
 
 
 
+@observed_operation("run")
 def run(project: Path) -> dict:
     project = Path(project).resolve()
     out: dict = {"project": str(project), "drift": []}
