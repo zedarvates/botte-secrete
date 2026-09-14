@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "action_id": "storycore-dark-lap-001",
+  "stage": "gated",
+  "requested_autonomy": "gated",
+  "mission": {
+    "goals": ["apply one bounded non-critical change"],
+    "invariants": ["preserve unrelated behavior", "preserve security gates"],
+    "non_goals": ["architecture rewrite", "dependency-wide modernization"],
+    "forbidden_transformations": ["disable tests", "weaken security checks"],
+    "within_mission": true
+  },
+  "actors": {
+    "builder": "builder-agent",
+    "judge": "independent-judge-agent"
+  },
+  "effects": {
+    "declared": ["source"],
+    "observed": ["source"],
+    "unresolved": []
+  },
+  "evidence": [
+    {"name": "targeted-tests", "status": "pass", "required": true},
+    {"name": "runtime-smoke", "status": "pass", "required": true},
+    {"name": "private-holdout", "status": "pass", "required": true}
+  ],
+  "controls": {
+    "positive_control": "pass",
+    "negative_control": "fail",
+    "holdout_scope": "private_external",
+    "historical_regressions_checked": false,
+    "adversarial_cases_checked": false
+  },
+  "identity": {
+    "source_sha": "1111111111111111111111111111111111111111",
+    "build_sha": "1111111111111111111111111111111111111111",
+    "tested_sha": "1111111111111111111111111111111111111111",
+    "deployed_sha": null
+  }
+}
