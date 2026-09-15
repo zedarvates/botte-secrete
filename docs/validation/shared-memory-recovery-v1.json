@@ -1,0 +1,85 @@
+{
+  "schema": "botte.memory-recovery-acceptance/v1",
+  "recorded_at": "2026-09-09T20:34:16.142620+00:00",
+  "base_commit": "d7a1f4864b52e22e37fd58aa3db2c74caa5b3003",
+  "status": "local_snapshot_restore_verified",
+  "runtime": {
+    "python": "3.12.14",
+    "platform": "Linux",
+    "sqlite": "3.53.1"
+  },
+  "local_checks": [
+    {
+      "command": "python3 -m pytest --rootdir=. -q skills/memory_hub/test_shared_service.py skills/memory_hub/test_shared_transport.py skills/memory_hub/test_memory_hub.py skills/memory_hub/test_recovery.py",
+      "exit_code": 0,
+      "passed": 127,
+      "failed": 0,
+      "seconds": 12.24
+    },
+    {
+      "command": "python3 -m pytest --rootdir=. -q skills/memory_hub/test_recovery.py",
+      "exit_code": 0,
+      "passed": 18,
+      "failed": 0,
+      "seconds": 0.43,
+      "scope": "Included in the 127-case run; do not add these counts."
+    },
+    {
+      "command": "python3 scripts/run_tests.py --changed -q",
+      "exit_code": 0,
+      "passed": 71,
+      "failed": 0,
+      "suites": 3,
+      "scope": "Existing affected suites overlap with focused pytest cases; not unique additional cases."
+    },
+    {
+      "check": "Capability-effects JSON Schema and all declared source hashes",
+      "exit_code": 0,
+      "schema_source_ref": "13b04c46f2a1865b660e108125c554b99d197794"
+    },
+    {
+      "command": "python3 scripts/check_docs_links.py",
+      "exit_code": 0,
+      "markdown_files": 65,
+      "broken_local_links": 0
+    },
+    {
+      "command": "python3 -m skills.checkup.cli . --json",
+      "exit_code": 0,
+      "high_severity_findings": 0,
+      "scope": "Local checkout advisory only; no homelab or local-model connection. SQL formatting warnings use only code-defined table names; values remain bound parameters."
+    }
+  ],
+  "exercised": [
+    "Read committed data in a live SQLite WAL through the SQLite backup API.",
+    "Preserve versions, owner isolation, quarantine and idempotency receipts after restoring.",
+    "Reconcile deletions before/after backup, including keys created and deleted after backup.",
+    "Remove forgotten values/revisions/vectors/receipts; preserve replay tombstones; compact only the new file.",
+    "Refuse corrupt or incomplete backups, mismatched project/schema, missing or regressed deletion ledgers and existing destinations.",
+    "Clean controlled interruptions without removing source directories; CLI returns 130, not success.",
+    "CLI backup/restore subprocess roundtrip and structured SQLite errors.",
+    "POSIX owner-only output permissions and exclusion of credentials."
+  ],
+  "limits": [
+    "No homelab host or two-machine transport was accessed; Windows ACLs/execution remain untested.",
+    "The operator must stop writers through cutover and supply the authoritative current deletion ledger; freshness is not attested by the code.",
+    "No automatic service activation or replacement of an existing data directory.",
+    "Restore does not recover post-backup captures, corrections or reviews.",
+    "Backups are plaintext; encryption, off-host retention, scheduling and whole-service disaster recovery are not configured.",
+    "Digests detect mismatches; they do not authenticate an attacker-controlled backup plus manifest.",
+    "Old snapshots, exported data and agent archives remain outside deletion scope."
+  ],
+  "deployment_observed": false,
+  "real_machine_pair_verified": false,
+  "current_increment_remote_ci_observed_at_recording": false,
+  "source_sha256": {
+    ".github/workflows/ci.yml": "76b6e0fb525df57023306d25a70d4531eb9e785962e319b09f6010e059272563",
+    "skills/memory_hub/cli.py": "5fe29278c8586478aa27253f0adb872ca360656bbd8daeeae83e386c52d6dc3c",
+    "skills/memory_hub/recovery.py": "2353ff97c15bde42a49574c072546676190d8413a8211bf3083ea7b4d7d7b95c",
+    "skills/memory_hub/test_recovery.py": "61e3453510e3f80bfccb5fe72992ae82b7868171b3ba091c538e5c2639b6a840",
+    "skills/memory_hub/effects.json": "7be5fc28aa64f36030adb917e4d8780aa0eab7e0bb4a65432ec4bea59b9b0d54",
+    "docs/shared-memory-recovery.md": "84e814b2e2040b905fe0b4dee0f33a66f8a16473fdcfdd58fb8782c2b3646996",
+    "docs/shared-memory.md": "6f03ade4407e5680f897099d5a141827d6cdd61e4bf2954e4f511e3acb5aee3c",
+    "docs/shared-memory-homelab.md": "2593e56bb8942a2f81df7d6f764da4cc7b2d12a0a1b6738015d820fbd940693c"
+  }
+}
