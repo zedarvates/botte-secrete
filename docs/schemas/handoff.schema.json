@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/zedarvates/botte-secrete/blob/main/docs/schemas/handoff.schema.json",
+  "title": "Botte Secrete typed inter-session handoff",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "mission_id", "attempt_id", "worker_id", "created_at",
+    "status", "workspace_lease", "checks", "evidence_refs", "artifacts",
+    "uncertainties", "approval_required", "review_verdict",
+    "next_safe_action", "safety_rules_pinned", "raw_context_stored",
+    "handoff_sha256"
+  ],
+  "properties": {
+    "schema": {"const": "botte.handoff/v1"},
+    "mission_id": {"type": "string", "maxLength": 128},
+    "attempt_id": {"type": "string", "maxLength": 128},
+    "worker_id": {"type": "string", "maxLength": 128},
+    "created_at": {"type": "string", "format": "date-time"},
+    "status": {"enum": ["PARTIAL", "FAIL", "UNCERTAIN", "READY_FOR_REVIEW", "APPROVAL_REQUIRED"]},
+    "workspace_lease": {
+      "type": "object", "additionalProperties": false,
+      "required": ["lease_id", "worker_id", "state", "base_sha", "head_sha", "expires_at", "workspace_fingerprint"],
+      "properties": {
+        "lease_id": {"type": "string", "maxLength": 128},
+        "worker_id": {"type": "string", "maxLength": 128},
+        "state": {"enum": ["ACTIVE", "RELEASED", "QUARANTINED", "EXPIRED"]},
+        "base_sha": {"type": "string", "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"},
+        "head_sha": {"type": "string", "pattern": "^$|^(?:[0-9a-f]{40}|[0-9a-f]{64})$"},
+        "expires_at": {"type": "string", "format": "date-time"},
+        "workspace_fingerprint": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    },
+    "checks": {
+      "type": "array", "maxItems": 100,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["name", "status", "evidence_ref"],
+        "properties": {
+          "name": {"type": "string", "maxLength": 128},
+          "status": {"enum": ["PASS", "FAIL", "UNCERTAIN", "SKIPPED"]},
+          "evidence_ref": {"type": "string", "maxLength": 256}
+        }
+      }
+    },
+    "evidence_refs": {"type": "array", "maxItems": 100, "uniqueItems": true, "items": {"type": "string", "maxLength": 256}},
+    "artifacts": {
+      "type": "array", "maxItems": 100,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["kind", "ref", "sha256"],
+        "properties": {
+          "kind": {"type": "string", "maxLength": 64},
+          "ref": {"type": "string", "maxLength": 256},
+          "sha256": {"type": "string", "pattern": "^$|^[0-9a-f]{64}$"}
+        }
+      }
+    },
+    "uncertainties": {"type": "array", "maxItems": 100, "uniqueItems": true, "items": {"type": "string", "maxLength": 512}},
+    "approval_required": {"type": "boolean"},
+    "review_verdict": {"enum": ["ACCEPT", "REWORK", "BLOCKED", null]},
+    "next_safe_action": {"type": "string", "minLength": 1, "maxLength": 512},
+    "safety_rules_pinned": {"const": true},
+    "raw_context_stored": {"const": false},
+    "handoff_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  }
+}

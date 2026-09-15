@@ -1,6 +1,6 @@
 ---
 name: directives_audit
-description: Audit a project's AI-agent guidance files — CLAUDE.md, AGENTS.md, .cursorrules, copilot-instructions.md, GEMINI.md, intent docs and specs, in markdown, text or HTML. Use when checking whether a repo has agent instructions, whether they are healthy/consistent, or before an agent starts work on an unfamiliar codebase. Also use when the user mentions CLAUDE.md, AGENTS.md, agent rules, "does this project have instructions", or stale/oversized directive files.
+description: Audit a project's AI-agent guidance files and its optional committed semantic rule contract. Use when checking CLAUDE.md/AGENTS.md health, exact policy-to-guard drift, contradictory rules, missing positive/negative probes, or before an agent starts work on an unfamiliar codebase.
 ---
 
 # directives_audit — validate AI-agent guidance files
@@ -22,6 +22,7 @@ re-flagged).
 ```bash
 python -m skills.directives_audit.cli <project_dir>          # readable report
 python -m skills.directives_audit.cli <project_dir> --json   # machine-readable
+botte rules audit <project_dir> --json                       # semantic contract
 ```
 
 ```python
@@ -56,5 +57,24 @@ in HTML; the audit reads HTML too and flags it as a parse-friendliness issue.
 - **Broken references** — paths cited in prose docs that don't exist in the repo.
 - **Empty / unreadable** directive files.
 - **Multiple sources** — several instruction files that can drift apart.
+
+## Committed semantic rules
+
+Projects may commit `.botte/rules.json` using
+`docs/schemas/rules-manifest.schema.json`. Each rule binds an exact policy
+statement to deterministic guard anchors, one allow probe, one deny probe, and
+a semantic verification receipt.
+
+```bash
+botte rules audit .
+botte rules audit . --json
+```
+
+The audit is data-only: it reads project-relative `path#anchor` references and
+never executes a probe or imports project code. It detects missing anchors,
+changed statements, stale receipts, unenforced rules, contradictory active
+effects, unsafe paths and supersession cycles. Exit status is `1` for contract
+errors and `2` when the manifest is absent; projects without a manifest remain
+compatible with the ordinary directives audit and checkup.
 
 Related: [[llm_backends]], `skill_project_optimizer` (per-project skill filtering).

@@ -26,7 +26,7 @@ jobs:
           path: ~/.cache/pip
           key: pip-${{ runner.os }}-${{ matrix.python-version }}
       - name: Install project dependencies
-        run: pip install -e .
+        run: pip install -e . pytest
       - name: Run tests (fail-fast)
         id: tests
         run: python scripts/run_tests.py -q

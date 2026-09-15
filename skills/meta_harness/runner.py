@@ -40,7 +40,8 @@ class Sandbox:
             env: dict | None = None) -> SandboxResult:
         """Run a command in the sandbox.
 
-        Creates sandbox dir if needed, runs subprocess, returns result.
+        Creates a per-step artifact directory, then runs from the leased
+        worktree root. ``BOTTE_SANDBOX`` points at the artifact directory.
         """
         Path(self.sandbox_dir).mkdir(parents=True, exist_ok=True)
 
@@ -56,7 +57,7 @@ class Sandbox:
         try:
             result = subprocess.run(
                 full_cmd,
-                cwd=self.sandbox_dir,
+                cwd=self.workdir,
                 capture_output=True,
                 text=True,
                 timeout=self.timeout,

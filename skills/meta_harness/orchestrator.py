@@ -7,19 +7,26 @@ L'orchestrateur dispatche vers le runner, collecte les résultats.
 
 from __future__ import annotations
 
-import json
-import os
-import subprocess
 import sys
-import tempfile
 import time
-from dataclasses import dataclass, field, asdict
+import uuid
+import hashlib
+import json
+import subprocess
+from copy import deepcopy
+from dataclasses import dataclass, field, replace
 from pathlib import Path
-from typing import Optional
+from typing import Mapping, Optional
 
-from skills.meta_harness.runner import Sandbox, SandboxResult
+from skills.meta_harness.runner import Sandbox
 from skills.meta_harness.governance import Governance
 from skills.meta_harness.session import Session
+from skills.safe_exit import (
+    AuthorizationTier,
+    RunDecision,
+    SafeExitConfig,
+    SafeExitGuard,
+)
 
 
 # ── Agents catalogue ──
@@ -30,6 +37,8 @@ _AGENT_CATALOG: dict[str, dict] = {
         "command": [sys.executable, "-m", "skills.directives_audit.cli", "audit"],
         "description": "Audit des directives (AGENTS.md, CLAUDE.md)",
         "requires": [],
+        "mutating": False,
+        "evidence_ref": "audit:directives",
     },
     "rochefort": {
         "name": "rochefort",
@@ -37,6 +46,8 @@ _AGENT_CATALOG: dict[str, dict] = {
         "command": [sys.executable, "-m", "skills.cardinal.cli", "audit"],
         "description": "Contre-audit red team",
         "requires": ["porthos"],
+        "mutating": False,
+        "evidence_ref": "audit:counter",
     },
     "dartagnan": {
         "name": "d'artagnan",
@@ -44,6 +55,8 @@ _AGENT_CATALOG: dict[str, dict] = {
         "command": [sys.executable, "-m", "skills.fix.cli", "fix"],
         "description": "Correction automatique",
         "requires": ["porthos"],
+        "mutating": True,
+        "evidence_ref": "change:fix",
     },
     "aramis": {
         "name": "aramis",
@@ -51,6 +64,8 @@ _AGENT_CATALOG: dict[str, dict] = {
         "command": [sys.executable, "-m", "skills.skill_project_optimizer.cli", "optimize"],
         "description": "Optimisation token",
         "requires": [],
+        "mutating": True,
+        "evidence_ref": "change:optimize",
     },
     "security": {
         "name": "security",
@@ -58,6 +73,8 @@ _AGENT_CATALOG: dict[str, dict] = {
         "command": [sys.executable, "-m", "skills.security_scanner.cli", "scan"],
         "description": "Scan sécurité",
         "requires": [],
+        "mutating": False,
+        "evidence_ref": "audit:security",
     },
     "fast_context": {
         "name": "fast_context",
@@ -65,6 +82,8 @@ _AGENT_CATALOG: dict[str, dict] = {
         "command": [sys.executable, "-m", "skills.fast_context.cli", "explore"],
         "description": "Exploration repo",
         "requires": [],
+        "mutating": False,
+        "evidence_ref": "",
     },
     "migration_audit": {
         "name": "migration_audit",
@@ -72,13 +91,17 @@ _AGENT_CATALOG: dict[str, dict] = {
         "command": [sys.executable, "-m", "skills.migration_audit.cli"],
         "description": "Gate deterministic entre BUILDER et VALIDATOR",
         "requires": [],
+        "mutating": False,
+        "evidence_ref": "audit:migration",
     },
     "test": {
         "name": "test",
         "skill": None,  # shell command
         "command": [sys.executable, "-m", "pytest"],
         "description": "Lance les tests",
-        "requires": ["dartagnan"],
+        "requires": [],
+        "mutating": False,
+        "evidence_ref": "tests:project",
     },
 }
 
@@ -96,6 +119,8 @@ class Step:
     exit_code: int = -1
     duration: float = 0.0
     sandbox_path: str = ""
+    mutating: bool = False
+    evidence_ref: str = ""
 
 
 @dataclass
@@ -132,16 +157,60 @@ _BUILTIN_PLANS: dict[str, list[str]] = {
 class MetaHarness:
     """The meta-harness orchestrator."""
 
-    def __init__(self, workdir: str = ".", approval: bool = False):
+    def __init__(
+        self,
+        workdir: str = ".",
+        approval: bool = False,
+        *,
+        safe_exit_config: SafeExitConfig | None = None,
+        mission: Mapping | None = None,
+        context_manifest: Mapping | None = None,
+        worker_id: str = "meta-harness",
+        attempt_id: str | None = None,
+        base_ref: str = "HEAD",
+        workspace_root: str | Path | None = None,
+        addressed_failure_refs: list[str] | None = None,
+    ):
         self.workdir = str(Path(workdir).resolve())
         self.governance = Governance(require_approval=approval)
-        self.session = Session(name=f"pipeline_{int(time.time())}")
+        self.mission = None
+        self.context_manifest = deepcopy(context_manifest)
+        self.worker_id = worker_id
+        self.attempt_id = attempt_id or f"attempt-{uuid.uuid4().hex[:12]}"
+        self.base_ref = base_ref
+        self.workspace_root = workspace_root
+        self.addressed_failure_refs = list(addressed_failure_refs or [])
+        self.lease_manager = None
+        self.workspace_lease = None
+        if mission is not None:
+            from skills.run_contract import validate_mission
+
+            self.mission = validate_mission(mission)
+            budgets = self.mission["budgets"]
+            if safe_exit_config is None:
+                safe_exit_config = SafeExitConfig(
+                    max_iterations=budgets["max_iterations"],
+                    max_tool_calls=budgets["max_tool_calls"],
+                    max_wall_seconds=budgets["max_wall_seconds"],
+                )
+            else:
+                safe_exit_config = replace(
+                    safe_exit_config,
+                    **{key: min(budgets[key], getattr(safe_exit_config, key))
+                       for key in ("max_iterations", "max_tool_calls", "max_wall_seconds")},
+                )
+        self.session = Session(
+            name=f"pipeline_{int(time.time())}_{uuid.uuid4().hex[:8]}",
+            storage_dir=Path(self.workdir) / ".botte-cache" / "sessions",
+        )
+        self.safe_exit_config = safe_exit_config or SafeExitConfig()
 
     def list_agents(self) -> list[dict]:
         """List available agents with metadata."""
         return [
             {"name": a["name"], "skill": a["skill"],
-             "description": a["description"], "requires": a["requires"]}
+             "description": a["description"], "requires": a["requires"],
+             "mutating": a["mutating"]}
             for a in _AGENT_CATALOG.values()
         ]
 
@@ -174,7 +243,6 @@ class MetaHarness:
         for name in agents:
             agent_info = self._resolve_agent(name)
             if agent_info is None:
-                # Fallback: try as a raw CLI command
                 resolved.append(Step(
                     agent=name,
                     command=[sys.executable, "-m", name] if name == "test" else [name],
@@ -182,9 +250,12 @@ class MetaHarness:
                     workdir=self.workdir,
                     requires=[],
                 ))
+                if self.mission is not None:
+                    raise ValueError(
+                        f"mission runs reject unknown agent/command: {name}"
+                    )
                 continue
 
-            # Add dependencies recursively
             for dep in agent_info.get("requires", []):
                 if dep not in seen:
                     dep_info = self._resolve_agent(dep)
@@ -195,6 +266,8 @@ class MetaHarness:
                             args=[],
                             workdir=self.workdir,
                             requires=dep_info.get("requires", []),
+                            mutating=dep_info.get("mutating", False),
+                            evidence_ref=dep_info.get("evidence_ref", ""),
                         )
                         resolved.append(dep_step)
                         seen.add(dep)
@@ -212,19 +285,69 @@ class MetaHarness:
                 args=[],
                 workdir=self.workdir,
                 requires=agent_info.get("requires", []),
+                mutating=agent_info.get("mutating", False),
+                evidence_ref=agent_info.get("evidence_ref", ""),
             )
+            self._validate_step_authority(step)
             resolved.append(step)
             seen.add(name)
 
         plan.steps = resolved
+        self._validate_mission_plan(plan)
         return plan
 
     def execute(self, plan: PipelinePlan) -> Session:
-        """Execute a plan step by step, respecting governance."""
+        """Execute a plan step by step, respecting governance and SAFE-EXIT."""
+        if self.mission is not None:
+            if self.session.plan is not None:
+                raise ValueError("mission harness instances are single-use; create a fresh attempt")
+            # Validate a private snapshot at the execution boundary, including
+            # plans constructed directly or changed after plan().
+            plan = deepcopy(plan)
+            self._validate_mission_plan(plan)
         self.session.plan = plan
+        run_root = self.workdir
+        if self.mission is not None:
+            from skills.meta_harness.lease import WorktreeLeaseManager
+            from skills.meta_harness.review import CheckpointRegistry
+            from skills.run_contract import compile_context_manifest, validate_context_manifest
+
+            self.lease_manager = WorktreeLeaseManager(
+                self.workdir, workspace_root=self.workspace_root
+            )
+            ttl = self.mission["budgets"]["max_wall_seconds"] + 300
+            self.workspace_lease = self.lease_manager.create(
+                self.worker_id, base_ref=self.base_ref, ttl_seconds=ttl
+            )
+            run_root = self.workspace_lease.workspace_path
+            try:
+                self.context_manifest = (
+                    compile_context_manifest(run_root, self.mission)
+                    if self.context_manifest is None
+                    else validate_context_manifest(run_root, self.mission, self.context_manifest)
+                )
+                CheckpointRegistry(self.workdir).register_attempt(
+                    self.mission,
+                    attempt_id=self.attempt_id,
+                    addressed_failure_refs=self.addressed_failure_refs,
+                )
+            except Exception:
+                # The lease is brand-new and clean here. Release it rather than
+                # consuming a workspace for a rejected revision contract.
+                self.lease_manager.release(self.workspace_lease)
+                raise
+            self.session.bind_contract(
+                mission_id=self.mission["mission_id"],
+                attempt_id=self.attempt_id,
+                worker_id=self.worker_id,
+                workspace_lease=self.workspace_lease.contract_view(),
+                context_manifest_sha256=self.context_manifest.get(
+                    "manifest_sha256", ""
+                ),
+            )
+        guard = SafeExitGuard(self.safe_exit_config)
 
         for i, step in enumerate(plan.steps):
-            # Check dependencies
             deps_met = all(
                 any(s.agent == dep and s.status == "passed" for s in plan.steps[:i])
                 for dep in step.requires
@@ -235,7 +358,6 @@ class MetaHarness:
                 self.session.add_result(step)
                 continue
 
-            # Governance check
             if plan.approval_required:
                 gate = self.governance.check(step)
                 if gate.blocked:
@@ -244,9 +366,19 @@ class MetaHarness:
                     self.session.add_result(step)
                     continue
 
-            # Execute in sandbox
+            now = time.monotonic()
+            capacity = guard.before_action(now=now)
+            if capacity.decision == RunDecision.UNCERTAIN:
+                self.session.terminate_uncertain(capacity.reason or "safe_exit")
+                self._skip_remaining_after_safe_exit(plan, i, capacity.reason or "safe_exit")
+                break
+
             step.status = "running"
-            sandbox = Sandbox(workdir=step.workdir, sandbox_dir=f".botte-sandbox/{step.agent}")
+            remaining = self.safe_exit_config.max_wall_seconds - (now - guard.started_at)
+            sandbox = Sandbox(
+                workdir=run_root, sandbox_dir=f".botte-sandbox/{step.agent}",
+                timeout=min(300, remaining),
+            )
 
             t0 = time.time()
             result = sandbox.run(step.command, args=step.args)
@@ -257,11 +389,229 @@ class MetaHarness:
             step.exit_code = result.exit_code
             step.duration = round(t1 - t0, 2)
             step.sandbox_path = sandbox.sandbox_dir
-
             self.session.add_result(step)
 
+            failure_signature = None
+            if not result.success:
+                # Stable, bounded signature: enough to identify repeating failures
+                # without persisting the full stderr in the guard state.
+                first_line = (result.stderr or "").strip().splitlines()[:1]
+                failure_signature = f"{step.agent}:{result.exit_code}:{first_line[0] if first_line else ''}"[:512]
+
+            guard_result = guard.observe(
+                failure_signature=failure_signature,
+                tool_calls_delta=1,
+            )
+            if guard_result.decision == RunDecision.UNCERTAIN:
+                self.session.terminate_uncertain(guard_result.reason or "safe_exit")
+                self._skip_remaining_after_safe_exit(plan, i + 1, guard_result.reason or "safe_exit")
+                break
+
         self.session.completed_at = time.time()
+        if self.mission is not None and self.workspace_lease is not None:
+            self.workspace_lease = self.lease_manager.refresh(self.workspace_lease)
+            if self.workspace_lease.dirty_tree_sha256 != hashlib.sha256(b"").hexdigest():
+                self.workspace_lease = self.lease_manager.quarantine(self.workspace_lease)
+            self.session.workspace_lease = self.workspace_lease.contract_view()
+            self.session.set_handoff(self._build_handoff(plan))
+            self._emit_bound_outcome(plan)
+        self.session._save()
         return self.session
+
+    def _validate_mission_plan(self, plan: PipelinePlan) -> None:
+        if self.mission is None:
+            return
+        if not isinstance(plan, PipelinePlan) or not isinstance(plan.steps, list):
+            raise ValueError("mission runs require a PipelinePlan with a step list")
+        for step in plan.steps:
+            if not isinstance(step, Step) or not isinstance(step.agent, str):
+                raise ValueError("mission plan contains an invalid step")
+            info = self._resolve_agent(step.agent)
+            if info is None:
+                raise ValueError(f"mission runs reject unknown agent/command: {step.agent}")
+            if (step.agent != info["name"] or step.command != info["command"]
+                    or step.args != [] or step.requires != info.get("requires", [])
+                    or step.evidence_ref != info.get("evidence_ref", "")
+                    or step.mutating is not info.get("mutating", False)
+                    or step.workdir not in ("", self.workdir) or step.status != "pending"):
+                raise ValueError(f"mission step {step.agent} differs from its catalog contract")
+            self._validate_step_authority(step)
+
+    def _validate_step_authority(self, step: Step) -> None:
+        if self.mission is None or not step.mutating:
+            return
+        tiers = {
+            "SIMULATE": AuthorizationTier.SIMULATE,
+            "SHADOW": AuthorizationTier.SHADOW,
+            "ACT": AuthorizationTier.ACT,
+        }
+        if tiers[self.mission["authority"]] < AuthorizationTier.ACT:
+            raise ValueError(
+                f"agent {step.agent} mutates the workspace and requires ACT"
+            )
+
+    def _build_handoff(self, plan: PipelinePlan) -> dict:
+        from skills.run_contract import build_handoff
+
+        checks = []
+        evidence_refs = []
+        for result, step in zip(self.session.results, plan.steps):
+            status = {
+                "passed": "PASS",
+                "failed": "FAIL",
+                "skipped": "SKIPPED",
+            }.get(result.status, "UNCERTAIN")
+            evidence_ref = (
+                step.evidence_ref
+                if status == "PASS"
+                else f"harness:{self.session.name}:{step.agent}:{result.exit_code}"
+            )
+            checks.append(
+                {
+                    "name": step.agent,
+                    "status": status,
+                    "evidence_ref": evidence_ref,
+                }
+            )
+            if evidence_ref:
+                evidence_refs.append(evidence_ref)
+
+        required = set(self.mission["required_evidence"])
+        produced = set(evidence_refs)
+        approval_required = (
+            self.mission["risk"] in ("R3", "R4")
+            and not self.mission.get("owner_approval_ref")
+        )
+        uncertainties = [self.session.termination_reason] if self.session.termination_reason else []
+        if self.workspace_lease.state == "QUARANTINED":
+            uncertainties.append("uncommitted_workspace")
+        if self.session.termination_decision == "UNCERTAIN":
+            status = "UNCERTAIN"
+            next_action = "Revise the plan; do not reset SAFE-EXIT inside this attempt."
+        elif plan.has_failed:
+            status = "FAIL"
+            next_action = "Name the failing proof before creating a bounded revision."
+        elif self.workspace_lease.state != "ACTIVE":
+            status = "PARTIAL"
+            next_action = "Inspect and commit preserved changes; rerun proofs in a fresh leased workspace."
+        elif approval_required:
+            status = "APPROVAL_REQUIRED"
+            next_action = "Obtain the owner-review approval before any ACT transition."
+        elif required <= produced and checks and all(
+            item["status"] == "PASS" for item in checks
+        ):
+            status = "READY_FOR_REVIEW"
+            next_action = "Run a fresh Gauntlet review in a distinct workspace."
+        else:
+            status = "PARTIAL"
+            next_action = "Collect the mission's missing required evidence."
+
+        return build_handoff(
+            self.mission,
+            attempt_id=self.attempt_id,
+            worker_id=self.worker_id,
+            status=status,
+            workspace_lease=self.workspace_lease.contract_view(),
+            checks=checks,
+            evidence_refs=sorted(produced),
+            uncertainties=uncertainties,
+            approval_required=approval_required,
+            next_safe_action=next_action,
+        )
+
+    def _repository_ref(self) -> str:
+        try:
+            result = subprocess.run(
+                ["git", "-C", self.workdir, "config", "--get", "remote.origin.url"],
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                timeout=10,
+            )
+        except (OSError, subprocess.TimeoutExpired):
+            return ""
+        if result.returncode != 0:
+            return ""
+        remote = result.stdout.strip().removesuffix(".git")
+        if remote.startswith("git@github.com:"):
+            return remote.split(":", 1)[1]
+        marker = "github.com/"
+        if marker in remote:
+            return remote.split(marker, 1)[1]
+        return ""
+
+    def _emit_bound_outcome(self, plan: PipelinePlan) -> None:
+        from skills.trajectory.outcome import emit_outcome
+
+        handoff = self.session.handoff or {}
+        status = handoff.get("status", "PARTIAL")
+        outcome_status = {
+            "FAIL": "FAIL",
+            "UNCERTAIN": "UNCERTAIN",
+            "APPROVAL_REQUIRED": "APPROVAL_REQUIRED",
+        }.get(status, "PARTIAL")
+        checks = handoff.get("checks", [])
+        evidence = list(handoff.get("evidence_refs", []))
+        if outcome_status in ("FAIL", "UNCERTAIN"):
+            evidence.extend(
+                check["evidence_ref"]
+                for check in checks
+                if check.get("evidence_ref")
+            )
+        command_basis = json.dumps(
+            [step.command + step.args for step in plan.steps],
+            ensure_ascii=False,
+            separators=(",", ":"),
+        )
+        risk = {
+            "R0": "low", "R1": "low", "R2": "standard",
+            "R3": "high", "R4": "critical",
+        }[self.mission["risk"]]
+        verified_by = (
+            "harness:meta-harness"
+            if outcome_status in ("FAIL", "UNCERTAIN") and evidence
+            else ""
+        )
+        emitted = emit_outcome(
+            self.mission["objective"],
+            project_root=self.workdir,
+            execution_id=f"{self.mission['mission_id']}/{self.attempt_id}",
+            source="meta_harness",
+            route="deterministic",
+            status=outcome_status,
+            verified_by=verified_by,
+            evidence_refs=sorted(set(evidence)),
+            risk=risk,
+            permission_profile=self.mission["authority"].casefold(),
+            harness="meta-harness/run-contract-v1",
+            acted=any(step.mutating and step.status == "passed" for step in plan.steps),
+            approval_required=handoff.get("approval_required", False),
+            mission_id=self.mission["mission_id"],
+            attempt_id=self.attempt_id,
+            worker_id=self.worker_id,
+            workspace_lease=self.workspace_lease.contract_view(),
+            repository_ref=self._repository_ref(),
+            base_sha=self.workspace_lease.base_sha,
+            head_sha=self.workspace_lease.head_sha,
+            dirty_tree_sha256=self.workspace_lease.dirty_tree_sha256,
+            check_command_sha256=hashlib.sha256(
+                command_basis.encode("utf-8")
+            ).hexdigest(),
+            checks=checks,
+            uncertainties=handoff.get("uncertainties", []),
+            next_safe_action=handoff.get("next_safe_action", ""),
+        )
+        self.session.outcome_id = emitted["envelope"]["id"]
+
+    def _skip_remaining_after_safe_exit(self, plan: PipelinePlan, start: int, reason: str) -> None:
+        """Record unexecuted steps after a bounded-run stop."""
+        for step in plan.steps[start:]:
+            if step.status != "pending":
+                continue
+            step.status = "skipped"
+            step.output = f"SAFE-EXIT: {reason}"
+            self.session.add_result(step)
 
     def _resolve_agent(self, name: str) -> Optional[dict]:
         """Resolve an agent name to its catalog entry."""

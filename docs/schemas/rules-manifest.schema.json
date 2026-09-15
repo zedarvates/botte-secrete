@@ -1,0 +1,149 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/zedarvates/botte-secrete/blob/main/docs/schemas/rules-manifest.schema.json",
+  "title": "Botte committed rules manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "rules"],
+  "properties": {
+    "schema": {
+      "const": "botte.rules-manifest/v1"
+    },
+    "rules": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1000,
+      "items": {
+        "$ref": "#/$defs/rule"
+      }
+    }
+  },
+  "$defs": {
+    "reference": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 512,
+      "pattern": "^[^\\\\#]+#[^#]+$"
+    },
+    "identifier": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]{2,127}$"
+    },
+    "probe": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "polarity", "evidence_ref"],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "polarity": {
+          "enum": ["allow", "deny"]
+        },
+        "evidence_ref": {
+          "$ref": "#/$defs/reference"
+        }
+      }
+    },
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["at", "content_sha256", "evidence_ref"],
+      "properties": {
+        "at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "content_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "evidence_ref": {
+          "$ref": "#/$defs/reference"
+        }
+      }
+    },
+    "rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "action",
+        "effect",
+        "scope",
+        "statement",
+        "source_ref",
+        "owner_only",
+        "enforced",
+        "enforcement_refs",
+        "probes",
+        "supersedes",
+        "last_verified"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "action": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "effect": {
+          "enum": ["ALLOW", "DENY", "REQUIRE"]
+        },
+        "scope": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "statement": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "source_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "owner_only": {
+          "type": "boolean"
+        },
+        "enforced": {
+          "type": "boolean"
+        },
+        "enforcement_refs": {
+          "type": "array",
+          "maxItems": 100,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/reference"
+          }
+        },
+        "probes": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {
+            "$ref": "#/$defs/probe"
+          }
+        },
+        "supersedes": {
+          "type": "array",
+          "maxItems": 100,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/identifier"
+          }
+        },
+        "last_verified": {
+          "$ref": "#/$defs/verification"
+        }
+      }
+    }
+  }
+}

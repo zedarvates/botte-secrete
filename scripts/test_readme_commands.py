@@ -22,8 +22,8 @@ force_utf8()
 REPO = Path(__file__).resolve().parent.parent
 TIMEOUT = 30
 SAFE_BOTTE_COMMANDS = {
-    "--help", "belt", "checkup", "discover", "doctor", "gain", "harvest",
-    "upstreams",
+    "--help", "belt", "checkup", "contract", "discover", "doctor", "gain", "harvest",
+    "lease", "review", "run", "upstreams",
 }
 BLOCKED_MODULES = {
     "skills.dashboard.api",

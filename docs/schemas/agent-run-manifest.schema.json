@@ -32,5 +32,19 @@
     "abstained": {"type": "boolean"},
     "escalated": {"type": "boolean"},
     "approval_required": {"type": "boolean"}
+    ,"mission_id": {"type": "string", "maxLength": 128}
+    ,"attempt_id": {"type": "string", "maxLength": 128}
+    ,"worker_id": {"type": "string", "maxLength": 128}
+    ,"workspace_lease": {"type": "object"}
+    ,"repository_ref": {"type": "string", "maxLength": 256}
+    ,"base_sha": {"type": "string", "pattern": "^$|^(?:[0-9a-f]{40}|[0-9a-f]{64})$"}
+    ,"head_sha": {"type": "string", "pattern": "^$|^(?:[0-9a-f]{40}|[0-9a-f]{64})$"}
+    ,"dirty_tree_sha256": {"type": "string", "pattern": "^$|^[0-9a-f]{64}$"}
+    ,"check_command_sha256": {"type": "string", "pattern": "^$|^[0-9a-f]{64}$"}
+    ,"checks": {"type": "array", "maxItems": 100}
+    ,"artifacts": {"type": "array", "maxItems": 100}
+    ,"uncertainties": {"type": "array", "maxItems": 100, "items": {"type": "string", "maxLength": 512}}
+    ,"review_verdict": {"enum": ["ACCEPT", "REWORK", "BLOCKED", null]}
+    ,"next_safe_action": {"type": "string", "maxLength": 512}
   }
 }
