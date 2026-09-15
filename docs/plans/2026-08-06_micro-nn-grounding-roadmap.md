@@ -7,8 +7,8 @@ an auditable label source and a production validation gate.
 
 ## Why this roadmap exists
 
-`nn_audit` currently finds eleven wired micro-NN models. Four have reproducible
-curated-corpus trainers and test guards. Seven Belt 2.0 predictors have weights
+`nn_audit` currently finds eleven wired micro-NN models. Five have reproducible
+curated-corpus trainers and test guards. Six Belt 2.0 predictors have weights
 and call sites, but no trainer discovered by the audit, no test guard, and model
 metadata that reports `accuracy: 0.0`. Repeated rule-generated feature vectors
 or a `trained_on` string are not real grounding evidence.
@@ -44,8 +44,8 @@ python -m skills.nn_audit.cli skills/botte_nn --json
 | `effort_classifier` | G1 | reviewed task tier plus successful execution | 2,000 verified; macro-F1 beats heuristic baseline | Add shadow outcome collector |
 | `anomaly_detector` | G1 | confirmed incident/anomaly resolution | 1,000 verified windows; bounded false-negative rate | Link alerts to incident verdicts |
 | `error_classifier` | G1, reproducible provenance embedded | real exception type and recovery result | 1,000 verified errors; macro-F1 >= 0.90 | Replace the curated-template holdout with verified production outcomes |
-| `compressibility_predictor` | G0, collector active | exact roundtrip plus measured reduction | 1,000 automatic labels across text, JSON, code, and logs | Accumulate diverse reversible calls, then temporal holdout |
-| `semantic_cache_hit_predictor` | G0, collector active | actual cache hit or miss | 2,000 automatic labels; temporal holdout | Accumulate real lookups and monitor class balance |
+| `compressibility_predictor` | G1, reproducible roundtrip corpus + collector active | exact roundtrip plus measured reduction | 1,000 automatic labels across text, JSON, code, and logs | Accumulate diverse reversible calls, then temporal holdout |
+| `semantic_cache_hit_predictor` | G0, opt-in shadow collector ready | semantic hit or miss after an exact-cache miss | 2,000 automatic labels; temporal holdout; no contradictory feature groups | Enable shadow on one reviewed runtime; redesign constant features before training |
 | `cloud_escalation_predictor` | G0 | verified local/harness/cloud outcome | 2,000 verified; prove incremental value over `binary_router` | Merge or remove if redundant |
 | `context_pruning_predictor` | G0 | matched full-context versus pruned evaluation | 500 matched pairs; no material quality regression | Build replay evaluator |
 | `skip_agent_predictor` | G0 | matched execute versus skip replay | 500 matched pairs; fail-open to execute | Build no-change oracle and replay |
@@ -70,12 +70,33 @@ current rule are excluded from the verified count.
 Ground models whose outcomes already have exact local oracles:
 
 1. `compressibility_predictor` from roundtrip and measured reduction;
-2. `semantic_cache_hit_predictor` from actual cache outcomes;
+2. `semantic_cache_hit_predictor` from actual conditional semantic outcomes;
 3. `error_classifier` from exception classes and recovery results.
 
-These produce honest labels without cloud tokens or subjective review.
-The first two collectors are active: they append calibrated, verified labels,
-deduplicate stable fingerprints, and never persist raw content or queries.
+These produce honest labels without cloud tokens or subjective review.  The
+compression collector is active.  Current repository consumers explicitly
+disable served semantic lookup.  Setting `BOTTE_NN_SEMANTIC_SHADOW=1` enables a
+local observation-only probe after exact misses: it records whether the matcher
+would hit without returning that cached response.  Both collectors deduplicate
+stable fingerprints and never persist raw content or queries.
+
+### Semantic-cache label contract
+
+- Exact-cache hits are excluded: they do not exercise the semantic matcher.
+- Normal lookups with semantic matching disabled are excluded unless the
+  explicit shadow environment flag is enabled.
+- Only a served or shadow semantic hit/miss observed after an exact miss is
+  labelled.
+- Shadow probes never increment served-hit, entry-hit, or token-saving counters.
+- Semantic candidates are partitioned by model and a SHA-256 system-context
+  fingerprint; raw system prompts are never persisted for this purpose.
+- The ledger stores a SHA-256 sample key and feature vector, never the raw query.
+- Training is refused when one rounded feature vector carries both labels.
+
+The current schema still contains constant placeholder features.  Its collector
+is useful for measuring class balance and identifiability, but the model remains
+G0 until one reviewed runtime collects shadow attempts, those features are
+replaced, and the collision gate passes.
 
 ### Wave 2 - routing and operational verdicts
 
