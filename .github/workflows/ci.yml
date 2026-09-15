@@ -27,6 +27,8 @@ jobs:
           key: pip-${{ runner.os }}-${{ matrix.python-version }}
       - name: Install project dependencies
         run: pip install -e .
+      - name: Test external-tool inventory (offline fixtures)
+        run: python scripts/test_external_tools_inventory.py
       - name: Run tests (fail-fast)
         id: tests
         run: python scripts/run_tests.py -q
