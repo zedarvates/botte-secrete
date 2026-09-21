@@ -1,0 +1,15 @@
+{
+  "status": "complete",
+  "message": "Moyenne corrigee pour la liste vide (convention du scenario: resultat 0).",
+  "proof": {
+    "cmd_output_ref": "../03-tests-apres.txt",
+    "artifact_hash": "b17904ab2890fb69231c349c826080d5754d62955aa08560127827a12b6cb846"
+  },
+  "validations": [
+    {
+      "name": "unittest: 3 cas",
+      "status": "passed",
+      "reference": "../03-tests-apres.txt"
+    }
+  ]
+}

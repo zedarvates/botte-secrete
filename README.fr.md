@@ -35,6 +35,18 @@ Le projet est en **bêta**. Ses principaux flux fonctionnent localement, mais le
 serveurs de modèles, fournisseurs cloud, accélérateurs matériels et agents tiers
 restent des systèmes externes avec leurs propres limites de sécurité.
 
+## Voir Botte à l'œuvre : « terminé » mérite une preuve
+
+Un rapport préparé annonce un travail terminé. Botte signale la preuve manquante ;
+un vrai test révèle un défaut, puis une correction préparée fait réussir les trois
+tests. [Découvrir la démonstration rejouable](docs/demos/completion-proof/README.md),
+ses résultats et sa limite : A11 détecte des marqueurs de preuve sans en vérifier
+l'authenticité.
+
+Le [vérificateur de reçus](skills/completion_proof/VERIFICATION.md), activable
+séparément, contrôle les fichiers et leurs empreintes à partir d'une référence
+fournie par l'exécuteur de confiance, hors du rapport de l'agent.
+
 ## Comprendre et inspecter les petits modèles
 
 **Le code et les poids des micro-NN sont ouverts et consultables.** Ces petits

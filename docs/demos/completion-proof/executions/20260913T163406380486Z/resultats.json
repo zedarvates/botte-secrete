@@ -1,0 +1,26 @@
+{
+  "scenario": "synthetique, executions reelles",
+  "created_utc": "2026-09-13T16:34:08.207131+00:00",
+  "before_findings": 1,
+  "before_tests_exit_code": 1,
+  "after_findings": 0,
+  "after_tests_exit_code": 0,
+  "tests_count": 3,
+  "missing_reference_findings": 0,
+  "detector_tests_exit_code": 0,
+  "detector_source_sha256": {
+    "skills/completion_proof/__init__.py": "ae1b8ebda73d6f201500c28974a97d812513927baaddaf1181112e6419e023cf",
+    "skills/completion_proof/audit.py": "308ccd1961f9f43209f7cca65d53e3c75b1ba94ef931a0d27a40fa6d4db3e465",
+    "skills/completion_proof/cli.py": "b9d7f040061e5cd449fab115ad374549611803ac6dcf31c6247b3268d4217334",
+    "skills/completion_proof/test_completion_proof.py": "a1f802b65c6833ed9ae2e6c2c44c202a751ab154261a11ad5990f2c2122e19aa",
+    "skills/completion_proof/verify.py": "b278037fbc216602fb71114972b88b2b627ab41dc64438aeaa4c82c6afc0913d",
+    "skills/completion_proof/test_verify.py": "325e5d5b621e8d4f65d52c916d3076f4753632330bbee7acf6a4bfac75b5371a",
+    "skills/completion_proof/presentation.py": "3d4b48a373d5c7124d092c231ca65cbf5c58b72bfaac57f2e2611934dbe7edf2"
+  },
+  "limits": [
+    "A11 est un detecteur declaratif, pas un validateur de la veracite des preuves.",
+    "Le CLI A11 retourne zero meme en presence de constats.",
+    "La correction et le controle des preuves sont orchestres par ce script de demonstration.",
+    "Trois cas de test ne prouvent pas une correction universelle."
+  ]
+}

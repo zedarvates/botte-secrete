@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "run_id": "20260913T160408788104Z-apres",
+  "result": {
+    "exit_code": 0,
+    "tests_run": 3,
+    "failures": 0,
+    "errors": 0
+  },
+  "log": {
+    "path": "03-tests-apres.txt",
+    "sha256": "9a6e9b920f4813eda8caaa59b37ff9226972aadc4da80e4bfc16f20cbd8854d9"
+  },
+  "sources": [
+    {
+      "path": "moyenne.py",
+      "sha256": "b17904ab2890fb69231c349c826080d5754d62955aa08560127827a12b6cb846"
+    },
+    {
+      "path": "test_moyenne.py",
+      "sha256": "20ef83fe5ff50ce4a51400552057a88f401e51f0830cec662391f800d4bc1bd9"
+    }
+  ]
+}

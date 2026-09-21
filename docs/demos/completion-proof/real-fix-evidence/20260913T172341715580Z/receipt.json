@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "run_id": "20260913T172341715580Z",
+  "result": {
+    "exit_code": 0,
+    "tests_run": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 1
+  },
+  "log": {
+    "path": "test-output.txt",
+    "sha256": "77d059e1df3177ea53328a8290cfcc2bd45503362f1a24b1bba16877afe5cf0e"
+  },
+  "sources": [
+    {
+      "path": "test_optional.py",
+      "sha256": "9ea59e2a2e7fb6cd333d80e45f70fc7c764bf7161f90d6425ed709f0b09bdd92"
+    }
+  ]
+}

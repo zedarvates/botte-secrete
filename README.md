@@ -33,6 +33,18 @@ The project is in **beta**. Its core workflows run locally, but optional local
 LLM backends, cloud providers, hardware accelerators, and third-party agents
 remain external systems with their own setup and security boundaries.
 
+## See it in action: "done" needs evidence
+
+A prepared agent report claims completion. Botte flags the missing evidence;
+an actual test exposes a defect, and a prepared correction passes all three
+tests. [Follow the replayable demonstration](docs/demos/completion-proof/README.md)
+with recorded outputs and an explicit negative control: A11 detects evidence
+markers but does not authenticate them.
+
+The separate opt-in [receipt verifier](skills/completion_proof/VERIFICATION.md)
+checks actual artifacts and source hashes against a digest supplied by the
+trusted test executor; it does not rely on a hash asserted by the agent report.
+
 ## Understand and inspect the small models
 
 **You can inspect the code and the micro-NN weights.** Botte's small predictors

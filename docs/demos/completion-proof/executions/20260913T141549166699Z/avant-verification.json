@@ -1,0 +1,1 @@
+{"schema_version": 1, "status": "test_failed", "verified": false, "errors": [], "source_files_checked": ["moyenne.py", "test_moyenne.py"], "cloud_tokens": 0, "scope": "recorded tests and listed files only", "tests_run": 3, "receipt_sha256": "fefdd4de629d57ac6b7ba35ce9288521d00c841bf4e323910879125f1080f1aa"}
