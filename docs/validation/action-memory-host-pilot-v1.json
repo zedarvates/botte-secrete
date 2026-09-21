@@ -1,0 +1,99 @@
+{
+  "schema": "botte.action-host-pilot-acceptance/v1",
+  "recorded_at": "2026-09-08T15:22:05.523098+00:00",
+  "base_commit": "64b910ebbc6dcfad5bdf862405dea175f279f3f5",
+  "status": "local_two_identity_pilot_passed",
+  "runtime": {
+    "python": "3.12.13",
+    "platform": "Linux",
+    "runtime_dependencies": "standard library only"
+  },
+  "tests": [
+    {
+      "command": "python -m scripts.test_action_memory_pilot",
+      "passed": 4,
+      "failed": 0,
+      "exit_code": 0
+    },
+    {
+      "command": "python -m skills.memory_hub.test_action_memory",
+      "passed": 16,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0
+    }
+  ],
+  "current_validation_test_total": 20,
+  "baseline_note": "The 328-test integration record belongs to base commit 64b910eb. This follow-up adds four pilot tests and reruns the 16 action-memory tests; it does not claim a fresh full integration run.",
+  "documented_usage": {
+    "service_started_by_documented_cli": true,
+    "auth_loaded_from_operator_configuration": true,
+    "producer": {
+      "schema": "botte.action-pilot-result/v1",
+      "phase": "produce",
+      "complete": true,
+      "quantity": 13,
+      "total_cents": 2740,
+      "executions": 2,
+      "lost_reply": "synthetic_client_discard_after_server_capture",
+      "capture_retry_replayed": true,
+      "stale_detection": true,
+      "both_episodes_owner_visible": true,
+      "normal_context_excluded": true,
+      "peer_validation": "pending",
+      "handoff": "handoff.json"
+    },
+    "consumer": {
+      "schema": "botte.action-pilot-result/v1",
+      "phase": "consume",
+      "complete": true,
+      "shared_episode_unchanged": true,
+      "private_episode_hidden": true,
+      "normal_context_excluded": true,
+      "commands_executed": 0,
+      "causal_attribution": "not_assessed",
+      "quality_verified": false
+    },
+    "physical_hosts": 1,
+    "transport": "loopback_http",
+    "identity_count": 2,
+    "pilot_server_stopped": true
+  },
+  "checks": {
+    "checkup": {
+      "exit_code": 0,
+      "headline": "directives 100/100 · infra 24/100 · 0 duplicate-fn group(s)",
+      "drift": [
+        "MCP not wired here — run `python -m skills.bootstrap.cli .`"
+      ],
+      "security_available": false
+    },
+    "fast_precommit": {
+      "exit_code": 0,
+      "staged_python_files": 3,
+      "scope": "Staged Python syntax and heuristic secret scan; the existing schema pre-commit function is a placeholder."
+    },
+    "documentation_links": {
+      "exit_code": 0,
+      "markdown_files": 68,
+      "broken_local_links": 0
+    },
+    "diff_whitespace": {
+      "exit_code": 0
+    }
+  },
+  "remaining_limits": [
+    "No configured BOTTE_MEMORY_URL, BOTTE_MEMORY_TOKEN_FILE or SSH configuration was available in this session; no remote execution tool was exposed.",
+    "The recorded service and both clients ran on one isolated local host. Homelab transport and real agent MCP activation remain untested.",
+    "The lost reply is injected in the client after a successful capture, not a real network interruption or server crash.",
+    "The handoff and result JSONs are observations, not authenticated attestations. The handoff source comparison covers the pilot script only.",
+    "No main merge, deployment, model training, corpus quality evaluation, Windows test or additional Python version test."
+  ],
+  "source_sha256": {
+    "scripts/action_memory_pilot.py": "a0eec619b97bfe68c58f57c59d5727472c20eec0a83cb836a5808b3d5d7c66f1",
+    "scripts/test_action_memory_pilot.py": "ad1f7f109ff304c469a9d80d616e08f8d00f37e48edeb12cb825844ebca5abd0",
+    "scripts/run_tests.py": "9d51860b30977b83047a94fbabaee0156367d7e0848ba26e13dd208c5536efcb",
+    "docs/action-memory-homelab-pilot.md": "f1ee8678211da013b2a1cc9a7b3ca70ff1ec5c0cbd3d9a0f119512aa19bd4aec",
+    "docs/action-consequence-memory.md": "5bba94de585ee98d8a7b6947335457e3d3f7128aa42258bcde3bbe88b6b2e01b"
+  }
+}

@@ -112,6 +112,14 @@ coverage: file checks cannot establish all downstream effects or model quality.
 Reference the report through existing handoff evidence fields; never equate a
 report's `verified` status with an independently verified task-quality label.
 
+When a shared memory endpoint is configured, use
+[action-consequence memory](../../docs/action-consequence-memory.md) to recall
+relevant episodes before an explicit plan and retain its observed consequences.
+`execute_remembered_plan` previews by default and returns execution and memory
+results separately. If execution completed but ingestion failed, retry capture
+from the archived report. The memory's local-check assessment does not replace
+the current plan's dependency gates or establish a causal claim.
+
 Exposed via [[llm_mcp]] as `conduct` (plan) and `execute_plan` (plan + run safe
 steps). Built on [[capabilities]], [[auto_router]]; pairs with the [[control_loop]]
 (measure savings → adapt the routing).

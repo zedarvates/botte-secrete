@@ -1,9 +1,9 @@
 {
   "schema": "botte.capability-effects/v1",
   "capability_id": "zedarvates/botte-secrete:skills/conductor",
-  "contract_version": "0.4.0",
+  "contract_version": "0.4.1",
   "source_hashes": {
-    "SKILL.md": "4df426155d42cc23ff7423dfdcc072cfb5e4be607fb1e3888a6bb0a4a6be0377",
+    "SKILL.md": "7b1d7918df296b94f1cbe171fadf72dc72bb82741a2d9c2d5486934b59b27913",
     "__init__.py": "e9b15c49cb32b65ebb539c65786e92906b6d892449c74e82d0203bf0f972fa4a",
     "conductor.py": "d7d8ec22e19d8b53adeeb3e3954e0c3fb11971505b3edf3aaec29d0604a3f8c1",
     "executor.py": "e55b918580ffa9f8affd66ee1dc5071a381573c7473de3f3ba3f1f8d56af4694",
@@ -107,7 +107,8 @@
       "Legacy execution supplies no automatic dependency gate; optional observation checks declarations at instrumented call entry. The explicit mode checks only listed files and predicates; it is not a transaction, sandbox, authenticated proof store or fleet lease.",
       "The llm_mcp transport is outside these skill-local source bindings; command resolution still relies on the trusted installed environment.",
       "Observation helpers and atomic checkpoint persistence are imported dependencies outside these skill-local hashes. Coverage is cooperative, bounded and not an authenticated attestation.",
-      "The context fingerprint includes the project and Python interpreter but does not inventory remote services or installed packages; observation snapshots do not defend against concurrent hostile filesystem mutation."
+      "The context fingerprint includes the project and Python interpreter but does not inventory remote services or installed packages; observation snapshots do not defend against concurrent hostile filesystem mutation.",
+      "The optional remembered-plan composition is implemented by memory_hub.action_memory; inspect that capability for shared API, archival and trajectory-write consequences."
     ],
     "evidence_refs": [
       "conductor.py:plan",

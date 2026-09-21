@@ -12,6 +12,9 @@ Shared rules for all agents and developers on this project. Keep cheap, keep loc
 - Prefer `rtk <command>` for terminal commands (compact output).
 - **Hybrid pipeline**: cloud model plans (2-3 lines), **Ornith-1.0-9B local**
   executes the actual work (0 tokens, 0 cost).
+- Skill search/routing produces candidates. Before execution, read the retained
+  candidates' full instructions and check the requested operation's suitable
+  situations, exclusions and prerequisites against the actual task.
 
 ## Prompts
 - Before a big/ambiguous request, improve it locally (`improve_prompt`) so the
@@ -25,6 +28,9 @@ Shared rules for all agents and developers on this project. Keep cheap, keep loc
   tight. Auto-set by `context_budget`.
 - **Input** (files, context): Run `python -m skills.caveman.cli compress <file>`
   before loading into context. Typical savings: 46% on AGENTS.md/CLAUDE.md.
+  Selected candidate instructions must be read in full. Preserve acceptance
+  conditions, evidence and unresolved state needed for execution or resumption;
+  compression must not replace those checks.
 - **JSON reports**: Always use `ultra_compact` (-30 to -90%).
 - **Logs/CI output**: Use `universal_compressor` with `log` strategy (-80 to 98%).
 
@@ -40,6 +46,11 @@ Shared rules for all agents and developers on this project. Keep cheap, keep loc
 - After a component update or before a checkup, run `/checkup` (or
   `python -m skills.checkup.cli .`) — directives + metrics + infra + drift.
 - Keep `CLAUDE.md`/`AGENTS.md` under ~2000 tokens and free of stale path refs.
+- Apply the [six tool-improvement axes](../docs/tool-improvement-axes.md):
+  selection, consequences, dependency outputs, resumption, contextual experience
+  and measured improvement. Record evidence and remaining gaps for the axes
+  affected by a change; a declared contract or green CI alone proves no task
+  quality gain.
 
 ## Budget
 - Daily token budget: 50000 (auto_router downgrades when exceeded).

@@ -38,6 +38,9 @@ dependencies = [
     "networkx",
 ]
 
+[project.optional-dependencies]
+memory-test = ["pytest>=8,<10", "jsonschema>=4.18,<5"]
+
 [project.urls]
 Homepage = "https://github.com/zedarvates/botte-secrete"
 Changelog = "https://github.com/zedarvates/botte-secrete/blob/main/CHANGELOG.md"
