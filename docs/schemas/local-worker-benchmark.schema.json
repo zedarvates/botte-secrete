@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/zedarvates/botte-secrete/blob/main/docs/schemas/local-worker-benchmark.schema.json",
+  "title": "Botte Secrete local worker benchmark report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "generated_at", "benchmark_status", "conclusion", "dataset", "models", "missing_metrics", "reproducibility", "authority"],
+  "properties": {
+    "schema": {"const": "botte.local-worker-benchmark/v1"},
+    "generated_at": {"type": "string", "format": "date-time"},
+    "benchmark_status": {"enum": ["insufficient_evidence", "measured_comparable"]},
+    "conclusion": {"type": "string", "minLength": 1},
+    "dataset": {"type": "object"},
+    "models": {"type": "object", "minProperties": 2},
+    "missing_metrics": {"type": "array"},
+    "reproducibility": {"type": "object"},
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "acted", "trained", "activation_allowed", "builder_promotion_allowed"],
+      "properties": {
+        "mode": {"const": "SIMULATE"},
+        "acted": {"const": false},
+        "trained": {"const": false},
+        "activation_allowed": {"const": false},
+        "builder_promotion_allowed": {"const": false}
+      }
+    }
+  }
+}

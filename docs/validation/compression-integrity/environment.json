@@ -1,0 +1,325 @@
+{
+  "python": "3.12.14",
+  "packages": [
+    {
+      "name": "headroom-ai",
+      "version": "0.37.0",
+      "archive_sha256": "2efc5cdf681a10c5fc7a2a271a471179c409074537045f682b10e4d724976f46"
+    },
+    {
+      "name": "ast-grep-cli",
+      "version": "0.45.3",
+      "archive_sha256": "2d151b89c6d45c2640338fe5d24b2ee0810224902d603cb271803bf7418054ea"
+    },
+    {
+      "name": "click",
+      "version": "8.5.0",
+      "archive_sha256": "255bc9599cf7748b4b1a446ccc735421bd08a2ae529a8b88597d3de5664ee360"
+    },
+    {
+      "name": "litellm",
+      "version": "1.100.1",
+      "archive_sha256": "8f53d917ece795e35c125ec24d342ddc2103a806c22b1f7b1517110d31f45362"
+    },
+    {
+      "name": "opentelemetry-api",
+      "version": "1.44.0",
+      "archive_sha256": "94b98c893a91b88657eaac1e3ba89618cdb85be6918196705354f34728b2cdef"
+    },
+    {
+      "name": "pydantic",
+      "version": "2.13.5",
+      "archive_sha256": "346a034f080da3755d8e9cb5e00e8b07de1d39e4f6e2c87d8ab7cafa0b269a73"
+    },
+    {
+      "name": "pydantic_core",
+      "version": "2.46.5",
+      "archive_sha256": "0fc5be0abd4a407e200d844b404e33639a554e7bd0d448e7b9ae181be4789ac2"
+    },
+    {
+      "name": "PyYAML",
+      "version": "6.0.3",
+      "archive_sha256": "ba1cc08a7ccde2d2ec775841541641e4548226580ab850948cbfda66a1befcdc"
+    },
+    {
+      "name": "rich",
+      "version": "15.0.0",
+      "archive_sha256": "33bd4ef74232fb73fe9279a257718407f169c09b78a87ad3d296f548e27de0bb"
+    },
+    {
+      "name": "tiktoken",
+      "version": "0.14.0",
+      "archive_sha256": "7896eea257fe497a2b7134474d909156c6744ce8da35bce88011a960e008aa0d"
+    },
+    {
+      "name": "tomlkit",
+      "version": "0.15.1",
+      "archive_sha256": "177a05aece5a8ca5266fd3c448abb47b8d352f09d477d3ca8332db4d89b24304"
+    },
+    {
+      "name": "aiohttp",
+      "version": "3.14.3",
+      "archive_sha256": "543906c127fb1d929b95076db19b83fa2d46751006ff1e23b093aa5ac4d8db42"
+    },
+    {
+      "name": "annotated-types",
+      "version": "0.8.0",
+      "archive_sha256": "f072f4d804ea359e4eaf198b1af7a8b0943881a87f31bb764f8bf219bb9419e0"
+    },
+    {
+      "name": "boto3",
+      "version": "1.43.93",
+      "archive_sha256": "3c948fe231490d446bf90bf3322d1452632107329d3683b37d88b7399bf481a0"
+    },
+    {
+      "name": "fastuuid",
+      "version": "0.14.0",
+      "archive_sha256": "808527f2407f58a76c916d6aa15d58692a4a019fdf8d4c32ac7ff303b7d7af09"
+    },
+    {
+      "name": "httpx",
+      "version": "0.28.1",
+      "archive_sha256": "d909fcccc110f8c7faf814ca82a9a4d816bc5a6dbfea25d6591d6985b8ba59ad"
+    },
+    {
+      "name": "httpcore",
+      "version": "1.0.9",
+      "archive_sha256": "2d400746a40668fc9dec9810239072b40b4484b640a8c38fd654a024c7a1bf55"
+    },
+    {
+      "name": "importlib_metadata",
+      "version": "8.9.0",
+      "archive_sha256": "e0f761b6ea91ced3b0844c14c9d955224d538105921f8e6754c00f6ca79fba7f"
+    },
+    {
+      "name": "Jinja2",
+      "version": "3.1.6",
+      "archive_sha256": "85ece4451f492d0c13c5dd7c13a64681a86afae63a5f347908daf103ce6d2f67"
+    },
+    {
+      "name": "jsonschema",
+      "version": "4.26.0",
+      "archive_sha256": "d489f15263b8d200f8387e64b4c3a75f06629559fb73deb8fdfb525f2dab50ce"
+    },
+    {
+      "name": "markdown-it-py",
+      "version": "4.2.0",
+      "archive_sha256": "9f7ebbcd14fe59494226453aed97c1070d83f8d24b6fc3a3bcf9a38092641c4a"
+    },
+    {
+      "name": "openai",
+      "version": "2.54.0",
+      "archive_sha256": "89089789197ccdb87f173a03145ed1598d00795220c93e96cf712b1cbf5e5f2b"
+    },
+    {
+      "name": "pydantic-settings",
+      "version": "2.15.0",
+      "archive_sha256": "0ba092c291c94baceb5eff768aa0d56400a457585bc0175925a5a5510303da42"
+    },
+    {
+      "name": "Pygments",
+      "version": "2.21.0",
+      "archive_sha256": "2363c69b61c4a97c838da3b130dcd6468f4848992b21a82f2a63ec34377137d9"
+    },
+    {
+      "name": "python-dotenv",
+      "version": "1.2.3",
+      "archive_sha256": "904552145e8bfed22162c09dab1c2b9b54fefa7b23ba780f4f26ca0316b0f0d9"
+    },
+    {
+      "name": "tokenizers",
+      "version": "0.23.2",
+      "archive_sha256": "41c2f84d172449b4dadb9cdc508e3e364076613c35b16e76ecfe47a60d1e3305"
+    },
+    {
+      "name": "typing_extensions",
+      "version": "4.16.0",
+      "archive_sha256": "481caa481374e813c1b176ada14e97f1f67a4539ce9cfeb3f350d78d6370c2e8"
+    },
+    {
+      "name": "typing-inspection",
+      "version": "0.4.4",
+      "archive_sha256": "65b8397ba37ccbce054456aaccddfc91e6e3083c92824df348d96ca832f3f147"
+    },
+    {
+      "name": "regex",
+      "version": "2026.9.10",
+      "archive_sha256": "2e67f8843f0e4b931f1fa860bf3bbe4134b714c0155cc5c7c0d7ea450230aae0"
+    },
+    {
+      "name": "requests",
+      "version": "2.34.2",
+      "archive_sha256": "2a0d60c172f83ac6ab31e4554906c0f3b3588d37b5cb939b1c061f4907e278e0"
+    },
+    {
+      "name": "aiohappyeyeballs",
+      "version": "2.7.1",
+      "archive_sha256": "9243213661e29250eb41368e5daa826fc017156c3b8a11440826b2e3ed376472"
+    },
+    {
+      "name": "aiosignal",
+      "version": "1.4.0",
+      "archive_sha256": "053243f8b92b990551949e63930a839ff0cf0b0ebbe0597b0f3fb19e1a0fe82e"
+    },
+    {
+      "name": "anyio",
+      "version": "4.15.1",
+      "archive_sha256": "6152fdbbf9a77fdec97731721bebf7c4c44f7c29b424b0065826173efc7ed101"
+    },
+    {
+      "name": "attrs",
+      "version": "26.1.0",
+      "archive_sha256": "c647aa4a12dfbad9333ca4e71fe62ddc36f4e63b2d260a37a8b83d2f043ac309"
+    },
+    {
+      "name": "botocore",
+      "version": "1.43.93",
+      "archive_sha256": "3ca57bb5d26d88b554a74de708a5c991f45306436c91aacca931252d1d4d54ff"
+    },
+    {
+      "name": "certifi",
+      "version": "2026.7.22",
+      "archive_sha256": "62f22742b58a1a33014a2b6b706588a8d7e2a88ae7bd1a6ebe8c992928483775"
+    },
+    {
+      "name": "charset-normalizer",
+      "version": "3.5.1",
+      "archive_sha256": "b9af956078716df40d985fb0dfeb2c2120c5ca92ba4ff4b388acfd01cdc14d08"
+    },
+    {
+      "name": "distro",
+      "version": "1.9.0",
+      "archive_sha256": "7bffd925d65168f85027d8da9af6bddab658135b840670a223589bc0c8ef02b2"
+    },
+    {
+      "name": "frozenlist",
+      "version": "1.8.0",
+      "archive_sha256": "494a5952b1c597ba44e0e78113a7266e656b9794eec897b19ead706bd7074383"
+    },
+    {
+      "name": "huggingface_hub",
+      "version": "1.31.0",
+      "archive_sha256": "9dbb6a503cbe2494ea666695207e7262d410659e09134059deb83e5480864667"
+    },
+    {
+      "name": "idna",
+      "version": "3.19",
+      "archive_sha256": "815e7be7a7806d54abb586dc943addc79e8b2ee16915059658cbeff4b1b43bf4"
+    },
+    {
+      "name": "jiter",
+      "version": "0.17.0",
+      "archive_sha256": "8c21265b251d99bbb40080d178a8953e35601d3a1564e05c4de4c0d2ca616797"
+    },
+    {
+      "name": "jmespath",
+      "version": "1.1.0",
+      "archive_sha256": "a5663118de4908c91729bea0acadca56526eb2698e83de10cd116ae0f4e97c64"
+    },
+    {
+      "name": "jsonschema-specifications",
+      "version": "2025.9.1",
+      "archive_sha256": "98802fee3a11ee76ecaca44429fda8a41bff98b00a0f2838151b113f210cc6fe"
+    },
+    {
+      "name": "MarkupSafe",
+      "version": "3.0.3",
+      "archive_sha256": "d6dd0be5b5b189d31db7cda48b91d7e0a9795f31430b7f271219ab30f1d3ac9d"
+    },
+    {
+      "name": "mdurl",
+      "version": "0.1.2",
+      "archive_sha256": "84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8"
+    },
+    {
+      "name": "multidict",
+      "version": "6.8.0",
+      "archive_sha256": "003a3bddb32915c3f67096ea41d24e53edf710edb65a1f5d0c70ab40b0e4d20b"
+    },
+    {
+      "name": "propcache",
+      "version": "0.5.2",
+      "archive_sha256": "6f328175a2cde1f0ff2c4ed8ce968b9dcfb55f3a7153f39e2957ed994da13476"
+    },
+    {
+      "name": "referencing",
+      "version": "0.37.0",
+      "archive_sha256": "381329a9f99628c9069361716891d34ad94af76e461dcb0335825aecc7692231"
+    },
+    {
+      "name": "rpds-py",
+      "version": "2026.6.3",
+      "archive_sha256": "ecabd69db66de867690f9797f2f8fa27ba501bbc24540cbdbdc649cd15888ba6"
+    },
+    {
+      "name": "s3transfer",
+      "version": "0.19.2",
+      "archive_sha256": "d8168eccca828cbb2cd573675333f3bddd254313a9c42494b84c76b539e8ba25"
+    },
+    {
+      "name": "tqdm",
+      "version": "4.70.1",
+      "archive_sha256": "c293e525e6fef9c20e8728fd4612df02a0aa31bb5fe91ecd93e123b1b7bffa73"
+    },
+    {
+      "name": "urllib3",
+      "version": "2.7.0",
+      "archive_sha256": "9fb4c81ebbb1ce9531cce37674bbc6f1360472bc18ca9a553ede278ef7276897"
+    },
+    {
+      "name": "yarl",
+      "version": "1.24.5",
+      "archive_sha256": "f08c7513ecef5aad65687bfdf6bc601ae9fccd04a42904501f8f7141abad9eb9"
+    },
+    {
+      "name": "zipp",
+      "version": "4.1.0",
+      "archive_sha256": "25ad4e16390cd314347dd8f1de67a2ac538ae658ed4ab9db16029c07c188e97f"
+    },
+    {
+      "name": "sniffio",
+      "version": "1.3.1",
+      "archive_sha256": "2f6da418d1f1e0fddd844478f41680e794e6051915791a034ff65e5f100525a2"
+    },
+    {
+      "name": "filelock",
+      "version": "3.32.6",
+      "archive_sha256": "3f16ecd0117feae0dfc147e8c62eb5daeccd8bd800378c3ddf416de9b4feb6b1"
+    },
+    {
+      "name": "fsspec",
+      "version": "2026.7.0",
+      "archive_sha256": "b57ddbafedfaef7018c1ecab32aa200a9d7ca26b77965f64e48b70061249d279"
+    },
+    {
+      "name": "h11",
+      "version": "0.16.0",
+      "archive_sha256": "63cf8bbe7522de3bf65932fda1d9c2772064ffb3dae62d55932da54b31cb6c86"
+    },
+    {
+      "name": "hf-xet",
+      "version": "1.6.0",
+      "archive_sha256": "d62671bb130879cef0ee4c9ebe47a14af6c66ec53e6d84dc15936e5ffdfac82f"
+    },
+    {
+      "name": "packaging",
+      "version": "26.3",
+      "archive_sha256": "d7193f7c8e4e93f444fde0262bf90af30e16fa0ad0ad44cb553c87339b23cd1c"
+    },
+    {
+      "name": "python-dateutil",
+      "version": "2.9.0.post0",
+      "archive_sha256": "a8b2bc7bffae282281c8140a97d3aa9c14da0b136dfe83f850eea9a5f7470427"
+    },
+    {
+      "name": "six",
+      "version": "1.17.0",
+      "archive_sha256": "4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274"
+    }
+  ],
+  "notes": [
+    "Only binary wheels; isolated test environment.",
+    "Native content detection fell back to pure Python because ONNX Runtime 1.24+ was not installed.",
+    "No proxy or model inference; Python socket.connect denied during benchmark."
+  ]
+}

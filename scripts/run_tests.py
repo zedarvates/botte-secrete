@@ -33,6 +33,12 @@ os.environ.setdefault("BOTTE_NN_AUTO_LABELS", "0")
 # module_prefix is the skills/ directory prefix used for --changed matching.
 SUITES = [
     ("e2e", [sys.executable, "skills/test_e2e.py"], ""),
+    ("runner_exit_verdict", [sys.executable, "scripts/test_runner_exit_verdict.py"], "scripts/"),
+    ("response_cache_exact", [sys.executable, "-m", "skills.response_cache.test_exact"], "skills/response_cache/"),
+    ("universal_compressor", [sys.executable, "-m", "skills.universal_compressor.test_universal_compressor"], "skills/universal_compressor/"),
+    ("compression_benchmark", [sys.executable, "-m", "skills.universal_compressor.test_benchmark"], "skills/universal_compressor/"),
+    ("caveman", [sys.executable, "-m", "skills.caveman.test_caveman"], "skills/caveman/"),
+    ("loop_cost_reporting", [sys.executable, "-m", "skills.loop_optimizer.test_cost_reporting"], "skills/loop_optimizer/"),
     ("cli_router", [sys.executable, "-m", "skills.test_cli"], "skills/"),
     ("llm_backends", [sys.executable, "-m", "skills.llm_backends.test_llm_backends"], "skills/llm_backends/"),
     ("directives_audit", [sys.executable, "-m", "skills.directives_audit.test_directives_audit"], "skills/directives_audit/"),
@@ -75,6 +81,7 @@ SUITES = [
     ("local_harness", [sys.executable, "-m", "skills.local_harness.test_verifier"], "skills/local_harness/"),
     ("harness_executor", [sys.executable, "-m", "skills.local_harness.test_executor"], "skills/local_harness/"),
     ("harness_bench", [sys.executable, "-m", "skills.local_harness.test_bench"], "skills/local_harness/"),
+    ("worker_benchmark", [sys.executable, "-m", "skills.local_harness.test_worker_benchmark"], "skills/local_harness/"),
     ("migration_audit", [sys.executable, "-m", "skills.migration_audit.test_migration_audit"], "skills/migration_audit/"),
     ("memory_quarantine", [sys.executable, "-m", "skills.memory_hub.test_quarantine"], "skills/memory_hub/"),
     ("calibration", [sys.executable, "-m", "skills.botte_nn.test_calibration"], "skills/botte_nn/"),
@@ -218,7 +225,8 @@ def main() -> int:
             if mm:
                 m = mm
         p, f = (int(m.group(1)), int(m.group(2))) if m else (0, 1)
-        if not m and proc.returncode != 0:
+        # A passing-looking summary cannot override a failed child process.
+        if proc.returncode != 0:
             f = max(f, 1)
         total_pass += p
         total_fail += f

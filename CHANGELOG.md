@@ -2,7 +2,15 @@
 
 ## Unreleased
 
+### Fixed
+- Exact response-cache identity preserves whitespace and indentation. Legacy
+  normalized entries cannot answer a different query; affected queries miss
+  safely until recached, while unchanged legacy identities remain usable.
+
 ### Added
+- Fail-closed, privacy-preserving local-worker benchmark for Granite 4.2 versus
+  an existing worker, covering TTFT, throughput, quality, escalation, validator
+  disagreement, host RAM, and per-GPU VRAM in `SIMULATE` mode.
 - Fail-closed Memory Hub quarantine with mandatory MCP provenance, separate
   storage for external/generated observations, explicit review envelopes, and
   a poisoning fixture that cannot enter context or gain promotion authority.

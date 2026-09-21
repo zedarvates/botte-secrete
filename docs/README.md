@@ -36,7 +36,11 @@ the code in `skills/<name>/SKILL.md`.
 
 ## Explanations and evidence
 
+- [2.0.0rc1 installation and public pilot reports](validation/2.0.0rc1/README.md)
+  — dated results, pinned reproduction scripts, and Windows/Linux workflow.
+
 - [Local model benchmark note](local-model-benchmarks.md) — historical evidence
+- [Local worker benchmark](local-worker-benchmark.md) — comparable Granite 4.2 evidence
   with explicit reproducibility limits.
 - [Quality Compass plan](plans/2026-08-25_quality-compass-plan.md) — active plan
   for verified QA memory, k-NN baselines, and specialized local workers.

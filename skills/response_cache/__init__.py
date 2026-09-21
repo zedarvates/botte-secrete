@@ -81,10 +81,9 @@ class ResponseCache:
 
     def _hash(self, query: str, model: str = "", context: str = "") -> str:
         """Deterministic hash of a query."""
-        # Normalize: strip whitespace, lowercase for case-insensitive matching
-        normalized = " ".join(query.split())
+        # Exact identity includes whitespace, including indentation and quoted text.
         material = json.dumps(
-            {"query": normalized, "model": model, "context": context},
+            {"query": query, "model": model, "context": context},
             ensure_ascii=False, sort_keys=True,
         )
         return hashlib.sha256(material.encode("utf-8")).hexdigest()[:16]
@@ -99,6 +98,10 @@ class ResponseCache:
         h = self._hash(query, model, context)
         if h in self._entries:
             entry = self._entries[h]
+            # Legacy keys collapsed whitespace. Reject a different stored query
+            # before recording a hit; noncanonical legacy queries need recaching.
+            if entry.query != query or entry.model != model:
+                return None
             entry.hit_count += 1
             self.stats["hits_exact"] += 1
             self.stats["tokens_saved"] += entry.tokens_saved
