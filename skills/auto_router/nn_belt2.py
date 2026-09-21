@@ -120,14 +120,21 @@ def tool_call_hint(has_code: bool = False, has_files: bool = False,
                     tool_call_values(has_code, has_files, query_type, criticality))
 
 
-def semantic_cache_hint(cache_density: float = 0.0,
-                        agent_type: str = "audit",
-                        cache_hit_history: float = 0.0,
-                        query_length: int = 0) -> Optional[tuple[str, float]]:
+def semantic_cache_hint(query: str = "", *, cache_density: float = 0.0,
+                        eligible_cache_density: float = 0.0,
+                        eligible_vocabulary_coverage: float = 0.0,
+                        length_neighbor_ratio: float = 0.0,
+                        cache_hit_history: float = 0.0) -> Optional[tuple[str, float]]:
     """('miss'|'hit', confidence). None = abstain."""
     from skills.botte_nn.features import semantic_cache_values
     return _predict("semantic_cache_hit_predictor",
-                    semantic_cache_values(cache_density, agent_type, cache_hit_history, query_length))
+                    semantic_cache_values(
+                        query, cache_density=cache_density,
+                        eligible_cache_density=eligible_cache_density,
+                        eligible_vocabulary_coverage=eligible_vocabulary_coverage,
+                        length_neighbor_ratio=length_neighbor_ratio,
+                        cache_hit_history=cache_hit_history,
+                    ))
 
 
 # ── Composite hint — tous les prédicteurs en un appel ──────────
@@ -143,5 +150,5 @@ def full_belt_hint(text: str = "", agent_type: str = "audit",
         "cloud_escalation": cloud_escalation_hint(task_type=task_type, criticality=criticality),
         "response_length": response_length_hint(agent_type=agent_type, criticality=criticality),
         "tool_call": tool_call_hint(has_code=has_code, query_type=task_type, criticality=criticality),
-        "semantic_cache": semantic_cache_hint(agent_type=agent_type),
+        "semantic_cache": semantic_cache_hint(text),
     }

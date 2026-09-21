@@ -45,7 +45,7 @@ python -m skills.nn_audit.cli skills/botte_nn --json
 | `anomaly_detector` | G1 | confirmed incident/anomaly resolution | 1,000 verified windows; bounded false-negative rate | Link alerts to incident verdicts |
 | `error_classifier` | G1, reproducible provenance embedded | real exception type and recovery result | 1,000 verified errors; macro-F1 >= 0.90 | Replace the curated-template holdout with verified production outcomes |
 | `compressibility_predictor` | G1, reproducible roundtrip corpus + collector active | exact roundtrip plus measured reduction | 1,000 automatic labels across text, JSON, code, and logs | Accumulate diverse reversible calls, then temporal holdout |
-| `semantic_cache_hit_predictor` | G0, opt-in shadow collector ready | semantic hit or miss after an exact-cache miss | 2,000 automatic labels; temporal holdout; no contradictory feature groups | Enable shadow on one reviewed runtime; redesign constant features before training |
+| `semantic_cache_hit_predictor` | G0, opt-in shadow collector + non-constant v2 features ready | semantic hit or miss after an exact-cache miss | 2,000 automatic labels; temporal holdout; no contradictory feature groups | Collect on one reviewed persistent runtime, then evaluate the collision gate |
 | `cloud_escalation_predictor` | G0 | verified local/harness/cloud outcome | 2,000 verified; prove incremental value over `binary_router` | Merge or remove if redundant |
 | `context_pruning_predictor` | G0 | matched full-context versus pruned evaluation | 500 matched pairs; no material quality regression | Build replay evaluator |
 | `skip_agent_predictor` | G0 | matched execute versus skip replay | 500 matched pairs; fail-open to execute | Build no-change oracle and replay |
@@ -93,10 +93,11 @@ stable fingerprints and never persist raw content or queries.
 - The ledger stores a SHA-256 sample key and feature vector, never the raw query.
 - Training is refused when one rounded feature vector carries both labels.
 
-The current schema still contains constant placeholder features.  Its collector
-is useful for measuring class balance and identifiability, but the model remains
-G0 until one reviewed runtime collects shadow attempts, those features are
-replaced, and the collision gate passes.
+The v2 schema replaces constant embedding/distance placeholders with local
+pre-match signals: eligible-cache density, query-token diversity, eligible
+vocabulary coverage, length-neighbor ratio, semantic hit history, and query
+length.  The model remains G0 until one reviewed persistent runtime collects
+enough shadow attempts and the collision gate passes.
 
 ### Wave 2 - routing and operational verdicts
 

@@ -108,6 +108,10 @@ def main() -> int:
             [row["features"][5] for row in cache_rows] == [0.0, 1.0]
             and cache.report()["semantic_attempts"] == 2
             and cache.report()["semantic_hit_rate_pct"] == 50, state)
+        _ok("semantic observations use discriminating pre-match features",
+            cache_rows[0]["features"][3] > cache_rows[1]["features"][3]
+            and cache_rows[0]["features"][1:5] != [0.5, 0.5, 1.0, 0.5]
+            and cache_rows[0]["features"] != cache_rows[1]["features"], state)
 
         shadow_cache = ResponseCache(
             tempfile.mkdtemp(), learn=True, semantic_shadow=True
@@ -163,6 +167,18 @@ def main() -> int:
         _ok("cache persists only the system-context fingerprint",
             "system-a" not in persisted_context_cache
             and context_cache._context_hash("system-a") in persisted_context_cache,
+            state)
+        wrong_context_features = context_cache._grounding_values(
+            context_query, model="m", context="system-b"
+        )
+        right_context_features = context_cache._grounding_values(
+            context_query, model="m", context="system-a"
+        )
+        _ok("grounding summaries respect model/system context boundaries",
+            wrong_context_features["eligible_cache_density"] == 0.0
+            and right_context_features["eligible_cache_density"] > 0.0
+            and wrong_context_features["eligible_vocabulary_coverage"] == 0.0
+            and right_context_features["eligible_vocabulary_coverage"] > 0.0,
             state)
 
         collision_rows = [
