@@ -33,6 +33,40 @@ The project is in **beta**. Its core workflows run locally, but optional local
 LLM backends, cloud providers, hardware accelerators, and third-party agents
 remain external systems with their own setup and security boundaries.
 
+## Understand and inspect the small models
+
+**You can inspect the code and the micro-NN weights.** Botte's small predictors
+help choose a route or compare an asset with previous examples. Their output
+is a hint; it is not evidence that a task is correct or complete.
+
+| Mechanism | In plain language | What you can inspect |
+|---|---|---|
+| **Micro-NN** — small neural network | A small calculator turns numeric features, such as task complexity, into a category or score. Its learned **weights and biases** are the numbers used in that calculation. It does not generate text. | [JSON weights](skills/botte_nn/models/), [feature extraction](skills/botte_nn/features.py), [inference code](skills/botte_nn/cli.py) and [training code](skills/botte_nn/training/) |
+| **k-NN** — k-nearest neighbors | Looks for the most similar previously verified examples and uses their outcomes to suggest a result. Asset Quality Memory exposes its neighbors and abstains when support is insufficient. | [Comparison and memory code](skills/asset_quality/memory.py), [usage contract](skills/asset_quality/SKILL.md) and [public example](examples/asset-quality/mesh-report.json) |
+
+For example, a micro-NN may suggest a local route for a simple task. The k-NN
+baseline may compare a mesh report with verified meshes from the same family.
+Deterministic checks and the applicable verification policy remain necessary.
+
+### Public files on Hugging Face
+
+| Public repository | What is actually available |
+|---|---|
+| [Botte Nano-NN](https://huggingface.co/zedgamer/botte-nano-nn) | [Six JSON weight files](https://huggingface.co/zedgamer/botte-nano-nn/tree/main/models), readable in the browser and downloadable; for example [binary_router.json](https://huggingface.co/zedgamer/botte-nano-nn/blob/main/models/binary_router.json). The model card declares MIT. |
+| [Asset Quality Memory k-NN](https://huggingface.co/zedgamer/asset-quality-memory-knn) | [A public model card and source links](https://huggingface.co/zedgamer/asset-quality-memory-knn/tree/main). This k-NN baseline has no neural weight file; its example memory remains project-local and is not published. |
+
+Public access was checked without credentials on **14 September 2026**.
+The Hub's six-file micro-NN snapshot is **not a synchronized copy** of the eleven
+JSON models in this GitHub source tree. Use the weights and feature contracts
+from the same version; consult the [dated inventory](docs/model-transparency-check.json)
+and [publication/provenance rules](docs/huggingface-publication.md).
+
+Open weights make inspection possible; they do not establish accuracy or
+production readiness. Read the [grounding roadmap](docs/plans/2026-08-06_micro-nn-grounding-roadmap.md)
+for validation requirements. The core source is [MIT licensed](LICENSE); the
+public Hub cards also declare MIT. No private neighbor ledger needs to be shared
+to understand the algorithm.
+
 ## Why Botte Secrète?
 
 Agent workflows often spend expensive model tokens on work that does not need a
@@ -285,5 +319,3 @@ test, benchmark, schema, or source file that a contributor can inspect.
 
 Released under the [MIT License](LICENSE). Created by
 [Sylvain Galliez](https://github.com/zedarvates).
-
-Support options are listed in [DONATE.md](DONATE.md).

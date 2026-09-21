@@ -35,6 +35,42 @@ Le projet est en **bêta**. Ses principaux flux fonctionnent localement, mais le
 serveurs de modèles, fournisseurs cloud, accélérateurs matériels et agents tiers
 restent des systèmes externes avec leurs propres limites de sécurité.
 
+## Comprendre et inspecter les petits modèles
+
+**Le code et les poids des micro-NN sont ouverts et consultables.** Ces petits
+prédicteurs aident à choisir un traitement ou à comparer un asset avec des
+exemples antérieurs. Leur réponse est un conseil : elle ne prouve pas qu'une
+tâche est correcte ou terminée.
+
+| Mécanisme | Explication simple | Ce que l'on peut consulter |
+|---|---|---|
+| **Micro-NN** — petit réseau de neurones | Un petit calculateur transforme des caractéristiques numériques, comme la complexité d'une tâche, en catégorie ou en score. Ses **poids et biais** sont les nombres appris qui servent à ce calcul. Il ne génère pas de texte. | [Poids JSON](skills/botte_nn/models/), [extraction des caractéristiques](skills/botte_nn/features.py), [code de calcul](skills/botte_nn/cli.py) et [entraînement](skills/botte_nn/training/) |
+| **k-NN** — k plus proches voisins | Recherche les exemples vérifiés les plus ressemblants, puis utilise leurs résultats pour proposer un avis. La mémoire qualité des assets montre ses voisins et s'abstient si les exemples sont insuffisants. | [Code de comparaison et de mémoire](skills/asset_quality/memory.py), [fonctionnement](skills/asset_quality/SKILL.md) et [exemple public](examples/asset-quality/mesh-report.json) |
+
+Par exemple, un micro-NN peut conseiller un traitement local pour une tâche
+simple. Le k-NN peut comparer un rapport de maillage à des maillages déjà vérifiés
+de la même famille. Les contrôles déterministes et la politique de vérification
+applicable restent nécessaires.
+
+### Les fichiers publics sur Hugging Face
+
+| Dépôt public | Ce qui est réellement accessible |
+|---|---|
+| [Botte Nano-NN](https://huggingface.co/zedgamer/botte-nano-nn) | [Six fichiers de poids JSON](https://huggingface.co/zedgamer/botte-nano-nn/tree/main/models), lisibles dans le navigateur et téléchargeables ; par exemple [binary_router.json](https://huggingface.co/zedgamer/botte-nano-nn/blob/main/models/binary_router.json). La fiche déclare la licence MIT. |
+| [Asset Quality Memory k-NN](https://huggingface.co/zedgamer/asset-quality-memory-knn) | [Une fiche publique et les liens vers le code](https://huggingface.co/zedgamer/asset-quality-memory-knn/tree/main). Ce k-NN n'a pas de fichier de poids neuronaux : sa mémoire d'exemples reste locale au projet et n'est pas publiée. |
+
+L'accès public a été vérifié sans identifiants le **14 septembre 2026**.
+Les six modèles du Hub constituent un instantané **différent des onze fichiers
+JSON présents dans ce dépôt GitHub**. Utiliser les poids et les caractéristiques
+de la même version ; consulter l'[inventaire daté](docs/model-transparency-check.json)
+et les [règles de publication et de provenance](docs/huggingface-publication.md).
+
+L'ouverture permet d'inspecter le fonctionnement ; elle ne garantit ni la
+précision ni la maturité en production. La [roadmap de validation](docs/plans/2026-08-06_micro-nn-grounding-roadmap.md)
+précise les exigences. Le code est sous [licence MIT](LICENSE), également
+déclarée par les fiches publiques du Hub. Comprendre l'algorithme ne nécessite
+pas de partager sa mémoire privée d'exemples.
+
 ## Pourquoi Botte Secrète ?
 
 Les agents consomment souvent des tokens coûteux pour des opérations qui ne
@@ -193,8 +229,8 @@ Le dépôt MIT existant
 [Botte Nano-NN sur Hugging Face](https://huggingface.co/zedgamer/botte-nano-nn)
 héberge un instantané portable du format micro-NN. Le code source, les contrats
 de caractéristiques, les tests et l'état de maturité restent autoritaires ici.
-Une carte séparée pour la [mémoire k-NN des assets](distribution/huggingface/asset-quality-knn/README.md)
-est préparée mais pas encore publiée ; voir la
+La [fiche k-NN des assets sur Hugging Face](https://huggingface.co/zedgamer/asset-quality-memory-knn)
+est publique ; voir la
 [check-list de publication](docs/huggingface-publication.md).
 
 ![Réduction mesurée sur les échantillons fournis](docs/assets/benchmark-compression.svg)
@@ -286,5 +322,3 @@ fichier source vérifiable.
 
 Distribué sous [licence MIT](LICENSE). Créé par
 [Sylvain Galliez](https://github.com/zedarvates).
-
-Les possibilités de soutien sont décrites dans [DONATE.md](DONATE.md).
