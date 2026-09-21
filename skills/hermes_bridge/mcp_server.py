@@ -93,11 +93,12 @@ def handle_request(request: dict) -> dict:
                 "id": req_id,
                 "result": {
                     "content": [{"type": "text", "text": json.dumps({
-                        "data": result.data[:200] + ("..." if len(result.data) > 200 else ""),
+                        "data": result.data,
                         "original_size": result.original_size,
                         "compressed_size": result.compressed_size,
                         "ratio": result.ratio,
                         "strategy": result.strategy,
+                        "warnings": result.warnings,
                     })}]
                 },
             }

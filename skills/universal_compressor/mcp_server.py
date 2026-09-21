@@ -16,7 +16,7 @@ from skills.universal_compressor.compressor import compress, restore, flush_stor
 
 TOOLS = {
     "compress": {
-        "description": "Compress text content using the best strategy for its type. Reduces tokens by 40-98%.",
+        "description": "Conservatively compact content and report measured UTF-8 bytes. Token savings are workload-dependent.",
         "inputSchema": {
             "type": "object",
             "properties": {
@@ -84,13 +84,14 @@ def handle_request(request: dict) -> dict:
                 "id": req_id,
                 "result": {
                     "content": [{"type": "text", "text": json.dumps({
-                        "data": result.data[:500] + ("..." if len(result.data) > 500 else ""),
+                        "data": result.data,
                         "content_type": result.content_type,
                         "original_size": result.original_size,
                         "compressed_size": result.compressed_size,
                         "ratio": result.ratio,
                         "reversible_key": result.reversible_key,
                         "strategy": result.strategy,
+                        "warnings": result.warnings,
                         "grounding_id": result.grounding_id,
                     })}]
                 },
@@ -103,7 +104,7 @@ def handle_request(request: dict) -> dict:
                 "jsonrpc": "2.0",
                 "id": req_id,
                 "result": {
-                    "content": [{"type": "text", "text": original or f"No content found for key '{key}'"}]
+                    "content": [{"type": "text", "text": original if original is not None else f"No content found for key '{key}'"}]
                 },
             }
 
