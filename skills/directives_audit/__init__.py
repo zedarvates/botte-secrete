@@ -12,5 +12,9 @@ reference issues.
 from skills.directives_audit.directives import (
     audit, discover, validate, CATALOG, DirectiveFile, Finding,
 )
+from skills.directives_audit.rules import audit_rules, rule_semantic_sha256
 
-__all__ = ["audit", "discover", "validate", "CATALOG", "DirectiveFile", "Finding"]
+__all__ = [
+    "audit", "audit_rules", "discover", "validate", "rule_semantic_sha256",
+    "CATALOG", "DirectiveFile", "Finding",
+]

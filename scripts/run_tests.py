@@ -36,6 +36,7 @@ SUITES = [
     ("cli_router", [sys.executable, "-m", "skills.test_cli"], "skills/"),
     ("llm_backends", [sys.executable, "-m", "skills.llm_backends.test_llm_backends"], "skills/llm_backends/"),
     ("directives_audit", [sys.executable, "-m", "skills.directives_audit.test_directives_audit"], "skills/directives_audit/"),
+    ("rules_drift", [sys.executable, "-m", "skills.directives_audit.test_rules"], "skills/directives_audit/"),
     ("auto_router", [sys.executable, "-m", "skills.auto_router.test_auto_router"], "skills/auto_router/"),
     ("router_outcome", [sys.executable, "-m", "skills.auto_router.test_outcome_adapter"], "skills/auto_router/"),
     ("skill_finder", [sys.executable, "-m", "skills.skill_finder.test_skill_finder"], "skills/skill_finder/"),

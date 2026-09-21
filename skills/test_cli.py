@@ -54,6 +54,9 @@ def main() -> int:
         check("review routes to independent Gauntlet replay",
               cli.main(["review", "mission.json", "handoff.json"]) == 0
               and captured[-1] == ["mission.json", "handoff.json"])
+        check("rules routes to deterministic semantic drift audit",
+              cli.main(["rules", "audit", ".", "--json"]) == 0
+              and captured[-1] == ["audit", ".", "--json"])
 
     print(f"\nRESULT: {state[0]} passed, {state[1]} failed")
     return 0 if state[1] == 0 else 1

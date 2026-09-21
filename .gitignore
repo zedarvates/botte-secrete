@@ -69,9 +69,11 @@ configs/llm-endpoints.json
 # Local MCP wiring (per-machine absolute paths)
 .mcp.json
 
-# Per-project deployer output (machine-specific paths + config)
-.botte/
+# Per-project deployer output (machine-specific paths + config). Traverse the
+# directory only to retain the two explicit governance contracts below.
+.botte/*
 !.botte/policy.md
+!.botte/rules.json
 
 # Generated artifacts
 fix-report.json

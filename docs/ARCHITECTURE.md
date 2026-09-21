@@ -47,14 +47,14 @@ network location alone does not make an endpoint trusted.
 
 | Layer | Responsibility | Primary implementation |
 |---|---|---|
-| Policy | Cost rules, budgets, hygiene, safe defaults | `.botte/policy.md`, `preflight`, `checkup` |
+| Policy | Cost rules, typed missions, semantic rule contract, safe defaults | `.botte/policy.md`, `.botte/rules.json`, `run_contract`, `preflight` |
 | Discovery | Project capabilities and relevant skills | `capabilities`, `skill_finder`, `llm_backends` |
 | Routing | Effort, local/cloud tier, belt hints, fusion | `auto_router`, `tiered_router`, `botte_nn` |
 | Optimization | Compression, pruning, token and context budgets | `universal_compressor`, `context_budget`, `token_shaper` |
-| Execution | Local backends, orchestration, bounded automation | `llm_backends`, `conductor`, `local_harness` |
+| Execution | Local backends, leased Git worktrees, bounded automation | `llm_backends`, `meta_harness`, `local_harness` |
 | Tool plane | MCP schemas, discovery, dispatch, lazy loading | `llm_mcp`, `mcp_gateway` |
 | Observation | Events, verified quality memory, cache, reports, metrics, dashboards | `events`, `trajectory`, `cache`, `metrics`, `dashboard` |
-| Governance | Policy, drift checks, and security analysis | `preflight`, `checkup`, `security_scanner` |
+| Governance | Independent review, rule drift, and security analysis | `meta_harness`, `directives_audit`, `checkup`, `security_scanner` |
 
 The layers are logical, not separate services. Most modules are flat Python
 packages under `skills/` and can be called directly or through the top-level
@@ -183,6 +183,7 @@ Useful validation commands:
 ```bash
 python scripts/run_tests.py --changed -q
 python -m skills.checkup.cli .
+botte rules audit .
 python scripts/test_readme_commands.py
 python scripts/check_docs_links.py
 ```

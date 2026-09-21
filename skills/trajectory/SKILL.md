@@ -76,6 +76,13 @@ promoted to the k-NN support ledger only when both an allowed external verifier
 and at least one evidence reference are present. Replaying the same execution
 and outcome returns the existing row and cannot add another label.
 
+Mission-backed runs additionally bind the private envelope to `mission_id`,
+`attempt_id`, worker, privacy-safe workspace lease, repository ref, base/head
+Git SHA, dirty-tree digest, check-command digest, checks, artifacts,
+uncertainties and the next safe action. An author or model cannot submit a
+review verdict; only an independent or human verifier can attach
+`ACCEPT`/`REWORK`/`BLOCKED` evidence.
+
 The local harness, auto-router, bounded Codex/Hermes run manifests, and primary
 GitHub CI matrix are live adapters. Deterministic schema, grounding,
 and citation checks can produce verified `PASS`, `FAIL`, or `UNCERTAIN` labels;
@@ -163,7 +170,9 @@ changes a route, or grants `ACT` authority.
 | `<project>/.botte/events.jsonl` | Compact `qa_outcome`, `qa_trajectory`, and `qa_shadow_advice` events |
 | `skills/trajectory/store/trajectories.jsonl` | Legacy solver fixtures/history |
 
-Project-local `.botte/` data is operational state and must not be committed.
+Project-local `.botte/` data is operational state and must not be committed,
+except the explicit governance contracts `.botte/policy.md` and
+`.botte/rules.json`.
 The legacy `capture`, `search`, `load`, and `get_stats` API remains available for
 existing deterministic solver integrations; do not put secrets in that legacy
 store.

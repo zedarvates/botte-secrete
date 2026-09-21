@@ -58,6 +58,9 @@ contrôles structurés, des preuves ou une escalade explicite.
 | Routage | Choisit une exécution déterministe, locale ou cloud | `botte route` |
 | Mémoire qualité | Apprend des résultats vérifiés et explique les conseils k-NN en observation | `botte qa` |
 | Qualité des assets | Contrôle et compare images, textures, maillages, animations et paquets Godot | `botte asset-qa` |
+| Missions fiables | Exécute des missions typées dans des worktrees Git loués et reprend un handoff exact | `botte run`, `botte lease` |
+| Revue indépendante | Rejoue les preuves dans un espace distinct ; seuls les SHA acceptés deviennent verts | `botte review` |
+| Contrat de règles | Audite politique, gardes, tests positifs/négatifs, conflits et dérive | `botte rules audit` |
 | Diagnostic | Vérifie politique, directives, métriques, sécurité et dérive | `botte doctor` |
 | Réduction du contexte | Compresse journaux, JSON, sorties d’outils et contexte sélectionné | `universal_compressor`, `context_budget` |
 | Ceinture micro-NN | Fournit des indices de routage avec de petits classifieurs, pas des LLM | `botte belt` |
