@@ -62,6 +62,7 @@ contrôles structurés, des preuves ou une escalade explicite.
 | Réduction du contexte | Compresse journaux, JSON, sorties d’outils et contexte sélectionné | `universal_compressor`, `context_budget` |
 | Ceinture micro-NN | Fournit des indices de routage avec de petits classifieurs, pas des LLM | `botte belt` |
 | Modèles locaux | Détecte les serveurs compatibles OpenAI, dont LM Studio et Ollama | `llm_backends` |
+| Inférence locale adaptable | Configure des profils par tâche et réutilise une mémoire commune ou externe | `botte runtime` |
 | MCP | Expose routage, découverte, audit et optimisation sur stdio | `botte-mcp` |
 | Dashboard | Affiche les instantanés publics et les mesures locales | `botte dashboard` |
 | Regard stratégique | Remet en question les hypothèses partagées par les équipes bleue et rouge avant une décision coûteuse | `monte_cristo` |
@@ -69,6 +70,20 @@ contrôles structurés, des preuves ou une escalade explicite.
 Les contrats détaillés vivent dans `skills/<nom>/SKILL.md`. Les flux entre
 modules et les frontières de confiance sont décrits dans le
 [guide d’architecture](docs/ARCHITECTURE.md).
+
+## Configurer Botte avec votre propre LLM
+
+Pour faire adapter Botte par **votre propre LLM**, consultez le
+[guide de configuration portable](docs/adaptive-local-runtime.md). Il fournit
+une consigne en français à copier, un inventaire local, des profils validables
+hors ligne et des adaptateurs pour votre mémoire existante. Les comparatifs
+mesurent des moteurs déjà configurés ; aucun gain ni support spéculatif n'est
+présumé à partir du seul matériel déclaré.
+
+```bash
+botte runtime inspect
+botte runtime template --topology single --memory none
+```
 
 ## Agent stratégique : Monte Cristo
 

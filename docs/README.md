@@ -18,6 +18,7 @@ the code in `skills/<name>/SKILL.md`.
 | Goal | Guide |
 |---|---|
 | Connect an MCP-compatible agent | [MCP integration](mcp-integration.md) |
+| Let your LLM adapt inference to your hardware and memory | [Portable local runtime](adaptive-local-runtime.md) |
 | Connect Cursor or Windsurf | [Cursor and Windsurf](integrations/cursor-windsurf-mcp.md) |
 | Evaluate a Hermes integration | [Hermes](integrations/hermes.md) |
 | Use the Loop Optimizer safely | [Loop Optimizer](loop-optimizer.md) |

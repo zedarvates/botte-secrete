@@ -61,6 +61,7 @@ structured checks, evidence checks, or an explicit escalation path.
 | Context reduction | Compresses logs, JSON, tool output, and selected context | `universal_compressor`, `context_budget` |
 | Micro-NN belt | Runs tiny classifiers for routing hints; these are not LLMs | `botte belt` |
 | Local models | Discovers OpenAI-compatible local backends such as LM Studio or Ollama | `llm_backends` |
+| Adaptive local runtime | Configures task-specific engine profiles and reuses shared or external memory | `botte runtime` |
 | MCP | Exposes routing, discovery, audit, and optimization tools over stdio | `botte-mcp` |
 | Dashboard | Renders public-safe snapshots and local operational views | `botte dashboard` |
 | Strategic outsider | Challenges assumptions shared by blue and red teams before costly decisions | `monte_cristo` |
@@ -68,6 +69,19 @@ structured checks, evidence checks, or an explicit escalation path.
 Detailed module contracts live in each `skills/<name>/SKILL.md`. Cross-module
 flows and trust boundaries are described in the
 [architecture guide](docs/ARCHITECTURE.md).
+
+## Configure Botte with your own LLM
+
+For an installation tailored by **your own LLM**, use the
+[portable runtime setup guide](docs/adaptive-local-runtime.md). It provides a
+copyable agent instruction, offline hardware/configuration tools, shared and
+external memory adapters, and paired trials of preconfigured native engines.
+Draft templates make no hardware, engine-support or speedup assumptions.
+
+```bash
+botte runtime inspect
+botte runtime template --topology single --memory none
+```
 
 ## Strategic agent: Monte Cristo
 
