@@ -238,14 +238,16 @@ python scripts/generate_docs_visuals.py
 python scripts/benchmark_full.py --json
 ```
 
-Code compression is deliberately conservative and may return the original
-input when a transformation would expand it. Reversible compression is
-in-memory by default; durable restoration requires an explicit bounded store.
+Code is returned unchanged. JSON compaction preserves every value; logs retain
+distinct lines and their order. Sizes are UTF-8 bytes, not billed tokens.
+Reversible originals live only in the current process, until it exits or its
+store is cleared. The CLI does not provide durable restoration.
 
 ```bash
 python -m skills.universal_compressor.cli compress /path/to/file.log --type log
-python -m skills.universal_compressor.cli compress /path/to/file.log --type log --reversible --store .private-compressor
 ```
+
+See the [compression integrity and comparison protocol](docs/plans/2026-09-13-compression-integrity.md).
 
 ## Architecture at a glance
 
