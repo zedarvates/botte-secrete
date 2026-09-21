@@ -1,0 +1,85 @@
+{
+  "schema": "botte.skill-selection-memory-review-validation/v1",
+  "observed_at": 1789306338.8784778,
+  "reviewer_sha256": "7a7292907c15f3f11daf970a498eab0e255eed80da5b99dc53f5380e1f39d0ec",
+  "test_module_sha256": "1c6b05038a322f297cd9028c10a74c3ba180710d06317a19b1663f284da1790c",
+  "request_file": "skill-selection-cpu-memory-request-v1.json",
+  "request_sha256": "c5116c2e611241af00ae9ae1e76d8f77b2d77cd2f82e4ba5a73dd084ea614d6e",
+  "comparison_sha256": "7af98eadbd338dafbbb679e3b886082464b7a0b98535bf1de7de42aa7a584089",
+  "corpus_sha256": "15f7870cf8add3672a8625decb2e3fe8f5c09d98a05eb1cc9a2c74d72cffd8ff",
+  "recalled_response_canonical_sha256": "2113c98f3b49b01e483e9a81f67eb8eec3cc19191dc023abd43af1671748e7f5",
+  "transport": "temporary_loopback_http_two_synthetic_identities",
+  "checks": {
+    "private_excluded_from_other_identity": true,
+    "one_project_observation_recalled": true,
+    "project_observation_text_unchanged": true,
+    "recalled_assessment_matches_pinned_report": true,
+    "source_change_reported": true,
+    "seven_candidate_failures_retained": true,
+    "earlier_assessor_retained": true,
+    "owned_server_stopped": true,
+    "temporary_service_removed": true,
+    "target_sources_unchanged": true,
+    "retained_request_unchanged": true
+  },
+  "acceptance_state": "not_accepted",
+  "candidate_failures": [
+    "r0-delete-notes-candidate",
+    "r0-missing-image-candidate",
+    "r0-overwrite-image-candidate",
+    "r0-read-permission-only-candidate",
+    "r0-restart-uncertain-candidate",
+    "r0-two-destinations-candidate",
+    "r0-wrong-owner-candidate"
+  ],
+  "memory_review": {
+    "status": "matched",
+    "matched_entries": [
+      {
+        "key": "ss_457612cc58318e5c178c3d51ebd67d84c0402bdd1798ec27599d807306134f1b",
+        "recorded_assessor_sha256": "fdbc40651fc67b39a1487e0b1cccf9e68bbe02aba7cc9cb91af7684d4df33420",
+        "assessor_changed": true
+      }
+    ],
+    "invalid_entry_indices": [],
+    "unrelated_entries": 0,
+    "retrieval_incomplete": false,
+    "sample_only": true,
+    "distinct_comparison_reports": 1,
+    "source_check": {
+      "state": "source_changed",
+      "changed_fields": [
+        "head",
+        "code_sha256"
+      ],
+      "target": {
+        "head": "f01d212a55cd3c70b292549439244be1036dee96",
+        "code_sha256": "1ea0b5bc6c1f1d7a3cd1d86382fc3fea337960f002324f8b8cf147c36b5229d6",
+        "source_count": 593,
+        "sources_match_commit": true,
+        "source_scope": [
+          "*.py",
+          "skills/**/SKILL.md",
+          "skills/**/effects.json"
+        ]
+      },
+      "measured_sources_match_commit": true
+    },
+    "runtime_check": "not_performed",
+    "task_prerequisites": "not_checked",
+    "memory_service_state": "not_rechecked",
+    "automatic_reuse": false,
+    "historical_execution_state": "not_rechecked",
+    "evidence_scope": "Recall bytes matched to pinned reassessment; current tracked sources sampled. No service, issuer or runtime attestation."
+  },
+  "cli_exit_for_this_review": 3,
+  "new_model_calls": 0,
+  "production_memory_ingestion": false,
+  "automatic_reuse": false,
+  "limits": [
+    "One host; homelab, Windows, real-agent task quality and configured-service ingestion remain unverified.",
+    "Recall digest identifies observed bytes; raw service response and temporary credentials are not published.",
+    "The unchanged source-bound request and executable regression tests allow protocol reproduction, not independent attestation of this historical response.",
+    "Current memory-service state, model/runtime state and task prerequisites were not reviewed by the offline consumer."
+  ]
+}
