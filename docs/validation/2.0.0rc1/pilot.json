@@ -1,0 +1,174 @@
+{
+  "upstream": "https://github.com/un33k/python-slugify",
+  "upstream_commit": "fee5aa338d3bd7a9e36c269e33b496a7848edc44",
+  "botte_version": "2.0.0rc1",
+  "baseline_pass": true,
+  "mutants_killed": true,
+  "all_correctly_held": true,
+  "results": [
+    {
+      "name": "baseline",
+      "exit": 0,
+      "valid_run": true,
+      "tests": 82,
+      "failures": [],
+      "elapsed_seconds": 0.193,
+      "sha": "a4aeefea699f79304797a9b4d10c5cdecf904242",
+      "tree": "c24d81e2c0d4e3bc3a9fc12129e5ccd4b7cace97",
+      "upstream_test_sha256": "5262916dbabb42b0d63b7c3eaa200aa435e8bb6d888287a048ed649eb29d91b1",
+      "assurance": {
+        "schema_version": 1,
+        "action_id": "public-slugify-baseline",
+        "status": "hold",
+        "may_merge_automatically": false,
+        "may_deploy_automatically": false,
+        "blockers": [
+          "required evidence did not pass: independent-human-review",
+          "holdout must be private/external to the builder-visible repository"
+        ],
+        "warnings": [
+          "historical regression corpus not checked",
+          "deployment identity not supplied; merge and deployment remain separate"
+        ],
+        "next_action": "repair_evidence_and_re_evaluate"
+      }
+    },
+    {
+      "name": "lowercase_removed",
+      "exit": 1,
+      "valid_run": true,
+      "tests": 82,
+      "failures": [
+        "test_accented_text (test.TestSlugify.test_accented_text)",
+        "test_cyrillic_text (test.TestSlugify.test_cyrillic_text)",
+        "test_differently_cased_stopword_match (test.TestSlugify.test_differently_cased_stopword_match)",
+        "test_extraneous_seperators (test.TestSlugify.test_extraneous_seperators)",
+        "test_html_decimal_on (test.TestSlugify.test_html_decimal_on)",
+        "test_html_hexadecimal_off (test.TestSlugify.test_html_hexadecimal_off)",
+        "test_html_hexadecimal_on (test.TestSlugify.test_html_hexadecimal_on)",
+        "test_non_word_characters (test.TestSlugify.test_non_word_characters)",
+        "test_phonetic_conversion_of_eastern_scripts (test.TestSlugify.test_phonetic_conversion_of_eastern_scripts)",
+        "test_regex_pattern_keep_underscore (test.TestSlugify.test_regex_pattern_keep_underscore)",
+        "test_replacements (test.TestSlugify.test_replacements)",
+        "test_replacements_german_umlaut_custom (test.TestSlugify.test_replacements_german_umlaut_custom)",
+        "test_accented_text (test.TestSlugifyUnicode.test_accented_text)",
+        "test_cyrillic_text (test.TestSlugifyUnicode.test_cyrillic_text)",
+        "test_differently_cased_stopword_match (test.TestSlugifyUnicode.test_differently_cased_stopword_match)",
+        "test_extraneous_seperators (test.TestSlugifyUnicode.test_extraneous_seperators)",
+        "test_html_decimal_on (test.TestSlugifyUnicode.test_html_decimal_on)",
+        "test_html_hexadecimal_off (test.TestSlugifyUnicode.test_html_hexadecimal_off)",
+        "test_html_hexadecimal_on (test.TestSlugifyUnicode.test_html_hexadecimal_on)",
+        "test_non_word_characters (test.TestSlugifyUnicode.test_non_word_characters)",
+        "test_regex_pattern_keep_underscore (test.TestSlugifyUnicode.test_regex_pattern_keep_underscore)",
+        "test_replacements (test.TestSlugifyUnicode.test_replacements)",
+        "test_replacements_german_umlaut_custom (test.TestSlugifyUnicode.test_replacements_german_umlaut_custom)",
+        "test_stopword_removal (test.TestSlugifyUnicode.test_stopword_removal)"
+      ],
+      "elapsed_seconds": 0.177,
+      "sha": "6c5c37f54cc20f3088a28770a119b482426764c9",
+      "tree": "71a76e27c35f6381def77f9ef5e1ca3ab732af49",
+      "upstream_test_sha256": "5262916dbabb42b0d63b7c3eaa200aa435e8bb6d888287a048ed649eb29d91b1",
+      "assurance": {
+        "schema_version": 1,
+        "action_id": "public-slugify-lowercase_removed",
+        "status": "hold",
+        "may_merge_automatically": false,
+        "may_deploy_automatically": false,
+        "blockers": [
+          "required evidence did not pass: upstream-public-tests",
+          "required evidence did not pass: independent-human-review",
+          "holdout must be private/external to the builder-visible repository"
+        ],
+        "warnings": [
+          "historical regression corpus not checked",
+          "deployment identity not supplied; merge and deployment remain separate"
+        ],
+        "next_action": "repair_evidence_and_re_evaluate"
+      }
+    },
+    {
+      "name": "length_limit_removed",
+      "exit": 1,
+      "valid_run": true,
+      "tests": 82,
+      "failures": [
+        "test_max_length (test.TestSlugify.test_max_length)",
+        "test_save_order (test.TestSlugify.test_save_order)",
+        "test_word_boundary (test.TestSlugify.test_word_boundary)",
+        "test_max_length (test.TestSlugifyUnicode.test_max_length)",
+        "test_save_order (test.TestSlugifyUnicode.test_save_order)",
+        "test_save_order_rtl (test.TestSlugifyUnicode.test_save_order_rtl)",
+        "test_word_boundary (test.TestSlugifyUnicode.test_word_boundary)"
+      ],
+      "elapsed_seconds": 0.166,
+      "sha": "ce141e0752b25e7a127ee42d1d42b29755a9a33c",
+      "tree": "bdaf16b935f145b024ea78a0a69294b1bcfed89f",
+      "upstream_test_sha256": "5262916dbabb42b0d63b7c3eaa200aa435e8bb6d888287a048ed649eb29d91b1",
+      "assurance": {
+        "schema_version": 1,
+        "action_id": "public-slugify-length_limit_removed",
+        "status": "hold",
+        "may_merge_automatically": false,
+        "may_deploy_automatically": false,
+        "blockers": [
+          "required evidence did not pass: upstream-public-tests",
+          "required evidence did not pass: independent-human-review",
+          "holdout must be private/external to the builder-visible repository"
+        ],
+        "warnings": [
+          "historical regression corpus not checked",
+          "deployment identity not supplied; merge and deployment remain separate"
+        ],
+        "next_action": "repair_evidence_and_re_evaluate"
+      }
+    },
+    {
+      "name": "stopwords_removed",
+      "exit": 1,
+      "valid_run": true,
+      "tests": 82,
+      "failures": [
+        "test_differently_cased_stopword_match (test.TestSlugify.test_differently_cased_stopword_match)",
+        "test_multiple_stopword_occurances (test.TestSlugify.test_multiple_stopword_occurances)",
+        "test_multiple_stopwords (test.TestSlugify.test_multiple_stopwords)",
+        "test_stopword_removal (test.TestSlugify.test_stopword_removal)",
+        "test_stopword_removal_casesensitive (test.TestSlugify.test_stopword_removal_casesensitive)",
+        "test_stopwords_with_different_separator (test.TestSlugify.test_stopwords_with_different_separator)",
+        "test_differently_cased_stopword_match (test.TestSlugifyUnicode.test_differently_cased_stopword_match)",
+        "test_multiple_stopword_occurances (test.TestSlugifyUnicode.test_multiple_stopword_occurances)",
+        "test_multiple_stopwords (test.TestSlugifyUnicode.test_multiple_stopwords)",
+        "test_stopword_removal (test.TestSlugifyUnicode.test_stopword_removal)",
+        "test_stopword_removal_casesensitive (test.TestSlugifyUnicode.test_stopword_removal_casesensitive)",
+        "test_stopwords_with_different_separator (test.TestSlugifyUnicode.test_stopwords_with_different_separator)"
+      ],
+      "elapsed_seconds": 0.168,
+      "sha": "3f5ba98f7cbbbc5be32b112e7e1779e3a15306ed",
+      "tree": "20c58d850c321cd5743acb4e304ca5cb8fcf6c66",
+      "upstream_test_sha256": "5262916dbabb42b0d63b7c3eaa200aa435e8bb6d888287a048ed649eb29d91b1",
+      "assurance": {
+        "schema_version": 1,
+        "action_id": "public-slugify-stopwords_removed",
+        "status": "hold",
+        "may_merge_automatically": false,
+        "may_deploy_automatically": false,
+        "blockers": [
+          "required evidence did not pass: upstream-public-tests",
+          "required evidence did not pass: independent-human-review",
+          "holdout must be private/external to the builder-visible repository"
+        ],
+        "warnings": [
+          "historical regression corpus not checked",
+          "deployment identity not supplied; merge and deployment remain separate"
+        ],
+        "next_action": "repair_evidence_and_re_evaluate"
+      }
+    }
+  ],
+  "limits": [
+    "Public tests, not private holdout",
+    "No maintainer involvement",
+    "No new upstream defect claimed",
+    "Same operator prepared and ran the pilot",
+    "Botte consumes test evidence; it does not discover these defects itself"
+  ]
+}
