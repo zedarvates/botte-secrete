@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "verified_on": "2026-09-13",
+  "purpose": "Upstream release references; not an installation lock or compatibility certification",
+  "tools": {
+    "rtk": {
+      "repository": "https://github.com/rtk-ai/rtk",
+      "reference_version": "0.49.0",
+      "reference_tag": "v0.49.0",
+      "reference_commit": "b1c0dc00649c50fbe8930f849c800d4d6ca12091",
+      "release_url": "https://github.com/rtk-ai/rtk/releases/tag/v0.49.0",
+      "published_at": "2026-09-11T08:52:38Z",
+      "relationship": "Optional external CLI; not installed by pip install botte-secrete",
+      "compatibility": "not_tested"
+    },
+    "ponytail": {
+      "repository": "https://github.com/DietrichGebert/ponytail",
+      "reference_version": "4.9.0",
+      "reference_tag": "v4.9.0",
+      "reference_commit": "0a4dd63ad4541f4f655c4108a295916f3c1d8fda",
+      "release_url": "https://github.com/DietrichGebert/ponytail/releases/tag/v4.9.0",
+      "published_at": "2026-08-07T21:15:11Z",
+      "relationship": "Optional external plugin; Botte decision_ladder is a separate inspired implementation",
+      "compatibility": "not_tested"
+    }
+  }
+}

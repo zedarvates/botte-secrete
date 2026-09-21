@@ -37,6 +37,8 @@ the code in `skills/<name>/SKILL.md`.
 ## Explanations and evidence
 
 - [Completion proof demonstration](demos/completion-proof/README.md) — staged claims, real audits and tests, explicit detector limits.
+- [2.0.0rc1 installation and public pilot reports](validation/2.0.0rc1/README.md)
+  — dated results, pinned reproduction scripts, and Windows/Linux workflow.
 
 - [Local model benchmark note](local-model-benchmarks.md) — historical evidence
 - [Local worker benchmark](local-worker-benchmark.md) — comparable Granite 4.2 evidence
