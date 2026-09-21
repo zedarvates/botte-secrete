@@ -1,42 +1,44 @@
 ---
 name: universal-compressor
-description: "Headroom-inspired multi-type compression — text, JSON, logs, tool output, code. Reversible. MCP server compatible."
-version: 1.0.0
+description: "Compacter des données choisies pour le contexte : JSON, logs et sorties d'outils. Restauration optionnelle en mémoire ; conserver les instructions et le code exacts."
+metadata:
+  version: "1.1.0"
 ---
 
 # Universal Compressor
 
-Headroom-inspired multi-type compression for botte-secrete. Reduces token usage by 40-90% depending on content type. Works as library, CLI, or MCP server.
+Appliquer après sélection du contexte. La taille et le ratio sont mesurés en
+octets UTF-8, pas en tokens facturés. Aucun gain fixe n'est garanti.
 
-## Strategies
+| Type | Transformation |
+|---|---|
+| `json` | Retirer les espaces hors chaînes ; conserver clés, éléments et lexèmes numériques |
+| `log` | Résumer les répétitions consécutives strictement identiques ; garder les lignes distinctes dans l'ordre |
+| `tool_output` | Retirer les codes ANSI, garder toutes les lignes |
+| `text` | Résumer les répétitions consécutives et réduire les lignes vides |
+| `code` | Conserver le contenu exact |
+| `auto` | Détection heuristique ; préférer un type explicite lorsqu'il est connu |
 
-| Content Type | Strategy | Typical Savings |
-|---|---|---|
-| `text` | Dedup lines, collapse blanks | 0-30% |
-| `json` | Compact + truncate large arrays | 20-60% |
-| `log` | Pattern dedup + sampling | 80-98% |
-| `tool_output` | Head+tail, strip ANSI | 50-90% |
-| `code` | Strip comments, collapse imports | 20-40% |
-| `auto` | Auto-detect content type | Best effort |
-
-## Usage
+Le texte et les logs restent des représentations résumées. Pour des instructions,
+preuves ou chaînes dont chaque octet compte, conserver l'original (`code` convient
+comme passage sans transformation). Un résumé n'acquiert aucune autorité nouvelle.
 
 ```python
 from skills.universal_compressor import compress, restore
 
-# Compress with auto-detection
-result = compress(content)
-print(f"{result.original_size} → {result.compressed_size} ({result.ratio:.0%})")
-
-# Compress with type hint + reversibility
-result = compress(big_log, content_type="log", reversible=True, learn=True)
-
-# Restore original
-original = restore(result.reversible_key)
+result = compress(content, content_type="json", reversible=True)
+assert restore(result.reversible_key) == content
 ```
 
-`learn=True` records a verified `compressibility_predictor` label only when
-`reversible=True` restores the exact original. The ledger stores features and a
-fingerprint, never the raw content; repeated samples are deduplicated.
-The canonical test runner sets `BOTTE_NN_AUTO_LABELS=0`, so test traffic cannot
-inflate the production ledger.
+Le stockage est en mémoire du processus. La clé SHA-256 porte sur tout l'original.
+La restauration cesse après `flush_store()` ou arrêt du processus ; la CLI ne
+fournit pas de stockage persistant. Ne pas confondre restauration exacte et
+qualité de décision sur le résumé. Les réponses MCP rendent tout le résultat.
+
+`learn=True`, avec `reversible=True`, peut écrire un label de compressibilité
+après restauration exacte. Le registre contient empreinte et caractéristiques,
+jamais le contenu brut. Ce label ne prouve pas la qualité d'une réponse LLM.
+Les tests et benchmarks utilisent `learn=False` ou `BOTTE_NN_AUTO_LABELS=0`.
+
+Voir le [protocole de comparaison](../../docs/plans/2026-09-13-compression-integrity.md)
+pour les invariants, la provenance et les limites des mesures.
