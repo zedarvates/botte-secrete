@@ -539,6 +539,13 @@ def _validate_lease(value, *, worker_id: str) -> dict:
     }
     if normalized["worker_id"] != worker_id:
         raise ContractError("workspace_lease.worker_id must match handoff worker_id")
+    lease_id = normalized["lease_id"]
+    if (
+        not lease_id.startswith("wl_")
+        or len(lease_id) != 19
+        or any(ch not in "0123456789abcdef" for ch in lease_id[3:])
+    ):
+        raise ContractError("workspace_lease.lease_id has an invalid shape")
     if normalized["state"] not in LEASE_STATES:
         raise ContractError(f"workspace_lease.state must be one of {LEASE_STATES}")
     for name in ("base_sha", "head_sha"):
@@ -644,8 +651,8 @@ def validate_handoff(payload: Mapping) -> dict:
             raise ContractError("READY_FOR_REVIEW requires evidence_refs")
         if not checks or not any(item["status"] == "PASS" for item in checks):
             raise ContractError("READY_FOR_REVIEW requires at least one passing check")
-        if any(item["status"] in ("FAIL", "UNCERTAIN") for item in checks):
-            raise ContractError("READY_FOR_REVIEW cannot contain failing or uncertain checks")
+        if any(item["status"] != "PASS" for item in checks):
+            raise ContractError("READY_FOR_REVIEW requires every declared check to pass")
         if not lease["head_sha"]:
             raise ContractError("READY_FOR_REVIEW requires workspace_lease.head_sha")
     if verdict == "ACCEPT" and status != "READY_FOR_REVIEW":
@@ -714,3 +721,17 @@ def build_handoff(
     }
     payload["handoff_sha256"] = contract_fingerprint(payload)
     return validate_handoff(payload)
+
+
+def resume_base_ref(mission: Mapping, handoff: Mapping) -> str:
+    """Return the exact reviewed state from which a fresh session may resume."""
+    normalized_mission = validate_mission(mission)
+    normalized_handoff = validate_handoff(handoff)
+    if normalized_mission["mission_id"] != normalized_handoff["mission_id"]:
+        raise ContractError("resume handoff belongs to another mission")
+    head_sha = normalized_handoff["workspace_lease"]["head_sha"]
+    if not head_sha:
+        raise ContractError("resume handoff has no bound head SHA")
+    if normalized_handoff["workspace_lease"]["state"] == "QUARANTINED":
+        raise ContractError("quarantined workspace evidence requires inspection before resume")
+    return head_sha

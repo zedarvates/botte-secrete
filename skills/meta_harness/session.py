@@ -36,6 +36,34 @@ class Session:
         self.results: list[StepResult] = []
         self.termination_decision: str = "CONTINUE"
         self.termination_reason: str | None = None
+        self.mission_id: str = ""
+        self.attempt_id: str = ""
+        self.worker_id: str = ""
+        self.workspace_lease: dict = {}
+        self.context_manifest_sha256: str = ""
+        self.handoff: dict | None = None
+        self.outcome_id: str = ""
+
+    def bind_contract(
+        self,
+        *,
+        mission_id: str,
+        attempt_id: str,
+        worker_id: str,
+        workspace_lease: dict,
+        context_manifest_sha256: str,
+    ) -> None:
+        """Bind privacy-safe contract metadata to this session."""
+        self.mission_id = mission_id
+        self.attempt_id = attempt_id
+        self.worker_id = worker_id
+        self.workspace_lease = dict(workspace_lease)
+        self.context_manifest_sha256 = context_manifest_sha256
+        self._save()
+
+    def set_handoff(self, handoff: dict) -> None:
+        self.handoff = dict(handoff)
+        self._save()
 
     def add_result(self, step) -> None:
         """Record a step result."""
@@ -65,6 +93,15 @@ class Session:
             lines.append(f"   Duration: {total}s")
         if self.termination_decision == "UNCERTAIN":
             lines.append(f"   SAFE-EXIT: UNCERTAIN ({self.termination_reason})")
+        if self.mission_id:
+            lines.append(f"   Mission: {self.mission_id} / {self.attempt_id}")
+        if self.workspace_lease:
+            lines.append(
+                f"   Lease: {self.workspace_lease.get('lease_id', '')} "
+                f"[{self.workspace_lease.get('state', '')}]"
+            )
+        if self.handoff:
+            lines.append(f"   Handoff: {self.handoff.get('status', '')}")
         lines.append("")
 
         status_emoji = {
@@ -103,6 +140,13 @@ class Session:
             "completed_at": self.completed_at,
             "termination_decision": self.termination_decision,
             "termination_reason": self.termination_reason,
+            "mission_id": self.mission_id,
+            "attempt_id": self.attempt_id,
+            "worker_id": self.worker_id,
+            "workspace_lease": self.workspace_lease,
+            "context_manifest_sha256": self.context_manifest_sha256,
+            "handoff": self.handoff,
+            "outcome_id": self.outcome_id,
             "results": [asdict(r) for r in self.results],
         }
         return json.dumps(data, ensure_ascii=False, indent=2)

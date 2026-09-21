@@ -15,6 +15,10 @@ _ALLOWED = _REQUIRED | {
     "quality_score", "risk", "permission_profile", "model", "harness",
     "tool_versions", "duration_ms", "cost_usd", "tokens", "memory_mb",
     "energy_wh", "acted", "abstained", "escalated", "approval_required",
+    "mission_id", "attempt_id", "worker_id", "workspace_lease",
+    "repository_ref", "base_sha", "head_sha", "dirty_tree_sha256",
+    "check_command_sha256", "checks", "artifacts", "uncertainties",
+    "review_verdict", "next_safe_action",
 }
 _BOOL_FIELDS = {"acted", "abstained", "escalated", "approval_required"}
 
@@ -78,6 +82,20 @@ def emit_agent_run(manifest: Mapping[str, object], *,
         abstained=manifest.get("abstained", False),
         escalated=manifest.get("escalated", False),
         approval_required=manifest.get("approval_required", False),
+        mission_id=manifest.get("mission_id", ""),
+        attempt_id=manifest.get("attempt_id", ""),
+        worker_id=manifest.get("worker_id", ""),
+        workspace_lease=manifest.get("workspace_lease"),
+        repository_ref=manifest.get("repository_ref", ""),
+        base_sha=manifest.get("base_sha", ""),
+        head_sha=manifest.get("head_sha", ""),
+        dirty_tree_sha256=manifest.get("dirty_tree_sha256", ""),
+        check_command_sha256=manifest.get("check_command_sha256", ""),
+        checks=manifest.get("checks", ()),
+        artifacts=manifest.get("artifacts", ()),
+        uncertainties=manifest.get("uncertainties", ()),
+        review_verdict=manifest.get("review_verdict"),
+        next_safe_action=manifest.get("next_safe_action", ""),
     )
     return {"schema": SCHEMA, "agent": agent, **result}
 

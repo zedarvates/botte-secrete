@@ -42,6 +42,18 @@ def main() -> int:
         check("migration-audit routes to deterministic gate",
               cli.main(["migration-audit", "spec.json", "--json"]) == 0
               and captured[-1] == ["spec.json", "--json"])
+        check("contract routes to typed contract validation",
+              cli.main(["contract", "validate", "mission.json"]) == 0
+              and captured[-1] == ["validate", "mission.json"])
+        check("run preserves the bounded mission arguments",
+              cli.main(["run", "mission.json", "--plan", "audit"]) == 0
+              and captured[-1] == ["mission.json", "--plan", "audit"])
+        check("lease routes to recoverable workspace management",
+              cli.main(["lease", "--project", ".", "list"]) == 0
+              and captured[-1] == ["--project", ".", "list"])
+        check("review routes to independent Gauntlet replay",
+              cli.main(["review", "mission.json", "handoff.json"]) == 0
+              and captured[-1] == ["mission.json", "handoff.json"])
 
     print(f"\nRESULT: {state[0]} passed, {state[1]} failed")
     return 0 if state[1] == 0 else 1
