@@ -2,6 +2,17 @@
 
 # Botte Secrète
 
+[Rapports RC1 et reproduction](docs/validation/2.0.0rc1/README.md)
+— installation propre et pilote limité sur un projet public.
+
+**Versions :** [1.9.0 — dernière version stable](https://github.com/zedarvates/botte-secrete/releases/tag/1.9.0)
+· [2.0.0rc2 — préversion pour pilotes externes](https://github.com/zedarvates/botte-secrete/releases/tag/v2.0.0rc2).
+La RC ajoute Factory Assurance, un juge indépendant et des critères de preuve.
+Commencer en mode observe, consultative ou shadow ; la validation sur un jeu
+privé/externe indépendant reste à établir. Les notes de version précisent les
+limites et l'installation au commit validé. Le badge ci-dessous indique la
+version stable sur `main`.
+
 [![CI](https://github.com/zedarvates/botte-secrete/actions/workflows/ci.yml/badge.svg)](https://github.com/zedarvates/botte-secrete/actions)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![Version](https://img.shields.io/badge/version-1.9.0-55d6be)](pyproject.toml)
@@ -23,6 +34,42 @@ illustratives et ne constituent pas une télémétrie en direct._
 Le projet est en **bêta**. Ses principaux flux fonctionnent localement, mais les
 serveurs de modèles, fournisseurs cloud, accélérateurs matériels et agents tiers
 restent des systèmes externes avec leurs propres limites de sécurité.
+
+## Comprendre et inspecter les petits modèles
+
+**Le code et les poids des micro-NN sont ouverts et consultables.** Ces petits
+prédicteurs aident à choisir un traitement ou à comparer un asset avec des
+exemples antérieurs. Leur réponse est un conseil : elle ne prouve pas qu'une
+tâche est correcte ou terminée.
+
+| Mécanisme | Explication simple | Ce que l'on peut consulter |
+|---|---|---|
+| **Micro-NN** — petit réseau de neurones | Un petit calculateur transforme des caractéristiques numériques, comme la complexité d'une tâche, en catégorie ou en score. Ses **poids et biais** sont les nombres appris qui servent à ce calcul. Il ne génère pas de texte. | [Poids JSON](skills/botte_nn/models/), [extraction des caractéristiques](skills/botte_nn/features.py), [code de calcul](skills/botte_nn/cli.py) et [entraînement](skills/botte_nn/training/) |
+| **k-NN** — k plus proches voisins | Recherche les exemples vérifiés les plus ressemblants, puis utilise leurs résultats pour proposer un avis. La mémoire qualité des assets montre ses voisins et s'abstient si les exemples sont insuffisants. | [Code de comparaison et de mémoire](skills/asset_quality/memory.py), [fonctionnement](skills/asset_quality/SKILL.md) et [exemple public](examples/asset-quality/mesh-report.json) |
+
+Par exemple, un micro-NN peut conseiller un traitement local pour une tâche
+simple. Le k-NN peut comparer un rapport de maillage à des maillages déjà vérifiés
+de la même famille. Les contrôles déterministes et la politique de vérification
+applicable restent nécessaires.
+
+### Les fichiers publics sur Hugging Face
+
+| Dépôt public | Ce qui est réellement accessible |
+|---|---|
+| [Botte Nano-NN](https://huggingface.co/zedgamer/botte-nano-nn) | [Six fichiers de poids JSON](https://huggingface.co/zedgamer/botte-nano-nn/tree/main/models), lisibles dans le navigateur et téléchargeables ; par exemple [binary_router.json](https://huggingface.co/zedgamer/botte-nano-nn/blob/main/models/binary_router.json). La fiche déclare la licence MIT. |
+| [Asset Quality Memory k-NN](https://huggingface.co/zedgamer/asset-quality-memory-knn) | [Une fiche publique et les liens vers le code](https://huggingface.co/zedgamer/asset-quality-memory-knn/tree/main). Ce k-NN n'a pas de fichier de poids neuronaux : sa mémoire d'exemples reste locale au projet et n'est pas publiée. |
+
+L'accès public a été vérifié sans identifiants le **14 septembre 2026**.
+Les six modèles du Hub constituent un instantané **différent des onze fichiers
+JSON présents dans ce dépôt GitHub**. Utiliser les poids et les caractéristiques
+de la même version ; consulter l'[inventaire daté](docs/model-transparency-check.json)
+et les [règles de publication et de provenance](docs/huggingface-publication.md).
+
+L'ouverture permet d'inspecter le fonctionnement ; elle ne garantit ni la
+précision ni la maturité en production. La [roadmap de validation](docs/plans/2026-08-06_micro-nn-grounding-roadmap.md)
+précise les exigences. Le code est sous [licence MIT](LICENSE), également
+déclarée par les fiches publiques du Hub. Comprendre l'algorithme ne nécessite
+pas de partager sa mémoire privée d'exemples.
 
 ## Pourquoi Botte Secrète ?
 
@@ -197,8 +244,8 @@ Le dépôt MIT existant
 [Botte Nano-NN sur Hugging Face](https://huggingface.co/zedgamer/botte-nano-nn)
 héberge un instantané portable du format micro-NN. Le code source, les contrats
 de caractéristiques, les tests et l'état de maturité restent autoritaires ici.
-Une carte séparée pour la [mémoire k-NN des assets](distribution/huggingface/asset-quality-knn/README.md)
-est préparée mais pas encore publiée ; voir la
+La [fiche k-NN des assets sur Hugging Face](https://huggingface.co/zedgamer/asset-quality-memory-knn)
+est publique ; voir la
 [check-list de publication](docs/huggingface-publication.md).
 
 ![Réduction mesurée sur les échantillons fournis](docs/assets/benchmark-compression.svg)
@@ -214,9 +261,11 @@ python scripts/generate_docs_visuals.py
 python scripts/benchmark_full.py --json
 ```
 
-La compression de code est volontairement prudente et rend l’entrée originale
-si une transformation l’agrandit. La restauration est conservée en mémoire par
-défaut ; sa persistance exige un stockage borné explicite.
+Le code reste intact. Le JSON conserve toutes ses valeurs et les logs gardent
+leurs lignes distinctes dans l'ordre. Les tailles sont des octets UTF-8, pas des
+tokens facturés. Les originaux restent en mémoire du processus jusqu'à son arrêt
+ou au vidage du stockage ; la CLI ne fournit pas de restauration persistante.
+Voir le [protocole de comparaison](docs/plans/2026-09-13-compression-integrity.md).
 
 ## Architecture résumée
 
@@ -288,5 +337,3 @@ fichier source vérifiable.
 
 Distribué sous [licence MIT](LICENSE). Créé par
 [Sylvain Galliez](https://github.com/zedarvates).
-
-Les possibilités de soutien sont décrites dans [DONATE.md](DONATE.md).
