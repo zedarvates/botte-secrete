@@ -92,6 +92,11 @@ def safe_argv(command: str) -> list[str] | None:
     return None
 
 
+def _is_prerelease(version: str | None) -> bool:
+    """PEP 440-style pre/dev releases keep public README badges on latest stable."""
+    return bool(version and re.search(r"(?:a|b|rc|dev)\d*", version, re.IGNORECASE))
+
+
 def main():
     readme = REPO / "README.md"
     if not readme.exists():
@@ -107,9 +112,11 @@ def main():
     declared = declared_match.group(1) if declared_match else None
     public_readmes = [readme, REPO / "README.fr.md"]
     badge = f"version-{declared}-" if declared else ""
-    if (declared == __version__
-            and all(badge in path.read_text(encoding="utf-8")
-                    for path in public_readmes)):
+    version_sources_match = declared == __version__
+    badge_policy_ok = _is_prerelease(declared) or all(
+        badge in path.read_text(encoding="utf-8") for path in public_readmes
+    )
+    if version_sources_match and badge_policy_ok:
         passed += 1
     else:
         failed += 1
