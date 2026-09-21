@@ -121,6 +121,18 @@ def test_validate_and_summarize_registry() -> None:
             ),
             "absolute local path is forbidden",
         ),
+        (
+            lambda value: value["programs"]["research"][0].update(
+                {"notes": "file:///home/user/private/project"}
+            ),
+            "absolute local path is forbidden",
+        ),
+        (
+            lambda value: value["programs"]["research"][0].update(
+                {"notes": "file:///C:/private/project"}
+            ),
+            "absolute local path is forbidden",
+        ),
     ],
 )
 def test_registry_rejects_unsafe_or_ambiguous_data(mutator, message: str) -> None:
@@ -128,6 +140,73 @@ def test_registry_rejects_unsafe_or_ambiguous_data(mutator, message: str) -> Non
     mutator(registry)
     with pytest.raises(PortfolioError, match=message):
         validate_registry(registry)
+
+
+@pytest.mark.parametrize(
+    "key",
+    [
+        "secret",
+        "secrets",
+        "secret_key",
+        "auth_token",
+        "refresh_token",
+        "bearer_token",
+        "github_token",
+        "credentials",
+        "secret_access_key",
+    ],
+)
+def test_registry_rejects_common_sensitive_key_variants(key: str) -> None:
+    registry = copy.deepcopy(_registry())
+    registry[key] = "live-secret-value"
+    with pytest.raises(PortfolioError, match="sensitive value is forbidden"):
+        validate_registry(registry)
+
+
+def test_registry_rejects_object_under_secrets_key() -> None:
+    registry = copy.deepcopy(_registry())
+    registry["secrets"] = {"provider": "github", "value": "live-secret-value"}
+    with pytest.raises(PortfolioError, match="sensitive value is forbidden"):
+        validate_registry(registry)
+
+
+@pytest.mark.parametrize("sentinel", ["never-store", "redacted", "env-only"])
+def test_registry_allows_safe_sensitive_sentinels(sentinel: str) -> None:
+    registry = copy.deepcopy(_registry())
+    registry["secrets"] = sentinel
+    assert validate_registry(registry)["valid"] is True
+
+
+@pytest.mark.parametrize(
+    "source",
+    [
+        "github:/repo",
+        "github:owner/",
+        "github:-bad/repo",
+        "github:bad-/repo",
+        "github:owner/..",
+        "github:owner/repo name",
+    ],
+)
+def test_registry_rejects_invalid_github_segments(source: str) -> None:
+    registry = copy.deepcopy(_registry())
+    registry["programs"]["research"][0]["source"] = source
+    with pytest.raises(PortfolioError, match="invalid GitHub form"):
+        validate_registry(registry)
+
+
+@pytest.mark.parametrize("full_name", ["/repo", "owner/", "bad-/repo"])
+def test_observed_inventory_rejects_invalid_github_segments(
+    tmp_path: Path,
+    full_name: str,
+) -> None:
+    observed_path = tmp_path / "repos.json"
+    observed_path.write_text(
+        json.dumps({"repositories": [{"full_name": full_name}]}),
+        encoding="utf-8",
+    )
+    with pytest.raises(PortfolioError, match="valid full_name"):
+        load_observed_inventory(observed_path)
 
 
 def test_compare_inventory_reports_drift_without_writing() -> None:

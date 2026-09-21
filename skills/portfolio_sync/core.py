@@ -37,12 +37,21 @@ CONFIDENTIALITY_VALUES = {"public", "confidential", "restricted"}
 SENSITIVE_KEYS = {
     "token",
     "access_token",
+    "auth_token",
+    "bearer_token",
+    "refresh_token",
+    "github_token",
     "api_key",
     "apikey",
     "password",
     "passwd",
     "private_key",
+    "secret",
+    "secrets",
+    "secret_key",
+    "secret_access_key",
     "client_secret",
+    "credentials",
     "ssh_key",
 }
 SAFE_SENSITIVE_SENTINELS = {
@@ -55,8 +64,10 @@ SAFE_SENSITIVE_SENTINELS = {
     "env-only",
 }
 PROJECT_ID_RE = re.compile(r"^[a-z0-9][a-z0-9._-]*$")
+GITHUB_OWNER_RE = re.compile(r"^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$")
+GITHUB_REPO_RE = re.compile(r"^[A-Za-z0-9_.-]+$")
 GITHUB_SOURCE_RE = re.compile(
-    r"^github:(?P<owner>[A-Za-z0-9_.-]+)/(?P<repo>[A-Za-z0-9_.-]+)$"
+    r"^github:(?P<owner>[A-Za-z0-9-]+)/(?P<repo>[A-Za-z0-9_.-]+)$"
 )
 
 
@@ -79,6 +90,9 @@ def _read_json(path: str | Path) -> Any:
 def _looks_absolute_local_path(value: str) -> bool:
     if not value:
         return False
+    lowered = value.lower()
+    if lowered.startswith("file://"):
+        return True
     if value.startswith(("~/", "~\\", "\\\\")):
         return True
     if Path(value).is_absolute() or PureWindowsPath(value).is_absolute():
@@ -133,11 +147,23 @@ def iter_projects(registry: Mapping[str, Any]) -> Iterator[tuple[str, Mapping[st
                 yield str(program), project
 
 
+def _is_valid_github_full_name(full_name: str) -> bool:
+    if full_name.count("/") != 1:
+        return False
+    owner, repo = full_name.split("/", 1)
+    if not GITHUB_OWNER_RE.fullmatch(owner):
+        return False
+    if not GITHUB_REPO_RE.fullmatch(repo) or repo in {".", ".."}:
+        return False
+    return True
+
+
 def _github_full_name(source: str) -> str | None:
     match = GITHUB_SOURCE_RE.fullmatch(source)
     if not match:
         return None
-    return f"{match.group('owner')}/{match.group('repo')}"
+    full_name = f"{match.group('owner')}/{match.group('repo')}"
+    return full_name if _is_valid_github_full_name(full_name) else None
 
 
 def validate_registry(registry: Any) -> dict[str, Any]:
@@ -299,7 +325,7 @@ def _normalize_observed_entry(entry: Any, owner: str | None) -> dict[str, Any]:
         full_name = entry.strip()
         if "/" not in full_name and owner:
             full_name = f"{owner}/{full_name}"
-        if full_name.count("/") != 1:
+        if not _is_valid_github_full_name(full_name):
             raise PortfolioError(f"invalid observed repository name: {entry!r}")
         return {"full_name": full_name, "visibility": None, "archived": None}
 
@@ -315,7 +341,7 @@ def _normalize_observed_entry(entry: Any, owner: str | None) -> dict[str, Any]:
         observed_owner = str(observed_owner or owner or "").strip()
         if name and observed_owner:
             full_name = f"{observed_owner}/{name}"
-    if full_name.count("/") != 1:
+    if not _is_valid_github_full_name(full_name):
         raise PortfolioError(f"observed repository lacks a valid full_name: {entry!r}")
 
     visibility = entry.get("visibility")
