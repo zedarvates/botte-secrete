@@ -6,6 +6,12 @@ threshold filtering, argument repair or new model-quality measurement. The
 study decision remains `stop_insufficient_safe_coverage`, with no selected
 threshold and no activation.
 
+The report below was regenerated after the 21 September 2026 protocol re-freeze
+described in the [calibration study](needle2-calibration-study.md#re-freeze-record).
+Regeneration is deterministic and offline: it reclassifies the same archived
+rows, so the counts are unchanged. The v1 manifest pin and the protocol
+fingerprint moved; no inference, tool execution or memory write was added.
+
 The [reproducible JSON report](validation/needle2-error-diagnostics-v1.json)
 links every observation to its calibration case ID. It separates wrong tools,
 wrong arguments, missed positive calls and proposals on negative cases. Counts

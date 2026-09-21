@@ -12,7 +12,7 @@ from .needle2_study import (
 )
 
 MANIFEST = "docs/validation/needle2-study-validation-v1.json"
-MANIFEST_SHA256 = "f912faf2591007b0ad8b1963e845d2ff0294024947c16a1756181cfbdb191f56"
+MANIFEST_SHA256 = "ae0e81102fff746ab72039a1a5b2f5ee02b6e3e372be73f7e79f639ee3a706c0"
 PREFIX = "docs/validation/needle2-study-"
 OUTCOMES = (
     "positive_exact", "positive_wrong_tool", "positive_wrong_arguments",

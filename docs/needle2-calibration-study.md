@@ -5,6 +5,22 @@ On a new 20-case calibration split, changing the threshold cannot recover the
 missing exact calls. A small CPU generalist is also inadequate on this sample.
 This is a completed exploratory comparison, not a homelab acceptance result.
 
+## Re-freeze record
+
+On **21 September 2026** the protocol was re-frozen once. The pilot branch then
+integrated `feat/shared-memory-scribe-v1`, whose `skills/cli.py` adds the
+unrelated read-only `runtime` command. `skills/cli.py` is one of the bound
+source fingerprints, so the protocol would otherwise refuse to load. Only that
+entry-point digest changed: catalog, both splits, thresholds, selection rule,
+adapter, worker and model configuration are byte-identical.
+
+The archived calibration evidence was **re-anchored to the new protocol hash,
+not re-executed**. No new inference, threshold filter or validation run occurred;
+the stop decision `stop_insufficient_safe_coverage` and `selected_threshold:
+null` are unchanged and still recomputed from the same archived rows. The
+protocol records the previous hash, the exact source delta and this fact under
+`refreezes`. This is a provenance repair, not new evidence and not a re-run.
+
 ## What was actually measured
 
 The [protocol](validation/needle2-study-protocol-v1.json), implementation, model
