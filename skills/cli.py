@@ -10,6 +10,7 @@ One command instead of ~90 `python -m skills.<module>.cli` invocations:
     botte mcp                  run the MCP server (stdio JSON-RPC)
     botte belt                 verify the 11 micro-NN models
     botte qa [task]            quality compass (verified k-NN shadow)
+    botte contract ...         validate mission/context/handoff contracts
     botte asset-qa <command>   asset quality memory (rules + shadow k-NN)
     botte migration-audit ... deterministic migration completeness gate
     botte gain [path]          show measured project cost/savings metrics
@@ -36,6 +37,7 @@ _COMMANDS = {
     "mcp": ("skills.llm_mcp.server", "MCP server (stdio)"),
     "belt": ("skills.auto_router.checkup_belt2", "verify the 11 micro-NN"),
     "qa": ("skills.trajectory.cli", "verified quality compass (shadow only)"),
+    "contract": ("skills.run_contract.cli", "typed mission/context/handoff contracts"),
     "asset-qa": ("skills.asset_quality.cli", "asset QA (rules + shadow k-NN)"),
     "migration-audit": ("skills.migration_audit.cli", "verify migration completeness"),
     "gain": ("skills.metrics.cli", "show measured cost/savings metrics"),
