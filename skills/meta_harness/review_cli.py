@@ -18,6 +18,7 @@ from skills.meta_harness.review import (
     review_handoff,
 )
 from skills.run_contract import ContractError, load_mission, resume_base_ref, validate_handoff
+from skills.safe_exit import SafeExitConfig
 from skills.trajectory.outcome import emit_outcome
 
 
@@ -60,10 +61,20 @@ def main(argv=None) -> int:
             ttl_seconds=mission["budgets"]["max_wall_seconds"] + 300,
         )
 
-        replay = MetaHarness(workdir=lease.workspace_path)
+        budgets = mission["budgets"]
+        replay = MetaHarness(
+            workdir=lease.workspace_path,
+            safe_exit_config=SafeExitConfig(
+                max_iterations=budgets["max_iterations"],
+                max_tool_calls=budgets["max_tool_calls"],
+                max_wall_seconds=budgets["max_wall_seconds"],
+            ),
+        )
         plan = replay.plan(replay.list_plans()[args.plan])
         session = replay.execute(plan)
         lease = manager.refresh(lease)
+        if lease.dirty_tree_sha256 != hashlib.sha256(b"").hexdigest():
+            raise ReviewError("review worktree changed; a clean replay of the handoff SHA is required")
         checks = []
         for index, (result, step) in enumerate(zip(session.results, plan.steps)):
             status = {
