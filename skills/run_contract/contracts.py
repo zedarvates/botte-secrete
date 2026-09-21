@@ -499,6 +499,26 @@ def compile_context_manifest(
     return manifest
 
 
+def validate_context_manifest(
+    project_root: str | Path, mission: Mapping, payload: Mapping,
+) -> dict:
+    """Verify the entire manifest against the mission and actual leased files.
+
+    A self-consistent supplied digest is insufficient: regenerate metadata from
+    the checkout, including pinned rules, required files and budget decisions.
+    """
+    manifest = _mapping(payload, field="context_manifest")
+    generated_at = _date_time(manifest.get("generated_at"), field="context_manifest.generated_at")
+    expected = compile_context_manifest(project_root, mission, generated_at=generated_at)
+    try:
+        matches = contract_fingerprint(manifest) == contract_fingerprint(expected)
+    except (TypeError, ValueError) as exc:
+        raise ContractError("context_manifest must contain JSON metadata") from exc
+    if not matches:
+        raise ContractError("context_manifest does not match the mission and leased checkout")
+    return expected
+
+
 def _validate_lease(value, *, worker_id: str) -> dict:
     lease = _mapping(value, field="workspace_lease")
     allowed = frozenset(
@@ -647,6 +667,8 @@ def validate_handoff(payload: Mapping) -> dict:
         raise ContractError("raw_context_stored must be false")
 
     if status == "READY_FOR_REVIEW":
+        if lease["state"] in ("QUARANTINED", "EXPIRED"):
+            raise ContractError("READY_FOR_REVIEW requires a healthy workspace lease")
         if not evidence:
             raise ContractError("READY_FOR_REVIEW requires evidence_refs")
         if not checks or not any(item["status"] == "PASS" for item in checks):

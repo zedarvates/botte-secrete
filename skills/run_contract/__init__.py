@@ -10,6 +10,7 @@ from .contracts import (
     load_mission,
     resume_base_ref,
     validate_handoff,
+    validate_context_manifest,
     validate_mission,
 )
 
@@ -23,5 +24,6 @@ __all__ = [
     "load_mission",
     "resume_base_ref",
     "validate_handoff",
+    "validate_context_manifest",
     "validate_mission",
 ]

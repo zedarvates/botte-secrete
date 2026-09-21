@@ -73,6 +73,7 @@ SUITES = [
     ("meta_harness", [sys.executable, "-m", "skills.meta_harness.test_meta_harness"], "skills/meta_harness/"),
     ("reliable_run", [sys.executable, "-m", "skills.meta_harness.test_reliable_run"], "skills/meta_harness/"),
     ("review_boundaries", [sys.executable, "-m", "skills.meta_harness.test_review_boundaries"], "skills/meta_harness/"),
+    ("mission_boundaries", [sys.executable, "-m", "skills.meta_harness.test_mission_boundaries"], "skills/meta_harness/"),
     ("run_contract", [sys.executable, "-m", "skills.run_contract.test_run_contract"], "skills/run_contract/"),
     ("local_harness", [sys.executable, "-m", "skills.local_harness.test_verifier"], "skills/local_harness/"),
     ("harness_executor", [sys.executable, "-m", "skills.local_harness.test_executor"], "skills/local_harness/"),

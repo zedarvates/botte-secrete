@@ -9,6 +9,7 @@ import tempfile
 from datetime import datetime, timedelta, timezone
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from unittest.mock import patch
 
 from skills.meta_harness import MetaHarness, PipelinePlan, Step
 from skills.meta_harness.lease import WorktreeLeaseManager
@@ -51,6 +52,9 @@ def _init_repo(root: Path) -> None:
     (root / ".botte" / "policy.md").write_text("no publish", encoding="utf-8")
     (root / "AGENTS.md").write_text("run tests", encoding="utf-8")
     (root / "README.md").write_text("fixture", encoding="utf-8")
+    (root / ".gitignore").write_text(
+        ".botte-cache/\n.botte-sandbox/\n__pycache__/\n.pytest_cache/\n", encoding="utf-8"
+    )
     _run(root, "git", "add", ".")
     _run(root, "git", "commit", "-m", "fixture")
 
@@ -268,15 +272,10 @@ def main() -> int:
             worker_id="phaseone",
             workspace_root=Path(directory) / "run-worktrees",
         )
-        plan = PipelinePlan(
-            name="proof",
-            steps=[Step(
-                agent="proof",
-                command=[sys.executable, "-c", "print('proof')"],
-                evidence_ref="tests:project",
-            )],
-        )
-        session = harness.execute(plan)
+        from skills.meta_harness.orchestrator import _AGENT_CATALOG
+        proof = {**_AGENT_CATALOG["test"], "command": [sys.executable, "-c", "print('proof')"]}
+        with patch.dict(_AGENT_CATALOG, {"test": proof}):
+            session = harness.execute(harness.plan(["test"]))
         _ok("mission execution emits READY_FOR_REVIEW handoff",
             session.handoff["status"] == "READY_FOR_REVIEW", state)
         _ok("session persists lease identity without raw path",

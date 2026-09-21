@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import stat
 import subprocess
 import time
 import uuid
@@ -27,22 +28,64 @@ def _utc_now() -> datetime:
     return datetime.now(timezone.utc)
 
 
-def _git(root: Path, *args: str, timeout: int = 30) -> str:
+def _git_bytes(root: Path, *args: str, timeout: int = 30) -> bytes:
     try:
         result = subprocess.run(
             ["git", "-C", str(root), *args],
             capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
             timeout=timeout,
         )
     except (OSError, subprocess.TimeoutExpired) as exc:
         raise WorkspaceLeaseError(f"git {' '.join(args)} failed: {exc}") from exc
     if result.returncode != 0:
-        detail = (result.stderr or result.stdout).strip()[:500]
+        detail = (result.stderr or result.stdout).decode("utf-8", errors="replace").strip()[:500]
         raise WorkspaceLeaseError(f"git {' '.join(args)} failed: {detail}")
-    return result.stdout.strip()
+    return result.stdout
+
+
+def _git(root: Path, *args: str, timeout: int = 30) -> str:
+    return _git_bytes(root, *args, timeout=timeout).decode("utf-8", errors="replace").strip()
+
+
+def _dirty_fingerprint(workspace: Path) -> str:
+    """Bind Git-visible staged, unstaged and untracked content, without host paths."""
+    raw_status = _git_bytes(workspace, "status", "--porcelain=v1", "-z")
+    digest = hashlib.sha256()
+    if not raw_status:
+        return digest.hexdigest()
+
+    def add(data: bytes) -> None:
+        digest.update(len(data).to_bytes(8, "big"))
+        digest.update(data)
+
+    add(raw_status)
+    for extra in ((), ("--cached",)):
+        add(_git_bytes(workspace, "diff", "--binary", "--no-ext-diff",
+                       "--no-textconv", "--ignore-submodules=none", *extra, "--"))
+    for name in sorted(_git_bytes(workspace, "ls-files", "--others", "--exclude-standard", "-z").split(b"\0")):
+        if not name:
+            continue
+        add(name)
+        path = workspace / os.fsdecode(name)
+        try:
+            mode = path.lstat().st_mode
+            if stat.S_ISLNK(mode):
+                add(b"symlink")
+                add(os.fsencode(os.readlink(path)))
+            elif stat.S_ISREG(mode):
+                add(b"file")
+                flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_BINARY", 0)
+                with os.fdopen(os.open(path, flags), "rb") as stream:
+                    content = hashlib.sha256()
+                    for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+                        content.update(chunk)
+                    add(content.digest())
+                add(str(stat.S_IMODE(mode)).encode("ascii"))
+            else:
+                raise WorkspaceLeaseError("cannot fingerprint unsupported untracked file type")
+        except OSError as exc:
+            raise WorkspaceLeaseError("cannot fingerprint changing untracked content") from exc
+    return digest.hexdigest()
 
 
 def _safe_worker(value: str) -> str:
@@ -241,10 +284,7 @@ class WorktreeLeaseManager:
         workspace = Path(current.workspace_path)
         if current.state in ("ACTIVE", "QUARANTINED") and workspace.is_dir():
             current.head_sha = _git(workspace, "rev-parse", "HEAD")
-            raw_status = _git(workspace, "status", "--porcelain=v1", "-z")
-            current.dirty_tree_sha256 = hashlib.sha256(
-                raw_status.encode("utf-8")
-            ).hexdigest()
+            current.dirty_tree_sha256 = _dirty_fingerprint(workspace)
             basis = json.dumps(
                 {
                     "lease_id": current.lease_id,

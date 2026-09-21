@@ -13,7 +13,8 @@ import uuid
 import hashlib
 import json
 import subprocess
-from dataclasses import dataclass, field
+from copy import deepcopy
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Mapping, Optional
 
@@ -173,7 +174,7 @@ class MetaHarness:
         self.workdir = str(Path(workdir).resolve())
         self.governance = Governance(require_approval=approval)
         self.mission = None
-        self.context_manifest = dict(context_manifest or {})
+        self.context_manifest = deepcopy(context_manifest)
         self.worker_id = worker_id
         self.attempt_id = attempt_id or f"attempt-{uuid.uuid4().hex[:12]}"
         self.base_ref = base_ref
@@ -191,6 +192,12 @@ class MetaHarness:
                     max_iterations=budgets["max_iterations"],
                     max_tool_calls=budgets["max_tool_calls"],
                     max_wall_seconds=budgets["max_wall_seconds"],
+                )
+            else:
+                safe_exit_config = replace(
+                    safe_exit_config,
+                    **{key: min(budgets[key], getattr(safe_exit_config, key))
+                       for key in ("max_iterations", "max_tool_calls", "max_wall_seconds")},
                 )
         self.session = Session(
             name=f"pipeline_{int(time.time())}_{uuid.uuid4().hex[:8]}",
@@ -286,15 +293,24 @@ class MetaHarness:
             seen.add(name)
 
         plan.steps = resolved
+        self._validate_mission_plan(plan)
         return plan
 
     def execute(self, plan: PipelinePlan) -> Session:
         """Execute a plan step by step, respecting governance and SAFE-EXIT."""
+        if self.mission is not None:
+            if self.session.plan is not None:
+                raise ValueError("mission harness instances are single-use; create a fresh attempt")
+            # Validate a private snapshot at the execution boundary, including
+            # plans constructed directly or changed after plan().
+            plan = deepcopy(plan)
+            self._validate_mission_plan(plan)
         self.session.plan = plan
         run_root = self.workdir
         if self.mission is not None:
             from skills.meta_harness.lease import WorktreeLeaseManager
             from skills.meta_harness.review import CheckpointRegistry
+            from skills.run_contract import compile_context_manifest, validate_context_manifest
 
             self.lease_manager = WorktreeLeaseManager(
                 self.workdir, workspace_root=self.workspace_root
@@ -305,6 +321,11 @@ class MetaHarness:
             )
             run_root = self.workspace_lease.workspace_path
             try:
+                self.context_manifest = (
+                    compile_context_manifest(run_root, self.mission)
+                    if self.context_manifest is None
+                    else validate_context_manifest(run_root, self.mission, self.context_manifest)
+                )
                 CheckpointRegistry(self.workdir).register_attempt(
                     self.mission,
                     attempt_id=self.attempt_id,
@@ -389,11 +410,32 @@ class MetaHarness:
         self.session.completed_at = time.time()
         if self.mission is not None and self.workspace_lease is not None:
             self.workspace_lease = self.lease_manager.refresh(self.workspace_lease)
+            if self.workspace_lease.dirty_tree_sha256 != hashlib.sha256(b"").hexdigest():
+                self.workspace_lease = self.lease_manager.quarantine(self.workspace_lease)
             self.session.workspace_lease = self.workspace_lease.contract_view()
             self.session.set_handoff(self._build_handoff(plan))
             self._emit_bound_outcome(plan)
         self.session._save()
         return self.session
+
+    def _validate_mission_plan(self, plan: PipelinePlan) -> None:
+        if self.mission is None:
+            return
+        if not isinstance(plan, PipelinePlan) or not isinstance(plan.steps, list):
+            raise ValueError("mission runs require a PipelinePlan with a step list")
+        for step in plan.steps:
+            if not isinstance(step, Step) or not isinstance(step.agent, str):
+                raise ValueError("mission plan contains an invalid step")
+            info = self._resolve_agent(step.agent)
+            if info is None:
+                raise ValueError(f"mission runs reject unknown agent/command: {step.agent}")
+            if (step.agent != info["name"] or step.command != info["command"]
+                    or step.args != [] or step.requires != info.get("requires", [])
+                    or step.evidence_ref != info.get("evidence_ref", "")
+                    or step.mutating is not info.get("mutating", False)
+                    or step.workdir not in ("", self.workdir) or step.status != "pending"):
+                raise ValueError(f"mission step {step.agent} differs from its catalog contract")
+            self._validate_step_authority(step)
 
     def _validate_step_authority(self, step: Step) -> None:
         if self.mission is None or not step.mutating:
@@ -440,12 +482,18 @@ class MetaHarness:
             self.mission["risk"] in ("R3", "R4")
             and not self.mission.get("owner_approval_ref")
         )
+        uncertainties = [self.session.termination_reason] if self.session.termination_reason else []
+        if self.workspace_lease.state == "QUARANTINED":
+            uncertainties.append("uncommitted_workspace")
         if self.session.termination_decision == "UNCERTAIN":
             status = "UNCERTAIN"
             next_action = "Revise the plan; do not reset SAFE-EXIT inside this attempt."
         elif plan.has_failed:
             status = "FAIL"
             next_action = "Name the failing proof before creating a bounded revision."
+        elif self.workspace_lease.state != "ACTIVE":
+            status = "PARTIAL"
+            next_action = "Inspect and commit preserved changes; rerun proofs in a fresh leased workspace."
         elif approval_required:
             status = "APPROVAL_REQUIRED"
             next_action = "Obtain the owner-review approval before any ACT transition."
@@ -466,11 +514,7 @@ class MetaHarness:
             workspace_lease=self.workspace_lease.contract_view(),
             checks=checks,
             evidence_refs=sorted(produced),
-            uncertainties=(
-                [self.session.termination_reason]
-                if self.session.termination_reason
-                else []
-            ),
+            uncertainties=uncertainties,
             approval_required=approval_required,
             next_safe_action=next_action,
         )
