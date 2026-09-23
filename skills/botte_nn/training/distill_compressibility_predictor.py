@@ -28,7 +28,7 @@ from skills.botte_nn.cli import _MODELS_DIR, _predict_python
 from skills.universal_compressor.compressor import compress, flush_store, restore
 
 _LABELS = ["none", "delta", "heavy"]
-_SOURCE_COMMIT = "8a22992bdec939446ee261ad883fd4a9eccc23ef"
+_SOURCE_COMMIT = "4730900405da04443bfe5002f76dcb3f70d4d89e"
 _TRAINER = "skills/botte_nn/training/distill_compressibility_predictor.py"
 _FEATURE_DECIMALS = 12
 _TRAINING_DECIMALS = 12
