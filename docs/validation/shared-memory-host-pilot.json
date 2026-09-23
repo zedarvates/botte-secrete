@@ -1,0 +1,85 @@
+{
+  "schema": "botte.shared-memory-host-acceptance/v1",
+  "recorded_at": "2026-09-08T20:02:32.131230+00:00",
+  "base_commit": "22562f36979f858569673592a5159f99053648ae",
+  "status": "host_launch_kit_validated_locally",
+  "baseline_ci": {
+    "trigger_head": "22562f36979f858569673592a5159f99053648ae",
+    "run_url": "https://github.com/zedarvates/botte-secrete/actions/runs/34210792313",
+    "conclusion": "success",
+    "successful_jobs": [
+      "test (3.10)",
+      "test (3.11)",
+      "test (3.12)",
+      "cold-machine",
+      "bench"
+    ],
+    "inspected_job_log": "https://github.com/zedarvates/botte-secrete/actions/runs/34210792313/job/102011038477",
+    "log_observations": {
+      "repository_suites": 64,
+      "repository_passed": 960,
+      "focused_passed": 94
+    },
+    "checkout": "The PR merge checkout combined trigger_head with main at 7da1eaeff66aad9fe4bf0b771b58a0688c868c09.",
+    "scope": "Evidence for the previous published revision, not this new increment."
+  },
+  "local_runtime": {
+    "python": "3.12.13",
+    "platform": "Linux",
+    "test_dependencies": "Optional pytest/jsonschema dependencies supplied through PYTHONPATH."
+  },
+  "local_checks": [
+    {
+      "command": "python3 -m pytest --rootdir=. -q skills/memory_hub/test_shared_service.py skills/memory_hub/test_shared_transport.py skills/memory_hub/test_memory_hub.py",
+      "exit_code": 0,
+      "passed": 109,
+      "failed": 0,
+      "seconds": 12.79
+    },
+    {
+      "command": "python3 scripts/run_tests.py --changed -q",
+      "exit_code": 0,
+      "passed": 71,
+      "failed": 0,
+      "suites": 3
+    },
+    {
+      "command": "python3 scripts/check_docs_links.py",
+      "exit_code": 0,
+      "markdown_files": 64,
+      "broken_local_links": 0
+    },
+    {
+      "command": "systemd-analyze verify docs/examples/botte-memory-pilot.service",
+      "exit_code": 0,
+      "scope": "Unit syntax only; no service activated."
+    },
+    {
+      "command": "python3 -m skills.checkup.cli . --json",
+      "exit_code": 0,
+      "scope": "Workspace advisory check; no homelab access or local model endpoint configured."
+    }
+  ],
+  "new_behavior_exercised": [
+    "Named worker credentials with separate tokens and no operator rights.",
+    "Reject invalid, duplicate, case-colliding or reserved identities before filesystem writes.",
+    "Start the real CLI service, persist an existing fixture, stop and restart the process.",
+    "Run the CLI acceptance probe with a second identity using real MCP subprocesses.",
+    "Observe project sharing, private scope, quarantine, correction, replay and deletion.",
+    "Preserve the unrelated fixture and exclude token contents from reports/configuration output.",
+    "Clean up after a committed write whose response is lost; report incomplete cleanup without raw errors.",
+    "Remove a fixture recreated by an injected failure of the replay guard."
+  ],
+  "deployment_observed": false,
+  "real_machine_pair_verified": false,
+  "remote_ci_for_this_increment_observed": false,
+  "source_sha256": {
+    "docs/examples/botte-memory-pilot.service": "4d0d6347ee9a0a93a2a75a33df1cb56cf2e2fd30bf51ef9140381cf15b7ef046",
+    "docs/shared-memory-homelab.md": "10ca9b6e60d49fd063e955756f2ccf9c6573e44ddef1689a7cd9f71fd0477cca",
+    "docs/shared-memory.md": "4a5ae3bcfa242bed367a836faefdf98b89efb7c9118ebe78feda337e346cdd76",
+    "skills/memory_hub/cli.py": "9fc405290fd82fdec3666a0ffe7153866c6241d9919284c41b2f0c92eb82f149",
+    "skills/memory_hub/effects.json": "5f8e28715edefabe9dd25c8abe09ec35c4833f368d8f9bf16bf55d2ce62c6bfb",
+    "skills/memory_hub/smoke.py": "07da817623767a0dcd18fe840d5d01fc5465bf461d3b8a48890f8127ba49228d",
+    "skills/memory_hub/test_shared_transport.py": "7fc3a652da8bba81f479af26729dfee3acf04ad788652bb6c59178bf2392c8d2"
+  }
+}

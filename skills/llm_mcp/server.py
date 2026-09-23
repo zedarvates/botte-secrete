@@ -960,6 +960,38 @@ TOOLS = [
 
 # ── Tool implementations ─────────────────────────────────────────────────────
 
+from skills.llm_backends.runtime_contract import (
+    SCHEMA as RUNTIME_SCHEMA, CONTEXT as RUNTIME_CONTEXT, TASKS as RUNTIME_TASKS,
+    obj as runtime_object, string as runtime_string,
+)
+
+TOOLS.extend([
+    {"name": "runtime_template",
+     "description": "Prepare portable local LLM profiles for this user's hosts and memory. Offline draft and schemas only; does not install or contact engines.",
+     "inputSchema": runtime_object({
+         "topology": runtime_string(enum=["single", "local-draft", "remote-draft"]),
+         "memory": runtime_string(enum=["none", "botte_http", "external"])}),
+     "annotations": {"readOnlyHint": True}},
+    {"name": "runtime_plan",
+     "description": "Validate portable runtime config and plan a task's local inference/memory profile. Offline, declared capabilities only; no execution or automatic promotion.",
+     "inputSchema": runtime_object({"config": RUNTIME_SCHEMA, "task": runtime_string(128)}, ("config",)),
+     "annotations": {"readOnlyHint": True}},
+])
+
+
+def _tool_runtime_template(args):
+    from skills.llm_backends.runtime_contract import template, validate
+    validate(next(t["inputSchema"] for t in TOOLS if t["name"] == "runtime_template"), args)
+    return json.dumps({"config": template(args.get("topology", "single"), args.get("memory", "none")),
+                       "config_schema": RUNTIME_SCHEMA, "tasks_schema": RUNTIME_TASKS,
+                       "context_schema": RUNTIME_CONTEXT}, ensure_ascii=False)
+
+
+def _tool_runtime_plan(args):
+    from skills.llm_backends.runtime_contract import plan, validate
+    validate(next(t["inputSchema"] for t in TOOLS if t["name"] == "runtime_plan"), args)
+    return json.dumps(plan(args["config"], args.get("task", "chat")), ensure_ascii=False)
+
 def _tool_discover_backends(args: dict) -> str:
     backends = registry.refresh(
         hosts=args.get("hosts") or None,
@@ -1454,6 +1486,8 @@ def _tool_forget_memory(args: dict) -> str:
 
 
 DISPATCH = {
+    "runtime_template": _tool_runtime_template,
+    "runtime_plan": _tool_runtime_plan,
     "dashboard": _tool_dashboard,
     "estimate_cost": _tool_estimate_cost,
     "fix_plan": _tool_fix_plan,
