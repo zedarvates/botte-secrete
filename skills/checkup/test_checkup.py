@@ -163,7 +163,7 @@ def main() -> int:
             )
             al_mod.record_feedback(
                 "semantic_cache_hit_predictor", [0.1] * 7, 0, 1,
-                outcome="oracle:response_cache_exact_hit",
+                outcome="oracle:response_cache_semantic_hit",
             )
             summary = _nn_summary(Path(__file__).resolve().parents[2])
             learning = summary["learning"]

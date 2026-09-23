@@ -119,11 +119,16 @@ SCHEMAS: dict[str, list[FeatureSpec]] = {
     ],
     "semantic_cache_hit_predictor": [
         FeatureSpec("cache_density", 0.0, 1.0, "cache entries / max capacity"),
-        FeatureSpec("query_embedding_norm", 0.0, 1.0, "norm of query embedding"),
-        FeatureSpec("avg_distance", 0.0, 1.0, "avg distance to cache entries / max"),
-        FeatureSpec("agent_type", 0.0, 1.0, "0=audit 0.33=fix 0.66=report 1.0=analyze"),
-        FeatureSpec("pattern_frequency", 0.0, 1.0, "normalized frequency of this query pattern"),
-        FeatureSpec("cache_hit_history", 0.0, 1.0, "fraction of recent queries that hit cache"),
+        FeatureSpec("eligible_cache_density", 0.0, 1.0,
+                    "same-model/context entries / max capacity"),
+        FeatureSpec("query_token_diversity", 0.0, 1.0,
+                    "unique query tokens / total query tokens"),
+        FeatureSpec("eligible_vocabulary_coverage", 0.0, 1.0,
+                    "query tokens seen in eligible cache vocabulary"),
+        FeatureSpec("length_neighbor_ratio", 0.0, 1.0,
+                    "eligible entries in the query token-length neighborhood"),
+        FeatureSpec("cache_hit_history", 0.0, 1.0,
+                    "fraction of prior semantic attempts that hit"),
         FeatureSpec("query_length", 0.0, 1.0, "query length / 2000 tokens"),
     ],
 }
@@ -348,18 +353,24 @@ def tool_call_values(has_code: bool = False, has_files: bool = False,
     }
 
 
-def semantic_cache_values(cache_density: float = 0.0,
-                          agent_type: str = "audit",
-                          cache_hit_history: float = 0.0,
-                          query_length: int = 0) -> dict:
-    """Features for semantic_cache_hit_predictor."""
-    atypes = {"audit": 0.0, "fix": 0.33, "report": 0.66, "analyze": 1.0}
+def semantic_cache_values(query: str = "", *, cache_density: float = 0.0,
+                          eligible_cache_density: float = 0.0,
+                          eligible_vocabulary_coverage: float = 0.0,
+                          length_neighbor_ratio: float = 0.0,
+                          cache_hit_history: float = 0.0) -> dict:
+    """Privacy-preserving features for semantic-cache hit observation.
+
+    Every value is available before the semantic matcher runs.  No embedding,
+    query, system prompt, or cache content is persisted in the learning ledger.
+    """
+    tokens = query.lower().split()
+    unique_tokens = len(set(tokens))
     return {
         "cache_density": cache_density,
-        "query_embedding_norm": 0.5,
-        "avg_distance": 0.5,
-        "agent_type": atypes.get(agent_type, 0.0),
-        "pattern_frequency": 0.5,
+        "eligible_cache_density": eligible_cache_density,
+        "query_token_diversity": unique_tokens / len(tokens) if tokens else 0.0,
+        "eligible_vocabulary_coverage": eligible_vocabulary_coverage,
+        "length_neighbor_ratio": length_neighbor_ratio,
         "cache_hit_history": cache_hit_history,
-        "query_length": min(query_length / 2000, 1.0),
+        "query_length": min(len(tokens) / 2000, 1.0),
     }
