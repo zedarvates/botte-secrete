@@ -21,6 +21,9 @@ the code in `skills/<name>/SKILL.md`.
 | Let your LLM adapt inference to your hardware and memory | [Portable local runtime](adaptive-local-runtime.md) |
 | Connect Cursor or Windsurf | [Cursor and Windsurf](integrations/cursor-windsurf-mcp.md) |
 | Evaluate a Hermes integration | [Hermes](integrations/hermes.md) |
+| Evaluate Needle 2 for memory tools | [Consultative CPU pilot](needle2-memory-pilot.md) |
+| Inspect the frozen Needle/Qwen errors | [Offline calibration diagnostics](needle2-error-diagnostics.md) |
+| Try exact argument copying without executing tools | [Source-span candidate](memory-argument-spans.md) |
 | Use the Loop Optimizer safely | [Loop Optimizer](loop-optimizer.md) |
 | Build and capture the public dashboard | [Dashboard capture](dashboard-capture.md) |
 | Regenerate README visuals | [Documentation visuals](screenshots-plan.md) |
@@ -43,6 +46,10 @@ the code in `skills/<name>/SKILL.md`.
 - [Local model benchmark note](local-model-benchmarks.md) — historical evidence
 - [Local worker benchmark](local-worker-benchmark.md) — comparable Granite 4.2 evidence
   with explicit reproducibility limits.
+- [YuE2 weights source qualification](yue2-weights-qualification.md) — pinned
+  checkpoint identities and the blocking commercial-use finding for PR #118.
+- [ACE-Step weights source qualification](acestep-weights-qualification.md) — a
+  permissive-licence candidate and constraints for a non-executing request preview.
 - [Quality Compass plan](plans/2026-08-25_quality-compass-plan.md) — active plan
   for verified QA memory, k-NN baselines, and specialized local workers.
 - [`plans/`](plans/) — proposed work and design explorations.

@@ -1,0 +1,497 @@
+{
+  "schema_version": "botte.needle2-error-diagnostics/v1",
+  "operation": "offline_classification_of_archived_calibration",
+  "source_sha256": {
+    "docs/validation/needle2-study-validation-v1.json": "ae0e81102fff746ab72039a1a5b2f5ee02b6e3e372be73f7e79f639ee3a706c0",
+    "docs/validation/needle2-study-protocol-v1.json": "212eaeeb5aa2dc7874e1e887e4ae608cc8c55bf8dc65a1d9120165335a1ee026",
+    "docs/validation/needle2-study-calibration-native-v1.json": "f69c2cb9a5afc7aa7e4e39c42d4e81b08755eb1c551c1456129cf2a74c854c43",
+    "docs/validation/needle2-study-calibration-generalist-v1.json": "aa687677205540d56868741a7f452de551d0ae1afd0662f4049ea280c5ec9fc1",
+    "docs/validation/needle2-study-selection-v1.json": "137bb053489316f064634c2052f84824238890374e873c7dc10747ceef111071",
+    "docs/validation/needle2-study-comparison-v1.json": "87d4071b34b476725e390f8ded65ff4af300e4107757933df3ae7073accb3868",
+    "skills/tool_router/test_needle2_study.py": "650d9bb9b1ff830477c25d80ed1c65fb70ec83b78ae24cdb1c8e5296ec9d3edd",
+    "docs/needle2-calibration-study.md": "c2ee0a1fcbd762e0215971a27270093c32b9719cd5cb1e279d90ada50b603e9d"
+  },
+  "diagnostic_source_sha256": "b036c1a899674a183d6015a738644fbcd30831634a741d22a33965b3e0a7f8a6",
+  "protocol_sha256": "212eaeeb5aa2dc7874e1e887e4ae608cc8c55bf8dc65a1d9120165335a1ee026",
+  "split": "calibration",
+  "selection_decision": "stop_insufficient_safe_coverage",
+  "selected_threshold": null,
+  "threshold_filter_applied": false,
+  "new_inference_attempts": 0,
+  "validation_case_attempts": 0,
+  "models": {
+    "needle": {
+      "counts": {
+        "positive_exact": 4,
+        "positive_wrong_tool": 1,
+        "positive_wrong_arguments": 2,
+        "positive_abstention": 3,
+        "negative_proposal": 4,
+        "negative_abstention": 6
+      },
+      "by_expected_tool": {
+        "memory_context": {
+          "positive_exact": 1,
+          "positive_wrong_tool": 1
+        },
+        "memory_history": {
+          "positive_exact": 2
+        },
+        "memory_observations": {
+          "positive_abstention": 1,
+          "positive_wrong_arguments": 1
+        },
+        "memory_scribe": {
+          "positive_abstention": 1,
+          "positive_exact": 1
+        },
+        "memory_wiki": {
+          "positive_abstention": 1,
+          "positive_wrong_arguments": 1
+        },
+        "no_tool_expected": {
+          "negative_abstention": 6,
+          "negative_proposal": 4
+        }
+      },
+      "abstentions_by_recorded_reason": {
+        "positive": {
+          "model_abstained": 2,
+          "ungrounded_arguments": 1
+        },
+        "negative": {
+          "invalid_arguments": 1,
+          "model_abstained": 3,
+          "ungrounded_arguments": 2
+        }
+      },
+      "cases": [
+        {
+          "id": "cal-context-1",
+          "expected_tool": "memory_context",
+          "proposed_tool": "memory_scribe",
+          "outcome": "positive_wrong_tool",
+          "recorded_reason": "advisory_only"
+        },
+        {
+          "id": "cal-context-2",
+          "expected_tool": "memory_context",
+          "proposed_tool": "memory_context",
+          "outcome": "positive_exact",
+          "recorded_reason": "advisory_only"
+        },
+        {
+          "id": "cal-observations-1",
+          "expected_tool": "memory_observations",
+          "proposed_tool": "memory_observations",
+          "outcome": "positive_wrong_arguments",
+          "recorded_reason": "advisory_only",
+          "argument_difference": {
+            "missing": [],
+            "unexpected": [],
+            "changed": [
+              "query"
+            ],
+            "expected": {
+              "query": "filtre du bassin"
+            },
+            "proposed": {
+              "query": "quarantaine relatives au filtre du bassin"
+            }
+          }
+        },
+        {
+          "id": "cal-observations-2",
+          "expected_tool": "memory_observations",
+          "proposed_tool": null,
+          "outcome": "positive_abstention",
+          "recorded_reason": "ungrounded_arguments"
+        },
+        {
+          "id": "cal-history-1",
+          "expected_tool": "memory_history",
+          "proposed_tool": "memory_history",
+          "outcome": "positive_exact",
+          "recorded_reason": "advisory_only"
+        },
+        {
+          "id": "cal-history-2",
+          "expected_tool": "memory_history",
+          "proposed_tool": "memory_history",
+          "outcome": "positive_exact",
+          "recorded_reason": "advisory_only"
+        },
+        {
+          "id": "cal-wiki-1",
+          "expected_tool": "memory_wiki",
+          "proposed_tool": null,
+          "outcome": "positive_abstention",
+          "recorded_reason": "model_abstained"
+        },
+        {
+          "id": "cal-wiki-2",
+          "expected_tool": "memory_wiki",
+          "proposed_tool": "memory_wiki",
+          "outcome": "positive_wrong_arguments",
+          "recorded_reason": "advisory_only",
+          "argument_difference": {
+            "missing": [],
+            "unexpected": [
+              "query"
+            ],
+            "changed": [],
+            "expected": {},
+            "proposed": {
+              "query": ""
+            }
+          }
+        },
+        {
+          "id": "cal-scribe-1",
+          "expected_tool": "memory_scribe",
+          "proposed_tool": "memory_scribe",
+          "outcome": "positive_exact",
+          "recorded_reason": "advisory_only"
+        },
+        {
+          "id": "cal-scribe-2",
+          "expected_tool": "memory_scribe",
+          "proposed_tool": null,
+          "outcome": "positive_abstention",
+          "recorded_reason": "model_abstained"
+        },
+        {
+          "id": "cal-negative-1",
+          "expected_tool": null,
+          "proposed_tool": "memory_scribe",
+          "outcome": "negative_proposal",
+          "recorded_reason": "advisory_only"
+        },
+        {
+          "id": "cal-negative-2",
+          "expected_tool": null,
+          "proposed_tool": "memory_wiki",
+          "outcome": "negative_proposal",
+          "recorded_reason": "advisory_only"
+        },
+        {
+          "id": "cal-negative-3",
+          "expected_tool": null,
+          "proposed_tool": null,
+          "outcome": "negative_abstention",
+          "recorded_reason": "model_abstained"
+        },
+        {
+          "id": "cal-negative-4",
+          "expected_tool": null,
+          "proposed_tool": null,
+          "outcome": "negative_abstention",
+          "recorded_reason": "model_abstained"
+        },
+        {
+          "id": "cal-negative-5",
+          "expected_tool": null,
+          "proposed_tool": null,
+          "outcome": "negative_abstention",
+          "recorded_reason": "model_abstained"
+        },
+        {
+          "id": "cal-negative-6",
+          "expected_tool": null,
+          "proposed_tool": "memory_observations",
+          "outcome": "negative_proposal",
+          "recorded_reason": "advisory_only"
+        },
+        {
+          "id": "cal-negative-7",
+          "expected_tool": null,
+          "proposed_tool": "memory_scribe",
+          "outcome": "negative_proposal",
+          "recorded_reason": "advisory_only"
+        },
+        {
+          "id": "cal-negative-8",
+          "expected_tool": null,
+          "proposed_tool": null,
+          "outcome": "negative_abstention",
+          "recorded_reason": "invalid_arguments"
+        },
+        {
+          "id": "cal-negative-9",
+          "expected_tool": null,
+          "proposed_tool": null,
+          "outcome": "negative_abstention",
+          "recorded_reason": "ungrounded_arguments"
+        },
+        {
+          "id": "cal-negative-10",
+          "expected_tool": null,
+          "proposed_tool": null,
+          "outcome": "negative_abstention",
+          "recorded_reason": "ungrounded_arguments"
+        }
+      ]
+    },
+    "generalist": {
+      "counts": {
+        "positive_exact": 4,
+        "positive_wrong_tool": 1,
+        "positive_wrong_arguments": 5,
+        "positive_abstention": 0,
+        "negative_proposal": 6,
+        "negative_abstention": 4
+      },
+      "by_expected_tool": {
+        "memory_context": {
+          "positive_wrong_arguments": 2
+        },
+        "memory_history": {
+          "positive_exact": 1,
+          "positive_wrong_arguments": 1
+        },
+        "memory_observations": {
+          "positive_wrong_arguments": 1,
+          "positive_wrong_tool": 1
+        },
+        "memory_scribe": {
+          "positive_exact": 2
+        },
+        "memory_wiki": {
+          "positive_exact": 1,
+          "positive_wrong_arguments": 1
+        },
+        "no_tool_expected": {
+          "negative_abstention": 4,
+          "negative_proposal": 6
+        }
+      },
+      "abstentions_by_recorded_reason": {
+        "positive": {},
+        "negative": {
+          "invalid_model_output": 3,
+          "model_abstained": 1
+        }
+      },
+      "cases": [
+        {
+          "id": "cal-context-1",
+          "expected_tool": "memory_context",
+          "proposed_tool": "memory_context",
+          "outcome": "positive_wrong_arguments",
+          "recorded_reason": "advisory_only",
+          "argument_difference": {
+            "missing": [],
+            "unexpected": [],
+            "changed": [
+              "query"
+            ],
+            "expected": {
+              "query": "pièces imprimées"
+            },
+            "proposed": {
+              "query": "decisions, preferences"
+            }
+          }
+        },
+        {
+          "id": "cal-context-2",
+          "expected_tool": "memory_context",
+          "proposed_tool": "memory_context",
+          "outcome": "positive_wrong_arguments",
+          "recorded_reason": "advisory_only",
+          "argument_difference": {
+            "missing": [],
+            "unexpected": [],
+            "changed": [
+              "query"
+            ],
+            "expected": {
+              "query": "panneaux solaires"
+            },
+            "proposed": {
+              "query": "preferences panneaux solaires"
+            }
+          }
+        },
+        {
+          "id": "cal-observations-1",
+          "expected_tool": "memory_observations",
+          "proposed_tool": "memory_wiki",
+          "outcome": "positive_wrong_tool",
+          "recorded_reason": "advisory_only"
+        },
+        {
+          "id": "cal-observations-2",
+          "expected_tool": "memory_observations",
+          "proposed_tool": "memory_observations",
+          "outcome": "positive_wrong_arguments",
+          "recorded_reason": "advisory_only",
+          "argument_difference": {
+            "missing": [],
+            "unexpected": [],
+            "changed": [
+              "query"
+            ],
+            "expected": {
+              "query": "cache du portail"
+            },
+            "proposed": {
+              "query": "cache portail"
+            }
+          }
+        },
+        {
+          "id": "cal-history-1",
+          "expected_tool": "memory_history",
+          "proposed_tool": "memory_history",
+          "outcome": "positive_exact",
+          "recorded_reason": "advisory_only"
+        },
+        {
+          "id": "cal-history-2",
+          "expected_tool": "memory_history",
+          "proposed_tool": "memory_history",
+          "outcome": "positive_wrong_arguments",
+          "recorded_reason": "advisory_only",
+          "argument_difference": {
+            "missing": [],
+            "unexpected": [],
+            "changed": [
+              "key"
+            ],
+            "expected": {
+              "key": "devis_laser_2"
+            },
+            "proposed": {
+              "key": "devise_laser_2"
+            }
+          }
+        },
+        {
+          "id": "cal-wiki-1",
+          "expected_tool": "memory_wiki",
+          "proposed_tool": "memory_wiki",
+          "outcome": "positive_exact",
+          "recorded_reason": "advisory_only"
+        },
+        {
+          "id": "cal-wiki-2",
+          "expected_tool": "memory_wiki",
+          "proposed_tool": "memory_wiki",
+          "outcome": "positive_wrong_arguments",
+          "recorded_reason": "advisory_only",
+          "argument_difference": {
+            "missing": [],
+            "unexpected": [
+              "query"
+            ],
+            "changed": [],
+            "expected": {},
+            "proposed": {
+              "query": "projet"
+            }
+          }
+        },
+        {
+          "id": "cal-scribe-1",
+          "expected_tool": "memory_scribe",
+          "proposed_tool": "memory_scribe",
+          "outcome": "positive_exact",
+          "recorded_reason": "advisory_only"
+        },
+        {
+          "id": "cal-scribe-2",
+          "expected_tool": "memory_scribe",
+          "proposed_tool": "memory_scribe",
+          "outcome": "positive_exact",
+          "recorded_reason": "advisory_only"
+        },
+        {
+          "id": "cal-negative-1",
+          "expected_tool": null,
+          "proposed_tool": "memory_wiki",
+          "outcome": "negative_proposal",
+          "recorded_reason": "advisory_only"
+        },
+        {
+          "id": "cal-negative-2",
+          "expected_tool": null,
+          "proposed_tool": null,
+          "outcome": "negative_abstention",
+          "recorded_reason": "model_abstained"
+        },
+        {
+          "id": "cal-negative-3",
+          "expected_tool": null,
+          "proposed_tool": "memory_wiki",
+          "outcome": "negative_proposal",
+          "recorded_reason": "advisory_only"
+        },
+        {
+          "id": "cal-negative-4",
+          "expected_tool": null,
+          "proposed_tool": "memory_scribe",
+          "outcome": "negative_proposal",
+          "recorded_reason": "advisory_only"
+        },
+        {
+          "id": "cal-negative-5",
+          "expected_tool": null,
+          "proposed_tool": "memory_wiki",
+          "outcome": "negative_proposal",
+          "recorded_reason": "advisory_only"
+        },
+        {
+          "id": "cal-negative-6",
+          "expected_tool": null,
+          "proposed_tool": "memory_context",
+          "outcome": "negative_proposal",
+          "recorded_reason": "advisory_only"
+        },
+        {
+          "id": "cal-negative-7",
+          "expected_tool": null,
+          "proposed_tool": null,
+          "outcome": "negative_abstention",
+          "recorded_reason": "invalid_model_output"
+        },
+        {
+          "id": "cal-negative-8",
+          "expected_tool": null,
+          "proposed_tool": null,
+          "outcome": "negative_abstention",
+          "recorded_reason": "invalid_model_output"
+        },
+        {
+          "id": "cal-negative-9",
+          "expected_tool": null,
+          "proposed_tool": "memory_wiki",
+          "outcome": "negative_proposal",
+          "recorded_reason": "advisory_only"
+        },
+        {
+          "id": "cal-negative-10",
+          "expected_tool": null,
+          "proposed_tool": null,
+          "outcome": "negative_abstention",
+          "recorded_reason": "invalid_model_output"
+        }
+      ]
+    }
+  },
+  "speedup_claim_allowed": false,
+  "limitations": [
+    "synthetic_small_sample",
+    "no_end_to_end_fallback_measurement",
+    "native_peak_memory_not_measured",
+    "no_homelab_claim_from_this_report",
+    "post_hoc_error_description_not_a_new_quality_measurement",
+    "recorded_abstention_reason_is_not_independent_model_intent_evidence",
+    "no_prediction_of_benefit_from_catalog_or_argument_changes"
+  ],
+  "executed": false,
+  "activation_allowed": false,
+  "tool_calls_executed": 0,
+  "memory_writes": 0,
+  "successful_action_ledger_eligible": false
+}
