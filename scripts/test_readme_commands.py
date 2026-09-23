@@ -21,6 +21,7 @@ force_utf8()
 
 REPO = Path(__file__).resolve().parent.parent
 TIMEOUT = 30
+CHECKUP_TIMEOUT = 90  # Full repository scan can exceed 30 s on Python 3.10 CI.
 SAFE_BOTTE_COMMANDS = {
     "--help", "belt", "checkup", "discover", "doctor", "gain", "harvest",
     "upstreams",
@@ -125,18 +126,23 @@ def main():
             skipped += 1
             continue
         try:
+            timeout = (CHECKUP_TIMEOUT if argv[1:3] == ["-m", "skills.checkup.cli"]
+                       else TIMEOUT)
             r = subprocess.run(argv, shell=False, cwd=REPO, capture_output=True,
                                text=True, encoding="utf-8", errors="replace",
-                               timeout=TIMEOUT,
+                               timeout=timeout,
                                env={**os.environ, "PYTHONPATH": str(REPO)})
             if r.returncode == 0:
                 passed += 1
             else:
                 failed += 1
                 print(f"  FAIL {cmd[:80]}")
-        except Exception:
+        except subprocess.TimeoutExpired:
             failed += 1
-            print(f"  ERR  {cmd[:80]}")
+            print(f"  TIMEOUT ({timeout}s) {cmd[:80]}")
+        except OSError as exc:
+            failed += 1
+            print(f"  ERR  {cmd[:80]}: {exc}")
 
     print(f"{passed} passed, {failed} failed, {skipped} skipped")
     return 0 if failed == 0 else 1
