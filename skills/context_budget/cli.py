@@ -1,4 +1,4 @@
-"""CLI for context_budget — optimal skill set under a token budget.
+"""CLI for context_budget — propose a skill shortlist under a token budget.
 
     python -m skills.context_budget.cli "<task>" [--budget N] [--json]
 """
@@ -35,7 +35,7 @@ def main(argv=None) -> int:
     for it in r["chosen"]:
         print(f"   ✓ {it['name']:20} ~{it['tokens']:5} tok  (rel {it['relevance']:.2f})")
     if r["dropped"]:
-        print("\n   dropped (over budget):")
+        print("\n   not selected from the shortlist:")
         for it in r["dropped"][:8]:
             print(f"   · {it['name']:20} ~{it['tokens']:5} tok  (rel {it['relevance']:.2f})")
     print(f"\n   {r['savings_note']}")

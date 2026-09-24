@@ -19,13 +19,13 @@ from skills.prefix_pruner.pruner import PrefixTree, prune_content
 
 def cmd_prune(args: argparse.Namespace):
     """Prune context content."""
-    content = Path(args.input).read_text() if args.input else sys.stdin.read()
+    content = Path(args.input).read_text(encoding="utf-8") if args.input else sys.stdin.read()
 
     tree = PrefixTree()
     result = prune_content(content, tree, strategy=args.strategy)
 
     if args.output:
-        Path(args.output).write_text(result)
+        Path(args.output).write_text(result, encoding="utf-8")
         print(f"  ✍️ Written to {args.output}")
     else:
         print(result)

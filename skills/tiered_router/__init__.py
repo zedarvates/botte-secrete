@@ -201,7 +201,7 @@ class TieredRouter:
             }
         """
         # Determine desired tier
-        desired_tier = force_tier or TASK_TIER.get(task_type, Tier.STANDARD)
+        desired_tier = force_tier if force_tier is not None else TASK_TIER.get(task_type, Tier.STANDARD)
         in_tok, out_tok = estimate_tokens(task_type, len(input_text), complexity)
         cost = estimate_cost(desired_tier, in_tok, out_tok)
 

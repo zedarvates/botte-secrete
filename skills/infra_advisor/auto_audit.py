@@ -23,6 +23,7 @@ from pathlib import Path
 from typing import Optional
 
 from skills.infra_advisor.advisor import advise
+from skills.capabilities.observations import observed_operation
 
 _SKIP_DIRS = {".git", "__pycache__", ".venv", "venv", "node_modules", ".botte",
               "dist", "build", ".botte-cache",
@@ -85,6 +86,7 @@ _DEEPER = [
 ]
 
 
+@observed_operation("auto_audit")
 def auto_audit(project: str | Path = ".", scan_subnet: bool = False) -> dict:
     project = Path(project).resolve()
     out: dict = {"project": str(project)}

@@ -34,6 +34,18 @@ def main() -> int:
         p = ev._events_path(d)
         _ok("writes under .botte/events.jsonl", p.parent.name == ".botte" and p.name == "events.jsonl", state)
 
+        before = p.read_bytes()
+        orig_max = ev.MAX_BYTES
+        ev.MAX_BYTES = 0  # invalid data must not rotate away existing history
+        try:
+            ev.log_event("invalid_payload", project_root=d, payload=object())
+            _ok("non-JSON fields do not interrupt the caller or append a broken row",
+                p.read_bytes() == before, state)
+        except TypeError:
+            _ok("non-JSON fields do not interrupt the caller or append a broken row", False, state)
+        finally:
+            ev.MAX_BYTES = orig_max
+
         for i in range(5):
             ev.log_event("nn_out", project_root=d, i=i)
         _ok("tail_events returns only the newest N",

@@ -1,0 +1,511 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Botte effect observations v2",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "enum": [
+        "botte.effect-observations/v2"
+      ]
+    },
+    "run_id": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{32}$"
+    },
+    "context": {
+      "type": "object",
+      "properties": {
+        "started_at": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 8192
+        },
+        "cwd": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 8192
+        },
+        "python": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 8192
+        }
+      },
+      "required": [
+        "started_at",
+        "cwd",
+        "python"
+      ],
+      "additionalProperties": false
+    },
+    "process": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "enum": [
+            "running",
+            "exited",
+            "timed_out",
+            "launch_failed",
+            "not_run",
+            "runner_error"
+          ]
+        },
+        "exit_code": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "status",
+        "exit_code"
+      ],
+      "additionalProperties": false
+    },
+    "calls": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 8192
+          },
+          "parent_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "minLength": 1,
+            "maxLength": 8192
+          },
+          "capability_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "minLength": 1,
+            "maxLength": 8192
+          },
+          "operation": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 8192
+          },
+          "source_path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 8192
+          },
+          "context": {
+            "type": "object",
+            "properties": {
+              "fresh": {
+                "type": "boolean"
+              },
+              "scan_subnet": {
+                "type": "boolean"
+              }
+            },
+            "additionalProperties": false
+          },
+          "status": {
+            "enum": [
+              "running",
+              "returned",
+              "raised"
+            ]
+          },
+          "duration_ms": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "declaration_status": {
+            "enum": [
+              "declared",
+              "stale",
+              "missing",
+              "invalid"
+            ]
+          },
+          "declaration_ref": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        },
+        "required": [
+          "id",
+          "parent_id",
+          "capability_id",
+          "operation",
+          "source_path",
+          "context",
+          "status",
+          "duration_ms",
+          "declaration_status",
+          "declaration_ref"
+        ],
+        "additionalProperties": false
+      },
+      "maxItems": 128
+    },
+    "declarations": {
+      "type": "object",
+      "maxProperties": 128,
+      "additionalProperties": {
+        "type": "object"
+      }
+    },
+    "observations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 8192
+          },
+          "call_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 8192
+          },
+          "resource": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 8192
+          },
+          "effect_ref": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^/(expected_effects|downstream_effects)/[0-9]+$"
+          },
+          "facet": {
+            "enum": [
+              "file_present_after_write"
+            ]
+          },
+          "write_status": {
+            "enum": [
+              "running",
+              "returned",
+              "raised"
+            ]
+          },
+          "before": {
+            "type": "object",
+            "properties": {
+              "state": {
+                "enum": [
+                  "present",
+                  "missing",
+                  "unknown"
+                ]
+              },
+              "sha256": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "size": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 0
+              }
+            },
+            "required": [
+              "state",
+              "sha256",
+              "size"
+            ],
+            "additionalProperties": false
+          },
+          "after": {
+            "type": "object",
+            "properties": {
+              "state": {
+                "enum": [
+                  "present",
+                  "missing",
+                  "unknown"
+                ]
+              },
+              "sha256": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "size": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 0
+              }
+            },
+            "required": [
+              "state",
+              "sha256",
+              "size"
+            ],
+            "additionalProperties": false
+          },
+          "comparison": {
+            "enum": [
+              "supported",
+              "deviation",
+              "unknown"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "call_id",
+          "resource",
+          "effect_ref",
+          "facet",
+          "write_status",
+          "before",
+          "after",
+          "comparison"
+        ],
+        "additionalProperties": false
+      },
+      "maxItems": 256
+    },
+    "problems": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 8192
+      },
+      "maxItems": 32
+    },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 8192
+      },
+      "maxItems": 32
+    },
+    "network": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 8192
+          },
+          "call_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 8192
+          },
+          "transport": {
+            "enum": [
+              "tcp",
+              "http"
+            ]
+          },
+          "method": {
+            "enum": [
+              "CONNECT",
+              "GET",
+              "POST"
+            ]
+          },
+          "target": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^t[1-9][0-9]*$"
+              },
+              "scheme": {
+                "enum": [
+                  "tcp",
+                  "http",
+                  "https",
+                  "unknown"
+                ]
+              },
+              "address_kind": {
+                "enum": [
+                  "loopback",
+                  "private",
+                  "public",
+                  "hostname",
+                  "unknown"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "scheme",
+              "address_kind"
+            ],
+            "additionalProperties": false
+          },
+          "effect_ref": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^/(expected_effects|downstream_effects)/[0-9]+$"
+          },
+          "facet": {
+            "enum": [
+              "transport_response"
+            ]
+          },
+          "status": {
+            "enum": [
+              "running",
+              "returned",
+              "raised"
+            ]
+          },
+          "http_status": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 100,
+            "maximum": 599
+          },
+          "response_target": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^t[1-9][0-9]*$"
+              },
+              "scheme": {
+                "enum": [
+                  "tcp",
+                  "http",
+                  "https",
+                  "unknown"
+                ]
+              },
+              "address_kind": {
+                "enum": [
+                  "loopback",
+                  "private",
+                  "public",
+                  "hostname",
+                  "unknown"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "scheme",
+              "address_kind"
+            ],
+            "additionalProperties": false
+          },
+          "origin_changed": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "response_complete": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "duration_ms": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "error_kind": {
+            "enum": [
+              null,
+              "timeout",
+              "http_error",
+              "network_error",
+              "response_error",
+              "interrupted"
+            ]
+          },
+          "comparison": {
+            "enum": [
+              "supported",
+              "unknown"
+            ]
+          },
+          "remote_effects": {
+            "enum": [
+              "unknown"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "call_id",
+          "transport",
+          "method",
+          "target",
+          "effect_ref",
+          "facet",
+          "status",
+          "http_status",
+          "response_target",
+          "origin_changed",
+          "response_complete",
+          "duration_ms",
+          "error_kind",
+          "comparison",
+          "remote_effects"
+        ],
+        "additionalProperties": false
+      },
+      "maxItems": 256
+    }
+  },
+  "required": [
+    "schema",
+    "run_id",
+    "context",
+    "process",
+    "calls",
+    "declarations",
+    "observations",
+    "problems",
+    "limitations",
+    "network"
+  ],
+  "additionalProperties": false
+}

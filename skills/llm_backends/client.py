@@ -19,6 +19,8 @@ from typing import Optional
 
 from skills.llm_backends.discovery import Backend
 from skills.llm_backends import registry
+from skills.capabilities.observations import observed_operation
+from skills.capabilities.network_observations import network_attempt
 
 
 class LocalLLMError(RuntimeError):
@@ -62,14 +64,19 @@ class LocalLLMClient:
                      "Authorization": "Bearer local"},
         )
         try:
-            with urllib.request.urlopen(req, timeout=self.timeout) as resp:
-                return json.loads(resp.read().decode("utf-8", "replace"))
+            with network_attempt("http", req, "/expected_effects/3", method="POST") as evidence:
+                with urllib.request.urlopen(req, timeout=self.timeout) as resp:
+                    evidence.response(resp)
+                    raw = resp.read()
+                    evidence.read_complete()
+            return json.loads(raw.decode("utf-8", "replace"))
         except urllib.error.HTTPError as e:
             detail = e.read().decode("utf-8", "replace")[:300]
             raise LocalLLMError(f"{self.backend.base_url}{path} → HTTP {e.code}: {detail}")
         except (urllib.error.URLError, OSError) as e:
             raise LocalLLMError(f"{self.backend.base_url}{path} unreachable: {e}")
 
+    @observed_operation("chat")
     def chat(self, prompt: str, *, system: Optional[str] = None,
              model: Optional[str] = None, temperature: float = 0.2,
              max_tokens: int = 1024, response_format: Optional[dict] = None,
@@ -126,6 +133,7 @@ class LocalLLMClient:
             truncated=choice.get("finish_reason") == "length",
         )
 
+    @observed_operation("chat_json")
     def chat_json(self, prompt: str, *, schema: Optional[dict] = None,
                   system: Optional[str] = None, model: Optional[str] = None,
                   max_tokens: int = 512, retries: int = 1) -> dict:

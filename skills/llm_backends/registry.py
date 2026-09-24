@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Optional
 
 from skills.llm_backends.discovery import Backend, discover
+from skills.capabilities.observations import observed_operation, observed_file_write
 
 
 # Repo root = three levels up from this file (skills/llm_backends/registry.py)
@@ -42,21 +43,24 @@ def load(path: Optional[Path] = None) -> list[Backend]:
     return [_backend_from_dict(b) for b in doc.get("backends", [])]
 
 
+@observed_operation("registry.save")
 def save(backends: list[Backend], path: Optional[Path] = None,
          meta: Optional[dict] = None) -> Path:
     """Write backends to the registry file (pretty JSON)."""
     path = path or DEFAULT_REGISTRY_PATH
-    path.parent.mkdir(parents=True, exist_ok=True)
-    doc = {
-        "generated_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
-        "count": len(backends),
-        "meta": meta or {},
-        "backends": [asdict(b) for b in backends],
-    }
-    path.write_text(json.dumps(doc, indent=2, ensure_ascii=False), encoding="utf-8")
+    with observed_file_write(path, "/expected_effects/1"):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        doc = {
+            "generated_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
+            "count": len(backends),
+            "meta": meta or {},
+            "backends": [asdict(b) for b in backends],
+        }
+        path.write_text(json.dumps(doc, indent=2, ensure_ascii=False), encoding="utf-8")
     return path
 
 
+@observed_operation("registry.refresh")
 def refresh(hosts: Optional[list[str]] = None, scan_subnet: bool = False,
             timeout: float = 1.0, path: Optional[Path] = None) -> list[Backend]:
     """Discover and persist in one call. Returns the discovered backends."""

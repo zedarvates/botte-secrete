@@ -43,11 +43,12 @@ def log_event(kind: str, project_root: str | Path = ".", **fields) -> None:
     try:
         p = _events_path(project_root)
         rec = {"ts": time.time(), "kind": kind, **fields}
+        line = json.dumps(rec, ensure_ascii=False) + "\n"
         p.parent.mkdir(parents=True, exist_ok=True)
         _maybe_rotate(p)
         with p.open("a", encoding="utf-8") as f:
-            f.write(json.dumps(rec, ensure_ascii=False) + "\n")
-    except (OSError, ValueError):
+            f.write(line)
+    except (OSError, ValueError, TypeError):
         pass
 
 

@@ -1,0 +1,126 @@
+{
+  "schema": "botte.capability-effects/v1",
+  "capability_id": "zedarvates/botte-secrete:skills/llm_backends",
+  "contract_version": "0.4.0",
+  "source_hashes": {
+    "SKILL.md": "6798fcdffb24c857e1a63aa0999c02c97ab7aa00ce7f83b7cbfb778c26b8e33f",
+    "__init__.py": "eca04ab1a01da980fdfff0125043a40cb68a83bcfc484a05862f5bffdd58bd1f",
+    "registry.py": "760617183d341c44798ebd6682b81e867afc04b26e71db738ce1478442866edd",
+    "discovery.py": "312f045d7ff62d783f56e589ab88ddfa0778a702890d18a20a35100cb8fdd468",
+    "audit.py": "ac9cd0b190a3f627c612679e6ef18eed79b8906a25c6dc8fa8bd63df81a2b5bb",
+    "client.py": "eeb7e559ff78161e4125b78b0ee449e4737bc33ae81a8ef6c4c05ba4e73358a8",
+    "cli.py": "97b85651dea30abb836261230d08946b4f5961ff3ceed6f1361d8640d4fd5c00"
+  },
+  "preconditions": [
+    "Select list/profile, discovery/refresh, audit or inference explicitly; their writes and network use differ.",
+    "Resolve the authorized hosts, subnet and output audience. Registry storage defaults to this toolkit checkout, not the audited project.",
+    "Inspect the selected backend base URL and model before disclosing prompt/system text; a local label is not an ownership or retention check."
+  ],
+  "expected_effects": [
+    {
+      "effect": "list/load read saved backend metadata; profile reads project metadata and recommends a model family.",
+      "scope": "Saved registry, selected project files, caller memory and stdout.",
+      "likelihood": "conditional",
+      "basis": "registry.load reads configs/llm-endpoints.json; cli._cmd_profile profiles the project and selects from the saved registry.",
+      "impact": "Exposes host addresses, model names and project context; consumes local CPU/I/O without making the listed models run.",
+      "verification": "Read a populated fixture registry and confirm no discovery call or registry byte change."
+    },
+    {
+      "effect": "discover probes endpoints; refresh, scan and refreshing audits also replace the saved backend registry.",
+      "scope": "Explicit hosts or localhost, the local /24 when requested, and configs/llm-endpoints.json or the supplied registry path.",
+      "likelihood": "conditional",
+      "basis": "registry.refresh calls discover then save, including an empty result; audit refreshes with fresh=True or an empty loaded registry.",
+      "impact": "Generates concurrent network requests and a timestamped registry write. An empty scan replaces old entries; interrupted writes may leave incomplete JSON.",
+      "verification": "Mock endpoint discovery, audit an empty then populated registry, and refresh with an empty result; inspect writes and request arguments."
+    },
+    {
+      "effect": "audit profiles hardware and returns local-model recommendations.",
+      "scope": "Host OS/hardware metadata, hardware utility subprocesses and caller output.",
+      "likelihood": "conditional",
+      "basis": "audit.profile_hardware uses platform information and available GPU utilities; recommendation tables are local heuristics.",
+      "impact": "Consumes host resources and exposes hardware details; suggested model fit and savings are estimates, not measured performance.",
+      "verification": "Use synthetic Hardware values and compare reported inputs, unavailable measurements and recommendation scope."
+    },
+    {
+      "effect": "chat/quick_chat send prompt and optional system text to the selected endpoint; chat_json may repeat inference after malformed JSON.",
+      "scope": "Selected base URL, model runtime, request/response data, backend compute and any backend logs.",
+      "likelihood": "conditional",
+      "basis": "client._post sends an HTTP POST; chat_json loops up to retries+1 with a corrective prompt, while usage comes from backend responses.",
+      "impact": "Uses compute and may retain or disclose input and output at the endpoint. Parsed JSON and a successful reply do not establish task correctness.",
+      "verification": "Mock the HTTP response, inspect the transmitted body and count malformed-JSON repair calls; do not send private data to test fixtures."
+    },
+    {
+      "effect": "Inside an explicitly enabled observation session, expose call boundaries, registry write samples and TCP/HTTP attempts in a separate partial evidence report.",
+      "scope": "Current call context and enrolled discovery workers, current effects declarations and configured checkpoint/report destinations; no prompt, response body, credential or raw endpoint is added by the observer.",
+      "likelihood": "conditional",
+      "basis": "Operation decorators and transport/write contexts use imported skills.capabilities observation helpers outside these hashes. discover/scan_host propagate worker contexts; probe_host links TCP and GET attempts; chat and chat_json retain distinct POST retries.",
+      "impact": "Makes inherited consequences traceable and retains received status even if the body times out. Adds bounded reads, optional checkpoint writes and opaque target metadata; server behavior, usage and answer quality remain unverified.",
+      "verification": "Run test_observations.py and test_network_observations.py in skills/conductor; inspect real loopback probes, parallel checkpoints, redirects, JSON retries, HTTP errors and body timeout without live models or private data."
+    }
+  ],
+  "downstream_effects": [
+    {
+      "effect": "Later routing, cluster status and audits can select different backends from the replaced registry.",
+      "scope": "Consumers of this checkout's registry, including cluster, infra_advisor and checkup.",
+      "likelihood": "conditional",
+      "basis": "Consumers load this shared registry; missing or empty entries may trigger another refresh.",
+      "impact": "A transient failed discovery can remove useful candidates and induce repeated discovery or a different later route.",
+      "verification": "Compare downstream selections before and after a fixture refresh; retain actual discovery scope and time."
+    },
+    {
+      "effect": "Captured output and model responses can persist or influence later tasks.",
+      "scope": "Caller reports, terminal capture and backend-owned storage.",
+      "likelihood": "plausible",
+      "basis": "CLI output and remote inference retention are controlled by their consumers.",
+      "impact": "Disclosures cannot be recalled by restoring the local registry; a model result can propagate an unverified claim.",
+      "verification": "Inspect actual output destinations and independent task evidence before sharing or reusing results."
+    }
+  ],
+  "reversibility": {
+    "status": "partial",
+    "strategy": "Reconcile the registry and restore a previously retained authorized snapshot only after accounting for later writes. Endpoint-side inference and disclosures require separate handling.",
+    "residual_effects": [
+      "Network probes, consumed inference compute and remote logging are not undone by registry restoration.",
+      "The registry writer provides no transactional history or automatic recovery from a partial overwrite."
+    ]
+  },
+  "retry": {
+    "semantics": "conditional",
+    "check_before_retry": "Reads can be repeated within scope. Refresh can change the snapshot and shared consumers; an inference retry can duplicate remote work. Check the concrete operation and actual state after timeout.",
+    "stop_condition": "Stop repeated discovery on an unresolved scope or persistence failure. Reconcile an uncertain inference before issuing another costly or sensitive request."
+  },
+  "required_scope": "Existing task authorization for the selected local files, output audience, network discovery range and inference endpoint/data. This declaration supplies none of that authority.",
+  "analysis": {
+    "summary": "Consultation, discovery, hardware advice and inference have distinct consequences. Tests can establish fixture writes and requests; endpoint behavior and target quality remain context-dependent.",
+    "uncertainties": [
+      "Registry writes are not atomic or protected by a cross-process lock.",
+      "Backend URLs and response usage fields are supplied by configuration or remote servers.",
+      "Model recommendations do not verify current prices, compatibility, throughput or quality.",
+      "The optional project profiler and interpreter/runtime behavior are outside these local source bindings.",
+      "Observation covers selected calls, writes and TCP/HTTP response facets, including enrolled discovery workers. Other background activity, intermediate redirects, remote effects and cost remain unverified."
+    ],
+    "evidence_refs": [
+      "registry.py:refresh",
+      "registry.py:save",
+      "audit.py:audit",
+      "client.py:LocalLLMClient.chat_json",
+      "cli.py:_cmd_profile",
+      "discovery.py:probe_host",
+      "discovery.py:discover"
+    ]
+  },
+  "reuse": [
+    {
+      "target": "Compare authorized backend inventory snapshots before a routing change.",
+      "rationale": "Explicit scope and before/after registry content make backend availability changes explainable.",
+      "adaptations": [
+        "Keep discovery scope fixed and account for transient endpoint failures.",
+        "Validate model quality separately and keep private host metadata within the target task scope."
+      ],
+      "validation": "Replay populated, empty and unavailable fixture inventories, then validate the relevant endpoints in the authorized target context.",
+      "status": "adaptation_to_test",
+      "validated_context": null,
+      "evidence_refs": []
+    }
+  ]
+}

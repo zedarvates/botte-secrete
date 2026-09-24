@@ -47,6 +47,13 @@ built to lean on local hardware and cheap models wherever possible.
 Run the relevant tests, keep diffs minimal, and don't commit machine-specific
 generated files (e.g. `configs/llm-endpoints.json`, `.mcp.json` — both ignored).
 
+## Effects and reuse
+
+Use the shared [effect review](skills/effect-review/SKILL.md) when assessing a
+selected operation or handing off its results. Conductor `--review-effects`
+returns compact cues; load capability-specific details only as needed. Authoring
+and evidence formats remain in the [effects contract](docs/capability-effects.md).
+
 ## Botte Secrète policy
 This project follows `.botte/policy.md` (prefer local models for cheap work, improve prompts locally, run `/checkup` after updates). Read it.
 

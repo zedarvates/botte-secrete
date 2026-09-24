@@ -25,6 +25,7 @@ from typing import Optional
 from skills.llm_backends.audit import profile_hardware, Hardware
 from skills.llm_backends import registry
 from skills.llm_backends.discovery import Backend
+from skills.capabilities.observations import observed_operation
 
 
 @dataclass
@@ -66,6 +67,7 @@ def _mcp_wired(project: Path) -> bool:
         return False
 
 
+@observed_operation("gather")
 def gather(project: Optional[Path] = None, scan_subnet: bool = False,
            fresh: bool = False) -> Snapshot:
     backends = registry.refresh(scan_subnet=scan_subnet) if fresh else (
