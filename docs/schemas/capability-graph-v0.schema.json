@@ -1,0 +1,20 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"https://botte-secrete.local/schemas/capability-graph-v0.schema.json",
+  "title":"Capability Graph v0 experimental",
+  "type":"object","required":["schema_version","capability_id","kind","inputs","outputs"],
+  "properties":{
+    "schema_version":{"const":"0.1-experimental"},
+    "capability_id":{"type":"string","pattern":"^[a-z0-9][a-z0-9._-]+$"},
+    "kind":{"enum":["skill","tool","cli","mcp","workflow","agent","service"]},
+    "inputs":{"type":"array","items":{"type":"string"}},
+    "outputs":{"type":"array","items":{"type":"string"}},
+    "prerequisites":{"type":"array","items":{"type":"string"}},
+    "exclusions":{"type":"array","items":{"type":"string"}},
+    "cost_class":{"enum":["negligible","low","medium","high","unknown"]},
+    "latency_class":{"enum":["interactive","short","long","unknown"]},
+    "consequence_class":{"enum":["read_only","reversible","bounded_mutation","high_consequence","unknown"]},
+    "evidence_types":{"type":"array","items":{"type":"string"}},
+    "fallback_capabilities":{"type":"array","items":{"type":"string"}}
+  },"additionalProperties":true
+}
