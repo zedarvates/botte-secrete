@@ -9,8 +9,22 @@ SCHEMA = "botte.rsi-graph/v1"
 def build_graph(project_root: str | Path = ".") -> dict:
     events = read_events(project_root)
     counts = Counter(str(e.get("kind", "unknown")) for e in events)
-    nodes = [{"id": "event-kind:" + kind, "event_kind": kind, "observations": count}
-             for kind, count in sorted(counts.items())]
+    provenance = {}
+    for event in events:
+        kind = str(event.get("kind", "unknown"))
+        producer = event.get("producer")
+        component_kind = event.get("component_kind")
+        if producer:
+            provenance[kind] = {"producer": str(producer), "component_kind": component_kind}
+    nodes = []
+    for kind, count in sorted(counts.items()):
+        node = {"id": "event-kind:" + kind, "event_kind": kind, "observations": count}
+        if kind in provenance:
+            node.update(provenance[kind])
+            node["provenance"] = "explicit_event_fields"
+        else:
+            node["provenance"] = "unknown"
+        nodes.append(node)
     transitions = Counter()
     previous = None
     for event in events:
