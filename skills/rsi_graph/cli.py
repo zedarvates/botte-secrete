@@ -18,7 +18,7 @@ def main(argv=None):
         print("RSI graph: %d events, %d nodes, %d edges" % (graph["event_count"], len(graph["nodes"]), len(graph["edges"])))
         for note in graph["limitations"]:
             print("- " + note)
-    return 0
+    return 2 if graph["source_status"] in {"unavailable", "invalid", "too_large"} else 0
 
 if __name__ == "__main__":
     raise SystemExit(main())

@@ -67,6 +67,28 @@
       "items": {
         "type": "string"
       }
+    },
+    "source_status": {
+      "type": "string",
+      "enum": [
+        "ok",
+        "missing",
+        "unavailable",
+        "invalid",
+        "too_large",
+        "partial"
+      ],
+      "description": "Read outcome. Any non-ok status means the result is not a verified complete history."
+    },
+    "rejected_records": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Parsed lines rejected for invalid JSON or non-object values."
+    },
+    "source_max_bytes": {
+      "type": "integer",
+      "const": 5242880,
+      "description": "Maximum source bytes accepted; the reader uses one extra sentinel byte and rejects larger files."
     }
   }
 }
