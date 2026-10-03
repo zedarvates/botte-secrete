@@ -457,7 +457,7 @@ def _log_route(d: AutoDecision) -> None:
     """Best-effort: append this decision to the project's live event log."""
     try:
         from skills.events import log_event
-        log_event("route", filter=(1 if d._belt_ctx else 2), out=d.mode,
+        log_event("route", filter=(1 if d._belt_ctx else 2), out=d.mode,\n                   producer="skills.auto_router", component_kind="router",
                    tier=d.tier.name, model=d.model, reason=d.reason,
                    est_cost=round(d.est_cost, 6))
     except Exception:
@@ -467,7 +467,7 @@ def _log_route(d: AutoDecision) -> None:
 def _log_escalate(from_mode: str, to_mode: str, reason: str) -> None:
     try:
         from skills.events import log_event
-        log_event("escalate", **{"from": from_mode, "to": to_mode, "reason": reason})
+        log_event("escalate", producer="skills.auto_router", component_kind="router",\n                  **{"from": from_mode, "to": to_mode, "reason": reason})
     except Exception:
         pass
 
