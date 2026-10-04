@@ -117,13 +117,15 @@ def test_source_at_the_exact_byte_limit_is_accepted(tmp_path):
 
 
 def test_same_event_kind_from_two_producers_stays_separate(tmp_path):
+    import json
     botte = tmp_path / ".botte"
     botte.mkdir()
-    (botte / "events.jsonl").write_text(
-        '{"kind":"route","producer":"a","component_kind":"router"}\\n'
-        '{"kind":"route","producer":"b","component_kind":"router"}\\n',
-        encoding="utf-8",
-    )
+    records = [
+        {"kind": "route", "producer": "a", "component_kind": "router"},
+        {"kind": "route", "producer": "b", "component_kind": "router"},
+    ]
+    payload = chr(10).join(json.dumps(record) for record in records) + chr(10)
+    (botte / "events.jsonl").write_text(payload, encoding="utf-8")
     graph = build_graph(tmp_path)
     ids = {node["id"] for node in graph["nodes"]}
     assert ids == {"producer:a:router:route", "producer:b:router:route"}
