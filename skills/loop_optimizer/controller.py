@@ -52,7 +52,8 @@ class LoopController:
         self.project_root = project_root
 
     def _event(self, kind: str, **fields: Any) -> None:
-        log_event(kind, self.project_root, **fields)
+        log_event(kind, self.project_root, producer="skills.loop_optimizer",
+                  component_kind="workflow", **fields)
 
     @staticmethod
     def _cache_material(request: LoopRequest, state: LoopState,
