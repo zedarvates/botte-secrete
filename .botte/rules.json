@@ -1,0 +1,110 @@
+{
+  "schema": "botte.rules-manifest/v1",
+  "rules": [
+    {
+      "id": "rsi.observe-only",
+      "action": "rsi-observation",
+      "effect": "REQUIRE",
+      "scope": [
+        "rsi-observer"
+      ],
+      "statement": "RSI observe ne modifie ni fichier, ni route, ni outil, ni politique, ni modèle et ne fournit aucune commande de promotion.",
+      "source_ref": ".botte/rsi-rules.md#RSI observe ne modifie ni fichier, ni route, ni outil, ni politique, ni modèle et ne fournit aucune commande de promotion.",
+      "owner_only": false,
+      "enforced": true,
+      "enforcement_refs": [
+        "skills/rsi_graph/observer.py#with path.open(\"rb\") as stream:",
+        "skills/rsi_graph/cli.py#sub.add_parser(\"observe\","
+      ],
+      "probes": [
+        {
+          "id": "rsi.observe-only.allow",
+          "polarity": "allow",
+          "evidence_ref": "skills/rsi_graph/test_observer.py#test_observer_does_not_apply_event_instructions"
+        },
+        {
+          "id": "rsi.observe-only.deny",
+          "polarity": "deny",
+          "evidence_ref": "skills/rsi_graph/test_cli.py#test_cli_rejects_promotion_without_mutation"
+        }
+      ],
+      "supersedes": [],
+      "last_verified": {
+        "at": "2026-10-05T15:32:08+00:00",
+        "content_sha256": "1b59c52acb5082c93d64f46f2abbd04055fbac50845cfa66d9c16c4e17374bdb",
+        "evidence_ref": "skills/rsi_graph/test_observer.py#test_observer_does_not_apply_event_instructions"
+      }
+    },
+    {
+      "id": "rsi.bounded-truthful-source",
+      "action": "rsi-input",
+      "effect": "REQUIRE",
+      "scope": [
+        "rsi-history"
+      ],
+      "statement": "La lecture RSI est bornée à 5 MiB plus un octet sentinelle ; une source absente, illisible, invalide ou partielle reste explicitement signalée.",
+      "source_ref": ".botte/rsi-rules.md#La lecture RSI est bornée à 5 MiB plus un octet sentinelle ; une source absente, illisible, invalide ou partielle reste explicitement signalée.",
+      "owner_only": false,
+      "enforced": true,
+      "enforcement_refs": [
+        "skills/rsi_graph/observer.py#MAX_SOURCE_BYTES = 5 * 1024 * 1024",
+        "skills/rsi_graph/observer.py#raw = stream.read(MAX_SOURCE_BYTES + 1)",
+        "skills/rsi_graph/observer.py#return [], \"unavailable\", 0",
+        "skills/rsi_graph/observer.py#return events, \"partial\" if rejected else \"ok\", rejected"
+      ],
+      "probes": [
+        {
+          "id": "rsi.bounded-truthful-source.allow",
+          "polarity": "allow",
+          "evidence_ref": "skills/rsi_graph/test_observer.py#test_source_at_the_exact_byte_limit_is_accepted"
+        },
+        {
+          "id": "rsi.bounded-truthful-source.deny",
+          "polarity": "deny",
+          "evidence_ref": "skills/rsi_graph/test_observer.py#test_oversized_source_uses_a_bounded_sentinel_read"
+        }
+      ],
+      "supersedes": [],
+      "last_verified": {
+        "at": "2026-10-05T15:32:08+00:00",
+        "content_sha256": "e488836a2afc21c7974b98bc226b0c1475e124ef2f1478b374f053f9a7ba35fd",
+        "evidence_ref": "skills/rsi_graph/test_observer.py#test_source_at_the_exact_byte_limit_is_accepted"
+      }
+    },
+    {
+      "id": "rsi.no-invented-evidence",
+      "action": "rsi-evidence",
+      "effect": "REQUIRE",
+      "scope": [
+        "rsi-report"
+      ],
+      "statement": "Les arêtes RSI expriment une adjacence observée, jamais une causalité prouvée ; les mesures absentes restent null et la provenance absente reste unknown.",
+      "source_ref": ".botte/rsi-rules.md#Les arêtes RSI expriment une adjacence observée, jamais une causalité prouvée ; les mesures absentes restent null et la provenance absente reste unknown.",
+      "owner_only": false,
+      "enforced": true,
+      "enforcement_refs": [
+        "skills/rsi_graph/observer.py#\"relation\": \"observed_next\"",
+        "skills/rsi_graph/observer.py#\"metrics\": {\"cost\": None, \"tokens\": None, \"compute\": None, \"energy\": None}",
+        "skills/rsi_graph/observer.py#node[\"provenance\"] = \"unknown\""
+      ],
+      "probes": [
+        {
+          "id": "rsi.no-invented-evidence.allow",
+          "polarity": "allow",
+          "evidence_ref": "skills/rsi_graph/test_observer.py#test_provenance_is_only_claimed_when_event_records_it"
+        },
+        {
+          "id": "rsi.no-invented-evidence.deny",
+          "polarity": "deny",
+          "evidence_ref": "skills/rsi_graph/test_observer.py#test_edges_are_observed_adjacency_not_causality"
+        }
+      ],
+      "supersedes": [],
+      "last_verified": {
+        "at": "2026-10-05T15:32:08+00:00",
+        "content_sha256": "3cdf26eacb8e3ace955cd5d071838665c88b240b70abee1634cc47fab8cffebe",
+        "evidence_ref": "skills/rsi_graph/test_observer.py#test_provenance_is_only_claimed_when_event_records_it"
+      }
+    }
+  ]
+}

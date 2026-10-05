@@ -17,9 +17,31 @@ jobs:
         python-version: ["3.10", "3.11", "3.12"]
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Verify exact source SHA
+        env:
+          SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
+          printf 'SOURCE_SHA=%s\n' "$SOURCE_SHA"
       - uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python-version }}
+      - name: Check Python syntax without importing modules
+        run: |
+          python - <<'PYTHON'
+          import ast, pathlib, subprocess
+          files = subprocess.check_output(["git", "ls-files", "--", "*.py"], text=True).splitlines()
+          for file in files:
+              ast.parse(pathlib.Path(file).read_text(encoding="utf-8-sig"), filename=file)
+          print(f"Syntax OK: {len(files)} tracked Python files")
+          PYTHON
+      - name: Require clean registered RSI rules
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: python scripts/check_committed_rules.py
       - name: Cache pip
         uses: actions/cache@v6
         with:
@@ -66,6 +88,15 @@ jobs:
     if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Verify exact source SHA
+        env:
+          SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
+          printf 'SOURCE_SHA=%s\n' "$SOURCE_SHA"
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
@@ -88,6 +119,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Verify exact source SHA
+        env:
+          SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
+          printf 'SOURCE_SHA=%s\n' "$SOURCE_SHA"
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"

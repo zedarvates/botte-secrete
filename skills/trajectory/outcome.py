@@ -312,6 +312,8 @@ def emit_outcome(
     log_event(
         EVENT_KIND,
         project_root=project_root,
+        producer="skills.trajectory.outcome",
+        component_kind="verifier",
         outcome_id=outcome_id,
         execution_fingerprint=execution_fingerprint,
         source=source,
