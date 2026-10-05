@@ -31,7 +31,14 @@ def test_provenance_is_only_claimed_when_event_records_it(tmp_path):
         encoding="utf-8",
     )
     graph = build_graph(tmp_path)
-    nodes = {node["event_kind"]: node for node in graph["nodes"]}\n    assert nodes["route"]["producer"] == "skills.auto_router"\n    assert nodes["route"]["component_kind"] == "router"\n    assert nodes["route"]["provenance"] == "explicit_event_fields"\n    assert nodes["route"]["id"] == "producer:skills.auto_router:router:route"\n    assert nodes["legacy"]["provenance"] == "unknown"\n    assert nodes["legacy"]["id"] == "event-kind:legacy"\n    assert "producer" not in nodes["legacy"]
+    nodes = {node["event_kind"]: node for node in graph["nodes"]}
+    assert nodes["route"]["producer"] == "skills.auto_router"
+    assert nodes["route"]["component_kind"] == "router"
+    assert nodes["route"]["provenance"] == "explicit_event_fields"
+    assert nodes["route"]["id"] == "producer:skills.auto_router:router:route"
+    assert nodes["legacy"]["provenance"] == "unknown"
+    assert nodes["legacy"]["id"] == "event-kind:legacy"
+    assert "producer" not in nodes["legacy"]
 
 def test_non_object_and_malformed_records_are_counted(tmp_path):
     import json
