@@ -40,6 +40,7 @@ _COMMANDS = {
     "migration-audit": ("skills.migration_audit.cli", "verify migration completeness"),
     "gain": ("skills.metrics.cli", "show measured cost/savings metrics"),
     "discover": ("skills.infra_advisor.cli", "find optimization opportunities"),
+    "rules": ("skills.directives_audit.rules_cli", "audit committed rule contracts"),
     "rsi": ("skills.rsi_graph.cli", "read-only recursive-improvement graph observer"),
 }
 

@@ -50,3 +50,16 @@ def test_top_level_cli_fails_on_unavailable_history(tmp_path):
             code = cli.main(["rsi", "observe", str(tmp_path), "--json"])
     assert code == 2
     assert json.loads(output.getvalue())["source_status"] == "unavailable"
+
+
+def test_cli_rejects_promotion_without_mutation(tmp_path):
+    import contextlib
+    import io
+    with contextlib.redirect_stderr(io.StringIO()):
+        try:
+            cli.main(["rsi", "promote", str(tmp_path)])
+        except SystemExit as error:
+            assert error.code == 2
+        else:
+            raise AssertionError("promotion unexpectedly accepted")
+    assert list(tmp_path.iterdir()) == []

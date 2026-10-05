@@ -136,3 +136,24 @@ def test_same_event_kind_from_two_producers_stays_separate(tmp_path):
     graph = build_graph(tmp_path)
     ids = {node["id"] for node in graph["nodes"]}
     assert ids == {"producer:a:router:route", "producer:b:router:route"}
+
+
+def test_observer_does_not_apply_event_instructions(tmp_path):
+    from pathlib import Path
+    from unittest.mock import patch
+    path = tmp_path / ".botte" / "events.jsonl"
+    path.parent.mkdir()
+    original = '{"kind":"promote","action":"rewrite_policy","target":"policy.md"}\n'
+    path.write_text(original, encoding="utf-8")
+    policy = tmp_path / "policy.md"
+    policy.write_text("Owner approval required.\n", encoding="utf-8")
+    before = {p.relative_to(tmp_path): p.read_bytes() for p in tmp_path.rglob("*") if p.is_file()}
+    real_open = Path.open
+    def read_only_open(self, mode="r", *args, **kwargs):
+        assert mode == "rb", "observer attempted a write or another input mode"
+        return real_open(self, mode, *args, **kwargs)
+    with patch.object(Path, "open", read_only_open):
+        graph = build_graph(tmp_path)
+    after = {p.relative_to(tmp_path): p.read_bytes() for p in tmp_path.rglob("*") if p.is_file()}
+    assert before == after
+    assert graph["event_count"] == 1 and graph["read_only"] is True
