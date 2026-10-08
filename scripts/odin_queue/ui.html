@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Odin — File Codex</title><link rel="stylesheet" href="/ui.css"><script defer src="/ui.js"></script></head>
+<body><main>
+<header><div><p class="eyebrow">ODIN / CODEX</p><h1>Le travail, à son tour.</h1><p class="subtitle">Cinq exécutions maximum. Une file qui garde sa place.</p></div><span id="mode" class="mode">Connexion…</span></header>
+<div id="notice" role="status"></div><div id="error" role="alert"></div>
+<section class="stats" aria-label="État de la file"><div><strong id="occupied">—</strong><span>places occupées / 5</span></div><div><strong id="queued">—</strong><span>discussions en file</span></div><div><strong id="finished">—</strong><span>tours terminés</span></div></section>
+<section class="toolbar"><h2>Discussions</h2><div><button id="pause" type="button">Suspendre les départs</button><button id="demo" type="button" hidden>Essayer avec 8 discussions</button></div></section>
+<p class="hint">La position est recalculée à chaque départ. Les dossiers qui se chevauchent attendent leur tour. Une validation en attente conserve sa place d’exécution.</p>
+<div id="jobs" class="jobs" aria-live="polite"><p>Aucune discussion.</p></div>
+<details class="composer"><summary>Ajouter une discussion à la file</summary><form id="submit">
+<label>Titre<input name="title" required maxlength="160" placeholder="Ex. Vérifier les tests StoryCore"></label>
+<label>Dossier de travail<input name="cwd" required list="roots" placeholder="Chemin absolu du dépôt"><datalist id="roots"></datalist></label>
+<label>Travail demandé<textarea name="prompt" required maxlength="32000" rows="4" placeholder="Objectif, limites et résultat attendu"></textarea></label>
+<label class="checkbox"><input type="checkbox" name="audit">Audit : terminal en lecture seule</label>
+<label>Discussion Codex existante (facultatif)<input name="thread_id" maxlength="160" placeholder="Identifiant vérifié pour continuer cette discussion"></label>
+<button class="primary" type="submit">Mettre en file</button></form></details>
+<footer>Cette file gère les lancements qui passent par elle. Elle ne limite pas les discussions démarrées directement dans l’application Codex. Un tour terminé reste un résultat à vérifier.</footer>
+</main></body></html>
