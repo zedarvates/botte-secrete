@@ -529,10 +529,11 @@ TOOLS = [
     },
     {
         "name": "nn_audit",
-        "description": "Audit the micro-NNs (skills/botte_nn): per model, is it grounded in "
-                       "REAL data or a synthetic copy of a hand rule? Reports data_source, "
-                       "provenance metadata, test guard, and a grounded/synthetic verdict — a "
-                       "net trained on np.random just mimics a rule. 0 cloud tokens.",
+        "description": "Inspect micro-model trainer keywords, metadata keys, test-text "
+                       "matches and source references. Reports heuristic data_source, "
+                       "test guard, wired and verdict flags; these do not verify datasets, "
+                       "provenance, executed tests or model accuracy. File inspection only; "
+                       "host-agent model usage is separate.",
         "inputSchema": {"type": "object", "properties": {
             "path": {"type": "string", "default": "skills/botte_nn"}},
         },

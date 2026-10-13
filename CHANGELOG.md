@@ -16,6 +16,13 @@
   of the historical hard-coded 1.0.0 server version.
 
 ### Fixed
+- Correct runtime skill references indexed by MCP discovery: distinguish heuristic
+  model-audit clues from validation, fixed finding vectors from learned embeddings,
+  proxy transforms from restoration, and the TC1 codec from historical token
+  transforms. Local search and inspection do not measure host-agent token savings.
+- Retain the upstream MIT declaration and attribution for the adapted Karpathy
+  reference, and MITRE's copyright and separate CWE terms beside the bundled
+  catalog. Both notices ship with the Python package.
 - Exact response-cache identity preserves whitespace and indentation. Legacy
   normalized entries cannot answer a different query; affected queries miss
   safely until recached, while unchanged legacy identities remain usable.
