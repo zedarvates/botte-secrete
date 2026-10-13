@@ -42,12 +42,13 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from skills import __version__  # noqa: E402
 from skills.llm_backends import registry  # noqa: E402
 from skills.llm_backends.audit import audit  # noqa: E402
 from skills.llm_backends.client import LocalLLMClient, LocalLLMError  # noqa: E402
 
 PROTOCOL_VERSION = "2024-11-05"
-SERVER_INFO = {"name": "botte-llm", "version": "1.0.0"}
+SERVER_INFO = {"name": "botte-llm", "version": __version__}
 
 # ── Tool definitions (MCP inputSchema = JSON Schema) ─────────────────────────
 

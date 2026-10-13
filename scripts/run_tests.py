@@ -49,6 +49,7 @@ SUITES = [
     ("skill_finder", [sys.executable, "-m", "skills.skill_finder.test_skill_finder"], "skills/skill_finder/"),
     ("project_profiler", [sys.executable, "-m", "skills.skill_project_optimizer.test_profiler"], "skills/skill_project_optimizer/"),
     ("bootstrap", [sys.executable, "-m", "skills.bootstrap.test_bootstrap"], "skills/bootstrap/"),
+    ("codex_distribution", [sys.executable, "-m", "skills.plugins.test_distribution"], "plugins/"),
     ("infra_advisor", [sys.executable, "-m", "skills.infra_advisor.test_infra_advisor"], "skills/infra_advisor/"),
     ("prompt_improver", [sys.executable, "-m", "skills.prompt_improver.test_prompt_improver"], "skills/prompt_improver/"),
     ("metrics", [sys.executable, "-m", "skills.metrics.test_metrics"], "skills/metrics/"),

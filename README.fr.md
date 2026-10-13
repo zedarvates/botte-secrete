@@ -10,12 +10,14 @@
 La RC ajoute Factory Assurance, un juge indépendant et des critères de preuve.
 Commencer en mode observe, consultative ou shadow ; la validation sur un jeu
 privé/externe indépendant reste à établir. Les notes de version précisent les
-limites et l'installation au commit validé. Le badge ci-dessous indique la
-version stable sur `main`.
+limites et l'installation au commit validé. `main` prépare la version
+**1.10.0** ; le badge ci-dessous indique cette candidate non publiée. Le
+[guide du plugin Codex](plugins/botte-secrete/README.md) explique l'installation
+séparée du runtime Python et le catalogue Git.
 
 [![CI](https://github.com/zedarvates/botte-secrete/actions/workflows/ci.yml/badge.svg)](https://github.com/zedarvates/botte-secrete/actions)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
-[![Version](https://img.shields.io/badge/version-1.9.0-55d6be)](pyproject.toml)
+[![Version](https://img.shields.io/badge/version-1.10.0-55d6be)](pyproject.toml)
 [![Licence MIT](https://img.shields.io/badge/licence-MIT-7b8cff)](LICENSE)
 
 [English](README.md) · [Documentation](docs/README.md) · [Architecture](docs/ARCHITECTURE.md) · [Développement](docs/DEVELOPMENT.md) · [Contribuer](CONTRIBUTING.md)

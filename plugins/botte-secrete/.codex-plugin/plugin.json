@@ -1,0 +1,19 @@
+{
+  "name": "botte-secrete",
+  "version": "1.10.0",
+  "description": "Connect Codex to an independently installed Botte Secrète local runtime for context, routing and evidence workflows.",
+  "author": { "name": "Zedarvates" },
+  "repository": "https://github.com/zedarvates/botte-secrete",
+  "homepage": "https://github.com/zedarvates/botte-secrete",
+  "license": "MIT",
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Botte Secrète",
+    "shortDescription": "Context and routing workflows with a local Botte runtime",
+    "longDescription": "A Codex workflow skill and stdio MCP connection to Botte Secrète. Install the compatible Botte runtime separately and make its botte-mcp executable available on PATH. The plugin does not bundle Python implementations, model weights or credentials.",
+    "developerName": "Zedarvates",
+    "category": "Productivity",
+    "websiteURL": "https://github.com/zedarvates/botte-secrete"
+  }
+}
