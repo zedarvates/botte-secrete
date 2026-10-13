@@ -63,3 +63,11 @@ Official format references, checked 2026-10-13:
 
 - [Package your plugin](https://developers.openai.com/plugins/build/plugins)
 - [Plugin MCP package example](https://developers.openai.com/api/docs/guides/agents-api/tools/plugins)
+- [Listing field types and limits](https://developers.openai.com/plugins/deploy/submission-errors)
+
+From the repository checkout, run `python -m skills.plugins.test_distribution`
+to check the listing capabilities, starter prompts, square SVG icons, package files and MCP
+handshake. These checks cover the Git package and selected listing constraints.
+They do not complete public directory submission or its MCP deployment, URL,
+review requirements. The two geometric boot icons are original assets included
+under the packaged MIT license.
