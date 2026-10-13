@@ -168,7 +168,8 @@ class DistributionTests(unittest.TestCase):
         self.assertEqual(entry["source"]["source"], "local")
         self.assertEqual((ROOT / entry["source"]["path"]).resolve(), PLUGIN)
         manifest = json.loads((PLUGIN / ".codex-plugin/plugin.json").read_text(encoding="utf-8"))
-        self.assertEqual(manifest["version"], __version__)
+        # Local Codex cachebusters retain the separately installed runtime version.
+        self.assertEqual(manifest["version"].split("+", 1)[0], __version__)
         version = re.search(r'^version = "([^"]+)"', (ROOT / "pyproject.toml").read_text(encoding="utf-8"), re.MULTILINE)
         self.assertIsNotNone(version)
         self.assertEqual(version.group(1), __version__)
