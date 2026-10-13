@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "botte.rsi-graph/v1",
+  "title": "Botte RSI Graph Observation v1",
+  "type": "object",
+  "required": [
+    "schema",
+    "mode",
+    "read_only",
+    "event_count",
+    "nodes",
+    "edges",
+    "metrics",
+    "limitations"
+  ],
+  "properties": {
+    "schema": {
+      "const": "botte.rsi-graph/v1"
+    },
+    "mode": {
+      "const": "observe"
+    },
+    "read_only": {
+      "const": true
+    },
+    "event_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "nodes": {
+      "type": "array"
+    },
+    "edges": {
+      "type": "array"
+    },
+    "metrics": {
+      "type": "object",
+      "properties": {
+        "cost": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "tokens": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "compute": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "energy": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      }
+    },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "source_status": {
+      "type": "string",
+      "enum": [
+        "ok",
+        "missing",
+        "unavailable",
+        "invalid",
+        "too_large",
+        "partial"
+      ],
+      "description": "Read outcome. Any non-ok status means the result is not a verified complete history."
+    },
+    "rejected_records": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Parsed lines rejected for invalid JSON or non-object values."
+    },
+    "source_max_bytes": {
+      "type": "integer",
+      "const": 5242880,
+      "description": "Maximum source bytes accepted; the reader uses one extra sentinel byte and rejects larger files."
+    }
+  }
+}
