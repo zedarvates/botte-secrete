@@ -10,11 +10,14 @@
 The RC adds Factory Assurance, independent judging, and evidence gates. Start in
 observe, consultative, or shadow mode; the private/external holdout remains
 unproven. See the release notes for limits and installation at the validated
-commit. The version badge below identifies the stable line on `main`.
+commit. `main` prepares version **1.10.0**; the badge below identifies that
+unreleased candidate, not a published stable release. The
+[Codex plugin guide](plugins/botte-secrete/README.md) documents its separately
+installed Python runtime and Git marketplace catalog.
 
 [![CI](https://github.com/zedarvates/botte-secrete/actions/workflows/ci.yml/badge.svg)](https://github.com/zedarvates/botte-secrete/actions)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
-[![Version](https://img.shields.io/badge/version-1.9.0-55d6be)](pyproject.toml)
+[![Version](https://img.shields.io/badge/version-1.10.0-55d6be)](pyproject.toml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-7b8cff)](LICENSE)
 
 [Français](README.fr.md) · [Documentation](docs/README.md) · [Architecture](docs/ARCHITECTURE.md) · [Development](docs/DEVELOPMENT.md) · [Contributing](CONTRIBUTING.md)

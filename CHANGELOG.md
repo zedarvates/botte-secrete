@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+## v1.10.0 (unreleased)
+
+### Distribution
+- Add a native Codex plugin and Git marketplace catalog. The plugin connects to
+  the separately installed `botte-mcp` runtime and includes a workflow skill and
+  MIT license; it does not install Python dependencies, models, or credentials.
+- Align the package and plugin versions with the post-1.9.0 source on `main`.
+  This prepares a stable release without merging the separate 2.0.0 RC2 branch.
+  The latest published stable release remains 1.9.0 until a new tag and release
+  are published.
+- Report the installed package version in the MCP initialize handshake instead
+  of the historical hard-coded 1.0.0 server version.
+
 ### Fixed
 - Exact response-cache identity preserves whitespace and indentation. Legacy
   normalized entries cannot answer a different query; affected queries miss

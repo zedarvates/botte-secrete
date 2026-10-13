@@ -30,7 +30,7 @@ from skills.atomic_json import write_json
 os.environ.setdefault("BOTTE_NN_AUTO_LABELS", "0")
 
 # (label, command, module_prefix) — the e2e script + every module's test_<module>.
-# module_prefix is the skills/ directory prefix used for --changed matching.
+# The third field lists file or directory inputs used for --changed matching.
 SUITES = [
     ("e2e", [sys.executable, "skills/test_e2e.py"], ""),
     ("completion_proof", [sys.executable, "-m", "skills.completion_proof.test_completion_proof"], "skills/completion_proof/"),
@@ -49,6 +49,11 @@ SUITES = [
     ("skill_finder", [sys.executable, "-m", "skills.skill_finder.test_skill_finder"], "skills/skill_finder/"),
     ("project_profiler", [sys.executable, "-m", "skills.skill_project_optimizer.test_profiler"], "skills/skill_project_optimizer/"),
     ("bootstrap", [sys.executable, "-m", "skills.bootstrap.test_bootstrap"], "skills/bootstrap/"),
+    ("codex_distribution", [sys.executable, "-m", "skills.plugins.test_distribution"], (
+        "plugins/botte-secrete/", ".agents/plugins/marketplace.json", "pyproject.toml",
+        "skills/__init__.py", "skills/llm_mcp/", "skills/plugins/", "LICENSE",
+        "scripts/run_tests.py", "scripts/test_runner_exit_verdict.py",
+    )),
     ("infra_advisor", [sys.executable, "-m", "skills.infra_advisor.test_infra_advisor"], "skills/infra_advisor/"),
     ("prompt_improver", [sys.executable, "-m", "skills.prompt_improver.test_prompt_improver"], "skills/prompt_improver/"),
     ("metrics", [sys.executable, "-m", "skills.metrics.test_metrics"], "skills/metrics/"),
@@ -128,7 +133,8 @@ def _git_changed_files(repo: Path) -> list[str]:
 def _suites_for_changes(changed: list[str]) -> set[int]:
     """Return indices of suites affected by the changed files.
 
-    A changed file matches a suite if its path starts with the suite's module_prefix.
+    A changed file matches a directory input ending in / or an exact file input.
+    Suites may declare one input or a tuple covering their cross-module contracts.
     The e2e suite (index 0) always runs — it tests cross-cutting concerns.
     Scripts/ changes also trigger e2e.
     """
@@ -137,7 +143,8 @@ def _suites_for_changes(changed: list[str]) -> set[int]:
         for idx, (label, cmd, prefix) in enumerate(SUITES):
             if not prefix:  # skip e2e (already handled)
                 continue
-            if f.startswith(prefix):
+            inputs = (prefix,) if isinstance(prefix, str) else prefix
+            if any(f.startswith(value) if value.endswith("/") else f == value for value in inputs):
                 affected.add(idx)
         # scripts/ changes may affect multiple suites
         if f.startswith("scripts/"):

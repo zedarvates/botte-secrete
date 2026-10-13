@@ -15,6 +15,32 @@ spec.loader.exec_module(runner)
 
 
 class ExitVerdictTests(unittest.TestCase):
+    def test_distribution_suite_is_selected_for_every_contract_input(self):
+        inputs = [
+            'plugins/botte-secrete/.codex-plugin/plugin.json',
+            'plugins/botte-secrete/assets/logo.svg',
+            'plugins/botte-secrete/skills/botte-secrete/SKILL.md',
+            '.agents/plugins/marketplace.json', 'pyproject.toml', 'skills/__init__.py',
+            'skills/llm_mcp/server.py', 'skills/plugins/test_distribution.py',
+            'skills/plugins/installer.py', 'LICENSE', 'scripts/run_tests.py',
+            'scripts/test_runner_exit_verdict.py',
+        ]
+        for path in inputs:
+            with self.subTest(path=path):
+                labels = {runner.SUITES[index][0] for index in runner._suites_for_changes([path])}
+                self.assertIn('codex_distribution', labels)
+                self.assertIn('e2e', labels)
+
+    def test_unrelated_changes_preserve_other_suite_selection(self):
+        for path in ['plugins/unrelated/SKILL.md', '.agents/other.json', 'pyproject.toml.bak']:
+            with self.subTest(path=path):
+                labels = {runner.SUITES[index][0] for index in runner._suites_for_changes([path])}
+                self.assertNotIn('codex_distribution', labels)
+        labels = {runner.SUITES[index][0] for index in runner._suites_for_changes(['skills/auto_router/router.py'])}
+        self.assertIn('auto_router', labels)
+        self.assertIn('router_outcome', labels)
+        self.assertNotIn('codex_distribution', labels)
+
     def check_case(self, text, child_exit, expected_failed):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
