@@ -1,0 +1,38 @@
+{
+  "schema": "botte.tool-catalog-measurement/v1",
+  "scope": "one serialized tool catalog; component measurement only",
+  "serialization": "json.dumps(ensure_ascii=False, separators=(',', ':'))",
+  "catalogs": {
+    "full": {
+      "tool_count": 61,
+      "utf8_bytes": 27147,
+      "tokens": 6244,
+      "serialized_sha256": "a4e4aeda34e8d6d891ac2ea67b2e794d7ff1e0eb6cf898fa375c04356297bd7a"
+    },
+    "lazy": {
+      "tool_count": 5,
+      "utf8_bytes": 2552,
+      "tokens": 605,
+      "serialized_sha256": "c96708cc1814e353db2be04e505c12024ba7ee98e82c76fcda0290699b409a3b"
+    }
+  },
+  "tokenizer": {
+    "status": "measured",
+    "name": "o200k_base",
+    "library": "tiktoken",
+    "version": "0.14.0"
+  },
+  "source_sha256": {
+    "skills/llm_mcp/server.py": "63ee80d0ace1ac3e57203ea8bbf4e4c5e1b70ea228175bec794bcb03b0644f02",
+    "skills/llm_mcp/lazy.py": "5e9e9218ba02067765ccf154e94cb69ae177a4f1c0ecb03f8efc76b8e9061289",
+    "scripts/measure_tool_catalog.py": "555a4883fcc6a8b6d77376f76fdb8d7116a0028274e6ff0c8e371d600b2eb4ac"
+  },
+  "llm_calls": 0,
+  "excluded": [
+    "lookup requests and responses",
+    "agent messages and tool results",
+    "provider accounting",
+    "prompt cache",
+    "agent turns and task quality"
+  ]
+}

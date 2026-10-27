@@ -1,0 +1,62 @@
+{
+  "platform": "Windows-11-10.0.26200-SP0",
+  "python": "3.14.0 (tags/v3.14.0:ebf955d, Oct  7 2025, 10:15:03) [MSC v.1944 64 bit (AMD64)]",
+  "checks": [
+    {
+      "name": "installed_identity",
+      "passed": true
+    },
+    {
+      "name": "pip-check",
+      "exit": 0,
+      "passed": true
+    },
+    {
+      "name": "cli-help",
+      "exit": 0,
+      "passed": true
+    },
+    {
+      "name": "cli-belt",
+      "exit": 0,
+      "passed": true
+    },
+    {
+      "name": "test_factory_assurance",
+      "exit": 0,
+      "passed": true
+    },
+    {
+      "name": "test_integrations",
+      "exit": 0,
+      "passed": true
+    },
+    {
+      "name": "test_roles",
+      "exit": 0,
+      "passed": true
+    },
+    {
+      "name": "mcp-stdio",
+      "exit": 0,
+      "passed": true
+    },
+    {
+      "name": "mcp_protocol",
+      "passed": true
+    }
+  ],
+  "version": "2.0.0rc1",
+  "module_version": "2.0.0rc1",
+  "source": {
+    "url": "https://github.com/zedarvates/botte-secrete.git",
+    "vcs_info": {
+      "commit_id": "d98505fd6586ff3d0d32a2cb4ebd5f0408d4142a",
+      "requested_revision": "v2.0.0rc1",
+      "vcs": "git"
+    }
+  },
+  "mcp_tool_count": 5,
+  "passed": true,
+  "installation_mode": "github"
+}

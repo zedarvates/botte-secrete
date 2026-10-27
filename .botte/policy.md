@@ -16,17 +16,20 @@ Shared rules for all agents and developers on this project. Keep cheap, keep loc
 ## Prompts
 - Before a big/ambiguous request, improve it locally (`improve_prompt`) so the
   cloud model starts from a structured, unambiguous prompt.
-- **Caveman style** by default. Activate via `/caveman full` (or ultra for
-  max savings). Use `python -m skills.caveman.cli prompt --level full` to
-  get the system prompt. Switch back with `/caveman off`.
+- Prefer concise, clear output. `python -m skills.caveman.cli prompt --level light`
+  prints an optional style prompt; it does not inject or activate it.
+  Preserve language, negations, conditions, uncertainty and evidence.
 
 ## Compression
-- **Output**: Caveman level depends on budget — light when healthy, ultra when
-  tight. Auto-set by `context_budget`.
-- **Input** (files, context): Run `python -m skills.caveman.cli compress <file>`
-  before loading into context. Typical savings: 46% on AGENTS.md/CLAUDE.md.
-- **JSON reports**: Always use `ultra_compact` (-30 to -90%).
-- **Logs/CI output**: Use `universal_compressor` with `log` strategy (-80 to 98%).
+- **Output**: choose a concise style explicitly; `context_budget` selects context
+  and does not automatically inject Caveman prompts. Measure paired model outputs
+  before claiming style savings.
+- **Input**: Caveman `compress` is read-only size analysis, not file compression.
+  Keep instructions and evidence exact. Select relevant context before compacting it.
+- **JSON reports**: `universal_compressor` removes whitespace without deleting values.
+- **Logs/CI output**: preserve distinct lines, errors and chronology; only exact
+  consecutive repetitions may be summarized. Report measured UTF-8 byte reduction
+  separately from tokenizer counts and provider usage.
 
 ## Reasoning Effort
 - Match effort to task complexity, not model capability.
@@ -43,5 +46,6 @@ Shared rules for all agents and developers on this project. Keep cheap, keep loc
 
 ## Budget
 - Daily token budget: 50000 (auto_router downgrades when exceeded).
-- When budget < 20% remaining: force caveman **ultra** + reasoning **low**.
-- When budget < 50%: force caveman **full** + reasoning **medium**.
+- A tight budget can justify shorter presentation, but cannot remove evidence,
+  permissions or necessary reasoning. No budget-triggered Caveman activation is
+  implemented by these standalone commands.

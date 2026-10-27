@@ -12,6 +12,8 @@ local memory content, or proprietary project data.
 | `docs/assets/dashboard-overview.png` | Sanitized static public dashboard | Product capture |
 | `docs/assets/routing-demo.svg` | Final frame of the fixed offline demo | Deterministic fixture capture |
 | `docs/assets/benchmark-compression.svg` | Current bundled benchmark result | Reproducible measured chart |
+| `docs/assets/monte-cristo-cli.svg` | Output of the bundled deterministic Monte Cristo route evaluator | Reproducible CLI capture |
+| `docs/assets/monte-cristo-governance.svg` | Read-only agent and approval boundaries | Maintained governance schema |
 | README routing diagram | Mermaid embedded in Markdown | Maintained architecture schema |
 | README architecture diagram | Mermaid embedded in Markdown | Maintained boundary schema |
 
@@ -47,6 +49,8 @@ command. The checked-in image is documentation, not a runtime artifact.
 
 - Text is readable at GitHub's normal README width.
 - The image has a useful alt description where embedded.
+- The README includes a visible caption stating whether the visual is measured,
+  synthetic, a deterministic fixture, or a maintained schema.
 - Metrics state whether they are measured, synthetic, partial, or sanitized.
 - The source command still runs from a clean clone.
 - No private or machine-specific data appears in the image metadata or pixels.

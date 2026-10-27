@@ -1,0 +1,127 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/zedarvates/botte-secrete/blob/main/docs/schemas/quality-routing-benchmark.schema.json",
+  "title": "Botte Secrete shadow routing benchmark report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "generated_at", "mode", "benchmark_status", "conclusion",
+    "comparative_winner", "dataset", "evidence_inventory", "routing_quality",
+    "model_quality", "harness_quality", "disagreement", "missing_metrics",
+    "gaps", "reproducibility", "authority"
+  ],
+  "properties": {
+    "schema": {"const": "botte.quality-routing-benchmark/v1"},
+    "generated_at": {"type": "string", "format": "date-time"},
+    "mode": {"const": "shadow"},
+    "benchmark_status": {
+      "enum": ["insufficient_evidence", "invalid_dataset", "rejected_for_leakage", "measured_fixture", "measured_verified_holdout"]
+    },
+    "conclusion": {"type": "string", "minLength": 1},
+    "comparative_winner": {"type": "null"},
+    "dataset": {
+      "type": "object",
+      "required": [
+        "provided", "dataset_class", "missions", "train", "holdout",
+        "train_families", "holdout_families", "temporal_order",
+        "exact_task_leakage", "task_family_leakage",
+        "eligible_for_conclusions", "raw_tasks_in_report"
+      ],
+      "properties": {
+        "provided": {"type": "boolean"},
+        "dataset_class": {"type": ["string", "null"]},
+        "missions": {"type": "integer", "minimum": 0},
+        "train": {"type": "integer", "minimum": 0},
+        "holdout": {"type": "integer", "minimum": 0},
+        "train_families": {"type": "integer", "minimum": 0},
+        "holdout_families": {"type": "integer", "minimum": 0},
+        "temporal_order": {"const": "oldest_train_newest_holdout"},
+        "exact_task_leakage": {"type": ["boolean", "null"]},
+        "task_family_leakage": {"type": ["boolean", "null"]},
+        "eligible_for_conclusions": {"type": "boolean"},
+        "raw_tasks_in_report": {"const": false}
+      },
+      "additionalProperties": false
+    },
+    "evidence_inventory": {"type": "object"},
+    "routing_quality": {
+      "type": "object",
+      "required": ["deterministic", "knn", "micro_nn"],
+      "properties": {
+        "deterministic": {"$ref": "#/$defs/mechanism"},
+        "knn": {"$ref": "#/$defs/mechanism"},
+        "micro_nn": {"$ref": "#/$defs/mechanism"}
+      },
+      "additionalProperties": false
+    },
+    "model_quality": {"$ref": "#/$defs/unobserved"},
+    "harness_quality": {"$ref": "#/$defs/unobserved"},
+    "disagreement": {"type": "object"},
+    "missing_metrics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["metric", "reason"],
+        "properties": {"metric": {"type": "string"}, "reason": {"type": "string"}},
+        "additionalProperties": false
+      }
+    },
+    "gaps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["code"],
+        "properties": {
+          "code": {"type": "string"},
+          "detail": {"type": "string"},
+          "observed": {
+            "oneOf": [
+              {"type": "integer", "minimum": 0},
+              {"type": "array", "items": {"type": "string"}}
+            ]
+          },
+          "required": {
+            "oneOf": [
+              {"type": "integer", "minimum": 0},
+              {"type": "array", "items": {"type": "string"}}
+            ]
+          },
+          "count": {"type": "integer", "minimum": 0}
+        },
+        "additionalProperties": false
+      }
+    },
+    "reproducibility": {"type": "object"},
+    "authority": {
+      "type": "object",
+      "required": ["shadow_only", "acted", "trained", "activation_allowed"],
+      "properties": {
+        "shadow_only": {"const": true},
+        "acted": {"const": false},
+        "trained": {"const": false},
+        "activation_allowed": {"const": false}
+      },
+      "additionalProperties": false
+    }
+  },
+  "$defs": {
+    "mechanism": {
+      "type": "object",
+      "required": ["mechanism", "status", "recommendation", "activation_allowed"],
+      "properties": {
+        "mechanism": {"enum": ["deterministic", "knn", "micro_nn"]},
+        "status": {"enum": ["not_run", "measured"]},
+        "quality_scope": {"const": "routing_oracle_only"},
+        "recommendation": {"enum": ["keep", "keep_shadow", "collect_more_data", "retire_candidate"]},
+        "activation_allowed": {"const": false}
+      },
+      "additionalProperties": true
+    },
+    "unobserved": {
+      "type": "object",
+      "required": ["status", "reason"],
+      "properties": {"status": {"const": "not_observed"}, "reason": {"type": "string", "minLength": 1}},
+      "additionalProperties": false
+    }
+  }
+}

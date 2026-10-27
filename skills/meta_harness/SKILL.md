@@ -40,6 +40,7 @@ Meta-Harness
 | `conductor` | conductor | Planification |
 | `security` | security_scanner | Scan sécurité |
 | `fast_context` | fast_context | Exploration repo |
+| `migration_audit` | migration_audit | Vérifie la suppression réelle des chemins historiques |
 
 ## Usage
 
@@ -52,6 +53,9 @@ python -m skills.meta_harness.cli plans
 
 # Lancement avec approval gate
 python -m skills.meta_harness.cli run . audit fix --approval
+
+# Étape déterministe à placer après BUILDER et avant VALIDATOR
+python -m skills.meta_harness.cli run . migration-gate
 
 # Voir l'état d'un pipeline
 python -m skills.meta_harness.cli status <session_id>

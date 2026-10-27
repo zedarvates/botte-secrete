@@ -2,7 +2,66 @@
 
 ## Unreleased
 
+## v1.10.0 (unreleased)
+
+### Distribution
+- Add a native Codex plugin and Git marketplace catalog. The plugin connects to
+  the separately installed `botte-mcp` runtime and includes a workflow skill and
+  MIT license; it does not install Python dependencies, models, or credentials.
+- Align the package and plugin versions with the post-1.9.0 source on `main`.
+  This prepares a stable release without merging the separate 2.0.0 RC2 branch.
+  The latest published stable release remains 1.9.0 until a new tag and release
+  are published.
+- Report the installed package version in the MCP initialize handshake instead
+  of the historical hard-coded 1.0.0 server version.
+
+### Fixed
+- Correct runtime skill references indexed by MCP discovery: distinguish heuristic
+  model-audit clues from validation, fixed finding vectors from learned embeddings,
+  proxy transforms from restoration, and the TC1 codec from historical token
+  transforms. Local search and inspection do not measure host-agent token savings.
+- Retain the upstream MIT declaration and attribution for the adapted Karpathy
+  reference, and MITRE's copyright and separate CWE terms beside the bundled
+  catalog. Both notices ship with the Python package.
+- Exact response-cache identity preserves whitespace and indentation. Legacy
+  normalized entries cannot answer a different query; affected queries miss
+  safely until recached, while unchanged legacy identities remain usable.
+
 ### Added
+- Fail-closed, privacy-preserving local-worker benchmark for Granite 4.2 versus
+  an existing worker, covering TTFT, throughput, quality, escalation, validator
+  disagreement, host RAM, and per-GPU VRAM in `SIMULATE` mode.
+- Fail-closed Memory Hub quarantine with mandatory MCP provenance, separate
+  storage for external/generated observations, explicit review envelopes, and
+  a poisoning fixture that cannot enter context or gain promotion authority.
+- Deterministic `MIGRATION_AUDIT` stage between builder and validator, detecting
+  legacy markers, stale paths, duplicate old/new entry points, and missing
+  migration acceptance markers without executing project code.
+- Idempotent `botte.quality-outcome/v1` envelopes for partial and verified
+  execution results, with the local harness as the first live adapter. Only
+  externally evidenced verdicts enter the shadow Quality Compass ledger.
+- Auto-router outcome adapter for private, replay-safe `PARTIAL`, `FAIL`, and
+  `ABSTAINED` facts; backend returns remain unverified and cannot promote labels.
+- Strict `botte.agent-run/v1` manifests shared by Codex MCP and the Hermes
+  function bridge, rejecting raw-output fields and agent self-labels.
+- Primary GitHub CI matrix outcome adapter with replay-safe verified envelopes
+  and a separate sanitized artifact that exposes state, reason, and the next
+  safe action without run IDs, fingerprints, paths, or evidence details.
+- Passive `botte.task-quality-status/v1` export for Kanboard/Odin and other task
+  planes, exposing only opaque correlation, bounded status, safe next action,
+  and independently verified evidence references without transition authority.
+- Accessible Quality Compass dashboard card with a fluid state/reason/next-action
+  view, progressive local evidence, route comparison, freshness and human-gate
+  states; public snapshots disclose no local task or evidence material.
+- Leakage-resistant shadow routing benchmark for deterministic, k-NN, and the
+  existing `binary_router` micro-NN. It uses a shared temporal holdout, rejects
+  exact-task and family leakage, separates routing/model/harness quality, and
+  emits an explicit `collect_more_data` report when verified evidence is
+  insufficient; fixtures cannot manufacture a winner or grant `ACT` authority.
+- Shadow-only Quality Compass: a project-local verified-outcome ledger, duplicate-
+  resistant hashed task features, explainable k-NN advice, `botte qa`, and lazy
+  MCP tools (`qa_status`, `qa_advise`, `qa_record`). Raw task text is not stored,
+  model self-reports are rejected as labels, and high-risk work keeps a human gate.
 - Governed, per-project Memory Hub with provenance, lifecycle, visibility,
   sensitivity, expiry, versioning, and lazy MCP tools.
 - Live loopback dashboard plus a sanitized, gated GitHub Pages artifact built

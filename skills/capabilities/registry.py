@@ -39,7 +39,8 @@ LAYER_MAP = {
     "ultra_compact": "REMEMBER", "loader": "REMEMBER", "cache": "REMEMBER",
     "diff_language": "REMEMBER",
     # GOVERN — consistency & cost
-    "clarification": "GOVERN", "checkup": "GOVERN", "skill_project_optimizer": "GOVERN",
+    "clarification": "GOVERN", "checkup": "GOVERN", "dashboard": "GOVERN",
+    "skill_project_optimizer": "GOVERN",
     "code-rules": "GOVERN", "karpathy-guidelines": "GOVERN",
     # DEPLOY — wire & measure
     "bootstrap": "DEPLOY",

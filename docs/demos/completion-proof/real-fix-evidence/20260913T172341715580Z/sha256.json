@@ -1,0 +1,14 @@
+{
+  "after-regression.txt": "1a52ff93b2b7c8bc576900f70c9062f5baedb573cf55507ec33070c999cd9b12",
+  "after-result.json": "7fbf38c20b5b49aab717e1eaddd98ead9c43a2f95a4f86c60819827584eb0cba",
+  "after-verifier.py": "fc916d268e0b5f2b08e21ffceea44c100d8f5b53c7fa19d245205da7be58c656",
+  "before-regression.txt": "f24c762601a24cd86b4653cb6ef65cb5be1f93afb8da8b2fdcb1c8ee213e6410",
+  "before-result.json": "9802fd0f19821af3faf4336f8148093a70bcae540788a868a22e1e9c47006b94",
+  "before-verifier.py": "b278037fbc216602fb71114972b88b2b627ab41dc64438aeaa4c82c6afc0913d",
+  "receipt.json": "c48681406a63f3a00f4e2a73a1dc8a87ef8820627fe0530ba6ff50afc1959e71",
+  "report.json": "4b0ca7615e76acb5d47459ccecfa9ebd18336e918883df1c103b97bf27d1897e",
+  "summary.json": "232d0955b9104d8a4734753ef9ae48249db3c25716763e779ba4b7c3ae95481c",
+  "test-output.txt": "77d059e1df3177ea53328a8290cfcc2bd45503362f1a24b1bba16877afe5cf0e",
+  "test_optional.py": "9ea59e2a2e7fb6cd333d80e45f70fc7c764bf7161f90d6425ed709f0b09bdd92",
+  "trusted-receipt.sha256": "2347beae3e0edb4e8a90aad459991ad9f6813e744d671343fd75d2613a50e220"
+}

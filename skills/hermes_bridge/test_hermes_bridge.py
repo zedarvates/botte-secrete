@@ -31,10 +31,10 @@ def main() -> int:
         cfg["mcpServers"]["botte-llm"]["args"] == ["-m", "skills.llm_mcp.server"]
         and cfg["mcpServers"]["botte-llm"]["cwd"] == "/x/botte-secrete", state)
 
-    _ok("5 tool schemas match the roadmap's named tools",
+    _ok("focused tool schemas include routing and QA run manifests",
         {s["name"] for s in TOOL_SCHEMAS} == {
             "botte_auto_route", "botte_local_chat", "botte_fusion",
-            "botte_find_skills", "botte_infra_tips"}, state)
+            "botte_find_skills", "botte_infra_tips", "botte_qa_agent_run"}, state)
     _ok("every schema is OpenAI-function-calling shaped",
         all("parameters" in s and s["parameters"]["type"] == "object" for s in TOOL_SCHEMAS),
         state)

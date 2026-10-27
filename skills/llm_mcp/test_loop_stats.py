@@ -55,3 +55,24 @@ def test_loop_stats_is_returned_through_mcp_tools_call() -> None:
     payload = json.loads(response["result"]["content"][0]["text"])
     assert payload["iterations"] == 0
     assert payload["success"] is False
+
+
+def main() -> int:
+    passed = 0
+    failed = 0
+    for test in (
+        test_loop_stats_dispatch_returns_decodable_summary,
+        test_loop_stats_is_returned_through_mcp_tools_call,
+    ):
+        try:
+            test()
+            passed += 1
+        except Exception as exc:
+            failed += 1
+            print(f"FAIL {test.__name__}: {type(exc).__name__}: {exc}")
+    print(f"{passed} passed, {failed} failed")
+    return 1 if failed else 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

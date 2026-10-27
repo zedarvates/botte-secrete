@@ -1,0 +1,28 @@
+{
+  "schema": "botte.local-worker-benchmark-plan/v1",
+  "authority": "SIMULATE",
+  "endpoint": "http://127.0.0.1:11434",
+  "api_key_env": "",
+  "models": [
+    {
+      "id": "granite-4.2-8b-q4km",
+      "model": "granite42-8b-q4km",
+      "family": "ibm-granite-4.2-8b",
+      "quantization": "Q4_K_M",
+      "source_uri": "https://huggingface.co/ibm-granite/granite-4.2-8b-GGUF"
+    },
+    {
+      "id": "qwen2.5-coder-7b-current",
+      "model": "qwen2.5-coder:7b",
+      "family": "qwen2.5-coder-7b",
+      "quantization": "runtime-declared",
+      "source_uri": "local:verify-runtime-manifest-before-run"
+    }
+  ],
+  "repetitions": 3,
+  "warmup": 1,
+  "timeout_s": 180,
+  "max_tokens": 512,
+  "temperature": 0,
+  "telemetry_interval_s": 0.25
+}

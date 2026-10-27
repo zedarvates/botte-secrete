@@ -30,16 +30,30 @@ from skills.atomic_json import write_json
 os.environ.setdefault("BOTTE_NN_AUTO_LABELS", "0")
 
 # (label, command, module_prefix) — the e2e script + every module's test_<module>.
-# module_prefix is the skills/ directory prefix used for --changed matching.
+# The third field lists file or directory inputs used for --changed matching.
 SUITES = [
     ("e2e", [sys.executable, "skills/test_e2e.py"], ""),
+    ("completion_proof", [sys.executable, "-m", "skills.completion_proof.test_completion_proof"], "skills/completion_proof/"),
+    ("completion_verify", [sys.executable, "-m", "skills.completion_proof.test_verify"], "skills/completion_proof/"),
+    ("runner_exit_verdict", [sys.executable, "scripts/test_runner_exit_verdict.py"], "scripts/"),
+    ("response_cache_exact", [sys.executable, "-m", "skills.response_cache.test_exact"], "skills/response_cache/"),
+    ("universal_compressor", [sys.executable, "-m", "skills.universal_compressor.test_universal_compressor"], "skills/universal_compressor/"),
+    ("compression_benchmark", [sys.executable, "-m", "skills.universal_compressor.test_benchmark"], "skills/universal_compressor/"),
+    ("caveman", [sys.executable, "-m", "skills.caveman.test_caveman"], "skills/caveman/"),
+    ("loop_cost_reporting", [sys.executable, "-m", "skills.loop_optimizer.test_cost_reporting"], "skills/loop_optimizer/"),
     ("cli_router", [sys.executable, "-m", "skills.test_cli"], "skills/"),
     ("llm_backends", [sys.executable, "-m", "skills.llm_backends.test_llm_backends"], "skills/llm_backends/"),
     ("directives_audit", [sys.executable, "-m", "skills.directives_audit.test_directives_audit"], "skills/directives_audit/"),
     ("auto_router", [sys.executable, "-m", "skills.auto_router.test_auto_router"], "skills/auto_router/"),
+    ("router_outcome", [sys.executable, "-m", "skills.auto_router.test_outcome_adapter"], "skills/auto_router/"),
     ("skill_finder", [sys.executable, "-m", "skills.skill_finder.test_skill_finder"], "skills/skill_finder/"),
     ("project_profiler", [sys.executable, "-m", "skills.skill_project_optimizer.test_profiler"], "skills/skill_project_optimizer/"),
     ("bootstrap", [sys.executable, "-m", "skills.bootstrap.test_bootstrap"], "skills/bootstrap/"),
+    ("codex_distribution", [sys.executable, "-m", "skills.plugins.test_distribution"], (
+        "plugins/botte-secrete/", ".agents/plugins/marketplace.json", "pyproject.toml",
+        "skills/__init__.py", "skills/llm_mcp/", "skills/plugins/", "LICENSE",
+        "scripts/run_tests.py", "scripts/test_runner_exit_verdict.py",
+    )),
     ("infra_advisor", [sys.executable, "-m", "skills.infra_advisor.test_infra_advisor"], "skills/infra_advisor/"),
     ("prompt_improver", [sys.executable, "-m", "skills.prompt_improver.test_prompt_improver"], "skills/prompt_improver/"),
     ("metrics", [sys.executable, "-m", "skills.metrics.test_metrics"], "skills/metrics/"),
@@ -56,6 +70,7 @@ SUITES = [
     ("cost_estimator", [sys.executable, "-m", "skills.cost_estimator.test_cost_estimator"], "skills/cost_estimator/"),
     ("trends", [sys.executable, "-m", "skills.trends.test_trends"], "skills/trends/"),
     ("dashboard", [sys.executable, "-m", "skills.dashboard.test_dashboard"], "skills/dashboard/"),
+    ("quality_dashboard", [sys.executable, "-m", "skills.dashboard.test_quality_compass"], "skills/dashboard/"),
     ("fallow_scanner", [sys.executable, "-m", "skills.fallow_like.test_scanner"], "skills/fallow_like/"),
     ("dead_code", [sys.executable, "-m", "skills.fallow_like.test_dead_code"], "skills/fallow_like/"),
     ("taint", [sys.executable, "-m", "skills.fallow_like.test_taint"], "skills/fallow_like/"),
@@ -66,17 +81,31 @@ SUITES = [
     ("cwe_kb", [sys.executable, "-m", "skills.cwe_kb.test_cwe_kb"], "skills/cwe_kb/"),
     ("botte_nn", [sys.executable, "-m", "skills.botte_nn.test_botte_nn"], "skills/botte_nn/"),
     ("features", [sys.executable, "-m", "skills.botte_nn.test_features"], "skills/botte_nn/"),
+    ("error_provenance", [sys.executable, "-m", "skills.botte_nn.test_error_classifier_provenance"], "skills/botte_nn/"),
     ("auto_labels", [sys.executable, "-m", "skills.botte_nn.test_auto_labels"], "skills/botte_nn/"),
+    ("meta_harness", [sys.executable, "-m", "skills.meta_harness.test_meta_harness"], "skills/meta_harness/"),
     ("local_harness", [sys.executable, "-m", "skills.local_harness.test_verifier"], "skills/local_harness/"),
     ("harness_executor", [sys.executable, "-m", "skills.local_harness.test_executor"], "skills/local_harness/"),
     ("harness_bench", [sys.executable, "-m", "skills.local_harness.test_bench"], "skills/local_harness/"),
+    ("worker_benchmark", [sys.executable, "-m", "skills.local_harness.test_worker_benchmark"], "skills/local_harness/"),
+    ("migration_audit", [sys.executable, "-m", "skills.migration_audit.test_migration_audit"], "skills/migration_audit/"),
+    ("memory_quarantine", [sys.executable, "-m", "skills.memory_hub.test_quarantine"], "skills/memory_hub/"),
     ("calibration", [sys.executable, "-m", "skills.botte_nn.test_calibration"], "skills/botte_nn/"),
     ("audit_dag", [sys.executable, "-m", "skills.audit_dag.test_audit_dag"], "skills/audit_dag/"),
     ("nn_audit", [sys.executable, "-m", "skills.nn_audit.test_nn_audit"], "skills/nn_audit/"),
+    ("hf_provenance", [sys.executable, "-m", "skills.hf_provenance.test_hf_provenance"], "skills/hf_provenance/"),
     ("security_scanner", [sys.executable, "-m", "skills.security_scanner.test_security_scanner"], "skills/security_scanner/"),
     ("context_profiler", [sys.executable, "-m", "skills.context_profiler.test_context_profiler"], "skills/context_profiler/"),
     ("lazy_tools", [sys.executable, "-m", "skills.llm_mcp.test_lazy"], "skills/llm_mcp/"),
+    ("loop_stats", [sys.executable, "-m", "skills.llm_mcp.test_loop_stats"], "skills/llm_mcp/"),
     ("events", [sys.executable, "-m", "skills.events.test_events"], "skills/events/"),
+    ("quality_compass", [sys.executable, "-m", "skills.trajectory.test_quality"], "skills/trajectory/"),
+    ("quality_outcomes", [sys.executable, "-m", "skills.trajectory.test_outcome"], "skills/trajectory/"),
+    ("agent_run_manifests", [sys.executable, "-m", "skills.trajectory.test_agent_run"], "skills/trajectory/"),
+    ("ci_outcomes", [sys.executable, "-m", "skills.trajectory.test_ci"], "skills/trajectory/"),
+    ("task_quality_status", [sys.executable, "-m", "skills.trajectory.test_task_status"], "skills/trajectory/"),
+    ("quality_routing_benchmark", [sys.executable, "-m", "skills.trajectory.test_benchmark"], "skills/trajectory/"),
+    ("asset_quality", [sys.executable, "-m", "skills.asset_quality.test_asset_quality"], "skills/asset_quality/"),
     ("demo", [sys.executable, "-m", "skills.demo.test_demo"], "skills/demo/"),
     ("bench", [sys.executable, "-m", "skills.bench.test_bench"], "skills/bench/"),
     ("hermes_bridge", [sys.executable, "-m", "skills.hermes_bridge.test_hermes_bridge"], "skills/hermes_bridge/"),
@@ -105,7 +134,8 @@ def _git_changed_files(repo: Path) -> list[str]:
 def _suites_for_changes(changed: list[str]) -> set[int]:
     """Return indices of suites affected by the changed files.
 
-    A changed file matches a suite if its path starts with the suite's module_prefix.
+    A changed file matches a directory input ending in / or an exact file input.
+    Suites may declare one input or a tuple covering their cross-module contracts.
     The e2e suite (index 0) always runs — it tests cross-cutting concerns.
     Scripts/ changes also trigger e2e.
     """
@@ -114,7 +144,8 @@ def _suites_for_changes(changed: list[str]) -> set[int]:
         for idx, (label, cmd, prefix) in enumerate(SUITES):
             if not prefix:  # skip e2e (already handled)
                 continue
-            if f.startswith(prefix):
+            inputs = (prefix,) if isinstance(prefix, str) else prefix
+            if any(f.startswith(value) if value.endswith("/") else f == value for value in inputs):
                 affected.add(idx)
         # scripts/ changes may affect multiple suites
         if f.startswith("scripts/"):
@@ -203,7 +234,8 @@ def main() -> int:
             if mm:
                 m = mm
         p, f = (int(m.group(1)), int(m.group(2))) if m else (0, 1)
-        if not m and proc.returncode != 0:
+        # A passing-looking summary cannot override a failed child process.
+        if proc.returncode != 0:
             f = max(f, 1)
         total_pass += p
         total_fail += f

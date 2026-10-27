@@ -1,0 +1,4 @@
+Preuve manquante
+Une référence ou un fichier nécessaire manque.
+Suite : Récupérer les pièces auprès de l'exécuteur des tests.
+Portée : uniquement les tests enregistrés et les fichiers listés ; exécuteur de confiance requis.

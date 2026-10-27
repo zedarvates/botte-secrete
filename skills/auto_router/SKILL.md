@@ -37,6 +37,13 @@ with `route_feedback` (or
 `python -m skills.botte_nn.active_learning verify <id> local|cloud`) only after
 the correct route is known; a backend return/failure is telemetry, not a label.
 
+Executed routes also emit a private `botte.quality-outcome/v1` lifecycle
+envelope. A returned or cached answer is unverified `PARTIAL`, an unavailable
+route is `ABSTAINED`, and a backend error is unverified `FAIL`. Pass
+`--execution-id` when retry/replay deduplication matters. The identifier and
+task text are hashed before persistence, and these router facts can neither
+activate a learned route nor promote themselves to Quality Compass labels.
+
 ## Cloud providers
 
 ```bash
