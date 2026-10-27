@@ -97,6 +97,7 @@ SUITES = [
     ("security_scanner", [sys.executable, "-m", "skills.security_scanner.test_security_scanner"], "skills/security_scanner/"),
     ("context_profiler", [sys.executable, "-m", "skills.context_profiler.test_context_profiler"], "skills/context_profiler/"),
     ("lazy_tools", [sys.executable, "-m", "skills.llm_mcp.test_lazy"], "skills/llm_mcp/"),
+    ("loop_stats", [sys.executable, "-m", "skills.llm_mcp.test_loop_stats"], "skills/llm_mcp/"),
     ("events", [sys.executable, "-m", "skills.events.test_events"], "skills/events/"),
     ("quality_compass", [sys.executable, "-m", "skills.trajectory.test_quality"], "skills/trajectory/"),
     ("quality_outcomes", [sys.executable, "-m", "skills.trajectory.test_outcome"], "skills/trajectory/"),

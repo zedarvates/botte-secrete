@@ -1421,6 +1421,8 @@ def _tool_loop_record(args: dict) -> str:
 def _tool_loop_stats(_args: dict) -> str:
     from skills.loop_optimizer.ledger import LoopLedger
     ledger = LoopLedger()
+    return json.dumps(ledger.summarize(ledger.read()), ensure_ascii=False, separators=(",", ":"))
+
 
 def _tool_search_hub(args: dict) -> str:
     from skills.memory_hub.mcp import dispatch as _mh
@@ -1451,8 +1453,6 @@ def _tool_forget_memory(args: dict) -> str:
     from skills.memory_hub.mcp import dispatch as _mh
     import json
     return json.dumps(_mh("forget_memory", args), ensure_ascii=False)
-
-    return json.dumps(ledger.summarize(ledger.read()), ensure_ascii=False, separators=(",", ":"))
 
 
 DISPATCH = {
