@@ -57,6 +57,37 @@ def _plain(text: str) -> str:
     return normalized.translate(str.maketrans({"’": "'", "‘": "'", "ʼ": "'"}))
 
 
+def _github_subject_labels(normalized: str, labels: list[str]) -> tuple[list[str], bool]:
+    """Separate PR-search subjects from explicit test/change commands.
+
+    This small clause grammar only applies when the first clause is a GitHub
+    research request. It is not a general parser or permission decision.
+    """
+    parts = re.split(
+        r"([,;:.!?\n]|\b(?:and|then|et|puis|ensuite|while|tout en|before|after|avant(?: de)?|apres(?: avoir)?)\b)", normalized)
+    clauses = [(parts[index].strip(), parts[index - 1].strip() if index else "")
+               for index in range(0, len(parts), 2) if parts[index].strip()]
+    prefix = r"(?:(?:please|also|can you|could you|would you|peux[- ]tu|pourrais[- ]tu|pouvez[- ]vous|pourriez[- ]vous|merci de|veuillez)\s+){0,2}"
+    research = r"(?:find|search|look up|locate|review|inspect|read|check|show|chercher|cherche|rechercher|recherche|retrouver|retrouve|trouver|trouve|examiner|examine|lire|lis|verifier|verifie|afficher|affiche)\b"
+    if ("github_research" not in labels or not clauses
+            or not re.match(prefix + research, clauses[0][0])
+            or not re.search(_RULES["github_research"], clauses[0][0])):
+        return labels, False
+    commands = {
+        "software_testing": r"(?:run|rerun|execute|launch|start|perform|carry out|test|tester|teste|testez|executer|execute|lancer|lance|lancez|relancer|relance|effectuer|effectue|effectuez|faire|fais|faites|passer|passe|passez|realiser|realise|realisez|running|executing|testing)\b",
+        "code_work": r"(?:fix|debug|compile|build|refactor|change|modify|patch|correct|repair|corriger|corrige|corrigez|compiler|refactoriser|debugger|modifier|modifie|modifiez|changer|changez|reparer|repare|reparez|fixing|debugging|compiling|building|refactoring|changing|modifying|patching|correcting|repairing)\b",
+    }
+    subjects = {
+        "software_testing": r"test\s+(?:results?|failures?|errors?|regressions?|coverage|logs?|reports?)\b",
+        "code_work": r"build\s+(?:results?|failures?|errors?|logs?|reports?|status|pipelines?)\b",
+    }
+    kept = [label for label in labels if label not in commands or any(
+        re.match(prefix + commands[label], clause) and re.search(_RULES[label], clause)
+        and not (separator in {"and", "et"} and re.match(subjects[label], clause))
+        for clause, separator in clauses)]
+    return kept, kept != labels
+
+
 def _task_labels(task: str) -> tuple[list[str], list[str]]:
     """Discard explicitly quoted material; abstain on negated intent clauses.
 
@@ -77,6 +108,9 @@ def _task_labels(task: str) -> tuple[list[str], list[str]]:
     if re.search(r"\b(not|never|dont|cannot|[a-z]+n't|ne|pas|jamais|sans|aucuns?|aucunes?|nullement|guere|ni)\b|\bn'[a-z]+", normalized):
         return [], reasons + ["negation_requires_host_review"]
     labels = [name for name, pattern in _RULES.items() if re.search(pattern, normalized)]
+    labels, subjects_ignored = _github_subject_labels(normalized, labels)
+    if subjects_ignored:
+        reasons.append("github_subject_terms_ignored")
     if ("game_playtest" in labels
             and not re.search(r"\b(playtests?|gameplay|jouer|jouable|tester|teste|testez|tests?|testing|play|control|piloter|capture|observe|observer)\b", normalized)):
         labels.remove("game_playtest")

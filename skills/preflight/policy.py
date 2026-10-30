@@ -3,7 +3,7 @@
 The gap the policy closes: our optimizations are opt-in, so a fresh prompt (after
 a component update, or from another dev/agent) bypasses them. A committed
 `.botte/policy.md` makes the rules explicit and consistent across people and
-agents — the preflight hook injects it every turn so nobody has to remember.
+agents. The local preflight hook can add bounded, task-specific guidance.
 """
 
 from __future__ import annotations
@@ -19,17 +19,26 @@ DEFAULT_POLICY = """\
 Shared rules for all agents and developers on this project. Keep cheap, keep local.
 
 ## Routing (cost)
-- **Default to LOCAL** for cheap/transformational work: classification,
-  extraction, short summaries, translation, formatting, syntax checks, and
-  **choosing which skills/tools to use**. Use the `botte-llm` MCP tools
-  (`local_chat`, `auto_route`, `find_skills`) — these cost 0 cloud tokens.
-- Escalate to the cloud model **only** for genuine reasoning: architecture,
-  multi-file changes, security, debugging root-causes.
-- Prefer `rtk <command>` for terminal commands (compact output).
+- Use Parcimonia for the first assessment of work that needs research, tool
+  selection, code changes or test planning, when `assess_task` is available.
+  Reuse a current preflight assessment; skip extra calls for trivial requests
+  and direct actions whose tool and scope are already clear.
+- Treat lexical proposals as hints. Check the actual offered tool schema and
+  prerequisites; an abstention returns interpretation to the host. Do not infer
+  permission, risk, locality or a working local backend from prompt wording.
+- For GitHub/PR research, prepare scoped reads with `plan_github_research`, use
+  the connected GitHub reader, then `summarize_github_evidence` for bulky supplied
+  results when useful. Retain source links, completeness and head/base revisions.
+- Prefer deterministic helpers and verified cache reuse for cheap transformations.
+  Use a local model only when its backend and task suitability are established.
+  Keep genuine architecture, security and debugging reasoning with the host.
+- No model call inside a helper does not imply zero host tokens or free compute.
+  Measure the accepted workflow, including tool overhead, retries and fallback.
+- Prefer `rtk <command>` when available for compact terminal output.
 
 ## Prompts
-- Before a big/ambiguous request, improve it locally (`improve_prompt`) so the
-  cloud model starts from a structured, unambiguous prompt.
+- Split or clarify ambiguous work using evidence and host judgment. Consider
+  `improve_prompt` only when useful and available.
 
 ## Hygiene (drift)
 - After a component update or before a checkup, run `/checkup` (or
@@ -42,8 +51,8 @@ Shared rules for all agents and developers on this project. Keep cheap, keep loc
 
 AGENTS_POINTER = (
     "\n## Botte Secrète policy\n"
-    "This project follows `.botte/policy.md` (prefer local models for cheap work, "
-    "improve prompts locally, run `/checkup` after updates). Read it.\n"
+    "This project follows `.botte/policy.md`: use Parcimonia first assessment when "
+    "useful, verify tool prerequisites and evidence, and run `/checkup` after updates. Read it.\n"
 )
 
 

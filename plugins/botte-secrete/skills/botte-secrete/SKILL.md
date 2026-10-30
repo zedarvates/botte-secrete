@@ -1,6 +1,6 @@
 ---
 name: botte-secrete
-description: Use the separately installed Botte Secrète local runtime for context budgets, compression, routing, code audit and evidence workflows. Use when the user asks to use Botte Secrète through its local MCP tools. Not for installing unknown packages, providing model weights or treating this plugin as the runtime implementation.
+description: Use the connected Botte Secrète runtime and Parcimonia helpers for first assessment of research, GitHub/PR review, tool selection, code changes and software or game test planning. Use for these tasks without requiring the user to name Botte. Skip trivial conversation and obvious direct actions; verify current schemas and prerequisites. Local runtime installation is separate from this plugin.
 license: MIT
 metadata:
   version: "1.11.0"
@@ -12,7 +12,9 @@ metadata:
    `botte-mcp` is available to Codex. The plugin bundles instructions and MCP
    wiring, not Python implementations or optional dependencies. If the server
    cannot start, report the missing prerequisite and use the plugin README's
-   runtime setup instructions.
+   runtime setup instructions for an installation request. For an ordinary task,
+   continue with available host tools; do not block the work or install a runtime
+   merely because an optional helper is missing.
 2. Inspect the connected `botte-llm` server's available tools and their schemas.
    Choose a tool supported by that installed version; do not invent tool names,
    arguments, service endpoints or CLI subcommands.
@@ -32,8 +34,9 @@ metadata:
 
 ## Parcimonia first assessment
 
-For work requiring tool selection or research planning, call `assess_task` when
-available. Pass the user's task and a small inventory of relevant tools actually
+For work requiring tool selection or research planning, reuse a current
+Parcimonia assessment from the local preflight when one is supplied. Otherwise
+call `assess_task` when available. Pass the user's task and a small inventory of relevant tools actually
 available in the current session. Read the shortlisted tool's real schema before
 calling it. Metadata and lexical scores do not verify capabilities or authorize
 execution. An abstention returns interpretation to the host agent. Skip this

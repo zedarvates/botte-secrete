@@ -1,47 +1,47 @@
 ---
 name: preflight
-description: Make the token-saving optimizations automatic instead of opt-in — a committed project policy plus a UserPromptSubmit hook that injects the prefer-local rules and suggested skills on every prompt, so a fresh prompt (after a component update, or from another dev/agent) never bypasses local routing. Use when the user wants the prefer-local behaviour enforced automatically, consistency across multiple devs/agents, or asks why their prompts aren't using local models by default.
+description: Add selective local Parcimonia task assessment to the existing Claude Code UserPromptSubmit hook and maintain the shared project policy. Use when a local project should assess supported work before choosing tools, or when repeated prompts bypass the configured guidance. This hook does not provide Codex or ChatGPT Work cloud lifecycle support.
 ---
 
-# preflight — enforce prefer-local, automatically
+# Selective Parcimonia preflight
 
-The gap this closes: the optimizations (local routing, prompt improvement, skill
-search) are **opt-in**, so a fresh prompt — especially after an update or from
-another dev/agent — bypasses them. Enforcement that doesn't depend on the model
-remembering:
-
-## 1. Committed policy (`.botte/policy.md`)
-The shared source of truth every dev and agent reads: default to local for cheap
-work, escalate only hard reasoning, improve big prompts, run `/checkup` after
-updates, budget. **Commit it** so multi-dev / multi-agent stays consistent.
+Keep the shared `.botte/policy.md` under version control and point the project's
+agent instructions to it. The policy guides the host; a tool recommendation
+does not establish availability, permission or a verified result.
 
 ```python
 from skills.preflight import policy
-policy.write_default(project)          # idempotent
-policy.ensure_agents_pointer(project)  # links AGENTS.md/CLAUDE.md to it
+policy.write_default(project)          # Idempotent; preserves an existing policy.
+policy.ensure_agents_pointer(project)
 ```
 
-## 2. Preflight hook (every turn, ~0 cost)
-A `UserPromptSubmit` hook that, before the expensive model sees the prompt,
-injects: the prefer-local rule, the top relevant skills (lexical `find_skills`,
-0 tokens), and an `improve_prompt` nudge for big/ambiguous requests. Crash-proof
-(a hook must never block you) and fast (no LLM call).
+The existing Claude Code hook calls `assess_task` locally. For supported work it
+emits the proposed intent, conditional workflow guidance and at most three
+skill-name hints. A detected mixed workflow returns an abstention for the host
+to interpret or split. Trivial, unsupported and negated requests add no context.
+The host retains the original prompt and its constraints.
 
-```bash
-echo '{"prompt":"classify these tickets","cwd":"."}' | python -m skills.preflight.hook
+The hook makes no model or network call and executes no selected tool. Input is
+limited to 64 KiB UTF-8, the task to 16 KiB, and emitted context to 1 KiB including
+the final newline. Invalid input or an internal failure produces no context and
+exits successfully so the user's prompt remains unblocked. These properties do
+not establish zero host tokens, zero compute cost or measured savings.
+
+```sh
+printf '%s' '{"prompt":"Rechercher les PR GitHub","cwd":"."}' | python -m skills.preflight.hook
 ```
 
-The deployer wires it automatically into `.claude/settings.json`:
+`python -m skills.bootstrap.cli <project>` can install the existing
+`.claude/settings.json` entry without replacing unrelated settings:
 
 ```json
 {"hooks": {"UserPromptSubmit": [{"hooks": [
   {"type": "command", "command": "python -m skills.preflight.hook"}]}]}}
 ```
 
-## Install
-`python -m skills.bootstrap.cli <project>` writes the policy, wires the hook and
-points AGENTS.md at the policy — all non-destructively. Works in any harness with
-a pre-prompt hook (Claude Code today); the hook script is standalone.
+This wiring targets Claude Code. Run the module standalone for a supported
+local pre-prompt integration; do not add it to the public Codex plugin manifest
+or claim that it runs in ChatGPT Work cloud. Codex and cloud hosts use their
+supported skill/MCP guidance and must check the tools exposed by that session.
 
-Related: [[bootstrap]] (installs this), [[checkup]] (the canonical audit),
-[[skill_finder]], [[prompt_improver]], [[auto_router]].
+Related: [[bootstrap]], [[skill_finder]], [[checkup]].

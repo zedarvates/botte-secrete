@@ -8,6 +8,62 @@ from skills.preflight.assessment import assess_task
 
 
 class AssessmentTests(unittest.TestCase):
+    def test_github_research_subjects_are_not_commands_to_run_tests_or_change_code(self):
+        for task in (
+            "Retrouver les PR liées à une régression de reconnexion",
+            "Rechercher les PR GitHub sur les tests de reconnexion",
+            "Trouver les PR qui corrigent un bug de cache",
+            "Peux-tu retrouver les PR sur un build en échec ?",
+            "Find GitHub PRs about regression tests",
+            "Review pull requests for the build failure",
+            "Please find GitHub PRs related to the cache fix",
+            "Search GitHub PRs about tests and reconnection bugs",
+            "Find PRs about test failures and build errors.",
+            "Find PRs and test results about the parser.",
+            "Cherche les PR sur les tests de build.",
+            "Recherche les PR concernant ce bug de tests.",
+            "Trouve les PR qui corrigent le bug de build.",
+        ):
+            with self.subTest(task=task):
+                result = assess_task(task)
+                self.assertEqual(result["intent"], "github_research")
+                self.assertIn("github_subject_terms_ignored", result["reasons"])
+                self.assertFalse(result["boundaries"]["execution"])
+
+    def test_explicit_github_and_test_or_change_commands_remain_ambiguous(self):
+        for task in (
+            "Chercher les PR puis lancer les tests",
+            "Rechercher les PR GitHub, puis corriger le code",
+            "Run tests and search GitHub",
+            "Fix code then find GitHub PRs",
+            "Find GitHub PRs and please run regression tests",
+            "Search pull requests; build the project",
+            "Review GitHub PRs while running tests",
+            "Search GitHub PRs then fix failing tests",
+            "Rechercher les PR puis effectuer les tests",
+            "Rechercher les PR et modifier le code",
+            "Find GitHub PRs and perform the tests",
+            "Search GitHub PRs and change the code",
+            "Search GitHub PRs before running pytest",
+            "Find PRs before fixing the bug",
+            "Chercher les PR avant de lancer les tests",
+            "Search PRs then build reports",
+        ):
+            with self.subTest(task=task):
+                result = assess_task(task)
+                self.assertEqual(result["status"], "abstained")
+                self.assertIn("multiple_workflows_require_host_review", result["reasons"])
+                self.assertEqual(result["candidate_tools"], [])
+
+    def test_github_subject_rule_keeps_negations_quotes_and_unclear_scope_conservative(self):
+        for task in (
+            "Ne recherche pas les PR sur les régressions",
+            '"Find GitHub PRs about regression tests"',
+            "Discuss the PR regression tests",
+        ):
+            with self.subTest(task=task):
+                self.assertEqual(assess_task(task)["status"], "abstained")
+
     def test_french_github_search_shortlists_only_offered_metadata(self):
         result = assess_task("Rechercher les PR GitHub ouvertes", [
             {"name": "github_search", "description": "Search GitHub pull requests"},

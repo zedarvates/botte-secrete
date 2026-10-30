@@ -4,6 +4,9 @@
 
 ## v1.11.0 (unreleased)
 
+- Connect selective local preflight assessment and project policy to Parcimonia,
+  broaden the plugin skill's task triggers, and document candidate installation
+  from one reviewed commit for both runtime and marketplace.
 - Compact supplied GitHub review data while preserving unknown states, revision
   mismatches, failure counts and source links. Report exact compact-JSON UTF-8
   sizes separately from unknown token usage and cost.

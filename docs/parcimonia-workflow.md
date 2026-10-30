@@ -27,6 +27,14 @@ validated call. Unsupported, negated or ambiguous requests abstain. This is a
 conservative lexical heuristic, not a general language or authorization parser.
 Risk, permission, locality and real-time capability remain unknown.
 
+The plugin's skill metadata now covers these work types without requiring a
+Botte mention. Project guidance uses the same first-assessment rule. The local
+preflight hook performs a selective assessment itself and supplies bounded
+guidance; the host should reuse it rather than repeat the classification.
+Trivial requests emit no hook context. This hook is integrated with Claude Code,
+not Codex or Work cloud; those surfaces use available skills/tools and host
+selection. No package can guarantee that a host will choose a skill every turn.
+
 Inputs: task at most 16 KiB UTF-8, at most 64 tool records, each description at
 most 2 KiB, budget 0–16000 estimated metadata tokens. The estimate uses character
 count divided by four; it is not billed usage. Cloud uses exact lexical ranking;

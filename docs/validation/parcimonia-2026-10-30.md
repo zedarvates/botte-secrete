@@ -90,3 +90,63 @@ detail URL handling, bounded categories, revision mismatches and self-sizing
 digit boundaries. Integral JSON literals are the portable numeric input form;
 Python rejects a float literal such as 1.0 where JavaScript represents it as an
 integer. Real GitHub integer fields use the portable form.
+
+## Selective first-assessment continuation
+
+The connected cloud tools were used for first assessment, PR planning and the
+GitHub evidence summary. A live witness exposed an unnecessary abstention:
+`Retrouver les PR liées à une régression de reconnexion` was interpreted as both
+GitHub research and test execution. The correction distinguishes the subject of
+an explicit GitHub search from an additional command. Separate commands still
+abstain. The grammar remains deliberately bounded rather than a general parser.
+
+The existing local hook now calls the assessor itself, reuses that first pass
+for bounded guidance and emits nothing for trivial or unsupported input. It
+does not call a model or execute tools. Its assessor import is inside the
+fail-open boundary: a missing module produces no context and exit 0. The hook
+is the existing Claude Code integration; the Codex plugin and Work cloud do not
+run it. Their broader skill metadata and workflow instructions guide host
+selection without guaranteeing it. Existing customized project policies are
+not overwritten by the generated defaults.
+
+Final source checks for this increment:
+
+- Canonical Python runner: **1140 passed, 0 failed across 75 suites**.
+- Targeted preflight: 18 tests; bootstrap: 13 checks; assessment: 20 tests.
+- Cloud after preserving the parallel statistics update: **262 tests passed**;
+  compiled Worker research and statistics dispatch succeeded.
+- Documentation: 11 passed, 0 failed, 10 intentionally skipped commands;
+  73 Markdown files, 0 broken local links.
+- Project checkup completed; the temporary source checkout still reports no
+  project-local MCP configuration. No claim about a user's installed machine
+  follows from this source validation.
+
+The source history advanced concurrently to
+`1ff900bb7a2465d1b3ea90f94f7e559ce52a8d34`, which added statistics. A normal push
+rejected the older source base. The current source was reopened and only the
+assessment correction was reconciled; the statistics engine, fixtures and tests
+remain byte-identical to that parallel commit. The combined service candidate
+is 0.5.0 from `336c5a7ea610f8f687a11f32c3077d8c67222dea`.
+Site version 5 deployed successfully. The same live research witness changed
+from `abstained` with research/testing labels to `proposed/github_research`
+after deployment, with the same supplied tool inventory. A separate request
+to find PRs and then run tests still abstains. The statistics intent remains
+available; no tool execution is inferred from that assessment.
+
+### Hook context comparison
+
+These five authored probes compare the previous hook at `dadbbe83d4aa07950dfbcb569a0cb2763aaa987a`
+with the candidate using the same current skill catalog. Sizes cover the returned
+context string only, excluding CLI framing and the host's task completion.
+
+| Prompt | Previous UTF-8 bytes | Candidate UTF-8 bytes |
+| --- | ---: | ---: |
+| bonjour | 216 | 0 |
+| merci | 264 | 0 |
+| continue | 216 | 0 |
+| Retrouver les PR liées à une régression de reconnexion | 289 | 364 |
+| Find GitHub PRs then run tests | 285 | 171 |
+
+The research hint is longer because it carries the scoped workflow and checks.
+The trivial prompts receive no hook context. These examples establish selective
+emission, not general accuracy, billed-token reduction or end-to-end speed.
