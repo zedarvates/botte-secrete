@@ -120,6 +120,9 @@ approval and publication before filming instructions to search and install.
 See the [English video draft](demos/parcimonia-introduction.md).
 The [offline replay](demos/parcimonia-workflow-run.md) runs the authored examples
 and records helper-only timing and size without executing external tools.
+See the [runtime readiness validation](validation/parcimonia-readiness-2026-10-30.md)
+for the isolated installed-runtime check, diagnostic scope and GUI runner
+completion requirements. A generated script alone is not a completed test.
 
 For a paired comparison, keep task, target revision, success criteria and tool
 availability equal. Measure the whole accepted task, including assessment calls,
