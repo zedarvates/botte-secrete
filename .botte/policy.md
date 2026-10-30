@@ -2,6 +2,21 @@
 
 Shared rules for all agents and developers on this project. Keep cheap, keep local.
 
+## Parcimonia before substantive work
+- Before a substantive task or a materially different phase, call `assess_task`
+  if exposed by the connected Botte Secrete runtime. Supply the task and a small
+  inventory of relevant tools actually available; inspect their real schemas.
+- Reuse the assessment for a homogeneous batch. Reassess when the goal,
+  constraints, available tools or failure evidence changes; skip trivial direct
+  actions. Do not add an assessment before every file read or command.
+- Before scoped GitHub/PR research, use `plan_github_research` when available,
+  then execute the reads with a real GitHub tool. Keep revisions and read limits.
+- If a helper is absent, fails or abstains, note the limitation once and let the
+  host choose a suitable available workflow. Preserve the user's language,
+  negations, constraints and permissions; do not retry merely to force a route.
+- These helpers provide advisory plans, not execution or authorization. Verify
+  actual results and count assessment overhead before claiming any savings.
+
 ## Routing (cost)
 - **Default to LOCAL** for cheap/transformational work: classification,
   extraction, short summaries, translation, formatting, syntax checks, and

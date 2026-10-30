@@ -8,6 +8,7 @@ if __name__ == "__main__":
         "skills.preflight.test_assessment",
         "skills.preflight.test_github_plan",
         "skills.preflight.test_github_evidence",
+        "skills.preflight.test_portable_guidance",
         "skills.llm_mcp.test_assessment_tools",
     ])
     result = unittest.TextTestRunner().run(suite)

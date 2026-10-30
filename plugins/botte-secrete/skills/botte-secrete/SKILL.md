@@ -1,6 +1,6 @@
 ---
 name: botte-secrete
-description: Use the separately installed Botte Secrète local runtime for context budgets, compression, routing, code audit and evidence workflows. Use when the user asks to use Botte Secrète through its local MCP tools. Not for installing unknown packages, providing model weights or treating this plugin as the runtime implementation.
+description: Use before substantive tool selection, GitHub research, code changes, software tests or game playtests when Botte Secrète tools are connected, and when the user requests its routing, compression or evidence workflows. Consult Parcimonia once per phase with reuse and fallback. Requires a separately installed runtime; the plugin does not provide model weights or the runtime implementation.
 license: MIT
 metadata:
   version: "1.11.0"
@@ -32,12 +32,19 @@ metadata:
 
 ## Parcimonia first assessment
 
-For work requiring tool selection or research planning, call `assess_task` when
+Before substantive work or a materially different phase, call `assess_task` when
 available. Pass the user's task and a small inventory of relevant tools actually
 available in the current session. Read the shortlisted tool's real schema before
 calling it. Metadata and lexical scores do not verify capabilities or authorize
-execution. An abstention returns interpretation to the host agent. Skip this
-extra round trip when a trivial task already has an obvious direct action.
+execution. Reuse the assessment for a homogeneous batch; reassess when the goal,
+constraints, available tools or failure evidence changes. Skip this extra round
+trip when a trivial task already has an obvious direct action.
+
+If either helper is absent, fails or abstains, note the limitation once and let
+the host choose a suitable available workflow. Preserve the user's language,
+negations, constraints and permissions. Do not repeat calls merely to force a
+route, install a runtime or start a model automatically. Include assessment
+overhead in any measured comparison of total task cost.
 
 For scoped GitHub/PR research, use `plan_github_research` then an available GitHub
 reader. Retain source links, pagination limits and observed revisions; closed

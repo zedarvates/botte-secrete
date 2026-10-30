@@ -4,6 +4,13 @@ This version 1.11.0 plugin supplies one workflow skill and an MCP stdio connecti
 Its executable runtime is installed separately; installing this plugin does not
 install Python, Botte Secrète, optional dependencies, models or credentials.
 
+The bundled workflow skill includes Parcimonia assessment before substantive
+work, reuse for homogeneous batches and a fallback when helpers are absent or
+abstain. These instructions travel with the plugin; no personal skill or global
+hook is required. They guide the host and do not demonstrate that an assessment
+has run; they apply when the host loads or invokes the skill. Repository users also receive `AGENTS.md` and `.botte/policy.md`; the
+bootstrap carries that guidance into newly configured projects.
+
 ## Install the local runtime
 
 Use a checkout of Botte Secrète compatible with this plugin version. Install it

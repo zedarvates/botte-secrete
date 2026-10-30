@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Preflight hook — injects the prefer-local policy + suggested skills every turn.
+"""Preflight hook — emits workflow guidance and suggested skills for Claude Code.
 
-Closes the opt-in gap: instead of hoping the model remembers to go local / pick
-the right tools / improve the prompt, this runs on **every** prompt (before the
-expensive model sees it), deterministically, for ~0 cost.
+When wired, runs on each prompt before the host model sees it. The hook performs
+no assessment, network request or LLM call. Emitted context still costs host
+resources; the host remains responsible for following the guidance.
 
 Designed for Claude Code's `UserPromptSubmit` hook (reads JSON on stdin, prints
 context to stdout), but works standalone: pipe a prompt on stdin and it prints
@@ -22,8 +22,11 @@ import sys
 from pathlib import Path
 
 BOTTE_ROOT = Path(__file__).resolve().parents[2]
-if str(BOTTE_ROOT) not in sys.path:
-    sys.path.insert(0, str(BOTTE_ROOT))
+# The absolute script entry must prefer its own installation, even when the
+# caller's PYTHONPATH already lists it after a different checkout.
+sys.path.insert(0, str(BOTTE_ROOT))
+
+from skills.preflight.policy import PARCIMONIA_GUIDANCE
 
 
 def _read_input() -> tuple[str, Path]:
@@ -55,6 +58,9 @@ def _suggested_skills(prompt: str, project: Path) -> list[str]:
 
 def build_context(prompt: str, project: Path) -> str:
     lines = [
+        "[botte preflight] Read the project's .botte/policy.md when present; "
+        "the following is workflow guidance, not a completed assessment.",
+        PARCIMONIA_GUIDANCE.rstrip(),
         "[botte preflight] Prefer LOCAL for cheap work (classification/extraction/"
         "summaries/tool-choice) via local_chat·auto_route·find_skills = 0 cloud "
         "tokens; escalate only hard reasoning. Use `rtk <cmd>` in the terminal.",
