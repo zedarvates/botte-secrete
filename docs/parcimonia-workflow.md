@@ -10,6 +10,11 @@ The host still interprets the task, reads real tool schemas and verifies results
 Call `assess_task` with the task and a small inventory of tools actually available
 to the current host. This is useful before research, code work, transformations,
 software testing or game playtests. Skip extra calls for obvious trivial work.
+Reuse the result for a homogeneous batch; reassess when the goal, constraints,
+available tools or failure evidence changes. Do not assess every individual read.
+When a helper is absent, fails or abstains, note the limitation once and let the
+host select an available workflow while preserving the user's meaning and
+permissions. Do not retry merely to force a proposed route.
 
 ```json
 {
@@ -26,6 +31,14 @@ steps, checks and missing prerequisites. A tool name is a discovery hint, not a
 validated call. Unsupported, negated or ambiguous requests abstain. This is a
 conservative lexical heuristic, not a general language or authorization parser.
 Risk, permission, locality and real-time capability remain unknown.
+
+The plugin's skill metadata now covers these work types without requiring a
+Botte mention. Project guidance uses the same first-assessment rule. The local
+preflight hook performs a selective assessment itself and supplies bounded
+guidance; the host should reuse it rather than repeat the classification.
+Trivial requests emit no hook context. This hook is integrated with Claude Code,
+not Codex or Work cloud; those surfaces use available skills/tools and host
+selection. No package can guarantee that a host will choose a skill every turn.
 
 Inputs: task at most 16 KiB UTF-8, at most 64 tool records, each description at
 most 2 KiB, budget 0–16000 estimated metadata tokens. The estimate uses character
@@ -54,6 +67,22 @@ Free text is converted to quoted lexical terms inside the explicit repository
 scope. This intentionally limits search syntax; it is not a replacement for all
 GitHub search operators. A zero-result search may require a different lexical
 query or direct reference. No result is cached or promoted into verified memory.
+
+After reads, `summarize_github_evidence` accepts a supplied `report_json` string
+up to 128 KiB. Its envelope uses `repository`, `pull_request`, optional
+`observed_at`, `files`, `check_runs`, `statuses` and `completeness`. PR and file
+objects use GitHub REST fields; checks use `{total_count, check_runs}` and commit
+statuses use `{sha, state, statuses}`. Completeness keys are `metadata`, `files`,
+`checks` and `statuses`, each `unknown`, `partial` or `complete`. These remain
+caller declarations. Omit bodies, patches and logs when only metadata is needed.
+
+The summary retains revision identities, conclusion counts and prioritized
+attention items within a 12 KiB compact-JSON bound. Missing merge evidence stays
+unknown; no overall merge or passing verdict is produced. Omitted rows and
+external/unsafe detail URLs are signalled. Data remains unverified. Exact input
+and output UTF-8 byte sizes can show reduction or expansion; host tokens, cost
+and total-task latency remain unknown. The MCP wrapper is additional data beyond
+the measured JSON summary. Use the original read for omitted details.
 
 ## Exact file duplicate inspection
 
@@ -110,10 +139,44 @@ Python runtime. The Site-hosted cloud tools process supplied inputs in memory
 and do not connect to the user's local machine. Updating either deployment does
 not update the other. No hooks are required for these helpers.
 
+### Portable instructions
+
+New users receive instructions through committed and packaged entry points:
+
+| Entry point | Delivered guidance |
+| --- | --- |
+| Repository `AGENTS.md` | Links the committed `.botte/policy.md` before substantive work |
+| `skills.preflight.policy.DEFAULT_POLICY` | Writes the same Parcimonia section into a new project's `.botte/policy.md` |
+| Bootstrap `--create-agents-md` | Creates a missing `AGENTS.md`, links an existing `CLAUDE.md` when present, and points to the policy |
+| `skills.preflight.hook` | Emits the shared guidance on Claude Code `UserPromptSubmit`; does not execute assessment |
+| Codex plugin `skills/botte-secrete/SKILL.md` | Carries self-contained assessment, reuse and fallback instructions inside the installable subset |
+
+The bootstrap retains existing policy and instruction files. Merge new guidance
+into older custom policies deliberately; rerunning setup does not overwrite them.
+For a new Codex project, run
+`python -m skills.bootstrap.cli /path/to/project --create-agents-md`;
+creation is opt-in. New Claude hooks use absolute interpreter
+and script paths from the configuring installation. Legacy module-based hooks
+are retained and need explicit migration if they resolve an older checkout.
+Claude hook wiring is not evidence of an active Codex or global hook. Each host
+must expose the real tools, load its supported instructions and verify behavior.
+Installing the plugin does not install or activate the separate runtime.
+
+Offline delivery checks from a checkout:
+
+```sh
+python -m pytest --rootdir=. -q skills/preflight/test_portable_guidance.py
+python -m skills.preflight.test_preflight
+python -m skills.bootstrap.test_bootstrap
+python -m skills.plugins.test_distribution
+```
+
 A public Git repository or publicly reachable Site is separate from acceptance
 in the public plugin directory. Verify installation, authentication, listing
 approval and publication before filming instructions to search and install.
 See the [English video draft](demos/parcimonia-introduction.md).
+The [offline replay](demos/parcimonia-workflow-run.md) runs the authored examples
+and records helper-only timing and size without executing external tools.
 
 For a paired comparison, keep task, target revision, success criteria and tool
 availability equal. Measure the whole accepted task, including assessment calls,

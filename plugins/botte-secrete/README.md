@@ -4,6 +4,63 @@ This version 1.11.0 plugin supplies one workflow skill and an MCP stdio connecti
 Its executable runtime is installed separately; installing this plugin does not
 install Python, Botte Secrète, optional dependencies, models or credentials.
 
+This checkout is an unreleased candidate. To reproduce a reviewed candidate,
+pin the runtime and marketplace to the same full commit as described below.
+The generic `main` examples follow that branch and can resolve to a different
+version while a pull request is still open.
+
+## Reproduce a reviewed candidate
+
+Choose the full 40-character commit from the reviewed pull request, including
+the state of its checks. Replace `REVIEWED_FULL_COMMIT_SHA` and `ABSOLUTE_CHECKOUT`
+below. These placeholders are deliberately not a moving branch or an invented
+release tag. Keep the same commit in both the Git checkout and marketplace:
+
+```sh
+git clone --no-checkout https://github.com/zedarvates/botte-secrete.git ABSOLUTE_CHECKOUT
+git -C ABSOLUTE_CHECKOUT fetch origin REVIEWED_FULL_COMMIT_SHA
+git -C ABSOLUTE_CHECKOUT checkout --detach REVIEWED_FULL_COMMIT_SHA
+git -C ABSOLUTE_CHECKOUT rev-parse HEAD
+python3 -m pip install ABSOLUTE_CHECKOUT
+codex plugin marketplace add zedarvates/botte-secrete --ref REVIEWED_FULL_COMMIT_SHA
+codex plugin add botte-secrete@botte-secrete-marketplace
+```
+
+On Windows, use `python -m pip` and an absolute Windows checkout path. Inspect
+`codex plugin marketplace list` and confirm that the selected source is pinned
+to the chosen SHA before installing; an existing `main` registration is not that
+pin. A previously pinned source remains pinned until explicitly changed.
+
+Make the installed environment's `botte-mcp` available on Codex's PATH. In a new
+Codex conversation, verify the server's reported package version, available
+schemas and a read-only `assess_task` call. The version alone is insufficient
+when several unreleased commits share it; retain the reviewed source SHA too.
+For local cache iteration, use the timestamp procedure in the Update section.
+This recipe is an installation procedure, not evidence that a fresh install has
+already passed on every platform.
+
+For the consolidated three-workflow validation and its recorded limitations,
+see the [candidate guide](../../docs/parcimonia-candidate.md).
+
+## First-assessment behavior
+
+The plugin skill can now be selected for research, tool choice, code work and
+test planning without an explicit Botte mention. The host decides which skills
+to load; the package does not force every conversation through a helper. Reuse
+a supplied assessment, and skip extra calls for trivial or obvious direct work.
+
+The separate project preflight hook calls Parcimonia locally where that hook is
+installed. Its current integration is Claude Code's `UserPromptSubmit`; the
+Codex plugin ships no lifecycle hook, and Work cloud does not run that local
+hook. Cloud use relies on connected tools and workflow instructions instead.
+
+The bundled workflow skill includes Parcimonia assessment before substantive
+work, reuse for homogeneous batches and a fallback when helpers are absent or
+abstain. These instructions travel with the plugin; no personal skill or global
+hook is required. They guide the host and do not demonstrate that an assessment
+has run; they apply when the host loads or invokes the skill. Repository users also receive `AGENTS.md` and `.botte/policy.md`; the
+bootstrap carries that guidance into newly configured projects.
+
 ## Install the local runtime
 
 Use a checkout of Botte Secrète compatible with this plugin version. Install it

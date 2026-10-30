@@ -18,6 +18,7 @@ The agent still checks the tools and carries out the work.
 For GitHub, it prepares a scoped research plan: search for pull requests,
 read their current state, inspect relevant files, and check the exact commit.
 That helps us keep the evidence tied to the change we’re reviewing.
+It can also condense supplied results while retaining failures and revision details.
 
 For software tests, it suggests what to verify and what evidence to keep.
 Game testing is a future direction; real-time control needs a qualified adapter.
@@ -38,7 +39,7 @@ that these operations complete within those intervals.
 | --- | --- | --- |
 | 0–12 s | A clean title and the task entered in ChatGPT or Codex. | “Development preview”; identify the surface actually recorded. |
 | 12–29 s | Call `assess_task` for one clear GitHub task using a small inventory of tools actually available in that session. Then show one ambiguous request returning an abstention. | `status`, `intent`, tool suggestions and `capability_verified: false`. These are advisory outputs. |
-| 29–52 s | Call `plan_github_research` for `zedarvates/botte-secrete`. Have the host use its connected GitHub reader to execute the proposed search. Select a PR number from those actual results, prepare its PR plan, and read current metadata. | Distinguish “Plan returned” from “GitHub read performed by host”. Show the source URL, observed head SHA and actual `merged`/`merged_at`. Mark incomplete reads. |
+| 29–52 s | Call `plan_github_research` for `zedarvates/botte-secrete`. Have the host use its connected GitHub reader to execute the proposed search. Select a PR from actual results, read its metadata, then call `summarize_github_evidence` on supplied observations. | Distinguish planning, the host's GitHub read and compaction. Show source URL, revisions, `merged`/`merged_at`, incomplete reads and retained failure counts. Any size comparison covers the supplied JSON, not billed tokens or total task cost. |
 | 52–65 s | Assess a focused software-testing request. Show the host running the relevant check in the candidate checkout and retaining the command, exit code and tested revision. | The assessment did not run the tests. Use the actual outcome, including failures or environment limits. |
 | 65–77 s | Assess a game playtest request. Show its missing prerequisites. | “Future integration”; adapter, measured capture/input latency and stop condition still required. Do not show a fabricated live game controller. |
 | 77–90 s | Show the cloud/local setup distinction and the release status card. | Cloud deterministic helpers; local runtime installed separately; public directory submission pending until independently confirmed. |
