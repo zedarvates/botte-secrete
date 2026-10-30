@@ -70,5 +70,22 @@
     "latency_savings": null,
     "cost_savings": null
   },
-  "inherited_fix": "Includes the previously prepared PR147 French README 1.11.0 alignment and version-check diagnostic."
+  "inherited_fix": "Includes the previously prepared PR147 French README 1.11.0 alignment and version-check diagnostic.",
+  "stdio_protocol": {
+    "status": "passed",
+    "checks": [
+      "initialize",
+      "lazy discovery with schema",
+      "statistics tools/call"
+    ],
+    "observed_mean": 25.0,
+    "observed_p95": 38.5
+  },
+  "proposal": {
+    "pull_request": 148,
+    "target": "main",
+    "prerequisite_pr": 147,
+    "code_revision_tested": "3e97e4926b0cd0a9209ae700c8d60ce9b06c8e0f",
+    "ci_matrix": "requested_on_PR"
+  }
 }
