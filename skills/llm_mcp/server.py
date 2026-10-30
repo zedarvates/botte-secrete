@@ -54,6 +54,29 @@ SERVER_INFO = {"name": "botte-llm", "version": __version__}
 
 TOOLS = [
     {
+        "name": "check_local_links",
+        "description": "Check relative Markdown file/image links against supplied repository paths. "
+                       "Returns source lines and missing or unresolved targets; incomplete inventories "
+                       "cannot prove a target missing. No filesystem access, network, model call or "
+                       "anchor validation. Supplied data only; not a live repository audit.",
+        "inputSchema": {
+            "type": "object", "additionalProperties": False,
+            "properties": {
+                "documents": {"type": "array", "minItems": 1, "maxItems": 200, "items": {
+                    "type": "object", "additionalProperties": False,
+                    "properties": {"path": {"type": "string", "minLength": 1, "maxLength": 4096},
+                                   "text": {"type": "string", "maxLength": 1048576}},
+                    "required": ["path", "text"]}},
+                "available_paths": {"type": "array", "maxItems": 50000,
+                                    "items": {"type": "string", "minLength": 1, "maxLength": 4096}},
+                "inventory_complete": {"type": "boolean", "default": False},
+                "max_links": {"type": "integer", "minimum": 1, "maximum": 50000, "default": 10000},
+            }, "required": ["documents", "available_paths"],
+        },
+        "annotations": {"readOnlyHint": True, "destructiveHint": False,
+                        "idempotentHint": True, "openWorldHint": False},
+    },
+    {
         "name": "find_file_duplicates",
         "description": "Read-only exact duplicate file inspection under one explicit local directory. "
                        "Groups by size and full SHA-256, then confirms bytes; reports hard links "
@@ -1565,6 +1588,13 @@ def _tool_find_file_duplicates(args: dict) -> str:
     return json.dumps(find_file_duplicates(**args), ensure_ascii=True, allow_nan=False)
 
 
+def _tool_check_local_links(args: dict) -> str:
+    from skills.fallow_like.local_links import check_local_links
+    if not isinstance(args, dict) or set(args) - {"documents", "available_paths", "inventory_complete", "max_links"}:
+        raise ValueError("unsupported local-link arguments")
+    return json.dumps(check_local_links(**args), ensure_ascii=True, allow_nan=False)
+
+
 def _tool_plan_github_research(args: dict) -> str:
     from skills.preflight.github_plan import plan_github_research
     _assessment_arguments(args, {"repository", "query", "pr_number"})
@@ -1572,6 +1602,7 @@ def _tool_plan_github_research(args: dict) -> str:
 
 
 DISPATCH = {
+    "check_local_links": _tool_check_local_links,
     "find_file_duplicates": _tool_find_file_duplicates,
     "compute_statistics": _tool_compute_statistics,
     "assess_task": _tool_assess_task,

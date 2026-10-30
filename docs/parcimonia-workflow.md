@@ -64,6 +64,15 @@ hard links, partial scans and omitted results stay distinct. See the
 [file-duplicate contract](file-duplicates.md). This does not change the hosted
 cloud tools or add desktop behavior.
 
+## Supplied local Markdown links
+
+`check_local_links` checks documents and a repository path inventory supplied by
+the host. It reports source lines, missing versus unresolved targets and partial
+coverage. Incomplete inventories cannot establish absence. It performs no file
+access or network request; a host can supply Git-tree filenames and documents at
+one observed commit. See the [local-link contract](local-links.md). This Python
+increment does not update the independent hosted cloud service or desktop plans.
+
 ## Deterministic statistics
 
 For an explicit request to compute descriptive statistics, `assess_task` can

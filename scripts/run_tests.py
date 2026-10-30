@@ -73,6 +73,12 @@ SUITES = [
     ("quality_dashboard", [sys.executable, "-m", "skills.dashboard.test_quality_compass"], "skills/dashboard/"),
     ("fallow_scanner", [sys.executable, "-m", "skills.fallow_like.test_scanner"], "skills/fallow_like/"),
     ("file_duplicates", [sys.executable, "-m", "skills.fallow_like.test_file_duplicates"], "skills/fallow_like/"),
+    ("local_links", [sys.executable, "-m", "skills.fallow_like.test_local_links"], (
+        "skills/fallow_like/", "scripts/check_docs_links.py",
+    )),
+    ("local_links_integration", [sys.executable, "-m", "skills.llm_mcp.test_local_links"], (
+        "skills/fallow_like/", "skills/preflight/assessment.py", "skills/llm_mcp/", "scripts/check_docs_links.py",
+    )),
     ("file_duplicates_integration", [sys.executable, "-m", "skills.llm_mcp.test_file_duplicates"], (
         "skills/fallow_like/", "skills/preflight/assessment.py", "skills/llm_mcp/",
     )),
