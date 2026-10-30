@@ -17,7 +17,7 @@ spec.loader.exec_module(runner)
 class ExitVerdictTests(unittest.TestCase):
     def test_workbench_contract_changes_select_real_aggregate(self):
         for path in ('skills/app_test/reducer.py', 'skills/preflight/conformance.py',
-                     'skills/app_test/workbench.py', 'skills/cli.py'):
+                     'skills/app_test/workbench.py', 'skills/cli.py', 'skills/memory_hub/store.py'):
             with self.subTest(path=path):
                 selected = {runner.SUITES[i][0] for i in runner._suites_for_changes([path])}
                 self.assertIn('verification_workbench', selected)

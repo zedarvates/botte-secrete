@@ -54,6 +54,20 @@ SERVER_INFO = {"name": "botte-llm", "version": __version__}
 
 TOOLS = [
     {
+        "name": "review_knowledge_links",
+        "description": "Parcimonia: review supplied versioned documentary and receipt "
+                       "links for missing references, stale versions and declared dependency "
+                       "cycles. Lexical suggestions remain advisory; no retrieval, memory "
+                       "write, model, network or proof of documentary truth.",
+        "inputSchema": {
+            "type": "object", "additionalProperties": False,
+            "properties": {"inventory_json": {"type": "string", "maxLength": 262144}},
+            "required": ["inventory_json"],
+        },
+        "annotations": {"readOnlyHint": True, "destructiveHint": False,
+                        "idempotentHint": True, "openWorldHint": False},
+    },
+    {
         "name": "summarize_github_evidence",
         "description": "Parcimonia: select bounded review fields from supplied "
                        "GitHub PR, file headers, checks and commit-status JSON. "
@@ -1512,6 +1526,28 @@ def _assessment_arguments(args: dict, allowed: set[str]) -> None:
         raise ValueError("unsupported assessment arguments")
 
 
+def _tool_review_knowledge_links(args: dict) -> str:
+    from skills.app_test.knowledge_links import review_knowledge_links
+    _assessment_arguments(args, {"inventory_json"})
+    raw = args.get("inventory_json")
+    if not isinstance(raw, str) or len(raw.encode("utf-8")) > 262144:
+        raise ValueError("inventory_json must be bounded UTF-8 text")
+
+    def pairs(items):
+        result = {}
+        for key, value in items:
+            if key in result:
+                raise ValueError("duplicate inventory field")
+            result[key] = value
+        return result
+
+    def invalid_constant(_value):
+        raise ValueError("nonfinite inventory number")
+
+    inventory = json.loads(raw, object_pairs_hook=pairs, parse_constant=invalid_constant)
+    return json.dumps(review_knowledge_links(inventory), ensure_ascii=True, separators=(",", ":"))
+
+
 def _tool_assess_task(args: dict) -> str:
     from skills.preflight.assessment import assess_task
     _assessment_arguments(args, {"task", "available_tools", "context_budget"})
@@ -1531,6 +1567,7 @@ def _tool_summarize_github_evidence(args: dict) -> str:
 
 
 DISPATCH = {
+    "review_knowledge_links": _tool_review_knowledge_links,
     "summarize_github_evidence": _tool_summarize_github_evidence,
     "assess_task": _tool_assess_task,
     "plan_github_research": _tool_plan_github_research,

@@ -1,11 +1,23 @@
 """Real JSON child-process behavior, including unavailable and incomplete runs."""
 import sys
+import hashlib
+from pathlib import Path
+import tempfile
 import unittest
 
-from skills.app_test.process_oracle import invoke_json
+from skills.app_test.process_oracle import invoke_json, read_json_text
 
 
 class ProcessOracleTests(unittest.TestCase):
+    def test_raw_json_reader_preserves_exact_document_bytes(self):
+        raw = b'{\r\n  "schema": "example", "value": 2\r\n}\r\n'
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "report.json"
+            path.write_bytes(raw)
+            text = read_json_text(path)
+            self.assertEqual(text.encode("utf-8"), raw)
+            self.assertEqual(hashlib.sha256(text.encode("utf-8")).hexdigest(), hashlib.sha256(raw).hexdigest())
+
     def test_huge_integer_deadline_is_invalid_without_launch(self):
         with self.assertRaises(ValueError):
             invoke_json([sys.executable], {}, timeout_seconds=10**1000)

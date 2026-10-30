@@ -1,5 +1,9 @@
 # Parcimonia verification workbench
 
+The [memory and documentary-link connection](parcimonia-verification-memory.md)
+can prepare the six helper receipts for existing Memory Hub quarantine and
+review declared source/version dependencies without fetching a corpus.
+
 Unreleased 1.11.0 candidate, local Python runtime. Six capabilities are usable
 through `botte verify` (or `python -m skills.app_test.workbench`). The cloud
 helpers do not acquire process execution or access to the user's machine.

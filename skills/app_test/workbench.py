@@ -9,9 +9,10 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+import sqlite3
 import sys
 
-from skills.app_test.process_oracle import invoke_json, read_json
+from skills.app_test.process_oracle import invoke_json, read_json, read_json_text
 from skills.console_utf8 import force_utf8
 
 
@@ -80,6 +81,19 @@ def main(argv=None) -> int:
     s.add_argument("--node", default="node")
     s = sub.add_parser("prioritize", help="order supplied checks; does not execute or omit any")
     s.add_argument("--input", required=True, help="JSON with checks [{label,command}] and history")
+    s = sub.add_parser("memory", help="preview a verification memory proposal; optionally persist to quarantine")
+    s.add_argument("--input", required=True, help="one supported versioned verification report")
+    s.add_argument("--project", required=True)
+    s.add_argument("--run-id", required=True)
+    s.add_argument("--source-uri", required=True)
+    s.add_argument("--source-version", required=True)
+    s.add_argument("--source-digest", help="optional expected report SHA-256")
+    s.add_argument("--documents", help="JSON array of documentary refs with uri/version")
+    s.add_argument("--observed-at", type=float, help="optional explicit observation timestamp")
+    s.add_argument("--write-quarantine", action="store_true", help="explicitly store a private non-executable observation")
+    s.add_argument("--memory-dir", type=Path, help="explicit MemoryStore base directory; required for write")
+    s = sub.add_parser("knowledge-links", help="review declared source links and missing/versioned dependencies")
+    s.add_argument("--input", required=True, help="versioned knowledge inventory JSON")
     args = p.parse_args(argv)
     try:
         op = args.operation
@@ -152,6 +166,28 @@ def main(argv=None) -> int:
             report = run_conformance(args.cloud_root, read_json(args.cases) if args.cases else None,
                                      node_command=args.node)
             code = 0 if report["passed"] else 1 if report["status"] == "failed" else 2
+        elif op == "memory":
+            from skills.app_test.memory_bridge import prepare_verification_memory, persist_to_quarantine
+            if args.write_quarantine != (args.memory_dir is not None):
+                raise ValueError("writing needs both --write-quarantine and --memory-dir")
+            prepared = prepare_verification_memory(read_json_text(args.input),
+                args.project, args.run_id, args.source_uri, args.source_version,
+                documentary_refs=read_json(args.documents) if args.documents else (),
+                expected_source_digest=args.source_digest, observed_at=args.observed_at)
+            if args.write_quarantine:
+                from skills.memory_hub.store import MemoryStore
+                with MemoryStore(base_dir=args.memory_dir) as store:
+                    persisted = persist_to_quarantine(prepared, store)
+                report = {"schema": "parcimonia.verification-memory-command/v1",
+                          "proposal": prepared, "persistence": persisted}
+                code = 0 if persisted.get("status") in ("stored", "already_present") else 2
+            else:
+                report = prepared
+                code = 0
+        elif op == "knowledge-links":
+            from skills.app_test.knowledge_links import review_knowledge_links
+            report = review_knowledge_links(read_json(args.input))
+            code = {"completed": 0, "findings": 1}.get(report.get("status"), 2)
         else:
             from skills.app_test.prioritization import prioritize_checks
             payload = read_json(args.input)
@@ -161,7 +197,7 @@ def main(argv=None) -> int:
             report = prioritize_checks(checks, payload.get("history", {
                 "schema": "parcimonia.test-history/v1", "runs": []}))
             code = 0
-    except (ValueError, OSError, KeyError, TypeError, RecursionError) as error:
+    except (ValueError, OSError, KeyError, TypeError, RecursionError, sqlite3.Error) as error:
         report = {"schema": "parcimonia.verification-error/v1", "status": "invalid",
                   "operation": args.operation, "reason": type(error).__name__}
         code = 2

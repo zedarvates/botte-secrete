@@ -75,6 +75,7 @@ SUITES = [
     ("app_test", [sys.executable, "-m", "skills.app_test.test_app_test"], "skills/app_test/"),
     ("verification_workbench", [sys.executable, "-m", "skills.app_test.test_workbench"], (
         "skills/app_test/", "skills/preflight/conformance.py", "skills/preflight/test_conformance.py",
+        "skills/memory_hub/",
         "skills/cli.py", "scripts/run_tests.py", "scripts/test_runner_exit_verdict.py",
     )),
     ("capabilities", [sys.executable, "-m", "skills.capabilities.test_capabilities"], "skills/capabilities/"),

@@ -7,6 +7,8 @@ MODULES = (
     "skills.app_test.test_mutation", "skills.app_test.test_explorer",
     "skills.app_test.test_prioritization", "skills.app_test.test_process_oracle",
     "skills.app_test.test_workbench_cli", "skills.preflight.test_conformance",
+    "skills.app_test.test_memory_bridge", "skills.app_test.test_knowledge_links",
+    "skills.app_test.test_memory_cli",
 )
 
 

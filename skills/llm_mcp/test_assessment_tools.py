@@ -3,10 +3,32 @@
 import json
 import unittest
 
-from skills.llm_mcp.server import handle
+from skills.llm_mcp.server import handle, TOOLS
 
 
 class AssessmentToolTests(unittest.TestCase):
+    def test_knowledge_link_review_is_discoverable_read_only_and_scoped(self):
+        tool = next(tool for tool in TOOLS if tool['name']=='review_knowledge_links')
+        self.assertEqual(tool['annotations'], {'readOnlyHint':True,'destructiveHint':False,
+                                              'idempotentHint':True,'openWorldHint':False})
+        found = self.call("find_tool", {"query":"review_knowledge_links"})
+        self.assertIn("review_knowledge_links", found["content"][0]["text"])
+        inventory = {"schema":"parcimonia.knowledge-inventory/v1", "completeness":"complete",
+            "nodes":[{"id":"receipt", "kind":"receipt", "source_uri":"urn:receipt", "source_version":"v1"}],
+            "links":[{"source":"receipt", "target":"missing", "kind":"documents", "target_version":"v1"}]}
+        raw = self.call("review_knowledge_links", {"inventory_json":json.dumps(inventory)})
+        report = json.loads(raw["content"][0]["text"])
+        self.assertEqual(report["status"], "findings")
+        self.assertEqual(report["counts"]["missing_in_declared_inventory"], 1)
+
+    def test_knowledge_link_tool_rejects_bad_envelopes(self):
+        for args in ({"inventory_json":"{}", "execute":True},
+                     {"inventory_json":[]},
+                     {"inventory_json":'{"schema":"x","schema":"y"}'},
+                     {"inventory_json":'{"value":NaN}'}):
+            with self.subTest(args=args):
+                self.assertTrue(self.call("review_knowledge_links", args)["isError"])
+
     def call(self, name, arguments):
         return handle({"jsonrpc": "2.0", "id": 1, "method": "tools/call",
                        "params": {"name": name, "arguments": arguments}})["result"]

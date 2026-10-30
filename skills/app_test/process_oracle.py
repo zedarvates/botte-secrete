@@ -30,14 +30,19 @@ def _pairs(pairs):
     return result
 
 
-def read_json(path: str | Path, *, maximum: int = 131072):
+def read_json_text(path: str | Path, *, maximum: int = 131072) -> str:
+    """Read bounded UTF-8 bytes without normalizing line endings or JSON layout."""
     if not stat.S_ISREG(Path(path).stat().st_mode):
         raise ValueError("JSON input must be a regular file")
     with Path(path).open("rb") as stream:
         raw = stream.read(maximum + 1)
     if len(raw) > maximum:
         raise ValueError("JSON input exceeds size limit")
-    return json.loads(raw.decode("utf-8"), object_pairs_hook=_pairs,
+    return raw.decode("utf-8")
+
+
+def read_json(path: str | Path, *, maximum: int = 131072):
+    return json.loads(read_json_text(path, maximum=maximum), object_pairs_hook=_pairs,
                       parse_constant=lambda _: (_ for _ in ()).throw(ValueError("nonfinite JSON")))
 
 

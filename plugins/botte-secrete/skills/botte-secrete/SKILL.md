@@ -66,3 +66,12 @@ adapters and the user's task scope; these capabilities are not cloud execution
 endpoints. Preserve process/source identities, inconclusive states, all observed
 failures and known comparison differences. A model replay or HTTP navigation
 adapter does not establish graphical or real-time game control.
+
+For documentary gaps, use `review_knowledge_links` when its schema is offered.
+Supply an explicit versioned inventory; resolve exact references and distinguish
+missing, unknown and stale versions. Lexical suggestions remain proposals.
+For local verification memory, inspect `botte verify memory --help`: preview
+first, retain the report digest/run/source version, and write only to an explicit
+Memory Hub directory when within the task scope. Receipts remain private,
+non-executable quarantine observations available through explicit review; they
+do not enter normal context or activate a wiki/LLM route.

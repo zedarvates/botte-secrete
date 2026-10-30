@@ -76,8 +76,9 @@ to a verified fact.
 - Intermittent-failure triage retains every attempt and its seed/context.
   A retry pass does not erase a prior failure or prove general reliability.
 
-These receipts can later be proposed to Memory Hub through its existing
-provenance boundary, or passed to the Parcimonia episode adapter after an
-explicit versioned mapping. That mapping and any promotion require their own
-integration checks. This inventory alone adds neither a new store nor an
-automatic memory write.
+The [verification-memory connection](parcimonia-verification-memory.md) now
+maps the six helper schemas to private quarantine proposals in the existing
+Memory Hub and reviews supplied documentary links. Preview is read-only;
+persistence needs an explicit destination and does not enter normal context.
+The separate Parcimonia episode format still requires its own versioned adapter.
+This inventory alone adds neither a store nor an automatic memory write.
