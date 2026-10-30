@@ -54,7 +54,9 @@ SUITES = [
         "skills/__init__.py", "skills/llm_mcp/", "skills/plugins/", "LICENSE",
         "scripts/run_tests.py", "scripts/test_runner_exit_verdict.py",
     )),
-    ("infra_advisor", [sys.executable, "-m", "skills.infra_advisor.test_infra_advisor"], "skills/infra_advisor/"),
+    ("infra_advisor", [sys.executable, "-m", "skills.infra_advisor.test_infra_advisor"], (
+        "skills/infra_advisor/", "skills/checkup/mcp.py",
+    )),
     ("prompt_improver", [sys.executable, "-m", "skills.prompt_improver.test_prompt_improver"], "skills/prompt_improver/"),
     ("metrics", [sys.executable, "-m", "skills.metrics.test_metrics"], "skills/metrics/"),
     ("preflight", [sys.executable, "-m", "skills.preflight.test_preflight"], "skills/preflight/"),
@@ -62,7 +64,9 @@ SUITES = [
         "skills/preflight/", "skills/llm_mcp/server.py", "skills/llm_mcp/test_assessment_tools.py",
         "skills/skill_finder/", "skills/context_budget/", "scripts/run_tests.py",
     )),
-    ("checkup", [sys.executable, "-m", "skills.checkup.test_checkup"], "skills/checkup/"),
+    ("checkup", [sys.executable, "-m", "skills.checkup.test_checkup"], (
+        "skills/checkup/", "skills/infra_advisor/", "skills/plugins/installer.py",
+    )),
     ("ingest", [sys.executable, "-m", "skills.ingest.test_ingest"], "skills/ingest/"),
     ("docgen", [sys.executable, "-m", "skills.docgen.test_docgen"], "skills/docgen/"),
     ("app_test", [sys.executable, "-m", "skills.app_test.test_app_test"], "skills/app_test/"),

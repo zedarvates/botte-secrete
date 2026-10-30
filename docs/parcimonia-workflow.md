@@ -88,6 +88,13 @@ typing and visible/absent assertions. A runner, display, target application and
 reference images are separate prerequisites. The unit tests of the generator
 do not establish end-to-end GUI success on a user's machine.
 
+Treat the runner's completion evidence separately from script generation.
+The CLI returns success only for a completed, coherent passing run. A missing
+runner or launch failure is `not_run`; a zero exit without a final result is
+`incomplete`. A nonzero exit, failed step or nonzero final error count fails.
+The JSON result and HTML report use the same verdict. These checks validate
+the reporting contract; they do not supply a GUI runner or display.
+
 For a game pilot, qualify a menu or deterministic scenario first. Continuous
 gameplay needs an adapter that supplies timestamped observations, bounded inputs
 and independent assertions. Reuse Parcimonia's `DecisionBudget` and

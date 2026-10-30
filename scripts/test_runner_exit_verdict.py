@@ -15,6 +15,15 @@ spec.loader.exec_module(runner)
 
 
 class ExitVerdictTests(unittest.TestCase):
+    def test_shared_mcp_diagnostics_select_both_consumers(self):
+        labels = {runner.SUITES[index][0] for index in
+                  runner._suites_for_changes(['skills/checkup/mcp.py'])}
+        self.assertTrue({'infra_advisor', 'checkup'}.issubset(labels))
+        for path in ['skills/infra_advisor/advisor.py', 'skills/plugins/installer.py']:
+            with self.subTest(path=path):
+                labels = {runner.SUITES[index][0] for index in runner._suites_for_changes([path])}
+                self.assertIn('checkup', labels)
+
     def test_parcimonia_behavioral_contracts_are_selected_for_changed_inputs(self):
         for path in ["skills/preflight/assessment.py", "skills/preflight/github_plan.py",
                      "skills/preflight/github_evidence.py", "skills/llm_mcp/server.py",

@@ -39,6 +39,12 @@ For local cache iteration, use the timestamp procedure in the Update section.
 This recipe is an installation procedure, not evidence that a fresh install has
 already passed on every platform.
 
+The project checkup now separates a configuration declaration from launcher
+discovery and runtime reachability. Its static `configured` result does not
+qualify the plugin installed in Codex; use Codex's current server status and
+the read-only call above. See [MCP diagnostics](../../docs/mcp-integration.md#read-the-installation-diagnostic)
+for supported files and parser limitations.
+
 ## First-assessment behavior
 
 The plugin skill can now be selected for research, tool choice, code work and
