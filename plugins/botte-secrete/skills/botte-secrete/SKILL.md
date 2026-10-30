@@ -42,6 +42,10 @@ extra round trip when a trivial task already has an obvious direct action.
 For scoped GitHub/PR research, use `plan_github_research` then an available GitHub
 reader. Retain source links, pagination limits and observed revisions; closed
 is not merged. Revalidate both head and base before reusing diff evidence.
+For bulky supplied PR metadata, file headers and checks, use
+`summarize_github_evidence` when available. Keep the original read references and
+inspect omitted details as needed. Its completeness is caller-declared and its
+size measurements cover compact JSON bytes, not tokens or the entire MCP call.
 
 For software tests or game playtests, use the proposed checks with the existing
 test workflow. Verify capture, input, assertions, stop conditions and target

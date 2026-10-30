@@ -54,6 +54,21 @@ SERVER_INFO = {"name": "botte-llm", "version": __version__}
 
 TOOLS = [
     {
+        "name": "summarize_github_evidence",
+        "description": "Parcimonia: select bounded review fields from supplied "
+                       "GitHub PR, file headers, checks and commit-status JSON. "
+                       "Retains revision mismatches, failure counts and source links. "
+                       "Caller data remains unverified. Reports UTF-8 bytes, not token savings; "
+                       "does not fetch GitHub or decide merge eligibility.",
+        "inputSchema": {
+            "type": "object", "additionalProperties": False,
+            "properties": {"report_json": {"type": "string", "maxLength": 131072}},
+            "required": ["report_json"],
+        },
+        "annotations": {"readOnlyHint": True, "destructiveHint": False,
+                        "idempotentHint": True, "openWorldHint": False},
+    },
+    {
         "name": "assess_task",
         "description": "Parcimonia: propose a bounded first assessment of a task, "
                        "including GitHub/PR research, software tests and game playtests. "
@@ -1509,7 +1524,14 @@ def _tool_plan_github_research(args: dict) -> str:
     return json.dumps(plan_github_research(**args), ensure_ascii=False)
 
 
+def _tool_summarize_github_evidence(args: dict) -> str:
+    from skills.preflight.github_evidence import summarize_github_evidence
+    _assessment_arguments(args, {"report_json"})
+    return json.dumps(summarize_github_evidence(**args), ensure_ascii=False, separators=(",", ":"))
+
+
 DISPATCH = {
+    "summarize_github_evidence": _tool_summarize_github_evidence,
     "assess_task": _tool_assess_task,
     "plan_github_research": _tool_plan_github_research,
     "dashboard": _tool_dashboard,

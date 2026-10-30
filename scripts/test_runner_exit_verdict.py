@@ -15,6 +15,16 @@ spec.loader.exec_module(runner)
 
 
 class ExitVerdictTests(unittest.TestCase):
+    def test_parcimonia_behavioral_contracts_are_selected_for_changed_inputs(self):
+        for path in ["skills/preflight/assessment.py", "skills/preflight/github_plan.py",
+                     "skills/preflight/github_evidence.py", "skills/llm_mcp/server.py",
+                     "skills/skill_finder/finder.py", "scripts/run_tests.py"]:
+            with self.subTest(path=path):
+                labels = {runner.SUITES[index][0] for index in runner._suites_for_changes([path])}
+                self.assertIn("parcimonia", labels)
+        command = next(command for label, command, _ in runner.SUITES if label == "parcimonia")
+        self.assertIn("skills.preflight.test_parcimonia", command)
+
     def test_distribution_suite_is_selected_for_every_contract_input(self):
         inputs = [
             'plugins/botte-secrete/.codex-plugin/plugin.json',

@@ -38,6 +38,16 @@ class AssessmentToolTests(unittest.TestCase):
             with self.subTest(name=name, args=args):
                 self.assertTrue(self.call(name, args)["isError"])
 
+    def test_github_summary_preserves_unknowns_and_rejects_extra_arguments(self):
+        report = {"repository": "owner/repo", "pull_request": {"number": 7, "state": "closed"}}
+        result = self.call("summarize_github_evidence", {"report_json": json.dumps(report)})
+        summary = json.loads(result["content"][0]["text"])
+        self.assertIsNone(summary["pull_request"]["merged"])
+        self.assertFalse(summary["source"]["verified"])
+        self.assertIsNone(summary["measurements"]["host_tokens"])
+        self.assertTrue(self.call("summarize_github_evidence", {
+            "report_json": json.dumps(report), "fetch": True})["isError"])
+
 
 if __name__ == "__main__":
     unittest.main()

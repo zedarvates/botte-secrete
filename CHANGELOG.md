@@ -4,6 +4,11 @@
 
 ## v1.11.0 (unreleased)
 
+- Compact supplied GitHub review data while preserving unknown states, revision
+  mismatches, failure counts and source links. Report exact compact-JSON UTF-8
+  sizes separately from unknown token usage and cost.
+- Add an offline, reproducible workflow demonstration and include all Parcimonia
+  behavioral tests in the canonical CI runner. Align the French version badge.
 - Add Parcimonia advisory first-task assessment to the small core MCP surface.
   Rank only supplied tool metadata within a declared context budget; abstain on
   unsupported or ambiguous intent. Software tests and game playtests include

@@ -55,6 +55,22 @@ scope. This intentionally limits search syntax; it is not a replacement for all
 GitHub search operators. A zero-result search may require a different lexical
 query or direct reference. No result is cached or promoted into verified memory.
 
+After reads, `summarize_github_evidence` accepts a supplied `report_json` string
+up to 128 KiB. Its envelope uses `repository`, `pull_request`, optional
+`observed_at`, `files`, `check_runs`, `statuses` and `completeness`. PR and file
+objects use GitHub REST fields; checks use `{total_count, check_runs}` and commit
+statuses use `{sha, state, statuses}`. Completeness keys are `metadata`, `files`,
+`checks` and `statuses`, each `unknown`, `partial` or `complete`. These remain
+caller declarations. Omit bodies, patches and logs when only metadata is needed.
+
+The summary retains revision identities, conclusion counts and prioritized
+attention items within a 12 KiB compact-JSON bound. Missing merge evidence stays
+unknown; no overall merge or passing verdict is produced. Omitted rows and
+external/unsafe detail URLs are signalled. Data remains unverified. Exact input
+and output UTF-8 byte sizes can show reduction or expansion; host tokens, cost
+and total-task latency remain unknown. The MCP wrapper is additional data beyond
+the measured JSON summary. Use the original read for omitted details.
+
 ## Software and game tests
 
 `assess_task` can prepare these workflows; it does not run a test. Existing
@@ -87,6 +103,8 @@ A public Git repository or publicly reachable Site is separate from acceptance
 in the public plugin directory. Verify installation, authentication, listing
 approval and publication before filming instructions to search and install.
 See the [English video draft](demos/parcimonia-introduction.md).
+The [offline replay](demos/parcimonia-workflow-run.md) runs the authored examples
+and records helper-only timing and size without executing external tools.
 
 For a paired comparison, keep task, target revision, success criteria and tool
 availability equal. Measure the whole accepted task, including assessment calls,
