@@ -1,5 +1,11 @@
 # Parcimonia task assessment and research
 
+See the [verification workbench](parcimonia-verification-workbench.md) for
+reproduction reduction, observed test order, cloud/local conformance, mutation,
+interface exploration and intermittent-failure triage. The
+[knowledge inventory](parcimonia-knowledge-inventory.md) locates existing wiki,
+RAG/DAG, memory and LLM work with source-pinned documentary links.
+
 Candidate version: Botte Secrète 1.11.0. The corresponding cloud helpers run
 without a local Python runtime. Both produce advice from supplied data, with
 no model call, network access, execution or persistent storage in the helpers.

@@ -13,10 +13,13 @@ default Windows console too. Exit code is non-zero if any suite fails.
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import re
+import stat
 import subprocess
 import sys
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -70,6 +73,10 @@ SUITES = [
     ("ingest", [sys.executable, "-m", "skills.ingest.test_ingest"], "skills/ingest/"),
     ("docgen", [sys.executable, "-m", "skills.docgen.test_docgen"], "skills/docgen/"),
     ("app_test", [sys.executable, "-m", "skills.app_test.test_app_test"], "skills/app_test/"),
+    ("verification_workbench", [sys.executable, "-m", "skills.app_test.test_workbench"], (
+        "skills/app_test/", "skills/preflight/conformance.py", "skills/preflight/test_conformance.py",
+        "skills/cli.py", "scripts/run_tests.py", "scripts/test_runner_exit_verdict.py",
+    )),
     ("capabilities", [sys.executable, "-m", "skills.capabilities.test_capabilities"], "skills/capabilities/"),
     ("cluster", [sys.executable, "-m", "skills.cluster.test_cluster"], "skills/cluster/"),
     ("conductor", [sys.executable, "-m", "skills.conductor.test_conductor"], "skills/conductor/"),
@@ -194,6 +201,8 @@ def main() -> int:
     p = argparse.ArgumentParser(description="Run Botte Secrète test suites")
     p.add_argument("--changed", action="store_true",
                    help="Only run suites for files changed since last commit")
+    p.add_argument("--prioritize", action="store_true",
+                   help="Order all selected suites using local observed failure/time history; skip none")
     p.add_argument("-q", "--quiet", action="store_true",
                    help="Compact output: one line per suite, full detail only on failure")
     args = p.parse_args()
@@ -231,11 +240,38 @@ def main() -> int:
         if not args.quiet:
             print("Botte Secrète — test suites\n")
 
+    history = {"schema": "parcimonia.test-history/v1", "runs": []}
+    history_valid = True
+    history_path = REPO / ".botte-cache" / "test-history.json"
+    if args.prioritize:
+        from skills.app_test.prioritization import prioritize_checks, validate_history
+        try:
+            if history_path.exists():
+                if not stat.S_ISREG(history_path.stat().st_mode):
+                    raise ValueError("history must be a regular file")
+                with history_path.open("rb") as stream:
+                    raw = stream.read(2 * 1024 * 1024 + 1)
+                if len(raw) > 2 * 1024 * 1024:
+                    raise ValueError("history exceeds size limit")
+                history = json.loads(raw.decode("utf-8"))
+                validate_history(history)
+        except (OSError, ValueError, RecursionError):
+            history = {"schema": "parcimonia.test-history/v1", "runs": []}
+            history_valid = False
+            print("warning: invalid/unreadable test history; preserving it and using original order", file=sys.stderr)
+        ordering = prioritize_checks(active, history)
+        by_label = dict(active)
+        active = [(row["label"], by_label[row["label"]]) for row in ordering["ordered"]]
+        print(f"History ordering: {len(active)} selected suites retained; no skips")
+
     total_pass = total_fail = 0
+    observations = []
     rows = []
     for label, cmd in active:
+        started = time.monotonic()
         proc = subprocess.run(cmd, cwd=REPO, env=env, capture_output=True,
                                text=True, encoding="utf-8", errors="replace")
+        duration_ms = (time.monotonic() - started) * 1000
         m = None
         for line in (proc.stdout or "").splitlines():
             mm = _RESULT_RE.search(_ANSI_RE.sub("", line))
@@ -245,6 +281,12 @@ def main() -> int:
         # A passing-looking summary cannot override a failed child process.
         if proc.returncode != 0:
             f = max(f, 1)
+        if args.prioritize:
+            from skills.app_test.prioritization import command_fingerprint
+            outcome = "failed" if m and f else (
+                "passed" if m and p > 0 and proc.returncode == 0 else "incomplete")
+            observations.append({"label": label, "command_sha256": command_fingerprint(cmd),
+                                 "duration_ms": duration_ms, "outcome": outcome})
         total_pass += p
         total_fail += f
 
@@ -284,6 +326,12 @@ def main() -> int:
         )
     except OSError as exc:
         print(f"warning: could not write dashboard test summary: {exc}", file=sys.stderr)
+    if args.prioritize and history_valid:
+        from skills.app_test.prioritization import append_observations
+        try:
+            write_json(history_path, append_observations(history, observations))
+        except (OSError, ValueError):
+            print("warning: could not persist test-order observations", file=sys.stderr)
     return 0 if total_fail == 0 else 1
 
 

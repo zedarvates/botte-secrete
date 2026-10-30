@@ -15,6 +15,36 @@ spec.loader.exec_module(runner)
 
 
 class ExitVerdictTests(unittest.TestCase):
+    def test_workbench_contract_changes_select_real_aggregate(self):
+        for path in ('skills/app_test/reducer.py', 'skills/preflight/conformance.py',
+                     'skills/app_test/workbench.py', 'skills/cli.py'):
+            with self.subTest(path=path):
+                selected = {runner.SUITES[i][0] for i in runner._suites_for_changes([path])}
+                self.assertIn('verification_workbench', selected)
+
+    def test_prioritized_run_keeps_all_checks_and_observes_real_child_outcomes(self):
+        from skills.app_test.prioritization import command_fingerprint
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            history_path = root / '.botte-cache' / 'test-history.json'
+            history_path.parent.mkdir()
+            command = [sys.executable, '-c', 'print("1 passed, 0 failed")']
+            fail_command = [sys.executable, '-c', 'print("0 passed, 1 failed"); raise SystemExit(1)']
+            history_path.write_text(json.dumps({'schema':'parcimonia.test-history/v1','runs':[
+                {'label':'failure','command_sha256':command_fingerprint(fail_command),
+                 'duration_ms':10,'outcome':'failed'}]}), encoding='utf-8')
+            with patch.object(runner, 'REPO', root), \
+                 patch.object(runner, 'TEST_SUMMARY_PATH', root / 'summary.json'), \
+                 patch.object(runner, 'SUITES', [('passing',command,''),('failure',fail_command,'')]), \
+                 patch.object(sys, 'argv', ['run_tests.py','--prioritize']), \
+                 contextlib.redirect_stdout(io.StringIO()) as output:
+                self.assertEqual(runner.main(), 1)
+            lines = output.getvalue()
+            self.assertLess(lines.index('[FAIL] failure'), lines.index('[OK ] passing'))
+            history = json.loads(history_path.read_text(encoding='utf-8'))
+            self.assertEqual([r['label'] for r in history['runs']], ['failure','failure','passing'])
+            self.assertEqual(json.loads((root/'summary.json').read_text(encoding='utf-8'))['suite_count'],2)
+
     def test_shared_mcp_diagnostics_select_both_consumers(self):
         labels = {runner.SUITES[index][0] for index in
                   runner._suites_for_changes(['skills/checkup/mcp.py'])}

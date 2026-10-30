@@ -54,3 +54,15 @@ For software tests or game playtests, use the proposed checks with the existing
 test workflow. Verify capture, input, assertions, stop conditions and target
 build separately. A plan or test generator does not prove a running test or
 real-time gameplay. Report actual results and unknown measurements separately.
+
+For a compatible local candidate exposing `botte verify --help`, reuse its
+bounded verification workbench: reduce a reproduction with the same failure
+fingerprint, triage repeated observations, compare supplied cloud/local sources,
+challenge Python tests with mutations, or explore explicit allowed interface
+actions. The canonical runner also supports opt-in observed test ordering with
+`--prioritize`, retaining every selected suite. Inspect each installed command's
+help and prerequisites first. Command execution requires explicit trusted local
+adapters and the user's task scope; these capabilities are not cloud execution
+endpoints. Preserve process/source identities, inconclusive states, all observed
+failures and known comparison differences. A model replay or HTTP navigation
+adapter does not establish graphical or real-time game control.
