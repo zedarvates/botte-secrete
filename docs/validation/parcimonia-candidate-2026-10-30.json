@@ -23,7 +23,7 @@
     ]
   },
   "implementation_sha256": {
-    "scripts/verify_parcimonia_candidate.py": "ac95f84640c58c507e8dfc3595abc845c7d059b8e92bd4025f4f5894103a3232",
+    "scripts/verify_parcimonia_candidate.py": "4f2ba1b26df35be3b66ba25c8dd433feb8cf26ffb42d6497968d054131664e8a",
     ".github/workflows/parcimonia-candidate.yml": "daf351d1d31cfa672e2ca2778937499acff1127f027a219ddc341204e5311b32",
     "skills/preflight/assessment.py": "be5e00a02fd92ef595cc7fb9dffe619786b128b32581806416db721296027493",
     "skills/preflight/hook.py": "c8a9719edaf8ea153871eba699ba09fb9f5cfe6cf431b2d714c64babde3d3781",
@@ -86,5 +86,14 @@
     "host_hooks": false,
     "hosted_cloud_deployed": false,
     "desktop_integration": false
+  },
+  "native_fixture_follow_up": {
+    "observed_commit": "6427ed80e51a042376d2c4eb9b655c656933fcbc",
+    "workflow_run": 41118053959,
+    "linux_full_checkout_installations": "three passed, including normal dependency install and pip check",
+    "windows_witness": "both Python versions failed the harness assumption of LF after native Path.write_text",
+    "change": "Record native seed AGENTS bytes after writing; compare existing-content prefix to those exact bytes. Production code and preservation assertion retained.",
+    "local_after_fix": "fresh selected-snapshot venv, all three MCP scenarios passed",
+    "next": "rerun all five clean installation jobs at follow-up commit"
   }
 }

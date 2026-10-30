@@ -280,11 +280,12 @@ def portable_guidance(work):
     project = work / "fresh-project"
     project.mkdir()
     (project / "AGENTS.md").write_text("# Existing user instructions\n", encoding="utf-8")
+    original_agents = (project / "AGENTS.md").read_bytes()
     path = policy.write_default(project)
     require(path is not None and "assess_task" in path.read_text(encoding="utf-8"), "fresh project guidance lacks Parcimonia assessment")
     require(policy.ensure_agents_pointer(project), "project guidance pointer was not added")
     agents = (project / "AGENTS.md").read_bytes()
-    require(agents.startswith(b"# Existing user instructions\n") and b".botte/policy.md" in agents, "user AGENTS content was not preserved")
+    require(agents.startswith(original_agents) and b".botte/policy.md" in agents, "user AGENTS content was not preserved")
     require(not policy.ensure_agents_pointer(project) and (project / "AGENTS.md").read_bytes() == agents, "project guidance pointer is not idempotent")
     path.write_text("# User-supplied policy\n", encoding="utf-8")
     require(policy.write_default(project) is None and policy.load(project) == "# User-supplied policy\n", "existing policy was overwritten")
