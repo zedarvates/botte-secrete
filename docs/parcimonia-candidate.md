@@ -75,6 +75,11 @@ and all host calls, retries and fallbacks included.
 
 ## Distribution boundaries
 
+The additional [Codex host qualification](codex-plugin-host-validation.md)
+checks plugin installation, skill discovery and controlled MCP execution through
+the real app-server on fresh profiles. Its results are separate from the direct
+runtime installation matrix above; neither establishes automatic model choice.
+
 | Capability | Candidate Python runtime | Independently hosted cloud |
 | --- | --- | --- |
 | Statistics on supplied values | Included and qualified by the installation scenarios | Existing separate deployment; not changed by this branch. |
