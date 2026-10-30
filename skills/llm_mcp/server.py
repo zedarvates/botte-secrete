@@ -54,6 +54,30 @@ SERVER_INFO = {"name": "botte-llm", "version": __version__}
 
 TOOLS = [
     {
+        "name": "compute_statistics",
+        "description": "Compute deterministic descriptive statistics from supplied numeric values: "
+                       "count, sum, min, max, mean, median, population/sample variance and "
+                       "standard deviation, plus linear type-7 percentiles. No model, network "
+                       "or file access. Rejects invalid inputs; omits nulls only on explicit request.",
+        "inputSchema": {
+            "type": "object", "additionalProperties": False,
+            "properties": {
+                "values": {"type": "array", "minItems": 1, "maxItems": 10000,
+                           "items": {"type": ["number", "null"]}},
+                "operations": {"type": "array", "minItems": 1, "maxItems": 10,
+                               "uniqueItems": True, "items": {"type": "string", "enum": [
+                                   "count", "sum", "min", "max", "mean", "median",
+                                   "variance_population", "variance_sample",
+                                   "stdev_population", "stdev_sample"]}},
+                "percentiles": {"type": "array", "maxItems": 16, "uniqueItems": True,
+                                "items": {"type": "number", "minimum": 0, "maximum": 100}},
+                "missing": {"type": "string", "enum": ["reject", "omit"], "default": "reject"},
+            }, "required": ["values"],
+        },
+        "annotations": {"readOnlyHint": True, "destructiveHint": False,
+                        "idempotentHint": True, "openWorldHint": False},
+    },
+    {
         "name": "assess_task",
         "description": "Parcimonia: propose a bounded first assessment of a task, "
                        "including GitHub/PR research, software tests and game playtests. "
@@ -1503,6 +1527,13 @@ def _tool_assess_task(args: dict) -> str:
     return json.dumps(assess_task(**args), ensure_ascii=False)
 
 
+def _tool_compute_statistics(args: dict) -> str:
+    from skills.solvers import compute_statistics
+    if not isinstance(args, dict) or set(args) - {"values", "operations", "percentiles", "missing"}:
+        raise ValueError("unsupported statistics arguments")
+    return json.dumps(compute_statistics(**args), ensure_ascii=False, allow_nan=False)
+
+
 def _tool_plan_github_research(args: dict) -> str:
     from skills.preflight.github_plan import plan_github_research
     _assessment_arguments(args, {"repository", "query", "pr_number"})
@@ -1510,6 +1541,7 @@ def _tool_plan_github_research(args: dict) -> str:
 
 
 DISPATCH = {
+    "compute_statistics": _tool_compute_statistics,
     "assess_task": _tool_assess_task,
     "plan_github_research": _tool_plan_github_research,
     "dashboard": _tool_dashboard,

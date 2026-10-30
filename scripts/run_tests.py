@@ -78,6 +78,10 @@ SUITES = [
     ("context_budget", [sys.executable, "-m", "skills.context_budget.test_context_budget"], "skills/context_budget/"),
     ("nlp_deterministic", [sys.executable, "-m", "skills.nlp_deterministic.test_nlp_deterministic"], "skills/nlp_deterministic/"),
     ("solvers", [sys.executable, "-m", "skills.solvers.test_solvers"], "skills/solvers/"),
+    ("statistics", [sys.executable, "-m", "skills.solvers.test_statistics"], "skills/solvers/"),
+    ("statistics_integration", [sys.executable, "-m", "skills.llm_mcp.test_statistics"], (
+        "skills/solvers/", "skills/preflight/assessment.py", "skills/llm_mcp/",
+    )),
     ("cwe_kb", [sys.executable, "-m", "skills.cwe_kb.test_cwe_kb"], "skills/cwe_kb/"),
     ("botte_nn", [sys.executable, "-m", "skills.botte_nn.test_botte_nn"], "skills/botte_nn/"),
     ("features", [sys.executable, "-m", "skills.botte_nn.test_features"], "skills/botte_nn/"),

@@ -107,13 +107,17 @@ def main():
     declared = declared_match.group(1) if declared_match else None
     public_readmes = [readme, REPO / "README.fr.md"]
     badge = f"version-{declared}-" if declared else ""
-    if (declared == __version__
-            and all(badge in path.read_text(encoding="utf-8")
-                    for path in public_readmes)):
+    mismatched_readmes = [
+        path.name for path in public_readmes
+        if badge not in path.read_text(encoding="utf-8")
+    ]
+    if declared == __version__ and not mismatched_readmes:
         passed += 1
     else:
         failed += 1
         print(f"  FAIL version metadata: package={__version__}, pyproject={declared}")
+        for name in mismatched_readmes:
+            print(f"    {name}: expected version badge {badge!r}")
 
     commands = extract_commands(readme)
     for cmd in commands:

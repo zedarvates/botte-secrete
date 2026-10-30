@@ -55,6 +55,15 @@ scope. This intentionally limits search syntax; it is not a replacement for all
 GitHub search operators. A zero-result search may require a different lexical
 query or direct reference. No result is cached or promoted into verified memory.
 
+## Deterministic statistics
+
+For an explicit request to compute descriptive statistics, `assess_task` can
+propose the `statistics` intent and shortlist an available `compute_statistics`
+tool. The Python runtime computes supplied values through that separate tool;
+assessment itself remains advisory. See the [statistics contract](statistics.md)
+for operations, input limits, missing-data policy and percentile conventions.
+This Python increment does not update the independently hosted cloud helpers.
+
 ## Software and game tests
 
 `assess_task` can prepare these workflows; it does not run a test. Existing
