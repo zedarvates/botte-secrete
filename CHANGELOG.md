@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+## v1.11.0 (unreleased)
+
+- Add Parcimonia advisory first-task assessment to the small core MCP surface.
+  Rank only supplied tool metadata within a declared context budget; abstain on
+  unsupported or ambiguous intent. Software tests and game playtests include
+  explicit adapter and evidence prerequisites, without executing them.
+- Add bounded GitHub/PR research plans with progressive reads and revision checks.
+  These helpers make no network or model calls and claim no measured savings.
+- Document the cloud/local boundary and a public-safe English video draft.
+
 ## v1.10.0 (unreleased)
 
 ### Distribution

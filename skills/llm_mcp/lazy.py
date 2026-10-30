@@ -26,7 +26,7 @@ import re
 # The handful of tools worth the agent always seeing — the rest are one
 # find_tool() call away. Kept small on purpose; grow only for genuinely
 # constant-use tools.
-CORE_TOOL_NAMES = {"local_chat", "auto_route", "find_skills", "conduct"}
+CORE_TOOL_NAMES = {"local_chat", "auto_route", "find_skills", "conduct", "assess_task"}
 
 _WORD = re.compile(r"[a-z0-9]+")
 # Common short words that would otherwise cause spurious matches (e.g. "no",

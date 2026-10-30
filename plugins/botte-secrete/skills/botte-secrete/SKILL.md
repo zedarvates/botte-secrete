@@ -3,7 +3,7 @@ name: botte-secrete
 description: Use the separately installed Botte Secrète local runtime for context budgets, compression, routing, code audit and evidence workflows. Use when the user asks to use Botte Secrète through its local MCP tools. Not for installing unknown packages, providing model weights or treating this plugin as the runtime implementation.
 license: MIT
 metadata:
-  version: "1.10.0"
+  version: "1.11.0"
 ---
 
 # Botte Secrète local workflow
@@ -29,3 +29,21 @@ metadata:
 6. Explain the result, relevant evidence and remaining prerequisites. Preserve
    the project's licence and third-party provenance boundaries when using
    upstream integrations or redistributing artifacts.
+
+## Parcimonia first assessment
+
+For work requiring tool selection or research planning, call `assess_task` when
+available. Pass the user's task and a small inventory of relevant tools actually
+available in the current session. Read the shortlisted tool's real schema before
+calling it. Metadata and lexical scores do not verify capabilities or authorize
+execution. An abstention returns interpretation to the host agent. Skip this
+extra round trip when a trivial task already has an obvious direct action.
+
+For scoped GitHub/PR research, use `plan_github_research` then an available GitHub
+reader. Retain source links, pagination limits and observed revisions; closed
+is not merged. Revalidate both head and base before reusing diff evidence.
+
+For software tests or game playtests, use the proposed checks with the existing
+test workflow. Verify capture, input, assertions, stop conditions and target
+build separately. A plan or test generator does not prove a running test or
+real-time gameplay. Report actual results and unknown measurements separately.

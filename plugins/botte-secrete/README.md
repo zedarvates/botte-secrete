@@ -1,6 +1,6 @@
 # Botte Secrète Codex plugin
 
-This version 1.10.0 plugin supplies one workflow skill and an MCP stdio connection.
+This version 1.11.0 plugin supplies one workflow skill and an MCP stdio connection.
 Its executable runtime is installed separately; installing this plugin does not
 install Python, Botte Secrète, optional dependencies, models or credentials.
 
@@ -65,10 +65,10 @@ Use the documented cachebuster flow below for local iteration.
 
 For local development, update the checkout and replace the plugin manifest's
 build suffix with a new UTC timestamp, such as
-`1.10.0+codex.local-20261013-184516`. Keep the version prefix before `+`; replace
+`1.11.0+codex.local-20261013-184516`. Keep the version prefix before `+`; replace
 an existing suffix instead of appending another one. This changes the local
 Codex cache key without incrementing the release version for each edit. The
-committed release manifest stays at `1.10.0`.
+committed release manifest stays at `1.11.0`.
 
 Confirm that the selected marketplace is the local checkout you edited, then
 run `codex plugin add botte-secrete@botte-secrete-marketplace` again. Marketplace

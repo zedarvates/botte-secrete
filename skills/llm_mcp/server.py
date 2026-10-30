@@ -54,6 +54,43 @@ SERVER_INFO = {"name": "botte-llm", "version": __version__}
 
 TOOLS = [
     {
+        "name": "assess_task",
+        "description": "Parcimonia: propose a bounded first assessment of a task, "
+                       "including GitHub/PR research, software tests and game playtests. "
+                       "Ranks only caller-supplied tool metadata. Lexical advice only; "
+                       "no execution, model, network, permission or measured savings.",
+        "inputSchema": {
+            "type": "object", "additionalProperties": False,
+            "properties": {
+                "task": {"type": "string", "minLength": 1, "maxLength": 16384},
+                "available_tools": {"type": "array", "maxItems": 64, "items": {
+                    "type": "object", "additionalProperties": False,
+                    "properties": {"name": {"type": "string", "maxLength": 160},
+                                   "description": {"type": "string", "maxLength": 2048}},
+                    "required": ["name"]}},
+                "context_budget": {"type": "integer", "minimum": 0, "maximum": 16000},
+            }, "required": ["task"],
+        },
+        "annotations": {"readOnlyHint": True, "destructiveHint": False,
+                        "idempotentHint": True, "openWorldHint": False},
+    },
+    {
+        "name": "plan_github_research",
+        "description": "Parcimonia: prepare scoped GitHub pull-request search and "
+                       "progressive reads of metadata, changed files and checks for "
+                       "the exact head. Returns a plan, never fetches or changes GitHub.",
+        "inputSchema": {
+            "type": "object", "additionalProperties": False,
+            "properties": {
+                "repository": {"type": "string", "maxLength": 140},
+                "query": {"type": "string", "maxLength": 1000},
+                "pr_number": {"type": "integer", "minimum": 1, "maximum": 2147483647},
+            }, "required": ["repository"],
+        },
+        "annotations": {"readOnlyHint": True, "destructiveHint": False,
+                        "idempotentHint": True, "openWorldHint": False},
+    },
+    {
         "name": "discover_backends",
         "description": "Scan for local LLM servers (LM Studio, Ollama, LocalAI, "
                        "vLLM, llama.cpp, ComfyUI, Qdrant) on localhost or the "
@@ -1455,7 +1492,26 @@ def _tool_forget_memory(args: dict) -> str:
     return json.dumps(_mh("forget_memory", args), ensure_ascii=False)
 
 
+def _assessment_arguments(args: dict, allowed: set[str]) -> None:
+    if not isinstance(args, dict) or set(args) - allowed:
+        raise ValueError("unsupported assessment arguments")
+
+
+def _tool_assess_task(args: dict) -> str:
+    from skills.preflight.assessment import assess_task
+    _assessment_arguments(args, {"task", "available_tools", "context_budget"})
+    return json.dumps(assess_task(**args), ensure_ascii=False)
+
+
+def _tool_plan_github_research(args: dict) -> str:
+    from skills.preflight.github_plan import plan_github_research
+    _assessment_arguments(args, {"repository", "query", "pr_number"})
+    return json.dumps(plan_github_research(**args), ensure_ascii=False)
+
+
 DISPATCH = {
+    "assess_task": _tool_assess_task,
+    "plan_github_research": _tool_plan_github_research,
     "dashboard": _tool_dashboard,
     "estimate_cost": _tool_estimate_cost,
     "fix_plan": _tool_fix_plan,
