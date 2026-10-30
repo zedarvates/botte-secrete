@@ -29,11 +29,26 @@ class _BudgetExceeded(Exception):
 
 def _marker(info):
     return (info.st_dev, info.st_ino, info.st_mode, info.st_size,
-            info.st_mtime_ns, info.st_ctime_ns)
+            info.st_mtime_ns, info.st_ctime_ns,
+            getattr(info, "st_file_attributes", 0), getattr(info, "st_reparse_tag", 0))
+
+
+def _is_reparse(info):
+    return bool(getattr(info, "st_file_attributes", 0)
+                & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x400)
+                or getattr(info, "st_reparse_tag", 0))
+
+
+def _opened_marker(info):
+    # CPython 3.12 on Windows exposes creation time through path st_ctime,
+    # but change time through fstat st_ctime. Compare ctime within each API.
+    # Path stat may also synthesize executable permission bits from extensions
+    # on Windows; retain full mode comparisons only within the same API.
+    return info.st_dev, info.st_ino, stat.S_IFMT(info.st_mode), info.st_size, info.st_mtime_ns
 
 
 def _directory_identity(info):
-    return info.st_dev, info.st_ino, stat.S_IFMT(info.st_mode)
+    return info.st_dev, info.st_ino, stat.S_IFMT(info.st_mode), _is_reparse(info)
 
 
 class _Scanner:
@@ -123,7 +138,8 @@ class _Scanner:
         parts, expected = record["parts"], record["info"]
         with self._parent(parts[:-1]) as parent_fd:
             before = self._entry_stat(parts[-1], parts[:-1], parent_fd)
-            if not stat.S_ISREG(before.st_mode) or _marker(before) != _marker(expected):
+            if (_is_reparse(before) or not stat.S_ISREG(before.st_mode)
+                    or _marker(before) != _marker(expected)):
                 raise _Changed("file changed before open")
             if self.anchored:
                 descriptor = os.open(parts[-1], self._flags(), dir_fd=parent_fd)
@@ -131,12 +147,14 @@ class _Scanner:
                 descriptor = os.open(self._path(parts), self._flags())
             try:
                 opened = os.fstat(descriptor)
-                if not stat.S_ISREG(opened.st_mode) or _marker(opened) != _marker(expected):
+                if (_is_reparse(opened) or not stat.S_ISREG(opened.st_mode)
+                        or _opened_marker(opened) != _opened_marker(before)):
                     raise _Changed("opened file differs from inventory")
                 yield descriptor
                 after = os.fstat(descriptor)
                 current = self._entry_stat(parts[-1], parts[:-1], parent_fd)
-                if _marker(after) != _marker(expected) or _marker(current) != _marker(expected):
+                if (_is_reparse(after) or _is_reparse(current)
+                        or _marker(after) != _marker(opened) or _marker(current) != _marker(before)):
                     raise _Changed("file changed during read")
             finally:
                 os.close(descriptor)
@@ -147,7 +165,7 @@ class _Scanner:
         expected = self.directories[parts]
         try:
             before = os.fstat(descriptor) if self.anchored else os.lstat(self._path(parts))
-            if _marker(before) != _marker(expected):
+            if _is_reparse(before) or _marker(before) != _marker(expected):
                 raise _Changed("directory changed before enumeration")
             entries = []
             with os.scandir(descriptor if self.anchored else self._path(parts)) as iterator:
@@ -165,7 +183,9 @@ class _Scanner:
             for name, info in sorted(entries, key=lambda item: item[0]):
                 child_parts = parts + (name,)
                 relative = self._relative(child_parts)
-                if stat.S_ISLNK(info.st_mode):
+                if _is_reparse(info):
+                    self._note("skip", "reparse_point_excluded", relative)
+                elif stat.S_ISLNK(info.st_mode):
                     self._note("skip", "symlink_excluded", relative)
                 elif stat.S_ISDIR(info.st_mode):
                     if name in self.excluded:
@@ -329,7 +349,7 @@ class _Scanner:
                 try:
                     with self._parent(record["parts"][:-1]) as parent_fd:
                         current = self._entry_stat(record["parts"][-1], record["parts"][:-1], parent_fd)
-                    if _marker(current) != _marker(record["info"]):
+                    if _is_reparse(current) or _marker(current) != _marker(record["info"]):
                         raise _Changed
                     valid.setdefault(identity, []).append(record)
                 except (OSError, _Changed):
@@ -449,8 +469,8 @@ def find_file_duplicates(root: str, *, max_files=5000, max_file_bytes=16 * 1024 
         root_info = os.lstat(absolute)
     except OSError as error:
         raise ValueError("root must be an explicit existing directory path") from error
-    if not stat.S_ISDIR(root_info.st_mode):
-        raise ValueError("root must be a directory, not a symlink or file")
+    if _is_reparse(root_info) or not stat.S_ISDIR(root_info.st_mode):
+        raise ValueError("root must be a directory, not a symlink, reparse point or file")
     limits = {name: value[0] for name, value in parameters.items()}
     limits["max_comparisons"] = MAX_COMPARISONS
     scanner = _Scanner(absolute, root_info, limits, names)

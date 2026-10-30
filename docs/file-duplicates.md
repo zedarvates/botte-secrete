@@ -36,10 +36,19 @@ The declared default directory exclusions are `.git`, `node_modules`, `.venv`,
 `venv` and `__pycache__`. An explicit `exclude_dirs` list replaces these defaults;
 entries must be directory basenames, not paths.
 
-Observed symlinks and special files are skipped. The scanner checks file
+Observed symlinks, Windows reparse points and special files are skipped. The scanner checks file
 identity and metadata before/after reads and reports detected changes or read
 failures. These checks are not an atomic filesystem snapshot. The report states
 which filesystem-access strategy was available on the current platform.
+
+Metadata from a path and an open descriptor must share file identity, file type,
+size and modification time. Complete markers, including change/creation time,
+are compared within each source before and after reading. This avoids comparing
+different `ctime` meanings in Windows CPython 3.12 while preserving each source's
+own change detection. Path-derived executable permission bits are not compared
+against descriptor-derived permission bits. See the pinned CPython sources for
+[path timestamps](https://github.com/python/cpython/blob/v3.12.10/Modules/posixmodule.c#L2148)
+and [descriptor timestamps](https://github.com/python/cpython/blob/v3.12.10/Python/fileutils.c#L1108).
 
 `scan_partial` means the scan could not fully inspect its admitted scope, for
 example because of a budget, depth, oversized file, read error or detected

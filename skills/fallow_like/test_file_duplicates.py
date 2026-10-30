@@ -7,6 +7,7 @@ import json
 import os
 from pathlib import Path
 import shutil
+import subprocess
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -51,6 +52,14 @@ class FileDuplicateTests(unittest.TestCase):
         self.assertEqual(result["status"], "complete")
         self.assertEqual(result["group_count"], 0)
         self.assertEqual(result["summary"]["bytes_read"], 10)
+
+    def test_executable_extension_copies_have_matching_file_types(self):
+        self.write("program.exe", b"same-content")
+        self.write("script.cmd", b"same-content")
+        result = self.scan()
+        self.assertEqual(result["status"], "complete")
+        self.assertEqual(result["group_count"], 1)
+        self.assertEqual(result["groups"][0]["paths"], ["program.exe", "script.cmd"])
 
     def test_forced_hash_collision_still_requires_bytes_equal(self):
         self.write("a", b"alpha")
@@ -175,6 +184,105 @@ class FileDuplicateTests(unittest.TestCase):
         self.assertEqual(result["status"], "complete")
         self.assertEqual(result["summary"]["files_seen"], 0)
         self.assertEqual(result["skips"][0]["reason"], "special_file_excluded")
+
+    def test_reparse_attributes_exclude_entries_and_reject_root(self):
+        self.write("a")
+        self.write("b")
+        self.write("junction/private")
+        original = os.lstat
+
+        class ReparseStat:
+            def __init__(self, info):
+                self.info = info
+                self.st_file_attributes = getattr(info, "st_file_attributes", 0) | 0x400
+                self.st_reparse_tag = 0xA0000003
+
+            def __getattr__(self, name):
+                return getattr(self.info, name)
+
+        def fake_entry(path, *args, **kwargs):
+            info = original(path, *args, **kwargs)
+            return ReparseStat(info) if os.fspath(path) == str(self.root / "junction") else info
+
+        with patch.object(module.os, "supports_dir_fd", set()), patch.object(module.os, "lstat", fake_entry):
+            result = self.scan()
+        self.assertEqual(result["status"], "complete")
+        self.assertEqual(result["summary"]["files_seen"], 2)
+        self.assertEqual(result["groups"][0]["paths"], ["a", "b"])
+        self.assertIn("reparse_point_excluded", [item["reason"] for item in result["skips"]])
+
+        def fake_root(path, *args, **kwargs):
+            return ReparseStat(original(path, *args, **kwargs))
+
+        with patch.object(module.os, "lstat", fake_root), self.assertRaises(ValueError):
+            self.scan()
+
+    def test_reparse_replacement_before_or_during_read_is_partial(self):
+        self.write("a")
+        self.write("b")
+        original_stat = os.lstat
+        original_hash = module._Scanner.hash_file
+        original_read = os.read
+        for phase in ("before_open", "during_read"):
+            changed = False
+
+            class ReparseStat:
+                def __init__(self, info):
+                    self.info = info
+                    self.st_file_attributes = getattr(info, "st_file_attributes", 0) | 0x400
+                    self.st_reparse_tag = 0xA0000003
+
+                def __getattr__(self, name):
+                    return getattr(self.info, name)
+
+            def fake_entry(path, *args, **kwargs):
+                info = original_stat(path, *args, **kwargs)
+                return ReparseStat(info) if changed and os.fspath(path) == str(self.root / "a") else info
+
+            def change_before_hash(scanner, record):
+                nonlocal changed
+                if phase == "before_open":
+                    changed = True
+                return original_hash(scanner, record)
+
+            def change_during_read(descriptor, count):
+                nonlocal changed
+                data = original_read(descriptor, count)
+                if phase == "during_read":
+                    changed = True
+                return data
+
+            with self.subTest(phase=phase), patch.object(module.os, "supports_dir_fd", set()), \
+                    patch.object(module.os, "lstat", fake_entry), \
+                    patch.object(module._Scanner, "hash_file", change_before_hash), \
+                    patch.object(module.os, "read", change_during_read):
+                result = self.scan()
+            self.assertTrue(changed)
+            self.assertTrue(result["scan_partial"])
+            self.assertEqual(result["group_count"], 0)
+
+    @unittest.skipUnless(os.name == "nt", "Windows junction creation unavailable on this platform")
+    def test_windows_junction_target_is_not_scanned(self):
+        self.write("a")
+        self.write("b")
+        outside = tempfile.TemporaryDirectory()
+        self.addCleanup(outside.cleanup)
+        Path(outside.name, "private").write_bytes(b"same")
+        junction = self.root / "junction"
+        try:
+            result = subprocess.run(["cmd", "/c", "mklink", "/J", str(junction), outside.name],
+                                    capture_output=True, text=True, timeout=10)
+        except (OSError, subprocess.TimeoutExpired) as error:
+            self.skipTest(f"junction fixture unavailable: {error}")
+        if result.returncode != 0:
+            self.skipTest(f"mklink /J unavailable: exit {result.returncode}")
+        self.addCleanup(junction.rmdir)
+        report = self.scan()
+        self.assertEqual(report["status"], "complete")
+        self.assertEqual(report["summary"]["files_seen"], 2)
+        self.assertIn("reparse_point_excluded", [item["reason"] for item in report["skips"]])
+        with self.assertRaises(ValueError):
+            find_file_duplicates(str(junction))
 
     def test_change_during_read_is_partial_and_not_verified(self):
         first = self.write("a", b"same")
@@ -339,6 +447,54 @@ class FileDuplicateTests(unittest.TestCase):
         self.assertEqual(result["filesystem_access"], "path_checks")
         self.assertEqual(result["status"], "complete")
         self.assertEqual(result["group_count"], 1)
+
+    def test_distinct_path_and_descriptor_ctime_semantics_are_stable(self):
+        self.write("a")
+        self.write("b")
+        original = os.fstat
+
+        class DescriptorStat:
+            def __init__(self, info):
+                self.info = info
+                self.st_ctime_ns = info.st_ctime_ns + 1_000_000_000
+
+            def __getattr__(self, name):
+                return getattr(self.info, name)
+
+        with patch.object(module.os, "supports_dir_fd", set()), patch.object(
+                module.os, "fstat", side_effect=lambda descriptor: DescriptorStat(original(descriptor))):
+            result = self.scan()
+        self.assertEqual(result["status"], "complete")
+        self.assertEqual(result["group_count"], 1)
+        self.assertEqual(result["summary"]["bytes_read"], 16)
+
+    def test_descriptor_ctime_change_is_detected_with_unchanged_path_mtime(self):
+        first = self.write("a")
+        self.write("b")
+        path_mtime = first.stat().st_mtime_ns
+        original = os.fstat
+        calls = {}
+
+        class DescriptorStat:
+            def __init__(self, info, delta):
+                self.info = info
+                self.st_ctime_ns = info.st_ctime_ns + delta
+
+            def __getattr__(self, name):
+                return getattr(self.info, name)
+
+        def changed_descriptor(descriptor):
+            calls[descriptor] = calls.get(descriptor, 0) + 1
+            phase = (calls[descriptor] - 1) % 2
+            return DescriptorStat(original(descriptor), 1_000_000_000 + phase)
+
+        with patch.object(module.os, "supports_dir_fd", set()), patch.object(
+                module.os, "fstat", side_effect=changed_descriptor):
+            result = self.scan()
+        self.assertTrue(result["scan_partial"])
+        self.assertIn("file_changed", result["partial_reasons"])
+        self.assertEqual(result["group_count"], 0)
+        self.assertEqual(first.stat().st_mtime_ns, path_mtime)
 
     def test_hash_io_failure_is_partial_not_clean_absence(self):
         self.write("a")
