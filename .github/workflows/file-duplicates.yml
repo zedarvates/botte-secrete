@@ -1,0 +1,37 @@
+name: Exact file duplicate pilot
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'skills/fallow_like/file_duplicates.py'
+      - 'skills/fallow_like/duplicates_cli.py'
+      - 'skills/fallow_like/test_file_duplicates.py'
+      - 'skills/llm_mcp/**'
+      - 'skills/preflight/assessment.py'
+      - '.github/workflows/file-duplicates.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  file-duplicates:
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.10', '3.12']
+    env:
+      PYTHONUTF8: '1'
+      PYTHONIOENCODING: utf-8
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Verify exact-file engine using temporary fixtures
+        run: python -m skills.fallow_like.test_file_duplicates
+      - name: Verify CLI, MCP and task assessment boundaries
+        run: python -m skills.llm_mcp.test_file_duplicates

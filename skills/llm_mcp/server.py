@@ -54,6 +54,28 @@ SERVER_INFO = {"name": "botte-llm", "version": __version__}
 
 TOOLS = [
     {
+        "name": "find_file_duplicates",
+        "description": "Read-only exact duplicate file inspection under one explicit local directory. "
+                       "Groups by size and full SHA-256, then confirms bytes; reports hard links "
+                       "separately. Bounded reads, exclusions and partial scans are explicit. "
+                       "No deletion, image similarity, functional-equivalence judgment or model call.",
+        "inputSchema": {
+            "type": "object", "additionalProperties": False,
+            "properties": {
+                "root": {"type": "string", "minLength": 1},
+                "max_files": {"type": "integer", "minimum": 1, "maximum": 50000},
+                "max_file_bytes": {"type": "integer", "minimum": 1, "maximum": 1073741824},
+                "max_total_bytes": {"type": "integer", "minimum": 1, "maximum": 1073741824},
+                "max_entries": {"type": "integer", "minimum": 1, "maximum": 100000},
+                "max_depth": {"type": "integer", "minimum": 0, "maximum": 128},
+                "exclude_dirs": {"type": "array", "maxItems": 100,
+                                 "items": {"type": "string", "minLength": 1}},
+            }, "required": ["root"],
+        },
+        "annotations": {"readOnlyHint": True, "destructiveHint": False,
+                        "idempotentHint": True, "openWorldHint": False},
+    },
+    {
         "name": "compute_statistics",
         "description": "Compute deterministic descriptive statistics from supplied numeric values: "
                        "count, sum, min, max, mean, median, population/sample variance and "
@@ -1534,6 +1556,15 @@ def _tool_compute_statistics(args: dict) -> str:
     return json.dumps(compute_statistics(**args), ensure_ascii=False, allow_nan=False)
 
 
+def _tool_find_file_duplicates(args: dict) -> str:
+    from skills.fallow_like.file_duplicates import find_file_duplicates
+    allowed = {"root", "max_files", "max_file_bytes", "max_total_bytes",
+               "max_entries", "max_depth", "exclude_dirs"}
+    if not isinstance(args, dict) or set(args) - allowed:
+        raise ValueError("unsupported file-duplicate arguments")
+    return json.dumps(find_file_duplicates(**args), ensure_ascii=True, allow_nan=False)
+
+
 def _tool_plan_github_research(args: dict) -> str:
     from skills.preflight.github_plan import plan_github_research
     _assessment_arguments(args, {"repository", "query", "pr_number"})
@@ -1541,6 +1572,7 @@ def _tool_plan_github_research(args: dict) -> str:
 
 
 DISPATCH = {
+    "find_file_duplicates": _tool_find_file_duplicates,
     "compute_statistics": _tool_compute_statistics,
     "assess_task": _tool_assess_task,
     "plan_github_research": _tool_plan_github_research,

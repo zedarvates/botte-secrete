@@ -18,6 +18,7 @@ MAX_BUDGET = 16_000
 _NAME = re.compile(r"[A-Za-z0-9_.:/-]{1,160}\Z")
 
 _RULES = {
+    "file_duplicates": r"\b(doublons?|duplicates?)\b",
     "statistics": r"\b(statistics|statistiques?|stats|moyennes?|averages?|means?|medianes?|medians?|percentiles?|quantiles?|variances?|ecarts?[ -]types?|standard deviations?|sommes?|sums?|minimums?|maximums?)\b",
     "github_research": r"\b(github|pull requests?|prs?)\b",
     "software_testing": r"\b(tests?|testing|pytest|unittest|regression|regressions|tester|teste|testez)\b",
@@ -27,6 +28,7 @@ _RULES = {
     "read_analysis": r"\b(read|lire|lis|analyze|analyse|analyser|inspect|inspecter|evaluate|evaluer|audit|review|recherche|rechercher|search|find)\b",
 }
 _HINTS = {
+    "file_duplicates": "find file duplicates exact bytes sha256 hash read only fichiers doublons",
     "statistics": "compute statistics descriptive numeric values mean median percentile variance statistiques moyenne mediane",
     "github_research": "github search pull request issue repository recherche",
     "software_testing": "test testing regression assertion software pytest logiciel",
@@ -36,6 +38,7 @@ _HINTS = {
     "read_analysis": "read analyze inspect search evidence document analyse",
 }
 _STEPS = {
+    "file_duplicates": ["Resolve the explicit local directory and inspection limits.", "Use an available read-only file-duplicate tool and retain its byte-comparison evidence.", "Keep hard links, excluded paths, read errors and partial scans distinct."],
     "statistics": ["Resolve the numeric values, requested measures and units.", "Use an available deterministic statistics tool with explicit missing-value and percentile conventions.", "Retain the supplied-data identity, calculation methods and rejected or omitted counts."],
     "github_research": ["Resolve the repository and requested scope.", "Search bounded metadata through an available GitHub connector.", "Read exact matching PRs or files and retain URLs, refs and pagination limits."],
     "software_testing": ["Identify the target version, expected behavior and test adapter.", "Run the smallest relevant checks through a verified available tool.", "Retain commands, exit codes, failures and environment limitations."],
@@ -45,6 +48,7 @@ _STEPS = {
     "read_analysis": ["Resolve the exact source and scope.", "Read only the evidence needed through available tools.", "Return findings with provenance and unresolved questions."],
 }
 _CHECKS = {
+    "file_duplicates": ["A partial scan or omitted group cannot establish absence of duplicates.", "Exact file bytes do not establish similar images, equivalent features or removable content."],
     "statistics": ["Do not invent missing measurements or mix incompatible units.", "Keep population and sample variance distinct; state the percentile method.", "A deterministic calculation does not establish data representativeness or causation."],
     "github_research": ["Do not infer merge state from a PR title or discussion.", "Report incomplete pagination or stale metadata."],
     "software_testing": ["A passing command is not proof of untested behavior.", "Distinguish product failure from an unavailable test environment."],
@@ -81,6 +85,14 @@ def _task_labels(task: str) -> tuple[list[str], list[str]]:
     if re.search(r"\b(not|never|dont|cannot|[a-z]+n't|ne|pas|jamais|sans|aucuns?|aucunes?|nullement|guere|ni)\b|\bn'[a-z]+", normalized):
         return [], reasons + ["negation_requires_host_review"]
     labels = [name for name, pattern in _RULES.items() if re.search(pattern, normalized)]
+    if "file_duplicates" in labels:
+        searching = re.search(r"\b(find|search|scan|check|detect|cherche|cherchez|chercher|rechercher|recherchez|detecte|detecter|trouve|trouver|recherche|verifier)\b", normalized)
+        file_scope = re.search(r"\b(files?|fichiers?)\b", normalized)
+        fuzzy_request = re.search(r"\b(similar|similarity|semblables?|similaires?|ressemblance|approximate|approximatifs?)\b", normalized)
+        if not searching or not file_scope or fuzzy_request:
+            labels.remove("file_duplicates")
+        elif "code_work" in labels and not re.search(r"\b(debug|debugger|compile|compiler|build|refactor|refactoriser|bug|corrige|corriger|fix)\b", normalized):
+            labels.remove("code_work")
     if "statistics" in labels:
         calculating = re.search(r"\b(calculate|calculates|calculating|compute|computes|computing|calcul|calculer|calcule|calculez|determiner)\b|\b(mean|median|moyenne|mediane)\s+(of|de|des)\b", normalized)
         if not calculating:

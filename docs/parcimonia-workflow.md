@@ -55,6 +55,15 @@ scope. This intentionally limits search syntax; it is not a replacement for all
 GitHub search operators. A zero-result search may require a different lexical
 query or direct reference. No result is cached or promoted into verified memory.
 
+## Exact file duplicate inspection
+
+The Python runtime can inspect an explicit local directory through
+`find_file_duplicates`. Parcimonia assessment can shortlist that tool for
+explicit file-duplicate searches. Size/hash groups require byte comparison;
+hard links, partial scans and omitted results stay distinct. See the
+[file-duplicate contract](file-duplicates.md). This does not change the hosted
+cloud tools or add desktop behavior.
+
 ## Deterministic statistics
 
 For an explicit request to compute descriptive statistics, `assess_task` can

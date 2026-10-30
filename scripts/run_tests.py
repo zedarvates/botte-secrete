@@ -72,6 +72,10 @@ SUITES = [
     ("dashboard", [sys.executable, "-m", "skills.dashboard.test_dashboard"], "skills/dashboard/"),
     ("quality_dashboard", [sys.executable, "-m", "skills.dashboard.test_quality_compass"], "skills/dashboard/"),
     ("fallow_scanner", [sys.executable, "-m", "skills.fallow_like.test_scanner"], "skills/fallow_like/"),
+    ("file_duplicates", [sys.executable, "-m", "skills.fallow_like.test_file_duplicates"], "skills/fallow_like/"),
+    ("file_duplicates_integration", [sys.executable, "-m", "skills.llm_mcp.test_file_duplicates"], (
+        "skills/fallow_like/", "skills/preflight/assessment.py", "skills/llm_mcp/",
+    )),
     ("dead_code", [sys.executable, "-m", "skills.fallow_like.test_dead_code"], "skills/fallow_like/"),
     ("taint", [sys.executable, "-m", "skills.fallow_like.test_taint"], "skills/fallow_like/"),
     ("docs_steward", [sys.executable, "-m", "skills.docs_steward.test_docs_steward"], "skills/docs_steward/"),
