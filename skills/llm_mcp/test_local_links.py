@@ -127,5 +127,14 @@ class LocalLinkIntegrationTests(unittest.TestCase):
         self.assertEqual(assess_task("Check local Markdown links and fix code")["status"], "abstained")
 
 
+def main():
+    suite = unittest.defaultTestLoader.loadTestsFromModule(sys.modules[__name__])
+    result = unittest.TextTestRunner().run(suite)
+    failed = len(result.failures) + len(result.errors)
+    skipped = len(result.skipped)
+    print(f"{result.testsRun - failed - skipped} passed, {failed} failed, {skipped} skipped")
+    return 0 if result.wasSuccessful() else 1
+
+
 if __name__ == "__main__":
-    unittest.main()
+    raise SystemExit(main())

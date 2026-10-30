@@ -9,8 +9,8 @@
   "implementation_sha256": {
     "skills/fallow_like/local_links.py": "f039269d5c169eb32649ec3d185e449d200f2f6555f8ce3a34cd31831c4e0356",
     "skills/fallow_like/links_cli.py": "2443ff8ff3f1716207332b77bd8a297cb4a1185e14d6756d474580a3dad8b41d",
-    "skills/fallow_like/test_local_links.py": "e3891b7e446a0d490fd4982abaa2b419fe5ee22651e4781cccf5179dfb4e00a9",
-    "skills/llm_mcp/test_local_links.py": "6a8bcff38f4f460fa8423e81d5cb1cff17b0b0bae381170ae3ccd0294c80d39f",
+    "skills/fallow_like/test_local_links.py": "b0bd25365e0db8619ba93cea2e3ab1b6362c89378fe6538655ba55535df26c0e",
+    "skills/llm_mcp/test_local_links.py": "d789e06ac99cba9eb643f95d8e30e56020dc3ccb26df93fbd802c4c616fbd0fd",
     "skills/llm_mcp/server.py": "aba38e7ecaaa65e65d90a867f83585d1ab03228768b8a8d75cc9631c3aff1066",
     "skills/preflight/assessment.py": "89f9baf1ce2b0d5ec4bf07b8957d7100b94934d8ec9e8743c174f0f746742639",
     "scripts/run_tests.py": "324bd14c81eff78c9700ca93aebe136995e100e2f8f95164dc670aa3b77c5124",
@@ -49,6 +49,13 @@
     {
       "check": "git diff --check",
       "status": "passed"
+    },
+    {
+      "check": "actual scripts.run_tests main with its two local-link suites selected",
+      "passed": 49,
+      "failed": 0,
+      "suite_count": 2,
+      "scope": "selected suites only; full repository CI remains separate"
     }
   ],
   "independent_review": {
@@ -138,5 +145,12 @@
     "tokens": null,
     "cost": null,
     "savings": null
+  },
+  "runner_integration_fix": {
+    "witness_run": 41111279715,
+    "witness_job": 124253944959,
+    "cause": "Both unittest entry points returned zero but omitted the stdout count summary required by scripts/run_tests.py. Dedicated tests passed; global runner classified missing summary as failure.",
+    "change": "Emit the existing N passed, M failed, K skipped summary while retaining unittest failure exit status. Production checker, CLI, MCP and parser unchanged.",
+    "verified": "Real global runner scoped to both new suites: 49 passed, 0 failed."
   }
 }
