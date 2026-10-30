@@ -47,6 +47,14 @@ def _opened_marker(info):
     return info.st_dev, info.st_ino, stat.S_IFMT(info.st_mode), info.st_size, info.st_mtime_ns
 
 
+def _alias_marker(info):
+    # Windows path stat derives executable bits from each alias's extension.
+    # Everything except those permission bits must agree across hardlinks.
+    return (info.st_dev, info.st_ino, stat.S_IFMT(info.st_mode), info.st_size,
+            info.st_mtime_ns, info.st_ctime_ns,
+            getattr(info, "st_file_attributes", 0), getattr(info, "st_reparse_tag", 0))
+
+
 def _directory_identity(info):
     return info.st_dev, info.st_ino, stat.S_IFMT(info.st_mode), _is_reparse(info)
 
@@ -65,6 +73,7 @@ class _Scanner:
                          and hasattr(os, "O_NOFOLLOW"))
         self.directories = {(): root_info}
         self.records = []
+        self.fd_markers = {}
         self.reasons = set()
         self.errors, self.skips = [], []
         self.error_count = self.skip_count = 0
@@ -150,12 +159,19 @@ class _Scanner:
                 if (_is_reparse(opened) or not stat.S_ISREG(opened.st_mode)
                         or _opened_marker(opened) != _opened_marker(before)):
                     raise _Changed("opened file differs from inventory")
+                baseline = self.fd_markers.get(record["identity"])
+                if baseline is not None and _marker(opened) != baseline:
+                    raise _Changed("opened file differs from its previous descriptor state")
                 yield descriptor
                 after = os.fstat(descriptor)
                 current = self._entry_stat(parts[-1], parts[:-1], parent_fd)
                 if (_is_reparse(after) or _is_reparse(current)
                         or _marker(after) != _marker(opened) or _marker(current) != _marker(before)):
                     raise _Changed("file changed during read")
+                # One immutable descriptor baseline per filesystem identity,
+                # shared by all observed hardlink aliases. In particular, Windows
+                # ChangeTime survives across separate open/read operations here.
+                self.fd_markers.setdefault(record["identity"], _marker(opened))
             finally:
                 os.close(descriptor)
 
@@ -290,7 +306,7 @@ class _Scanner:
         candidates = {}
         for identity, records in identities.items():
             first = records[0]
-            if any(_marker(record["info"]) != _marker(first["info"]) for record in records[1:]):
+            if any(_alias_marker(record["info"]) != _alias_marker(first["info"]) for record in records[1:]):
                 self._note("error", "file_changed", first["path"], partial=True)
                 continue
             if first["info"].st_size <= self.limits["max_file_bytes"]:
@@ -354,6 +370,19 @@ class _Scanner:
                     valid.setdefault(identity, []).append(record)
                 except (OSError, _Changed):
                     self._note("error", "file_changed", record["path"], partial=True)
+        for identity in list(valid):
+            if identity not in self.fd_markers:
+                continue
+            representative = valid[identity][0]
+            try:
+                # Metadata-only reopening keeps the content byte budget exact.
+                # It also checks ChangeTime against the original descriptor
+                # channel when path ctime still represents Windows creation.
+                with self._open_file(representative):
+                    pass
+            except (OSError, _Changed) as error:
+                self._failed_read(error, representative)
+                del valid[identity]
         detached = set()
         for parts, expected in self.directories.items():
             try:

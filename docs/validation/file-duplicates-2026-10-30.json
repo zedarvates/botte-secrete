@@ -1,6 +1,6 @@
 {
   "schema": "botte.file-duplicates-validation/v1",
-  "source_parent": "074da6ea095811f79bbe60c4dda21ff6d4b12c72",
+  "source_parent": "06e9a910e4b5eb406d8f0a4f8cc7d2595e0b48b5",
   "runtime": {
     "python": "3.12.14",
     "platform": "Linux",
@@ -10,7 +10,7 @@
   "checks": [
     {
       "command": "python -m skills.fallow_like.test_file_duplicates",
-      "passed": 33,
+      "passed": 36,
       "failed": 0,
       "skipped": 1
     },
@@ -36,8 +36,8 @@
     }
   ],
   "source_sha256": {
-    "skills/fallow_like/file_duplicates.py": "cac8e4405d6285d9650b3d069765bb4862337d7d757a1d29e07805362ca88789",
-    "skills/fallow_like/test_file_duplicates.py": "51a221fd15066b02babda4963fec134882d416a9291d5e24d3c5d515b6250ef4",
+    "skills/fallow_like/file_duplicates.py": "0cc692aadbfd9614d3324e189f92e4ea7e179b32320ac9ffc12457c0f15e3464",
+    "skills/fallow_like/test_file_duplicates.py": "b665bd0fc1a08f23ed4ca7f0686ed4a9c907a1493a78c6e372d9d45955d1f951",
     "skills/fallow_like/duplicates_cli.py": "7c351f28bb70d651f5d1433af06a09fc750d07e7e4ab5b4bdda9d08089dd041c",
     "skills/llm_mcp/test_file_duplicates.py": "9bf70bfe62c8240497c87f1dc7174d833efca2102d897116e195567b3e2f02c3",
     "skills/llm_mcp/server.py": "433a767e30936204757f4fc15796e8bb2d7f641fbe44e8673235247bcaea72a5",
@@ -90,11 +90,13 @@
     "non_utf8_unix_path_transport": "fixed_and_independently_retested",
     "windows_metadata_sources": "Path/descriptor ctime compared only within their own API; common identity/type/size/mtime compared across APIs. Native rerun pending.",
     "windows_executable_modes": "Compare S_IFMT across path/descriptor; preserve full mode within API.",
-    "windows_reparse_points": "Reject root and exclude observed entry reparse points; native junction fixture added."
+    "windows_reparse_points": "Reject root and exclude observed entry reparse points; native junction fixture added.",
+    "windows_handle_baseline": "Immutable descriptor marker shared by file identity; future opens and final revalidation compare within descriptor API without reading bytes.",
+    "hardlink_extension_modes": "Alias inventory comparison ignores only path-synthesized permission bits; each path and descriptor keeps full markers within its own API."
   },
   "limits": {
     "complete_repository_suite": "not_run_in_selected_source_checkout",
-    "native_windows_execution": "initial Python3.10 passed; corrected Python3.10/3.12 rerun pending",
+    "native_windows_execution": "corrected immutable-handle-baseline rerun pending",
     "python310_execution": "pending_dedicated_CI",
     "production_directories_scanned": false
   },
@@ -115,6 +117,17 @@
       "failed": 4,
       "skipped": 3,
       "job_id": 124236330102
+    }
+  },
+  "ci_second": {
+    "head": "06e9a910e4b5eb406d8f0a4f8cc7d2595e0b48b5",
+    "run_id": 41107076790,
+    "ubuntu_python310": "success",
+    "ubuntu_python312": "success",
+    "windows_python312": {
+      "failed": 1,
+      "job_id": 124239603416,
+      "remaining_case": "post-comparison same-size change not visible through path metadata"
     }
   }
 }

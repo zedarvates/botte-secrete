@@ -94,6 +94,22 @@ class FileDuplicateTests(unittest.TestCase):
         self.assertEqual(result["groups"][0]["file_count"], 2)
         self.assertEqual(result["summary"]["logical_duplicate_bytes"], 7)
 
+    @unittest.skipUnless(hasattr(os, "link"), "hardlinks unavailable")
+    def test_hardlink_alias_extensions_do_not_create_false_permission_changes(self):
+        original = self.write("program.exe", b"same-content")
+        try:
+            os.link(original, self.root / "program.txt")
+        except OSError as error:
+            self.skipTest(f"hardlink fixture unavailable: {error}")
+        self.write("copy.bin", b"same-content")
+        result = self.scan()
+        self.assertEqual(result["status"], "complete")
+        self.assertEqual(result["hardlink_group_count"], 1)
+        self.assertEqual(result["hardlink_groups"][0]["paths"], ["program.exe", "program.txt"])
+        self.assertEqual(result["group_count"], 1)
+        self.assertEqual(result["groups"][0]["file_count"], 2)
+        self.assertEqual(result["summary"]["logical_duplicate_bytes"], len(b"same-content"))
+
     def test_empty_directory_and_empty_file_copies(self):
         empty = self.scan()
         self.assertEqual(empty["status"], "complete")
@@ -495,6 +511,79 @@ class FileDuplicateTests(unittest.TestCase):
         self.assertIn("file_changed", result["partial_reasons"])
         self.assertEqual(result["group_count"], 0)
         self.assertEqual(first.stat().st_mtime_ns, path_mtime)
+
+    def test_final_descriptor_change_is_detected_when_path_times_stay_unchanged(self):
+        first = self.write("a")
+        second = self.write("b")
+        before = [(path.stat().st_mtime_ns, path.stat().st_ctime_ns) for path in (first, second)]
+        original_stat = os.fstat
+        original_equal = module._Scanner.equal_files
+        changed = False
+
+        class DescriptorStat:
+            def __init__(self, info):
+                self.info = info
+                self.st_ctime_ns = info.st_ctime_ns + 1_000_000_000 + int(changed)
+
+            def __getattr__(self, name):
+                return getattr(self.info, name)
+
+        def change_after_comparison(scanner, left, right):
+            nonlocal changed
+            equal = original_equal(scanner, left, right)
+            changed = True
+            return equal
+
+        with patch.object(module.os, "supports_dir_fd", set()), \
+                patch.object(module.os, "fstat", side_effect=lambda descriptor: DescriptorStat(original_stat(descriptor))), \
+                patch.object(module._Scanner, "equal_files", change_after_comparison):
+            result = self.scan(max_total_bytes=16)
+        self.assertTrue(changed)
+        self.assertTrue(result["scan_partial"])
+        self.assertIn("file_changed", result["partial_reasons"])
+        self.assertEqual(result["groups"], [])
+        self.assertEqual(result["summary"]["bytes_read"], 16)
+        self.assertEqual([(path.stat().st_mtime_ns, path.stat().st_ctime_ns) for path in (first, second)], before)
+
+    @unittest.skipUnless(hasattr(os, "link"), "hardlinks unavailable")
+    def test_descriptor_baseline_is_shared_by_hardlink_identity(self):
+        first = self.write("a")
+        self.write("b")
+        try:
+            os.link(first, self.root / "alias")
+        except OSError as error:
+            self.skipTest(str(error))
+        target_inode = first.stat().st_ino
+        original_stat = os.fstat
+        original_equal = module._Scanner.equal_files
+        changed = False
+        baseline_count = None
+
+        class DescriptorStat:
+            def __init__(self, info):
+                self.info = info
+                delta = int(changed and info.st_ino == target_inode)
+                self.st_ctime_ns = info.st_ctime_ns + 1_000_000_000 + delta
+
+            def __getattr__(self, name):
+                return getattr(self.info, name)
+
+        def change_after_comparison(scanner, left, right):
+            nonlocal changed, baseline_count
+            equal = original_equal(scanner, left, right)
+            baseline_count = len(scanner.fd_markers)
+            changed = True
+            return equal
+
+        with patch.object(module.os, "supports_dir_fd", set()), \
+                patch.object(module.os, "fstat", side_effect=lambda descriptor: DescriptorStat(original_stat(descriptor))), \
+                patch.object(module._Scanner, "equal_files", change_after_comparison):
+            result = self.scan()
+        self.assertEqual(baseline_count, 2)  # two files, three paths
+        self.assertTrue(result["scan_partial"])
+        self.assertEqual(result["groups"], [])
+        self.assertEqual(result["hardlink_groups"], [])
+        self.assertEqual(result["summary"]["logical_duplicate_bytes"], 0)
 
     def test_hash_io_failure_is_partial_not_clean_absence(self):
         self.write("a")
