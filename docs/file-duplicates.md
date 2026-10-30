@@ -38,7 +38,10 @@ entries must be directory basenames, not paths.
 
 Observed symlinks, Windows reparse points and special files are skipped. The scanner checks file
 identity and metadata before/after reads and reports detected changes or read
-failures. These checks are not an atomic filesystem snapshot. The report states
+failures. These checks are not an atomic filesystem snapshot. A concurrent
+same-size write that leaves all available metadata unchanged may escape change
+detection; groups describe byte comparisons observed during the scan, not a
+durable guarantee against concurrent writers. The report states
 which filesystem-access strategy was available on the current platform.
 
 Metadata from a path and an open descriptor must share file identity, file type,

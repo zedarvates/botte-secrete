@@ -303,6 +303,34 @@ class FileDuplicateTests(unittest.TestCase):
     def test_change_during_read_is_partial_and_not_verified(self):
         first = self.write("a", b"same")
         self.write("b", b"same")
+        mtime_before = first.stat().st_mtime_ns
+        original_read = os.read
+        changed = False
+
+        def read_then_change(descriptor, count):
+            nonlocal changed
+            data = original_read(descriptor, count)
+            if not changed:
+                changed = True
+                first.write_bytes(b"DIFF")
+                # Detection requires an observable marker. Equal-size writes
+                # can share one filesystem clock tick, especially on Windows.
+                os.utime(first, ns=(first.stat().st_atime_ns, mtime_before + 2_000_000_000))
+                self.assertNotEqual(first.stat().st_mtime_ns, mtime_before)
+                self.assertEqual(first.stat().st_size, len(b"same"))
+            return data
+
+        with patch.object(module.os, "read", read_then_change):
+            result = self.scan()
+        self.assertTrue(changed)
+        self.assertEqual(result["status"], "partial")
+        self.assertEqual(result["group_count"], 0)
+        self.assertEqual(result["summary"]["logical_duplicate_bytes"], 0)
+        self.assertIn("file_changed", result["partial_reasons"])
+
+    def test_same_size_midread_write_without_forced_clock_never_confirms_false_copy(self):
+        first = self.write("a", b"same")
+        second = self.write("b", b"same")
         original_read = os.read
         changed = False
 
@@ -316,9 +344,12 @@ class FileDuplicateTests(unittest.TestCase):
 
         with patch.object(module.os, "read", read_then_change):
             result = self.scan()
-        self.assertEqual(result["status"], "partial")
+        self.assertTrue(changed)
+        self.assertEqual(first.read_bytes(), b"DIFF")
+        self.assertEqual(second.read_bytes(), b"same")
+        self.assertEqual(result["groups"], [])
         self.assertEqual(result["group_count"], 0)
-        self.assertIn("file_changed", result["partial_reasons"])
+        self.assertEqual(result["summary"]["logical_duplicate_bytes"], 0)
 
     def test_disappearing_file_during_open_is_partial(self):
         self.write("a")
@@ -401,7 +432,12 @@ class FileDuplicateTests(unittest.TestCase):
 
         def change_after_comparison(scanner, left, right):
             equal = original(scanner, left, right)
-            (self.root / left["path"]).write_bytes(b"DIFF")
+            path = self.root / left["path"]
+            before = path.stat()
+            path.write_bytes(b"DIFF")
+            os.utime(path, ns=(before.st_atime_ns, before.st_mtime_ns + 2_000_000_000))
+            self.assertNotEqual(path.stat().st_mtime_ns, before.st_mtime_ns)
+            self.assertEqual(path.stat().st_size, before.st_size)
             return equal
 
         with patch.object(module._Scanner, "equal_files", change_after_comparison):
