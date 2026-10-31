@@ -53,7 +53,7 @@ network location alone does not make an endpoint trusted.
 | Optimization | Compression, pruning, token and context budgets | `universal_compressor`, `context_budget`, `token_shaper` |
 | Execution | Local backends, orchestration, bounded automation | `llm_backends`, `conductor`, `local_harness` |
 | Tool plane | MCP schemas, discovery, dispatch, lazy loading | `llm_mcp`, `mcp_gateway` |
-| Observation | Events, cache, reports, metrics, dashboards | `events`, `cache`, `metrics`, `dashboard` |
+| Observation | Events, verified quality memory, cache, reports, metrics, dashboards | `events`, `trajectory`, `cache`, `metrics`, `dashboard` |
 | Governance | Policy, drift checks, and security analysis | `preflight`, `checkup`, `security_scanner` |
 
 The layers are logical, not separate services. Most modules are flat Python
@@ -109,6 +109,12 @@ The Loop Optimizer is shadow-only by default: it can propose and record a loop
 decision without silently changing execution. See
 [Loop Optimizer](loop-optimizer.md) for its rollout gates.
 
+The Quality Compass is also shadow-only. It stores externally verified outcomes
+as task fingerprints and sparse hashed features, uses k-nearest neighbors as an
+explainable baseline, and exposes advice through `botte qa` and MCP. It never
+changes the active route; high-impact work keeps a human gate, and model
+self-reports cannot become labels.
+
 ## Data and state
 
 ```mermaid
@@ -116,15 +122,20 @@ flowchart TB
     Config[".botte/config.json"] --> Runtime["Routing and execution"]
     Profile[".skills-profile"] --> Runtime
     Runtime --> Events[".botte/events.jsonl"]
+    Runtime --> Quality[".botte/quality-trajectories.jsonl"]
     Runtime --> Cache[".botte-cache/"]
     Events --> Dashboard["Dashboard and replay"]
     Cache --> Dashboard
+    Quality --> Compass["QA CLI and MCP advice"]
     Runtime --> Reports["Timestamped reports"]
 ```
 
 Project-local files may contain absolute paths, discovered endpoints, or
 operational history. Generated configuration is machine-specific and should not
 be committed unless a module explicitly produces a sanitized public artifact.
+The Quality Compass does not persist raw task text, but its fingerprints,
+features, outcome labels, and evidence references remain private operational
+data and follow the same rule.
 
 The public dashboard generator copies the UI and writes a filtered JSON snapshot
 that excludes local operational metrics. The screenshot embedded in the README

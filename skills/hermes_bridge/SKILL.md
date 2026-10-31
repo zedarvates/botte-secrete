@@ -1,7 +1,6 @@
 ---
-name: hermes_bridge
-layer: EXPOSE
-description: Expose auto_route/local_chat/fusion/find_skills/infra_tips to Hermes-Agent (or any framework that expects OpenAI-function-calling tool specs instead of MCP) — plus a one-call MCP config generator for the zero-code path if the framework already speaks MCP. Use when connecting botte-secrète's routing belt to another agent framework.
+name: hermes-bridge
+description: Expose routing, local chat, fusion, skill search, infrastructure advice, and privacy-safe QA run manifests to Hermes-Agent or another OpenAI-function-calling framework, plus a one-call MCP config generator. Use when connecting botte-secrète's routing and evidence contracts to another agent framework.
 ---
 
 # hermes_bridge — connect the belt to another agent framework
@@ -20,7 +19,7 @@ instead expect a flat list of OpenAI-function-calling tool specs + a
 dispatcher, a common shape for agents built before/without MCP support.
 
 ```bash
-python -m skills.hermes_bridge.cli schemas          # the 5 tool specs, OpenAI-shaped
+python -m skills.hermes_bridge.cli schemas          # focused tool specs, OpenAI-shaped
 python -m skills.hermes_bridge.cli call botte_auto_route --prompt "rename x to y"
 ```
 
@@ -31,7 +30,7 @@ from skills.hermes_bridge import TOOL_SCHEMAS, dispatch
 dispatch("botte_auto_route", {"prompt": "..."})   # → JSON string, same shape as the MCP tool
 ```
 
-## The 5 tools
+## Focused tools
 
 Deliberately a subset of the ~35-tool MCP surface — the ones that matter for
 a second-brain / routing integration:
@@ -43,6 +42,7 @@ a second-brain / routing integration:
 | `botte_fusion` | cascade / draft_refine / vote — models collaborating |
 | `botte_find_skills` | 0-token local search over installed skill catalogs |
 | `botte_infra_tips` | hardware/software setup advice for running local models |
+| `botte_qa_agent_run` | emit a strict private run outcome without trusting agent self-report |
 
 ## Why this matters for a second-brain agent
 

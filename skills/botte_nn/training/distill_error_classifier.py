@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
-"""Distill error_classifier from REAL labelled errors instead of synthetic noise.
+"""Distill error_classifier from a curated labelled error corpus.
 
-The shipped micro-NNs are trained on `np.random` + hand-coded rules, so they encode
-invented rules, not reality — error_classifier even maps a ValueError traceback to
-"syntax". This is a proof-of-concept of the fix: a small corpus of *real* error
-messages, each with its true class, featurised with the deterministic extractor
-(`features.error_classifier_values` — the "teacher"), then the micro-NN is retrained
-on those real (features -> label) pairs.
+The original trainer used `np.random` plus hand-coded rules. This replacement uses
+curated real-world exception messages with explicit class labels, featurised with
+the deterministic extractor (`features.error_classifier_values`). It provides G1
+reproducibility evidence, not production observations; G2 still requires verified
+runtime errors and recovery outcomes.
 
     python -m skills.botte_nn.training.distill_error_classifier          # report only
     python -m skills.botte_nn.training.distill_error_classifier --save   # write weights
@@ -16,6 +15,8 @@ It prints the synthetic model's accuracy vs the distilled model's on a held-out 
 
 from __future__ import annotations
 
+import hashlib
+import json
 import sys
 from pathlib import Path
 
@@ -73,6 +74,75 @@ CORPUS: dict[int, list[str]] = {
 }
 _TB = "Traceback (most recent call last):\n  File \"x.py\", line 42, in <module>\n"
 _EXIT = [1, 2, 137]
+_LABELS = ["syntax", "runtime", "network", "permission", "timeout", "resource"]
+_SOURCE_COMMIT = "8a22992bdec939446ee261ad883fd4a9eccc23ef"
+_TRAINER = "skills/botte_nn/training/distill_error_classifier.py"
+
+
+def _stable_sha256(value) -> str:
+    payload = json.dumps(
+        value, sort_keys=True, separators=(",", ":"), ensure_ascii=False,
+    ).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
+
+
+def _core_payload(model_data: dict) -> dict:
+    """Return inference tensors only, excluding auditable metadata."""
+    return {
+        key: model_data[key]
+        for key in ("layers", "weights", "biases", "activations")
+    }
+
+
+def build_provenance(model_data: dict, X, y, train_idx, test_idx, accuracy: float) -> dict:
+    """Build deterministic G1 provenance for the exported model."""
+    class_counts = np.bincount(y, minlength=len(_LABELS)).tolist()
+    test_counts = np.bincount(y[test_idx], minlength=len(_LABELS)).tolist()
+    return {
+        "maturity": "G1",
+        "source_commit": _SOURCE_COMMIT,
+        "trainer": _TRAINER,
+        "label_contract": {
+            "classes": _LABELS,
+            "source": "curated real-world exception message templates with explicit labels",
+            "production_observations": False,
+        },
+        "corpus": {
+            "kind": "embedded_curated_templates",
+            "template_count": sum(len(items) for items in CORPUS.values()),
+            "sha256": _stable_sha256(CORPUS),
+        },
+        "dataset": {
+            "samples": int(len(y)),
+            "class_counts": class_counts,
+            "sha256": _stable_sha256({"features": X.tolist(), "labels": y.tolist()}),
+            "expansion": "template x exit_code(1,2,137) x bare_or_traceback",
+        },
+        "split": {
+            "method": "numpy.default_rng permutation",
+            "seed": 42,
+            "train_samples": int(len(train_idx)),
+            "held_out_samples": int(len(test_idx)),
+            "held_out_class_counts": test_counts,
+        },
+        "training": {
+            "initialization_seed": 0,
+            "layers": [12, 16, 6],
+            "activations": ["relu", "softmax"],
+            "epochs": 1500,
+            "learning_rate": 0.05,
+        },
+        "evaluation": {
+            "metric": "held_out_accuracy",
+            "value": accuracy,
+            "correct": int(round(accuracy * len(test_idx))),
+            "total": int(len(test_idx)),
+        },
+        "weights": {
+            "core_sha256": _stable_sha256(_core_payload(model_data)),
+            "reproduction_tolerance_atol": 1e-12,
+        },
+    }
 
 
 def build_dataset():
@@ -90,7 +160,7 @@ def build_dataset():
     return np.array(X, dtype=float), np.array(y, dtype=int)
 
 
-def _acc_synthetic(model_path, X, y):
+def _stored_accuracy(model_path, X, y):
     correct = 0
     for xi, yi in zip(X, y):
         out = _predict_python(str(model_path), list(xi))
@@ -120,7 +190,7 @@ def main(argv=None) -> int:
           f"({len(tr)} train / {len(te)} held-out)")
 
     model_path = _MODELS_DIR / "error_classifier.json"
-    syn_acc = _acc_synthetic(model_path, Xte, yte)
+    stored_acc = _stored_accuracy(model_path, Xte, yte)
 
     Y = np.zeros((len(ytr), 6))
     Y[np.arange(len(ytr)), ytr] = 1.0
@@ -129,22 +199,23 @@ def main(argv=None) -> int:
     model.train(Xtr, Y, epochs=1500, lr=0.05, verbose=False)
     dist_acc = float(np.mean(model.predict(Xte).argmax(axis=1) == yte))
 
-    labels = ["syntax", "runtime", "network", "permission", "timeout", "resource"]
     ve = features.error_classifier_values("ValueError: invalid literal for int()", exit_code=1)
     vvec = features.featurize("error_classifier", ve)
-    syn_ve = labels[int(np.argmax(_predict_python(str(model_path), vvec)))]
-    dist_ve = labels[int(model.predict(np.array([vvec])).argmax())]
+    stored_ve = _LABELS[int(np.argmax(_predict_python(str(model_path), vvec)))]
+    dist_ve = _LABELS[int(model.predict(np.array([vvec])).argmax())]
 
-    print(f"  synthetic model  : held-out accuracy {syn_acc:.0%}   | ValueError -> '{syn_ve}'")
+    print(f"  stored model     : held-out accuracy {stored_acc:.0%}   | ValueError -> '{stored_ve}'")
     print(f"  distilled model  : held-out accuracy {dist_acc:.0%}   | ValueError -> '{dist_ve}'")
-    print(f"  Δ accuracy: {dist_acc - syn_acc:+.0%}")
+    print(f"  Δ accuracy: {dist_acc - stored_acc:+.0%}")
 
     if "--save" in argv:
-        if dist_acc <= syn_acc:
-            print("  (not saving — distilled is not better)")
+        if dist_acc < stored_acc:
+            print("  (not saving — distilled is worse)")
             return 0
-        import json
-        model_path.write_text(json.dumps(model.export_json(), indent=2), encoding="utf-8")
+        stored_data = json.loads(model_path.read_text(encoding="utf-8"))
+        data = stored_data if dist_acc == stored_acc else model.export_json()
+        data["provenance"] = build_provenance(data, X, y, tr, te, dist_acc)
+        model_path.write_text(json.dumps(data, indent=2), encoding="utf-8")
         print(f"  ✅ saved distilled weights -> {model_path}"
               f"  (rebuild embedded Rust with embed_weights.py if you use the binary)")
     return 0

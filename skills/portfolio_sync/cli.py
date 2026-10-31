@@ -117,11 +117,13 @@ def main(argv: list[str] | None = None) -> int:
         else:
             observed = load_observed_inventory(args.observed, owner=args.owner)
             result = compare_github_inventory(registry, observed)
-    except PortfolioError as exc:
+    except PortfolioError:
+        # Error messages may contain private source values or dictionary keys.
+        # Expose a stable code; never copy exception text into a public report.
         if args.json:
-            _emit_json({"valid": False, "error": str(exc)})
+            _emit_json({"valid": False, "error": "invalid_portfolio_input"})
         else:
-            print(f"ERROR: {exc}", file=sys.stderr)
+            print("ERROR: invalid_portfolio_input", file=sys.stderr)
         return 2
 
     if args.json:

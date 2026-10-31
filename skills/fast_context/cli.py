@@ -37,12 +37,85 @@ def main(argv=None) -> int:
     s.add_argument("--no-color", action="store_true",
                    help="Disable color output")
 
+    s = sub.add_parser("symbol", help="Locate a function declaration in one explicit .zig/.gd file")
+    s.add_argument("file")
+    s.add_argument("name", help="Exact ASCII function name")
+    s.add_argument("--max-results", type=int, default=10)
+
+    s = sub.add_parser("context", help="Read a symbol line window only if the source SHA-256 still matches")
+    s.add_argument("file")
+    s.add_argument("name")
+    s.add_argument("expected_sha256")
+    s.add_argument("--occurrence", type=int)
+    s.add_argument("--before", type=int, default=3)
+    s.add_argument("--after", type=int, default=30)
+    s.add_argument("--max-context-bytes", type=int, default=16384)
+
+    s = sub.add_parser("bundle", help="Locate and read context, or enforce a caller-supplied source SHA-256")
+    s.add_argument("file")
+    s.add_argument("name")
+    s.add_argument("--expected-sha256")
+    s.add_argument("--occurrence", type=int)
+    s.add_argument("--before", type=int, default=3)
+    s.add_argument("--after", type=int, default=30)
+    s.add_argument("--max-context-bytes", type=int, default=16384)
+
+    s = sub.add_parser("batch", help="Prepare explicit source contexts inside one project root")
+    s.add_argument("request_file")
+    s.add_argument("--root", required=True)
+    s.add_argument("--max-context-bytes", type=int, default=32768)
+
     s = sub.add_parser("query-type", help="Detect query type from a query string")
     s.add_argument("query", help="Query string to classify")
 
     s = sub.add_parser("stats", help="Show cache stats")
 
     args = p.parse_args(argv)
+
+    if args.cmd == "batch":
+        from skills.fast_context.batch import read_batch_request, prepare_code_batch
+        try:
+            report = prepare_code_batch(read_batch_request(args.request_file), args.root,
+                                        max_context_bytes=args.max_context_bytes)
+        except (OSError, ValueError) as error:
+            print(json.dumps({"error": str(error)}, ensure_ascii=False), file=sys.stderr)
+            return 2
+        print(json.dumps(report, ensure_ascii=False, separators=(",", ":")))
+        return 0 if report['status'] == 'completed' else 6
+
+    if args.cmd == "bundle":
+        from skills.fast_context.workflow import prepare_code_context
+        try:
+            report = prepare_code_context(args.file, args.name, expected_sha256=args.expected_sha256,
+                                          occurrence=args.occurrence, before=args.before,
+                                          after=args.after, max_context_bytes=args.max_context_bytes)
+        except (OSError, ValueError) as error:
+            print(json.dumps({"error": str(error)}, ensure_ascii=False), file=sys.stderr)
+            return 2
+        print(json.dumps(report, ensure_ascii=False, separators=(",", ":")))
+        return {"stale_source": 3, "ambiguous": 4, "context_over_budget": 5}.get(report['status'], 0)
+
+    if args.cmd == "context":
+        from skills.fast_context.symbols import read_symbol_context_file
+        try:
+            report = read_symbol_context_file(args.file, args.name, args.expected_sha256,
+                                              occurrence=args.occurrence, before=args.before,
+                                              after=args.after, max_context_bytes=args.max_context_bytes)
+        except (OSError, ValueError) as error:
+            print(json.dumps({"error": str(error)}, ensure_ascii=False), file=sys.stderr)
+            return 2
+        print(json.dumps(report, ensure_ascii=False, separators=(",", ":")))
+        return {"stale_source": 3, "ambiguous": 4, "context_over_budget": 5}.get(report['status'], 0)
+
+    if args.cmd == "symbol":
+        from skills.fast_context.symbols import locate_symbol_file
+        try:
+            report = locate_symbol_file(args.file, args.name, args.max_results)
+        except (OSError, ValueError) as error:
+            print(json.dumps({"error": str(error)}, ensure_ascii=False), file=sys.stderr)
+            return 2
+        print(json.dumps(report, ensure_ascii=False, separators=(",", ":")))
+        return 0
 
     if args.cmd == "explore":
         root = Path(args.root).resolve()

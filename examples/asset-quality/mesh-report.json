@@ -1,0 +1,20 @@
+{
+  "family": "mesh",
+  "sha256": "0000000000000000000000000000000000000000000000000000000000000042",
+  "size_bytes": 48321,
+  "checks": {
+    "decodable": true,
+    "license_verified": true,
+    "manifest_verified": true,
+    "finite_geometry": true,
+    "nonempty_geometry": true
+  },
+  "features": {
+    "manifold": 0.92,
+    "normals": 0.97,
+    "prompt_alignment": 0.86,
+    "scale": 0.90,
+    "topology": 0.82,
+    "uv": 0.78
+  }
+}

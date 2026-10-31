@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/zedarvates/botte-secrete/blob/main/docs/schemas/task-quality-status.schema.json",
+  "title": "Botte Secrete passive task-plane quality status",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "id", "task_ref", "outcome_id", "source", "state",
+    "reason_code", "next_safe_action", "quality_status",
+    "verification_state", "verified", "evidence_refs", "evidence_count",
+    "requires_human_review", "suggested_task_state",
+    "task_transition_allowed", "terminal", "shadow_only",
+    "activation_allowed", "privacy"
+  ],
+  "properties": {
+    "schema": {"const": "botte.task-quality-status/v1"},
+    "id": {"type": "string", "pattern": "^tqs_[0-9a-f]{16}$"},
+    "task_ref": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/#-]{0,127}$"},
+    "outcome_id": {"type": ["string", "null"], "pattern": "^qo_[0-9a-f]{16}$"},
+    "source": {"type": "string", "maxLength": 64},
+    "state": {"enum": ["empty", "collecting", "grounded", "failing", "uncertain", "abstained", "escalated", "approval_required"]},
+    "reason_code": {"enum": ["no_outcome", "unverified_observation", "human_approval_required", "human_review_required", "route_abstained", "verified_pass", "verified_failure", "verified_uncertainty", "incomplete_observation"]},
+    "next_safe_action": {"type": "string", "minLength": 1, "maxLength": 256},
+    "quality_status": {"enum": ["NO_OUTCOME", "PARTIAL", "FAIL", "UNCERTAIN", "PASS", "PASS_ROBUST", "ABSTAINED", "ESCALATED", "APPROVAL_REQUIRED"]},
+    "verification_state": {"enum": ["unverified", "rejected", "verified"]},
+    "verified": {"type": "boolean"},
+    "evidence_refs": {"type": "array", "maxItems": 20, "items": {"type": "string", "maxLength": 256}},
+    "evidence_count": {"type": "integer", "minimum": 0, "maximum": 20},
+    "requires_human_review": {"const": true},
+    "suggested_task_state": {"const": "review"},
+    "task_transition_allowed": {"const": false},
+    "terminal": {"const": false},
+    "shadow_only": {"const": true},
+    "activation_allowed": {"const": false},
+    "privacy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["raw_task", "task_fingerprint", "execution_fingerprint", "evidence_body"],
+      "properties": {
+        "raw_task": {"const": false},
+        "task_fingerprint": {"const": false},
+        "execution_fingerprint": {"const": false},
+        "evidence_body": {"const": false}
+      }
+    }
+  }
+}

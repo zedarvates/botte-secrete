@@ -113,6 +113,7 @@ class Benchmark:
             savings = round((1 - result.ratio) * 100, 1)
             self.results[f"compress_{name}"] = {
                 "module": "universal_compressor",
+                "unit": "utf8_bytes",
                 "input": result.original_size,
                 "output": result.compressed_size,
                 "savings_pct": savings,
@@ -174,11 +175,12 @@ Last session: reviewed PR #42, found 3 vulnerabilities.
 
         self.results["prefix_prune"] = {
             "module": "prefix_pruner",
+            "unit": "estimated_tokens_chars_div_4",
             "input": orig_tok,
             "output": comp_tok,
             "savings_pct": savings,
         }
-        print(f"  Context: {orig_tok} → {comp_tok} tokens ({savings}%)")
+        print(f"  Context: ~{orig_tok} → ~{comp_tok} tokens, character estimate ({savings}%)")
 
     def benchmark_context_slicer(self):
         """Test context slicing."""
@@ -208,13 +210,14 @@ max_connections: 100
 
         self.results["context_slice"] = {
             "module": "context_slicer",
+            "unit": "estimated_tokens_chars_div_4",
             "total_slices": len(slices),
             "selected_slices": len(selected),
             "input": total_tok,
             "output": selected_tok,
             "savings_pct": round((1 - selected_tok / max(total_tok, 1)) * 100, 1),
         }
-        print(f"  {len(slices)} slices → {len(selected)} selected ({selected_tok}/{total_tok} tok)")
+        print(f"  {len(slices)} slices → {len(selected)} selected (~{selected_tok}/~{total_tok} tokens, character estimate)")
 
     def benchmark_belt2(self):
         """Test all 7 Belt 2.0 predictors."""
@@ -265,20 +268,17 @@ max_connections: 100
         self.benchmark_belt2()
 
         # Calculate totals
-        compress_savings = sum(
-            r.get("input", 0) - r.get("output", 0)
-            for r in self.results.values()
-            if r.get("module") == "universal_compressor"
-        )
+        # Only homogeneous byte measurements can be summed. Pruning/slicing
+        # rows use character-based token estimates and stay separate.
         total_input = sum(
             r.get("input", 0)
             for r in self.results.values()
-            if r.get("input", 0) > 0
+            if r.get("unit") == "utf8_bytes"
         )
         total_output = sum(
             r.get("output", 0)
             for r in self.results.values()
-            if r.get("output", 0) > 0
+            if r.get("unit") == "utf8_bytes"
         )
 
         elapsed = time.time() - self.start_time
@@ -288,10 +288,11 @@ max_connections: 100
             "elapsed_seconds": round(elapsed, 1),
             "total_modules_tested": len(self.results),
             "modules": self.results,
-            "total_input_chars": total_input,
-            "total_output_chars": total_output,
+            "measurement_schema": 2,
+            "totals_scope": "universal_compressor_only",
+            "total_input_bytes": total_input,
+            "total_output_bytes": total_output,
             "total_compression_ratio": round(total_output / max(total_input, 1), 3),
-            "estimated_monthly_savings_kb": (total_input - total_output) * 1000 // 1024,
         }
 
         # Print summary
@@ -299,6 +300,7 @@ max_connections: 100
         print(f"📊 BENCHMARK SUMMARY")
         print(f"{'='*60}")
         print(f"Modules tested: {len(self.results)}")
+        print("Totals scope:   universal compressor, measured UTF-8 bytes")
         print(f"Total input:    {format_bytes(total_input)}")
         print(f"Total output:   {format_bytes(total_output)}")
         print(f"Compression:    {round((1-total_output/max(total_input,1))*100,1)}%")

@@ -144,7 +144,7 @@ def iter_projects(registry: Mapping[str, Any]) -> Iterator[tuple[str, Mapping[st
             continue
         for project in entries:
             if isinstance(project, Mapping):
-                yield str(program), project
+                yield str(program).strip(), project
 
 
 def _is_valid_github_full_name(full_name: str) -> bool:
@@ -283,11 +283,11 @@ def summarize_registry(registry: Mapping[str, Any]) -> dict[str, Any]:
 
     for program, project in iter_projects(registry):
         by_program[program] += 1
-        by_status[project["status"]] += 1
-        by_priority[project["priority"]] += 1
-        by_visibility[project["visibility"]] += 1
-        by_confidentiality[project["confidentiality"]] += 1
-        source = project["source"]
+        by_status[project["status"].strip()] += 1
+        by_priority[project["priority"].strip()] += 1
+        by_visibility[project["visibility"].strip()] += 1
+        by_confidentiality[project["confidentiality"].strip()] += 1
+        source = project["source"].strip()
         by_source_type[
             "github" if source.startswith("github:") else source
         ] += 1
@@ -397,15 +397,15 @@ def compare_github_inventory(
 
     registered: dict[str, dict[str, Any]] = {}
     for program, project in iter_projects(registry):
-        full_name = _github_full_name(project["source"])
+        full_name = _github_full_name(project["source"].strip())
         if full_name is None:
             continue
         registered[full_name.casefold()] = {
             "full_name": full_name,
-            "project_id": project["id"],
+            "project_id": project["id"].strip(),
             "program": program,
-            "visibility": project["visibility"],
-            "status": project["status"],
+            "visibility": project["visibility"].strip(),
+            "status": project["status"].strip(),
         }
 
     normalized_observed: dict[str, dict[str, Any]] = {}

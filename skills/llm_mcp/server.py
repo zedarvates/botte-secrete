@@ -42,16 +42,152 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from skills import __version__  # noqa: E402
 from skills.llm_backends import registry  # noqa: E402
 from skills.llm_backends.audit import audit  # noqa: E402
 from skills.llm_backends.client import LocalLLMClient, LocalLLMError  # noqa: E402
 
 PROTOCOL_VERSION = "2024-11-05"
-SERVER_INFO = {"name": "botte-llm", "version": "1.0.0"}
+SERVER_INFO = {"name": "botte-llm", "version": __version__}
 
 # ── Tool definitions (MCP inputSchema = JSON Schema) ─────────────────────────
 
 TOOLS = [
+    {
+        "name": "review_knowledge_links",
+        "description": "Parcimonia: review supplied versioned documentary and receipt "
+                       "links for missing references, stale versions and declared dependency "
+                       "cycles. Lexical suggestions remain advisory; no retrieval, memory "
+                       "write, model, network or proof of documentary truth.",
+        "inputSchema": {
+            "type": "object", "additionalProperties": False,
+            "properties": {"inventory_json": {"type": "string", "maxLength": 262144}},
+            "required": ["inventory_json"],
+        },
+        "annotations": {"readOnlyHint": True, "destructiveHint": False,
+                        "idempotentHint": True, "openWorldHint": False},
+    },
+    {
+        "name": "summarize_github_evidence",
+        "description": "Parcimonia: select bounded review fields from supplied "
+                       "GitHub PR, file headers, checks and commit-status JSON. "
+                       "Retains revision mismatches, failure counts and source links. "
+                       "Caller data remains unverified. Reports UTF-8 bytes, not token savings; "
+                       "does not fetch GitHub or decide merge eligibility.",
+        "inputSchema": {
+            "type": "object", "additionalProperties": False,
+            "properties": {"report_json": {"type": "string", "maxLength": 131072}},
+            "required": ["report_json"],
+        },
+        "annotations": {"readOnlyHint": True, "destructiveHint": False,
+                        "idempotentHint": True, "openWorldHint": False},
+    },
+    {
+        "name": "check_local_links",
+        "description": "Check relative Markdown file/image links against supplied repository paths. "
+                       "Returns source lines and missing or unresolved targets; incomplete inventories "
+                       "cannot prove a target missing. No filesystem access, network, model call or "
+                       "anchor validation. Supplied data only; not a live repository audit.",
+        "inputSchema": {
+            "type": "object", "additionalProperties": False,
+            "properties": {
+                "documents": {"type": "array", "minItems": 1, "maxItems": 200, "items": {
+                    "type": "object", "additionalProperties": False,
+                    "properties": {"path": {"type": "string", "minLength": 1, "maxLength": 4096},
+                                   "text": {"type": "string", "maxLength": 1048576}},
+                    "required": ["path", "text"]}},
+                "available_paths": {"type": "array", "maxItems": 50000,
+                                    "items": {"type": "string", "minLength": 1, "maxLength": 4096}},
+                "inventory_complete": {"type": "boolean", "default": False},
+                "max_links": {"type": "integer", "minimum": 1, "maximum": 50000, "default": 10000},
+            }, "required": ["documents", "available_paths"],
+        },
+        "annotations": {"readOnlyHint": True, "destructiveHint": False,
+                        "idempotentHint": True, "openWorldHint": False},
+    },
+    {
+        "name": "find_file_duplicates",
+        "description": "Read-only exact duplicate file inspection under one explicit local directory. "
+                       "Groups by size and full SHA-256, then confirms bytes; reports hard links "
+                       "separately. Bounded reads, exclusions and partial scans are explicit. "
+                       "No deletion, image similarity, functional-equivalence judgment or model call.",
+        "inputSchema": {
+            "type": "object", "additionalProperties": False,
+            "properties": {
+                "root": {"type": "string", "minLength": 1},
+                "max_files": {"type": "integer", "minimum": 1, "maximum": 50000},
+                "max_file_bytes": {"type": "integer", "minimum": 1, "maximum": 1073741824},
+                "max_total_bytes": {"type": "integer", "minimum": 1, "maximum": 1073741824},
+                "max_entries": {"type": "integer", "minimum": 1, "maximum": 100000},
+                "max_depth": {"type": "integer", "minimum": 0, "maximum": 128},
+                "exclude_dirs": {"type": "array", "maxItems": 100,
+                                 "items": {"type": "string", "minLength": 1}},
+            }, "required": ["root"],
+        },
+        "annotations": {"readOnlyHint": True, "destructiveHint": False,
+                        "idempotentHint": True, "openWorldHint": False},
+    },
+    {
+        "name": "compute_statistics",
+        "description": "Compute deterministic descriptive statistics from supplied numeric values: "
+                       "count, sum, min, max, mean, median, population/sample variance and "
+                       "standard deviation, plus linear type-7 percentiles. No model, network "
+                       "or file access. Rejects invalid inputs; omits nulls only on explicit request.",
+        "inputSchema": {
+            "type": "object", "additionalProperties": False,
+            "properties": {
+                "values": {"type": "array", "minItems": 1, "maxItems": 10000,
+                           "items": {"type": ["number", "null"]}},
+                "operations": {"type": "array", "minItems": 1, "maxItems": 10,
+                               "uniqueItems": True, "items": {"type": "string", "enum": [
+                                   "count", "sum", "min", "max", "mean", "median",
+                                   "variance_population", "variance_sample",
+                                   "stdev_population", "stdev_sample"]}},
+                "percentiles": {"type": "array", "maxItems": 16, "uniqueItems": True,
+                                "items": {"type": "number", "minimum": 0, "maximum": 100}},
+                "missing": {"type": "string", "enum": ["reject", "omit"], "default": "reject"},
+            }, "required": ["values"],
+        },
+        "annotations": {"readOnlyHint": True, "destructiveHint": False,
+                        "idempotentHint": True, "openWorldHint": False},
+    },
+    {
+        "name": "assess_task",
+        "description": "Parcimonia: propose a bounded first assessment of a task, "
+                       "including GitHub/PR research, software tests and game playtests. "
+                       "Ranks only caller-supplied tool metadata. Lexical advice only; "
+                       "no execution, model, network, permission or measured savings.",
+        "inputSchema": {
+            "type": "object", "additionalProperties": False,
+            "properties": {
+                "task": {"type": "string", "minLength": 1, "maxLength": 16384},
+                "available_tools": {"type": "array", "maxItems": 64, "items": {
+                    "type": "object", "additionalProperties": False,
+                    "properties": {"name": {"type": "string", "maxLength": 160},
+                                   "description": {"type": "string", "maxLength": 2048}},
+                    "required": ["name"]}},
+                "context_budget": {"type": "integer", "minimum": 0, "maximum": 16000},
+            }, "required": ["task"],
+        },
+        "annotations": {"readOnlyHint": True, "destructiveHint": False,
+                        "idempotentHint": True, "openWorldHint": False},
+    },
+    {
+        "name": "plan_github_research",
+        "description": "Parcimonia: prepare scoped GitHub pull-request search and "
+                       "progressive reads of metadata, changed files and checks for "
+                       "the exact head. Returns a plan, never fetches or changes GitHub.",
+        "inputSchema": {
+            "type": "object", "additionalProperties": False,
+            "properties": {
+                "repository": {"type": "string", "maxLength": 140},
+                "query": {"type": "string", "maxLength": 1000},
+                "pr_number": {"type": "integer", "minimum": 1, "maximum": 2147483647},
+            }, "required": ["repository"],
+        },
+        "annotations": {"readOnlyHint": True, "destructiveHint": False,
+                        "idempotentHint": True, "openWorldHint": False},
+    },
     {
         "name": "discover_backends",
         "description": "Scan for local LLM servers (LM Studio, Ollama, LocalAI, "
@@ -129,6 +265,8 @@ TOOLS = [
                 "task_type": {"type": "string", "description": "Optional hint, e.g. code_review."},
                 "execute": {"type": "boolean", "description": "Run it (true) or just decide (false)."},
                 "max_tokens": {"type": "integer", "default": 512},
+                "project": {"type": "string", "description": "Project root for the private QA ledger."},
+                "execution_id": {"type": "string", "description": "Stable replay id; persisted only as a hash."},
             },
             "required": ["prompt"],
         },
@@ -161,6 +299,134 @@ TOOLS = [
                 "correct_route": {"type": "string", "enum": ["local", "cloud"]},
             },
             "required": ["feedback_id", "correct_route"],
+        },
+    },
+    {
+        "name": "qa_advise",
+        "description": "Return explainable quality advice: a shadow-only kNN route "
+                       "suggestion from externally verified project outcomes. It never executes or changes "
+                       "the active router, and high-risk work keeps a human gate.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "task": {"type": "string"},
+                "project": {"type": "string", "description": "Project dir (default: cwd)."},
+                "task_type": {"type": "string"},
+                "tags": {"type": "array", "items": {"type": "string"}},
+                "risk": {"type": "string",
+                         "enum": ["low", "standard", "high", "critical"],
+                         "default": "standard"},
+                "k": {"type": "integer", "minimum": 1, "maximum": 50, "default": 7},
+            },
+            "required": ["task"],
+        },
+    },
+    {
+        "name": "qa_record",
+        "description": "Record one externally verified quality outcome in the project's "
+                       "private support set. Raw task text is hashed into local features; "
+                       "model self-reports are rejected as labels; at least one "
+                       "external evidence reference is required.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "task": {"type": "string"},
+                "project": {"type": "string", "description": "Project dir (default: cwd)."},
+                "route": {"type": "string",
+                          "enum": ["deterministic", "local", "cloud", "human"]},
+                "verdict": {"type": "string",
+                            "enum": ["FAIL", "UNCERTAIN", "PASS", "PASS_ROBUST"]},
+                "verified_by": {"type": "string",
+                                "description": "External verifier, e.g. tests:pytest or human:review."},
+                "quality_score": {"type": "number", "minimum": 0, "maximum": 1},
+                "risk": {"type": "string",
+                         "enum": ["low", "standard", "high", "critical"],
+                         "default": "standard"},
+                "task_type": {"type": "string"},
+                "tags": {"type": "array", "items": {"type": "string"}},
+                "model": {"type": "string"},
+                "harness": {"type": "string"},
+                "duration_ms": {"type": "number", "minimum": 0},
+                "cost_usd": {"type": "number", "minimum": 0},
+                "tokens": {"type": "integer", "minimum": 0},
+                "evidence_refs": {"type": "array", "minItems": 1, "maxItems": 20,
+                                  "items": {"type": "string"}},
+            },
+            "required": ["task", "route", "verdict", "verified_by", "evidence_refs"],
+        },
+    },
+    {
+        "name": "qa_status",
+        "description": "Show verified support, maturity, privacy posture, and the single "
+                       "next step for the project's shadow quality compass.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "project": {"type": "string", "description": "Project dir (default: cwd)."},
+            },
+        },
+    },
+    {
+        "name": "qa_agent_run",
+        "description": "Emit a bounded Codex or Hermes run manifest into the private "
+                       "quality-outcome ledger. Raw task text is fingerprinted, unknown "
+                       "payload fields are rejected, and only external evidence can "
+                       "promote a verified label.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "project": {"type": "string", "description": "Project dir (default: cwd)."},
+                "manifest": {
+                    "type": "object",
+                    "additionalProperties": False,
+                    "properties": {
+                        "schema": {"const": "botte.agent-run/v1"},
+                        "agent": {"type": "string", "enum": ["codex", "hermes"]},
+                        "execution_id": {"type": "string", "minLength": 1, "maxLength": 256},
+                        "task": {"type": "string", "minLength": 1, "maxLength": 20000},
+                        "route": {"type": "string", "enum": ["deterministic", "local", "cloud", "human"]},
+                        "status": {"type": "string", "enum": ["PARTIAL", "FAIL", "UNCERTAIN", "PASS", "PASS_ROBUST", "ABSTAINED", "ESCALATED", "APPROVAL_REQUIRED"]},
+                        "task_type": {"type": "string"},
+                        "tags": {"type": "array", "items": {"type": "string"}},
+                        "verdict": {"type": ["string", "null"]},
+                        "verified_by": {"type": "string"},
+                        "evidence_refs": {"type": "array", "items": {"type": "string"}},
+                        "quality_score": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+                        "risk": {"type": "string", "enum": ["low", "standard", "high", "critical"]},
+                        "permission_profile": {"type": "string"},
+                        "model": {"type": "string"},
+                        "harness": {"type": "string"},
+                        "tool_versions": {"type": "object", "additionalProperties": {"type": "string"}},
+                        "duration_ms": {"type": ["number", "null"], "minimum": 0},
+                        "cost_usd": {"type": ["number", "null"], "minimum": 0},
+                        "tokens": {"type": ["integer", "null"], "minimum": 0},
+                        "memory_mb": {"type": ["number", "null"], "minimum": 0},
+                        "energy_wh": {"type": ["number", "null"], "minimum": 0},
+                        "acted": {"type": "boolean"},
+                        "abstained": {"type": "boolean"},
+                        "escalated": {"type": "boolean"},
+                        "approval_required": {"type": "boolean"},
+                    },
+                    "required": ["schema", "agent", "execution_id", "task", "route", "status"],
+                },
+            },
+            "required": ["manifest"],
+        },
+    },
+    {
+        "name": "qa_task_status",
+        "description": "Export a passive Quality Compass status packet for Kanboard, "
+                       "Odin, or another authenticated task plane. It contains no raw "
+                       "task or private fingerprint and never authorizes a transition.",
+        "inputSchema": {
+            "type": "object",
+            "additionalProperties": False,
+            "properties": {
+                "project": {"type": "string", "description": "Project dir (default: cwd)."},
+                "task_ref": {"type": "string", "minLength": 1, "maxLength": 128},
+                "outcome_id": {"type": "string", "pattern": "^qo_[0-9a-f]{16}$"},
+            },
+            "required": ["task_ref"],
         },
     },
     {
@@ -398,10 +664,11 @@ TOOLS = [
     },
     {
         "name": "nn_audit",
-        "description": "Audit the micro-NNs (skills/botte_nn): per model, is it grounded in "
-                       "REAL data or a synthetic copy of a hand rule? Reports data_source, "
-                       "provenance metadata, test guard, and a grounded/synthetic verdict — a "
-                       "net trained on np.random just mimics a rule. 0 cloud tokens.",
+        "description": "Inspect micro-model trainer keywords, metadata keys, test-text "
+                       "matches and source references. Reports heuristic data_source, "
+                       "test guard, wired and verdict flags; these do not verify datasets, "
+                       "provenance, executed tests or model accuracy. File inspection only; "
+                       "host-agent model usage is separate.",
         "inputSchema": {"type": "object", "properties": {
             "path": {"type": "string", "default": "skills/botte_nn"}},
         },
@@ -637,6 +904,10 @@ TOOLS = [
                 },
                 "limit": {
                     "type": "integer"
+                },
+                "storage_area": {
+                    "type": "string",
+                    "enum": ["all", "trusted", "quarantine"]
                 }
             },
             "required": [
@@ -664,6 +935,20 @@ TOOLS = [
                 "project_id",
                 "agent_id"
             ]
+        }
+    },
+    {
+        "name": "review_quarantine",
+        "description": "Review quarantined memory as non-executable data with provenance",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "project_id": {"type": "string"},
+                "agent_id": {"type": "string"},
+                "query": {"type": "string"},
+                "limit": {"type": "integer"}
+            },
+            "required": ["project_id", "agent_id"]
         }
     },
     {
@@ -705,6 +990,19 @@ TOOLS = [
                 "source_ref": {
                     "type": "string"
                 },
+                "source_type": {
+                    "type": "string",
+                    "enum": ["user", "repo", "web", "tool", "agent", "generated"]
+                },
+                "source_uri": {"type": "string"},
+                "source_id": {"type": "string"},
+                "run_id": {"type": "string"},
+                "timestamp": {"type": "number"},
+                "trust_class": {
+                    "type": "string",
+                    "enum": ["trusted_user", "external_observation", "generated_untrusted"]
+                },
+                "executable_instruction": {"type": "boolean", "enum": [False]},
                 "visibility": {
                     "type": "string",
                     "enum": [
@@ -728,7 +1026,12 @@ TOOLS = [
                 "project_id",
                 "key",
                 "value",
-                "agent_id"
+                "agent_id",
+                "source_type",
+                "run_id",
+                "timestamp",
+                "trust_class",
+                "executable_instruction"
             ]
         }
     },
@@ -858,7 +1161,9 @@ def _tool_auto_route(args: dict) -> str:
     from skills.auto_router import auto_route, auto_run
     if args.get("execute"):
         return json.dumps(auto_run(args["prompt"], task_type=args.get("task_type", ""),
-                                   max_tokens=int(args.get("max_tokens", 512))),
+                                   max_tokens=int(args.get("max_tokens", 512)),
+                                   project_root=args.get("project", "."),
+                                   execution_id=args.get("execution_id", "")),
                           ensure_ascii=False, indent=2)
     return json.dumps(auto_route(args["prompt"], args.get("task_type", "")),
                       ensure_ascii=False, indent=2)
@@ -873,6 +1178,69 @@ def _tool_route_feedback(args: dict) -> str:
     return json.dumps({"feedback_id": args["feedback_id"], "correct_route": route,
                        "verdict_id": verdict_id, "verified": True},
                       ensure_ascii=False, indent=2)
+
+
+def _tool_qa_advise(args: dict) -> str:
+    from skills.trajectory.quality import advise_route
+    advice = advise_route(
+        args["task"],
+        project_root=args.get("project", "."),
+        task_type=args.get("task_type", ""),
+        tags=args.get("tags", []),
+        risk=args.get("risk", "standard"),
+        k=int(args.get("k", 7)),
+    )
+    return json.dumps(advice.to_dict(), ensure_ascii=False, indent=2)
+
+
+def _tool_qa_record(args: dict) -> str:
+    from skills.trajectory.quality import record_verified
+    record = record_verified(
+        args["task"],
+        project_root=args.get("project", "."),
+        route=args["route"],
+        verdict=args["verdict"],
+        verified_by=args["verified_by"],
+        quality_score=args.get("quality_score"),
+        risk=args.get("risk", "standard"),
+        task_type=args.get("task_type", ""),
+        tags=args.get("tags", []),
+        model=args.get("model", ""),
+        harness=args.get("harness", ""),
+        duration_ms=args.get("duration_ms"),
+        cost_usd=args.get("cost_usd"),
+        tokens=args.get("tokens"),
+        evidence_refs=args.get("evidence_refs", []),
+    )
+    return json.dumps(record, ensure_ascii=False, indent=2)
+
+
+def _tool_qa_status(args: dict) -> str:
+    from skills.trajectory.quality import quality_status
+    return json.dumps(quality_status(args.get("project", ".")),
+                      ensure_ascii=False, indent=2)
+
+
+def _tool_qa_agent_run(args: dict) -> str:
+    from skills.trajectory.agent_run import emit_agent_run
+    return json.dumps(
+        emit_agent_run(args["manifest"], project_root=args.get("project", ".")),
+        ensure_ascii=False,
+        indent=2,
+    )
+
+
+def _tool_qa_task_status(args: dict) -> str:
+    from skills.trajectory.task_status import task_quality_status
+    return json.dumps(
+        task_quality_status(
+            task_ref=args["task_ref"],
+            project_root=args.get("project", "."),
+            outcome_id=args.get("outcome_id"),
+        ),
+        ensure_ascii=False,
+        indent=2,
+    )
 
 
 def _tool_fusion(args: dict) -> str:
@@ -1188,6 +1556,8 @@ def _tool_loop_record(args: dict) -> str:
 def _tool_loop_stats(_args: dict) -> str:
     from skills.loop_optimizer.ledger import LoopLedger
     ledger = LoopLedger()
+    return json.dumps(ledger.summarize(ledger.read()), ensure_ascii=False, separators=(",", ":"))
+
 
 def _tool_search_hub(args: dict) -> str:
     from skills.memory_hub.mcp import dispatch as _mh
@@ -1198,6 +1568,11 @@ def _tool_context_bundle(args: dict) -> str:
     from skills.memory_hub.mcp import dispatch as _mh
     import json
     return json.dumps(_mh("context_bundle", args), ensure_ascii=False)
+
+def _tool_review_quarantine(args: dict) -> str:
+    from skills.memory_hub.mcp import dispatch as _mh
+    import json
+    return json.dumps(_mh("review_quarantine", args), ensure_ascii=False)
 
 def _tool_propose_memory(args: dict) -> str:
     from skills.memory_hub.mcp import dispatch as _mh
@@ -1214,10 +1589,83 @@ def _tool_forget_memory(args: dict) -> str:
     import json
     return json.dumps(_mh("forget_memory", args), ensure_ascii=False)
 
-    return json.dumps(ledger.summarize(ledger.read()), ensure_ascii=False, separators=(",", ":"))
+
+def _assessment_arguments(args: dict, allowed: set[str]) -> None:
+    if not isinstance(args, dict) or set(args) - allowed:
+        raise ValueError("unsupported assessment arguments")
+
+
+def _tool_review_knowledge_links(args: dict) -> str:
+    from skills.app_test.knowledge_links import review_knowledge_links
+    _assessment_arguments(args, {"inventory_json"})
+    raw = args.get("inventory_json")
+    if not isinstance(raw, str) or len(raw.encode("utf-8")) > 262144:
+        raise ValueError("inventory_json must be bounded UTF-8 text")
+
+    def pairs(items):
+        result = {}
+        for key, value in items:
+            if key in result:
+                raise ValueError("duplicate inventory field")
+            result[key] = value
+        return result
+
+    def invalid_constant(_value):
+        raise ValueError("nonfinite inventory number")
+
+    inventory = json.loads(raw, object_pairs_hook=pairs, parse_constant=invalid_constant)
+    return json.dumps(review_knowledge_links(inventory), ensure_ascii=True, separators=(",", ":"))
+
+
+def _tool_assess_task(args: dict) -> str:
+    from skills.preflight.assessment import assess_task
+    _assessment_arguments(args, {"task", "available_tools", "context_budget"})
+    return json.dumps(assess_task(**args), ensure_ascii=False)
+
+
+def _tool_compute_statistics(args: dict) -> str:
+    from skills.solvers import compute_statistics
+    if not isinstance(args, dict) or set(args) - {"values", "operations", "percentiles", "missing"}:
+        raise ValueError("unsupported statistics arguments")
+    return json.dumps(compute_statistics(**args), ensure_ascii=False, allow_nan=False)
+
+
+def _tool_find_file_duplicates(args: dict) -> str:
+    from skills.fallow_like.file_duplicates import find_file_duplicates
+    allowed = {"root", "max_files", "max_file_bytes", "max_total_bytes",
+               "max_entries", "max_depth", "exclude_dirs"}
+    if not isinstance(args, dict) or set(args) - allowed:
+        raise ValueError("unsupported file-duplicate arguments")
+    return json.dumps(find_file_duplicates(**args), ensure_ascii=True, allow_nan=False)
+
+
+def _tool_check_local_links(args: dict) -> str:
+    from skills.fallow_like.local_links import check_local_links
+    if not isinstance(args, dict) or set(args) - {"documents", "available_paths", "inventory_complete", "max_links"}:
+        raise ValueError("unsupported local-link arguments")
+    return json.dumps(check_local_links(**args), ensure_ascii=True, allow_nan=False)
+
+
+def _tool_plan_github_research(args: dict) -> str:
+    from skills.preflight.github_plan import plan_github_research
+    _assessment_arguments(args, {"repository", "query", "pr_number"})
+    return json.dumps(plan_github_research(**args), ensure_ascii=False)
+
+
+def _tool_summarize_github_evidence(args: dict) -> str:
+    from skills.preflight.github_evidence import summarize_github_evidence
+    _assessment_arguments(args, {"report_json"})
+    return json.dumps(summarize_github_evidence(**args), ensure_ascii=False, separators=(",", ":"))
 
 
 DISPATCH = {
+    "check_local_links": _tool_check_local_links,
+    "find_file_duplicates": _tool_find_file_duplicates,
+    "compute_statistics": _tool_compute_statistics,
+    "review_knowledge_links": _tool_review_knowledge_links,
+    "summarize_github_evidence": _tool_summarize_github_evidence,
+    "assess_task": _tool_assess_task,
+    "plan_github_research": _tool_plan_github_research,
     "dashboard": _tool_dashboard,
     "estimate_cost": _tool_estimate_cost,
     "fix_plan": _tool_fix_plan,
@@ -1248,6 +1696,11 @@ DISPATCH = {
     "local_chat": _tool_local_chat,
     "auto_route": _tool_auto_route,
     "route_feedback": _tool_route_feedback,
+    "qa_advise": _tool_qa_advise,
+    "qa_record": _tool_qa_record,
+    "qa_status": _tool_qa_status,
+    "qa_agent_run": _tool_qa_agent_run,
+    "qa_task_status": _tool_qa_task_status,
     "fusion": _tool_fusion,
     "find_skills": _tool_find_skills,
     "infra_tips": _tool_infra_tips,
@@ -1270,6 +1723,7 @@ DISPATCH = {
     "loop_stats": _tool_loop_stats,
     "search_hub": _tool_search_hub,
     "context_bundle": _tool_context_bundle,
+    "review_quarantine": _tool_review_quarantine,
     "propose_memory": _tool_propose_memory,
     "promote_memory": _tool_promote_memory,
     "forget_memory": _tool_forget_memory,
@@ -1314,11 +1768,18 @@ def handle(request: dict):
         args = params.get("arguments", {}) or {}
         if name == "find_tool":
             from skills.llm_mcp.lazy import find_tool
-            import json as _json
-            text = _json.dumps(find_tool(args.get("query", ""), TOOLS,
-                                         top_k=int(args.get("top_k", 5))),
-                               ensure_ascii=False, indent=2)
-            return _result(req_id, {"content": [{"type": "text", "text": text}]})
+            try:
+                if not isinstance(args, dict) or set(args) - {"query", "top_k", "schema_budget_bytes", "detail"}:
+                    raise ValueError("unsupported find_tool arguments")
+                text = json.dumps(find_tool(args.get("query", ""), TOOLS,
+                                           top_k=args.get("top_k", 5),
+                                           schema_budget_bytes=args.get("schema_budget_bytes", 8192),
+                                           detail=args.get("detail", "schemas")),
+                                  ensure_ascii=False, separators=(",", ":"))
+                return _result(req_id, {"content": [{"type": "text", "text": text}]})
+            except (TypeError, ValueError) as error:
+                return _result(req_id, {"content": [{"type": "text", "text": f"ERROR: {error}"}],
+                                        "isError": True})
         fn = DISPATCH.get(name)
         if not fn:
             return _error(req_id, -32602, f"Unknown tool: {name}")

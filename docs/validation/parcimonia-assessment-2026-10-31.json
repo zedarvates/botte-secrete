@@ -1,0 +1,155 @@
+{
+  "schema": "parcimonia.assessment-preparation/v1",
+  "date": "2026-10-31",
+  "scope": "Selected local source snapshot; full-checkout native CI is pending at preparation time.",
+  "baseline": {
+    "source_revision": "229d302641fae4bf068bdb289c0c61a866adb86a",
+    "summary": {
+      "total": 29,
+      "passed": 27,
+      "failed": 2,
+      "groups": {
+        "statistics": {
+          "total": 10,
+          "passed": 8,
+          "failed": 2
+        },
+        "file_duplicates": {
+          "total": 6,
+          "passed": 6,
+          "failed": 0
+        },
+        "local_links": {
+          "total": 6,
+          "passed": 6,
+          "failed": 0
+        },
+        "cross_cutting": {
+          "total": 7,
+          "passed": 7,
+          "failed": 0
+        }
+      },
+      "splits": {
+        "regression": {
+          "total": 25,
+          "passed": 25,
+          "failed": 0
+        },
+        "challenge": {
+          "total": 4,
+          "passed": 2,
+          "failed": 2
+        }
+      }
+    },
+    "provenance": {
+      "corpus_sha256": "9a76656bfab03581c111e031d8c4c05a448bdc991d04f4d1506d6c58f38ddf36",
+      "corpus_hash_method": "sorted_compact_utf8_json",
+      "assessment_sha256": "be5e00a02fd92ef595cc7fb9dffe619786b128b32581806416db721296027493",
+      "finder_sha256": "9c6489eda289ed733981213d7779401648a439f9e7b74210063cc3f476391874",
+      "evaluator_sha256": "0b9a0d740b58d8e9941c767d9e1ddc35fe40cad658236eddcb27bda1fa9ca4e3",
+      "baseline_source_revision": "229d302641fae4bf068bdb289c0c61a866adb86a"
+    },
+    "failures": [
+      {
+        "id": "stats-fr-percentile-idiom",
+        "task": "Donne le 90e percentile des valeurs 1, 2, 3, 4, 5.",
+        "expect": {
+          "intent": "statistics",
+          "candidate_tool": "compute_statistics"
+        },
+        "observed_intent": null,
+        "candidate_tools": [],
+        "failures": [
+          "expected_intent",
+          "expected_candidate_absent"
+        ]
+      },
+      {
+        "id": "stats-en-percentile-idiom",
+        "task": "Give the 90th percentile of 1, 2, 3, 4, 5.",
+        "expect": {
+          "intent": "statistics",
+          "candidate_tool": "compute_statistics"
+        },
+        "observed_intent": null,
+        "candidate_tools": [],
+        "failures": [
+          "expected_intent",
+          "expected_candidate_absent"
+        ]
+      }
+    ]
+  },
+  "candidate": {
+    "source_revision": null,
+    "summary": {
+      "total": 29,
+      "passed": 29,
+      "failed": 0,
+      "groups": {
+        "statistics": {
+          "total": 10,
+          "passed": 10,
+          "failed": 0
+        },
+        "file_duplicates": {
+          "total": 6,
+          "passed": 6,
+          "failed": 0
+        },
+        "local_links": {
+          "total": 6,
+          "passed": 6,
+          "failed": 0
+        },
+        "cross_cutting": {
+          "total": 7,
+          "passed": 7,
+          "failed": 0
+        }
+      },
+      "splits": {
+        "regression": {
+          "total": 25,
+          "passed": 25,
+          "failed": 0
+        },
+        "challenge": {
+          "total": 4,
+          "passed": 4,
+          "failed": 0
+        }
+      }
+    },
+    "provenance": {
+      "corpus_sha256": "9a76656bfab03581c111e031d8c4c05a448bdc991d04f4d1506d6c58f38ddf36",
+      "corpus_hash_method": "sorted_compact_utf8_json",
+      "assessment_sha256": "c9bec4cc5e5acf1e7aa7eaac86ce4692442cdb866f383f7ce904d35ad024c503",
+      "finder_sha256": "9c6489eda289ed733981213d7779401648a439f9e7b74210063cc3f476391874",
+      "evaluator_sha256": "0b9a0d740b58d8e9941c767d9e1ddc35fe40cad658236eddcb27bda1fa9ca4e3",
+      "baseline_source_revision": "229d302641fae4bf068bdb289c0c61a866adb86a"
+    },
+    "local_evaluator_tests": 14,
+    "existing_assessment_tests": 20
+  },
+  "model_selection": {
+    "status": "not_run",
+    "evaluated_cases": 0
+  },
+  "provider_tokens": null,
+  "billed_cost": null,
+  "savings": null,
+  "native_ci": {
+    "status": "pending",
+    "report_name": "assessment-report.json",
+    "expected_installations": 5
+  },
+  "limits": [
+    "Candidate presence tests discovery, not ranking accuracy or verified capability.",
+    "Elapsed times cover local assessment calls only, not a Codex or model workflow.",
+    "Future codex criteria are retained but never graded by this offline runner.",
+    "Public synthetic regression cases do not establish generalization."
+  ]
+}

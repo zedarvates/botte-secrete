@@ -2,9 +2,22 @@
 
 # Botte Secrète
 
+[RC1 validation reports and reproduction](docs/validation/2.0.0rc1/README.md)
+— clean installation checks and a bounded public-source pilot.
+
+**Releases:** [1.9.0 — latest stable](https://github.com/zedarvates/botte-secrete/releases/tag/1.9.0)
+· [2.0.0rc2 — external-pilot pre-release](https://github.com/zedarvates/botte-secrete/releases/tag/v2.0.0rc2).
+The RC adds Factory Assurance, independent judging, and evidence gates. Start in
+observe, consultative, or shadow mode; the private/external holdout remains
+unproven. See the release notes for limits and installation at the validated
+commit. `main` prepares version **1.11.0**; the badge below identifies that
+unreleased candidate, not a published stable release. The
+[Codex plugin guide](plugins/botte-secrete/README.md) documents its separately
+installed Python runtime and Git marketplace catalog.
+
 [![CI](https://github.com/zedarvates/botte-secrete/actions/workflows/ci.yml/badge.svg)](https://github.com/zedarvates/botte-secrete/actions)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
-[![Version](https://img.shields.io/badge/version-1.9.0-55d6be)](pyproject.toml)
+[![Version](https://img.shields.io/badge/version-1.11.0-55d6be)](pyproject.toml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-7b8cff)](LICENSE)
 
 [Français](README.fr.md) · [Documentation](docs/README.md) · [Architecture](docs/ARCHITECTURE.md) · [Development](docs/DEVELOPMENT.md) · [Contributing](CONTRIBUTING.md)
@@ -22,6 +35,52 @@ live telemetry._
 The project is in **beta**. Its core workflows run locally, but optional local
 LLM backends, cloud providers, hardware accelerators, and third-party agents
 remain external systems with their own setup and security boundaries.
+
+## See it in action: "done" needs evidence
+
+A prepared agent report claims completion. Botte flags the missing evidence;
+an actual test exposes a defect, and a prepared correction passes all three
+tests. [Follow the replayable demonstration](docs/demos/completion-proof/README.md)
+with recorded outputs and an explicit negative control: A11 detects evidence
+markers but does not authenticate them.
+
+The separate opt-in [receipt verifier](skills/completion_proof/VERIFICATION.md)
+checks actual artifacts and source hashes against a digest supplied by the
+trusted test executor; it does not rely on a hash asserted by the agent report.
+
+## Understand and inspect the small models
+
+**You can inspect the code and the micro-NN weights.** Botte's small predictors
+help choose a route or compare an asset with previous examples. Their output
+is a hint; it is not evidence that a task is correct or complete.
+
+| Mechanism | In plain language | What you can inspect |
+|---|---|---|
+| **Micro-NN** — small neural network | A small calculator turns numeric features, such as task complexity, into a category or score. Its learned **weights and biases** are the numbers used in that calculation. It does not generate text. | [JSON weights](skills/botte_nn/models/), [feature extraction](skills/botte_nn/features.py), [inference code](skills/botte_nn/cli.py) and [training code](skills/botte_nn/training/) |
+| **k-NN** — k-nearest neighbors | Looks for the most similar previously verified examples and uses their outcomes to suggest a result. Asset Quality Memory exposes its neighbors and abstains when support is insufficient. | [Comparison and memory code](skills/asset_quality/memory.py), [usage contract](skills/asset_quality/SKILL.md) and [public example](examples/asset-quality/mesh-report.json) |
+
+For example, a micro-NN may suggest a local route for a simple task. The k-NN
+baseline may compare a mesh report with verified meshes from the same family.
+Deterministic checks and the applicable verification policy remain necessary.
+
+### Public files on Hugging Face
+
+| Public repository | What is actually available |
+|---|---|
+| [Botte Nano-NN](https://huggingface.co/zedgamer/botte-nano-nn) | [Six JSON weight files](https://huggingface.co/zedgamer/botte-nano-nn/tree/main/models), readable in the browser and downloadable; for example [binary_router.json](https://huggingface.co/zedgamer/botte-nano-nn/blob/main/models/binary_router.json). The model card declares MIT. |
+| [Asset Quality Memory k-NN](https://huggingface.co/zedgamer/asset-quality-memory-knn) | [A public model card and source links](https://huggingface.co/zedgamer/asset-quality-memory-knn/tree/main). This k-NN baseline has no neural weight file; its example memory remains project-local and is not published. |
+
+Public access was checked without credentials on **14 September 2026**.
+The Hub's six-file micro-NN snapshot is **not a synchronized copy** of the eleven
+JSON models in this GitHub source tree. Use the weights and feature contracts
+from the same version; consult the [dated inventory](docs/model-transparency-check.json)
+and [publication/provenance rules](docs/huggingface-publication.md).
+
+Open weights make inspection possible; they do not establish accuracy or
+production readiness. Read the [grounding roadmap](docs/plans/2026-08-06_micro-nn-grounding-roadmap.md)
+for validation requirements. The core source is [MIT licensed](LICENSE); the
+public Hub cards also declare MIT. No private neighbor ledger needs to be shared
+to understand the algorithm.
 
 ## Why Botte Secrète?
 
@@ -55,6 +114,8 @@ structured checks, evidence checks, or an explicit escalation path.
 | Area | What it does | Entry point |
 |---|---|---|
 | Routing | Chooses deterministic, local, or cloud execution | `botte route` |
+| Quality memory | Learns from verified outcomes and explains shadow k-NN advice | `botte qa` |
+| Asset quality | Gates and compares images, textures, meshes, animations, and Godot packages | `botte asset-qa` |
 | Project checkup | Audits policy, directives, metrics, security, and drift | `botte doctor` |
 | Context reduction | Compresses logs, JSON, tool output, and selected context | `universal_compressor`, `context_budget` |
 | Micro-NN belt | Runs tiny classifiers for routing hints; these are not LLMs | `botte belt` |
@@ -164,6 +225,22 @@ model is activated while an existing predictor still lacks an auditable label
 source, production verdicts, calibration, and rollback gate. Run `checkup` or
 `python -m skills.nn_audit.cli skills/botte_nn --json` for the current status.
 
+Asset Factory integrations can use the separate [Asset Quality Memory](skills/asset_quality/SKILL.md):
+deterministic integrity and licence gates run first, then a family-isolated,
+explainable k-NN baseline advises in shadow mode. The bundled
+[mesh report](examples/asset-quality/mesh-report.json) is a complete input
+example. No raw asset bytes or local paths enter its verified memory.
+
+The existing MIT-licensed
+[Botte Nano-NN repository on Hugging Face](https://huggingface.co/zedgamer/botte-nano-nn)
+hosts a portable snapshot of the micro-NN format. Its source, feature contracts,
+tests, and maturity status remain authoritative here. Weight publication is
+blocked unless the [offline Hub provenance gate](skills/hf_provenance/SKILL.md)
+finds a complete, grounded, SHA-256-identical inventory. The separate
+[Asset Quality Memory k-NN repository on Hugging Face](https://huggingface.co/zedgamer/asset-quality-memory-knn)
+documents the shadow-only baseline; private neighbor ledgers stay local. See the
+[publication checklist](docs/huggingface-publication.md).
+
 ![Measured reduction on bundled samples](docs/assets/benchmark-compression.svg)
 
 _Measured on the bundled synthetic samples; results vary with content. See the
@@ -176,14 +253,16 @@ python scripts/generate_docs_visuals.py
 python scripts/benchmark_full.py --json
 ```
 
-Code compression is deliberately conservative and may return the original
-input when a transformation would expand it. Reversible compression is
-in-memory by default; durable restoration requires an explicit bounded store.
+Code is returned unchanged. JSON compaction preserves every value; logs retain
+distinct lines and their order. Sizes are UTF-8 bytes, not billed tokens.
+Reversible originals live only in the current process, until it exits or its
+store is cleared. The CLI does not provide durable restoration.
 
 ```bash
 python -m skills.universal_compressor.cli compress /path/to/file.log --type log
-python -m skills.universal_compressor.cli compress /path/to/file.log --type log --reversible --store .private-compressor
 ```
+
+See the [compression integrity and comparison protocol](docs/plans/2026-09-13-compression-integrity.md).
 
 ## Architecture at a glance
 
@@ -255,5 +334,3 @@ test, benchmark, schema, or source file that a contributor can inspect.
 
 Released under the [MIT License](LICENSE). Created by
 [Sylvain Galliez](https://github.com/zedarvates).
-
-Support options are listed in [DONATE.md](DONATE.md).

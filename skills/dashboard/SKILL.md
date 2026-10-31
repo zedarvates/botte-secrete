@@ -1,14 +1,13 @@
 ---
 name: dashboard
-layer: GOVERN
 description: Generate one self-contained, timestamped HTML dashboard of the system's cost picture — routing savings (control loop), metric trends, current metrics, and the cost of outstanding fixes. Also renders as a live ANSI terminal view (--tui, --watch) and serves a live HTTP API (api.py). Use when the user wants a single visual view of cost/savings/health over time, or a live terminal view they don't have to open a browser for.
-version: 1.0.0
 ---
 
 # Dashboard Skill
 
 Live metrics visualization for botte-secrete — one data source, three views
-(timestamped HTML report, ANSI TUI, live HTTP API).
+(timestamped HTML report, ANSI TUI, live HTTP API). The live control room also
+leads with a three-line Quality Compass: state, reason, and next safe action.
 
 ## Usage
 
@@ -72,8 +71,15 @@ python scripts/generate_public_dashboard.py --output .botte-cache/public-dashboa
 
 The live server binds to `127.0.0.1` by default and reads local operational
 metrics. The static generator deliberately excludes local Memory Hub and
-Decision Ladder data; CI can publish only the repository test summary. The
+Decision Ladder data plus Quality Compass task/evidence material; CI can publish
+only the repository test summary and a local-evidence-private placeholder. The
 tracked `docs/dashboard.html` is a launcher and never embeds demo values.
+
+The Quality Compass reads the private verified ledger and, when installed, the
+bounded Wave 2 outcome envelope contract. Its default view stays non-technical;
+native `<details>` disclosure exposes aggregate coverage, abstentions, route
+comparison, versions, resources, drift, and recent evidence. Every learned
+signal remains `SHADOW`, and high-impact outcomes display the human gate.
 
 ### Metrics served
 
@@ -86,3 +92,4 @@ tracked `docs/dashboard.html` is a launcher and never embeds demo values.
 - `memory_entries` / `memory_projects` — Governed Memory Hub aggregate counts
 - `memory_by_status` / `memory_by_asset` — Aggregate lifecycle/type counts only
 - `legacy_memory_entries` — AutoMemory count during the migration window
+- `quality_compass` — Three-line qualitative state plus local progressive evidence

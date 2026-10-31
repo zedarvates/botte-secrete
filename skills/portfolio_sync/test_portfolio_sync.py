@@ -284,3 +284,34 @@ def test_loaders_and_cli_use_utf8_json(tmp_path: Path, capsys) -> None:
     output = json.loads(capsys.readouterr().out)
     assert code == 0
     assert output["clean"] is True
+
+
+@pytest.mark.parametrize("json_output", [False, True])
+@pytest.mark.parametrize("source", ["observed", "schema", "location"])
+def test_cli_errors_never_echo_private_input(tmp_path: Path, capsys, json_output: bool,
+                                           source: str) -> None:
+    """Public synthetic markers exercise error paths, not real credentials."""
+    marker = "PUBLIC-SYNTHETIC-DISCLOSURE-CANARY"
+    registry = _registry()
+    observed = [{"full_name": "zedarvates/botte-secrete"}]
+    if source == "observed":
+        observed = [{"secret": marker}]
+    elif source == "schema":
+        registry["schema_version"] = {"secret": marker}
+    else:
+        registry[marker] = {"password": "PUBLIC-SYNTHETIC-REJECTED-VALUE"}
+    registry_path = tmp_path / "registry.json"
+    observed_path = tmp_path / "observed.json"
+    registry_path.write_text(json.dumps(registry), encoding="utf-8")
+    observed_path.write_text(json.dumps(observed), encoding="utf-8")
+    argv = ["diff", "--registry", str(registry_path), "--observed", str(observed_path)]
+    if json_output:
+        argv.append("--json")
+    assert main(argv) == 2
+    captured = capsys.readouterr()
+    assert marker not in captured.out + captured.err
+    assert "PUBLIC-SYNTHETIC-REJECTED-VALUE" not in captured.out + captured.err
+    if json_output:
+        assert json.loads(captured.out) == {"valid": False, "error": "invalid_portfolio_input"}
+    else:
+        assert captured.err.strip() == "ERROR: invalid_portfolio_input"

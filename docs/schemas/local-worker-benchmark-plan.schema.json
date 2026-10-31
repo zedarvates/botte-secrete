@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/zedarvates/botte-secrete/blob/main/docs/schemas/local-worker-benchmark-plan.schema.json",
+  "title": "Botte Secrete local worker benchmark plan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "authority", "endpoint", "models"],
+  "properties": {
+    "schema": {"const": "botte.local-worker-benchmark-plan/v1"},
+    "authority": {"const": "SIMULATE"},
+    "endpoint": {"type": "string", "format": "uri"},
+    "api_key_env": {"type": "string", "pattern": "^$|^[A-Z][A-Z0-9_]{0,63}$"},
+    "models": {
+      "type": "array",
+      "minItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "model", "family", "quantization", "source_uri"],
+        "properties": {
+          "id": {"type": "string"}, "model": {"type": "string"},
+          "family": {"type": "string"}, "quantization": {"type": "string"},
+          "source_uri": {"type": "string"}
+        }
+      }
+    },
+    "repetitions": {"type": "integer", "minimum": 1, "maximum": 10},
+    "warmup": {"type": "integer", "minimum": 0, "maximum": 3},
+    "timeout_s": {"type": "number", "minimum": 1, "maximum": 900},
+    "max_tokens": {"type": "integer", "minimum": 1, "maximum": 4096},
+    "temperature": {"type": "number", "minimum": 0, "maximum": 1},
+    "telemetry_interval_s": {"type": "number", "exclusiveMinimum": 0}
+  }
+}

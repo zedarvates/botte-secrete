@@ -7,19 +7,16 @@ L'orchestrateur dispatche vers le runner, collecte les résultats.
 
 from __future__ import annotations
 
-import json
-import os
-import subprocess
 import sys
-import tempfile
 import time
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
 
-from skills.meta_harness.runner import Sandbox, SandboxResult
+from skills.meta_harness.runner import Sandbox
 from skills.meta_harness.governance import Governance
 from skills.meta_harness.session import Session
+from skills.safe_exit import RunDecision, SafeExitConfig, SafeExitGuard
 
 
 # ── Agents catalogue ──
@@ -64,6 +61,13 @@ _AGENT_CATALOG: dict[str, dict] = {
         "skill": "fast_context",
         "command": [sys.executable, "-m", "skills.fast_context.cli", "explore"],
         "description": "Exploration repo",
+        "requires": [],
+    },
+    "migration_audit": {
+        "name": "migration_audit",
+        "skill": "migration_audit",
+        "command": [sys.executable, "-m", "skills.migration_audit.cli"],
+        "description": "Gate deterministic entre BUILDER et VALIDATOR",
         "requires": [],
     },
     "test": {
@@ -118,16 +122,24 @@ _BUILTIN_PLANS: dict[str, list[str]] = {
     "full": ["fast_context", "porthos", "rochefort", "dartagnan", "security", "test"],
     "security": ["fast_context", "security"],
     "test-only": ["test"],
+    "migration-gate": ["migration_audit"],
 }
 
 
 class MetaHarness:
     """The meta-harness orchestrator."""
 
-    def __init__(self, workdir: str = ".", approval: bool = False):
+    def __init__(
+        self,
+        workdir: str = ".",
+        approval: bool = False,
+        *,
+        safe_exit_config: SafeExitConfig | None = None,
+    ):
         self.workdir = str(Path(workdir).resolve())
         self.governance = Governance(require_approval=approval)
         self.session = Session(name=f"pipeline_{int(time.time())}")
+        self.safe_exit_config = safe_exit_config or SafeExitConfig()
 
     def list_agents(self) -> list[dict]:
         """List available agents with metadata."""
@@ -147,6 +159,13 @@ class MetaHarness:
         Validates dependencies and orders steps correctly.
         Falls back to command execution if a Botte skill is not found.
         """
+        normalized = {
+            name.lower().replace("-", "_").replace(" ", "_") for name in agents
+        }
+        if {"builder", "validator"} <= normalized:
+            from skills.migration_audit.stage import insert_migration_audit_stage
+            agents = insert_migration_audit_stage(agents)
+
         plan = PipelinePlan(
             name="-".join(agents),
             created_at=time.time(),
@@ -159,7 +178,6 @@ class MetaHarness:
         for name in agents:
             agent_info = self._resolve_agent(name)
             if agent_info is None:
-                # Fallback: try as a raw CLI command
                 resolved.append(Step(
                     agent=name,
                     command=[sys.executable, "-m", name] if name == "test" else [name],
@@ -169,7 +187,6 @@ class MetaHarness:
                 ))
                 continue
 
-            # Add dependencies recursively
             for dep in agent_info.get("requires", []):
                 if dep not in seen:
                     dep_info = self._resolve_agent(dep)
@@ -205,11 +222,13 @@ class MetaHarness:
         return plan
 
     def execute(self, plan: PipelinePlan) -> Session:
-        """Execute a plan step by step, respecting governance."""
+        """Execute a plan step by step, respecting governance and SAFE-EXIT."""
+        if self.session.plan is not None or any(step.status != "pending" for step in plan.steps):
+            raise RuntimeError("A session/plan can execute only once; start a new explicit run")
         self.session.plan = plan
+        guard = SafeExitGuard(self.safe_exit_config)
 
         for i, step in enumerate(plan.steps):
-            # Check dependencies
             deps_met = all(
                 any(s.agent == dep and s.status == "passed" for s in plan.steps[:i])
                 for dep in step.requires
@@ -220,7 +239,6 @@ class MetaHarness:
                 self.session.add_result(step)
                 continue
 
-            # Governance check
             if plan.approval_required:
                 gate = self.governance.check(step)
                 if gate.blocked:
@@ -229,9 +247,18 @@ class MetaHarness:
                     self.session.add_result(step)
                     continue
 
-            # Execute in sandbox
+            before = guard.check()
+            if before.decision == RunDecision.UNCERTAIN:
+                self.session.terminate_uncertain(before.reason or "safe_exit")
+                self._skip_remaining_after_safe_exit(plan, i, before.reason or "safe_exit")
+                break
+
             step.status = "running"
-            sandbox = Sandbox(workdir=step.workdir, sandbox_dir=f".botte-sandbox/{step.agent}")
+            sandbox = Sandbox(
+                workdir=step.workdir,
+                sandbox_dir=f".botte-sandbox/{step.agent}",
+                timeout=min(300.0, guard.remaining_seconds()),
+            )
 
             t0 = time.time()
             result = sandbox.run(step.command, args=step.args)
@@ -242,11 +269,36 @@ class MetaHarness:
             step.exit_code = result.exit_code
             step.duration = round(t1 - t0, 2)
             step.sandbox_path = sandbox.sandbox_dir
-
             self.session.add_result(step)
 
+            failure_signature = None
+            if not result.success:
+                # Stable, bounded signature: enough to identify repeating failures
+                # without persisting the full stderr in the guard state.
+                first_line = (result.stderr or "").strip().splitlines()[:1]
+                failure_signature = f"{step.agent}:{result.exit_code}:{first_line[0] if first_line else ''}"[:512]
+
+            guard_result = guard.observe(
+                failure_signature=failure_signature,
+                tool_calls_delta=1,
+            )
+            if guard_result.decision == RunDecision.UNCERTAIN:
+                self.session.terminate_uncertain(guard_result.reason or "safe_exit")
+                self._skip_remaining_after_safe_exit(plan, i + 1, guard_result.reason or "safe_exit")
+                break
+
         self.session.completed_at = time.time()
+        self.session._save()
         return self.session
+
+    def _skip_remaining_after_safe_exit(self, plan: PipelinePlan, start: int, reason: str) -> None:
+        """Record unexecuted steps after a bounded-run stop."""
+        for step in plan.steps[start:]:
+            if step.status != "pending":
+                continue
+            step.status = "skipped"
+            step.output = f"SAFE-EXIT: {reason}"
+            self.session.add_result(step)
 
     def _resolve_agent(self, name: str) -> Optional[dict]:
         """Resolve an agent name to its catalog entry."""

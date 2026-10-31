@@ -18,7 +18,9 @@ contrôlé proposition → revue → promotion.
 Créer un module `skills/memory_hub/` qui étend `AutoMemory` avec :
 
 1. **`MemoryEntry` enrichi** : `project_id`, `asset_type`, `visibility`,
-   `status`, `source_ref`, `source_digest`, `expires_at`, `sensitivity`.
+   `status`, `source_ref`, `source_digest`, `expires_at`, `sensitivity`, puis
+   provenance typée (`source_type`, identifiant/URI, run, date, confiance et
+   classe de confiance) en v2.
 2. **Stockage SQLite cloisonné** par projet, avec migration et écriture
    atomique (stdlib, pas de dépendance).
 3. **Flux de cycle de vie** : proposal → review_active → promoted →
@@ -27,6 +29,9 @@ Créer un module `skills/memory_hub/` qui étend `AutoMemory` avec :
    promote_memory, forget_memory.
 5. **Tests** : isolement inter-projets, expiration, refus d'accès,
    suppression, provenance, cycle complet.
+6. **Quarantaine v2** : les observations repo/web/tool/agent/generated sont
+   stockées séparément, exclues du contexte normal, non exécutables et non
+   promouvables. Les enregistrements v1 sans provenance migrent en quarantaine.
 
 ## Options considérées
 

@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/zedarvates/botte-secrete/blob/main/docs/schemas/local-worker-benchmark-mission.schema.json",
+  "title": "Botte Secrete sanitized local worker benchmark mission",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "mission_id", "family", "role", "prompt", "verified_by", "evidence_ref", "expected"],
+  "properties": {
+    "schema": {"const": "botte.local-worker-benchmark-mission/v1"},
+    "mission_id": {"type": "string"},
+    "family": {"type": "string"},
+    "role": {"enum": ["SCOUT", "REQUIREMENTS", "VALIDATOR"]},
+    "system": {"type": "string", "maxLength": 4000},
+    "prompt": {"type": "string", "minLength": 1, "maxLength": 12000},
+    "verified_by": {"type": "string"},
+    "evidence_ref": {"type": "string"},
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "json_subset": {"type": "object"},
+        "tool_name": {"type": "string"},
+        "escalate": {"type": "boolean"},
+        "validator_verdict": {"type": "string"}
+      }
+    },
+    "tools": {"type": "array", "maxItems": 8}
+  }
+}

@@ -1,0 +1,1127 @@
+{
+  "schema": "botte.compression-fixtures/v1",
+  "corpus": [
+    {
+      "id": "json_late_error",
+      "type": "json",
+      "input": "[\n  {\n    \"job\": 0,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 1,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 2,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 3,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 4,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 5,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 6,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 7,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 8,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 9,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 10,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 11,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 12,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 13,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 14,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 15,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 16,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 17,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 18,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 19,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 20,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 21,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 22,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 23,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 24,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 25,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 26,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 27,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 28,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 29,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 30,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 31,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 32,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 33,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 34,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 35,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 36,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 37,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 38,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 39,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 40,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 41,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 42,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 43,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 44,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 45,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 46,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 47,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 48,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 49,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 50,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 51,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 52,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 53,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 54,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 55,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 56,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 57,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 58,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 59,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 60,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 61,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 62,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 63,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 64,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 65,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 66,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 67,\n    \"status\": \"failed\",\n    \"detail\": \"FATAL: do not deploy\"\n  },\n  {\n    \"job\": 68,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 69,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 70,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 71,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 72,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 73,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 74,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 75,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 76,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 77,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 78,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 79,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  }\n]",
+      "protected": [
+        "FATAL: do not deploy"
+      ],
+      "exact": false
+    },
+    {
+      "id": "json_long_value",
+      "type": "json",
+      "input": "{\n  \"detail\": \"\\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 NOT_AUTHORIZED\",\n  \"status\": \"PENDING_CI\"\n}",
+      "protected": [
+        "NOT_AUTHORIZED",
+        "PENDING_CI"
+      ],
+      "exact": false
+    },
+    {
+      "id": "log_middle_error",
+      "type": "log",
+      "input": "INFO synthetic step=0 value=0\nINFO synthetic step=1 value=3\nINFO synthetic step=2 value=6\nINFO synthetic step=3 value=9\nINFO synthetic step=4 value=12\nINFO synthetic step=5 value=15\nINFO synthetic step=6 value=18\nINFO synthetic step=7 value=21\nINFO synthetic step=8 value=24\nINFO synthetic step=9 value=27\nINFO synthetic step=10 value=30\nINFO synthetic step=11 value=33\nINFO synthetic step=12 value=36\nINFO synthetic step=13 value=39\nINFO synthetic step=14 value=42\nINFO synthetic step=15 value=45\nINFO synthetic step=16 value=48\nINFO synthetic step=17 value=51\nINFO synthetic step=18 value=54\nINFO synthetic step=19 value=57\nINFO synthetic step=20 value=60\nINFO synthetic step=21 value=63\nINFO synthetic step=22 value=66\nINFO synthetic step=23 value=69\nINFO synthetic step=24 value=72\nINFO synthetic step=25 value=75\nINFO synthetic step=26 value=78\nINFO synthetic step=27 value=81\nINFO synthetic step=28 value=84\nINFO synthetic step=29 value=87\nINFO synthetic step=30 value=90\nINFO synthetic step=31 value=93\nINFO synthetic step=32 value=96\nINFO synthetic step=33 value=99\nINFO synthetic step=34 value=102\nINFO synthetic step=35 value=105\nINFO synthetic step=36 value=108\nINFO synthetic step=37 value=111\nINFO synthetic step=38 value=114\nINFO synthetic step=39 value=117\nINFO synthetic step=40 value=120\nINFO synthetic step=41 value=123\nINFO synthetic step=42 value=126\nINFO synthetic step=43 value=129\nINFO synthetic step=44 value=132\nINFO synthetic step=45 value=135\nINFO synthetic step=46 value=138\nINFO synthetic step=47 value=141\nINFO synthetic step=48 value=144\nINFO synthetic step=49 value=147\nINFO synthetic step=50 value=150\nINFO synthetic step=51 value=153\nINFO synthetic step=52 value=156\nINFO synthetic step=53 value=159\nINFO synthetic step=54 value=162\nINFO synthetic step=55 value=165\nINFO synthetic step=56 value=168\nINFO synthetic step=57 value=171\nINFO synthetic step=58 value=174\nINFO synthetic step=59 value=177\nINFO synthetic step=60 value=180\nINFO synthetic step=61 value=183\nINFO synthetic step=62 value=186\nINFO synthetic step=63 value=189\nINFO synthetic step=64 value=192\nFATAL commit=fixture-v1: validation failed; do not deploy\nINFO synthetic step=66 value=198\nINFO synthetic step=67 value=201\nINFO synthetic step=68 value=204\nINFO synthetic step=69 value=207\nINFO synthetic step=70 value=210\nINFO synthetic step=71 value=213\nINFO synthetic step=72 value=216\nINFO synthetic step=73 value=219\nINFO synthetic step=74 value=222\nINFO synthetic step=75 value=225\nINFO synthetic step=76 value=228\nINFO synthetic step=77 value=231\nINFO synthetic step=78 value=234\nINFO synthetic step=79 value=237\nINFO synthetic step=80 value=240\nINFO synthetic step=81 value=243\nINFO synthetic step=82 value=246\nINFO synthetic step=83 value=249\nINFO synthetic step=84 value=252\nINFO synthetic step=85 value=255\nINFO synthetic step=86 value=258\nINFO synthetic step=87 value=261\nINFO synthetic step=88 value=264\nINFO synthetic step=89 value=267\nINFO synthetic step=90 value=270\nINFO synthetic step=91 value=273\nINFO synthetic step=92 value=276\nINFO synthetic step=93 value=279\nINFO synthetic step=94 value=282\nINFO synthetic step=95 value=285\nINFO synthetic step=96 value=288\nINFO synthetic step=97 value=291\nINFO synthetic step=98 value=294\nINFO synthetic step=99 value=297",
+      "protected": [
+        "FATAL commit=fixture-v1: validation failed; do not deploy"
+      ],
+      "exact": false
+    },
+    {
+      "id": "tool_middle_error",
+      "type": "tool_output",
+      "input": "INFO synthetic step=0 value=0\nINFO synthetic step=1 value=3\nINFO synthetic step=2 value=6\nINFO synthetic step=3 value=9\nINFO synthetic step=4 value=12\nINFO synthetic step=5 value=15\nINFO synthetic step=6 value=18\nINFO synthetic step=7 value=21\nINFO synthetic step=8 value=24\nINFO synthetic step=9 value=27\nINFO synthetic step=10 value=30\nINFO synthetic step=11 value=33\nINFO synthetic step=12 value=36\nINFO synthetic step=13 value=39\nINFO synthetic step=14 value=42\nINFO synthetic step=15 value=45\nINFO synthetic step=16 value=48\nINFO synthetic step=17 value=51\nINFO synthetic step=18 value=54\nINFO synthetic step=19 value=57\nINFO synthetic step=20 value=60\nINFO synthetic step=21 value=63\nINFO synthetic step=22 value=66\nINFO synthetic step=23 value=69\nINFO synthetic step=24 value=72\nINFO synthetic step=25 value=75\nINFO synthetic step=26 value=78\nINFO synthetic step=27 value=81\nINFO synthetic step=28 value=84\nINFO synthetic step=29 value=87\nINFO synthetic step=30 value=90\nINFO synthetic step=31 value=93\nINFO synthetic step=32 value=96\nINFO synthetic step=33 value=99\nINFO synthetic step=34 value=102\nINFO synthetic step=35 value=105\nINFO synthetic step=36 value=108\nINFO synthetic step=37 value=111\nINFO synthetic step=38 value=114\nINFO synthetic step=39 value=117\nINFO synthetic step=40 value=120\nINFO synthetic step=41 value=123\nINFO synthetic step=42 value=126\nINFO synthetic step=43 value=129\nINFO synthetic step=44 value=132\nINFO synthetic step=45 value=135\nINFO synthetic step=46 value=138\nINFO synthetic step=47 value=141\nINFO synthetic step=48 value=144\nINFO synthetic step=49 value=147\nINFO synthetic step=50 value=150\nINFO synthetic step=51 value=153\nINFO synthetic step=52 value=156\nINFO synthetic step=53 value=159\nINFO synthetic step=54 value=162\nINFO synthetic step=55 value=165\nINFO synthetic step=56 value=168\nINFO synthetic step=57 value=171\nINFO synthetic step=58 value=174\nINFO synthetic step=59 value=177\nINFO synthetic step=60 value=180\nINFO synthetic step=61 value=183\nINFO synthetic step=62 value=186\nINFO synthetic step=63 value=189\nINFO synthetic step=64 value=192\nFATAL commit=fixture-v1: validation failed; do not deploy\nINFO synthetic step=66 value=198\nINFO synthetic step=67 value=201\nINFO synthetic step=68 value=204\nINFO synthetic step=69 value=207\nINFO synthetic step=70 value=210\nINFO synthetic step=71 value=213\nINFO synthetic step=72 value=216\nINFO synthetic step=73 value=219\nINFO synthetic step=74 value=222\nINFO synthetic step=75 value=225\nINFO synthetic step=76 value=228\nINFO synthetic step=77 value=231\nINFO synthetic step=78 value=234\nINFO synthetic step=79 value=237\nINFO synthetic step=80 value=240\nINFO synthetic step=81 value=243\nINFO synthetic step=82 value=246\nINFO synthetic step=83 value=249\nINFO synthetic step=84 value=252\nINFO synthetic step=85 value=255\nINFO synthetic step=86 value=258\nINFO synthetic step=87 value=261\nINFO synthetic step=88 value=264\nINFO synthetic step=89 value=267\nINFO synthetic step=90 value=270\nINFO synthetic step=91 value=273\nINFO synthetic step=92 value=276\nINFO synthetic step=93 value=279\nINFO synthetic step=94 value=282\nINFO synthetic step=95 value=285\nINFO synthetic step=96 value=288\nINFO synthetic step=97 value=291\nINFO synthetic step=98 value=294\nINFO synthetic step=99 value=297",
+      "protected": [
+        "FATAL commit=fixture-v1: validation failed; do not deploy"
+      ],
+      "exact": false
+    },
+    {
+      "id": "code_hash_string",
+      "type": "code",
+      "input": "import os\nurl = \"https://example.invalid/a#fragment\"\n# Do not activate this candidate.\nprint(url)\n",
+      "protected": [],
+      "exact": true
+    },
+    {
+      "id": "log_exact_repeats",
+      "type": "log",
+      "input": "INFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\n",
+      "protected": [
+        "INFO same synthetic event"
+      ],
+      "exact": false
+    },
+    {
+      "id": "french_conditions",
+      "type": "text",
+      "input": "Ne pas fusionner. Autorisation absente. Preuve encore incertaine.\nActiver uniquement après validation indépendante.\n",
+      "protected": [
+        "Ne pas fusionner.",
+        "Autorisation absente.",
+        "Preuve encore incertaine.",
+        "uniquement après validation indépendante."
+      ],
+      "exact": false
+    }
+  ],
+  "corpus_sha256": "af8df2a0ee4aa4c3c11c374dc55c65c084eed64b3e3671bb69728999087a8237",
+  "source_sha256": "c88e0cae7ad594e9705930945974fa203efa38fff323345133736e16504ed288",
+  "harness_sha256": "c110df434db65bb3d12b915651a9eda5e6f0afd11603e8c5d80b3bc3fd54489b",
+  "python": "3.12.14",
+  "rows": [
+    {
+      "case": "json_late_error",
+      "arm": "original",
+      "gate": {
+        "passed": true,
+        "envelope_preserved": true,
+        "missing_protected": [],
+        "exact_required": false,
+        "exact_passed": true
+      },
+      "input_sha256": "b4d79704e0b0fef8557e21c7c59ca6f4d1d75333cfece223e98e7677074c6750",
+      "output_sha256": "b4d79704e0b0fef8557e21c7c59ca6f4d1d75333cfece223e98e7677074c6750",
+      "input_bytes": 7966,
+      "output_bytes": 7966,
+      "input_tokens": 2726,
+      "output_tokens": 2726,
+      "elapsed_ms": 0.023,
+      "messages": [
+        {
+          "role": "system",
+          "content": "Report observed facts, uncertainty and authorization limits."
+        },
+        {
+          "role": "user",
+          "content": "Inspect this fixture. Preserve failures and conditions."
+        },
+        {
+          "role": "assistant",
+          "content": null,
+          "tool_calls": [
+            {
+              "id": "fixture",
+              "type": "function",
+              "function": {
+                "name": "read_fixture",
+                "arguments": "{}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "fixture",
+          "content": "[\n  {\n    \"job\": 0,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 1,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 2,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 3,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 4,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 5,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 6,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 7,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 8,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 9,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 10,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 11,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 12,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 13,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 14,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 15,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 16,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 17,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 18,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 19,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 20,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 21,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 22,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 23,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 24,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 25,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 26,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 27,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 28,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 29,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 30,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 31,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 32,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 33,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 34,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 35,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 36,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 37,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 38,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 39,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 40,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 41,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 42,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 43,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 44,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 45,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 46,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 47,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 48,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 49,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 50,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 51,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 52,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 53,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 54,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 55,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 56,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 57,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 58,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 59,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 60,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 61,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 62,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 63,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 64,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 65,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 66,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 67,\n    \"status\": \"failed\",\n    \"detail\": \"FATAL: do not deploy\"\n  },\n  {\n    \"job\": 68,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 69,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 70,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 71,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 72,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 73,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 74,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 75,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 76,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 77,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 78,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 79,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  }\n]"
+        }
+      ]
+    },
+    {
+      "case": "json_late_error",
+      "arm": "botte",
+      "gate": {
+        "passed": true,
+        "envelope_preserved": true,
+        "missing_protected": [],
+        "exact_required": false,
+        "exact_passed": true
+      },
+      "input_sha256": "b4d79704e0b0fef8557e21c7c59ca6f4d1d75333cfece223e98e7677074c6750",
+      "output_sha256": "3f37288b8538d3b22a36bf390827f1a67ed2430bef9c1179216feaf963236f42",
+      "input_bytes": 7966,
+      "output_bytes": 5644,
+      "input_tokens": 2726,
+      "output_tokens": 1365,
+      "elapsed_ms": 0.672,
+      "messages": [
+        {
+          "role": "system",
+          "content": "Report observed facts, uncertainty and authorization limits."
+        },
+        {
+          "role": "user",
+          "content": "Inspect this fixture. Preserve failures and conditions."
+        },
+        {
+          "role": "assistant",
+          "content": null,
+          "tool_calls": [
+            {
+              "id": "fixture",
+              "type": "function",
+              "function": {
+                "name": "read_fixture",
+                "arguments": "{}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "fixture",
+          "content": "[{\"job\":0,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":1,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":2,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":3,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":4,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":5,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":6,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":7,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":8,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":9,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":10,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":11,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":12,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":13,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":14,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":15,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":16,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":17,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":18,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":19,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":20,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":21,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":22,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":23,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":24,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":25,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":26,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":27,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":28,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":29,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":30,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":31,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":32,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":33,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":34,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":35,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":36,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":37,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":38,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":39,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":40,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":41,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":42,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":43,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":44,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":45,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":46,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":47,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":48,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":49,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":50,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":51,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":52,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":53,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":54,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":55,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":56,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":57,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":58,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":59,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":60,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":61,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":62,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":63,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":64,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":65,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":66,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":67,\"status\":\"failed\",\"detail\":\"FATAL: do not deploy\"},{\"job\":68,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":69,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":70,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":71,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":72,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":73,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":74,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":75,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":76,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":77,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":78,\"status\":\"passed\",\"detail\":\"synthetic check\"},{\"job\":79,\"status\":\"passed\",\"detail\":\"synthetic check\"}]"
+        }
+      ]
+    },
+    {
+      "case": "json_late_error",
+      "arm": "headroom",
+      "gate": {
+        "passed": true,
+        "envelope_preserved": true,
+        "missing_protected": [],
+        "exact_required": false,
+        "exact_passed": true
+      },
+      "input_sha256": "b4d79704e0b0fef8557e21c7c59ca6f4d1d75333cfece223e98e7677074c6750",
+      "output_sha256": "b4d79704e0b0fef8557e21c7c59ca6f4d1d75333cfece223e98e7677074c6750",
+      "input_bytes": 7966,
+      "output_bytes": 7966,
+      "input_tokens": 2726,
+      "output_tokens": 2726,
+      "elapsed_ms": 55.762,
+      "messages": [
+        {
+          "role": "system",
+          "content": "Report observed facts, uncertainty and authorization limits."
+        },
+        {
+          "role": "user",
+          "content": "Inspect this fixture. Preserve failures and conditions."
+        },
+        {
+          "role": "assistant",
+          "content": null,
+          "tool_calls": [
+            {
+              "id": "fixture",
+              "type": "function",
+              "function": {
+                "name": "read_fixture",
+                "arguments": "{}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "fixture",
+          "content": "[\n  {\n    \"job\": 0,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 1,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 2,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 3,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 4,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 5,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 6,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 7,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 8,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 9,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 10,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 11,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 12,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 13,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 14,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 15,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 16,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 17,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 18,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 19,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 20,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 21,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 22,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 23,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 24,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 25,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 26,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 27,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 28,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 29,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 30,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 31,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 32,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 33,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 34,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 35,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 36,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 37,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 38,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 39,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 40,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 41,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 42,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 43,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 44,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 45,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 46,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 47,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 48,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 49,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 50,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 51,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 52,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 53,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 54,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 55,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 56,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 57,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 58,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 59,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 60,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 61,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 62,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 63,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 64,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 65,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 66,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 67,\n    \"status\": \"failed\",\n    \"detail\": \"FATAL: do not deploy\"\n  },\n  {\n    \"job\": 68,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 69,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 70,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 71,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 72,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 73,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 74,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 75,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 76,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 77,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 78,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  },\n  {\n    \"job\": 79,\n    \"status\": \"passed\",\n    \"detail\": \"synthetic check\"\n  }\n]"
+        }
+      ]
+    },
+    {
+      "case": "json_long_value",
+      "arm": "original",
+      "gate": {
+        "passed": true,
+        "envelope_preserved": true,
+        "missing_protected": [],
+        "exact_required": false,
+        "exact_passed": true
+      },
+      "input_sha256": "7679b483447b7b04ff9b6778902f2338678e165c8c1e4501e18b68cfacfb4bab",
+      "output_sha256": "7679b483447b7b04ff9b6778902f2338678e165c8c1e4501e18b68cfacfb4bab",
+      "input_bytes": 5657,
+      "output_bytes": 5657,
+      "input_tokens": 3165,
+      "output_tokens": 3165,
+      "elapsed_ms": 0.017,
+      "messages": [
+        {
+          "role": "system",
+          "content": "Report observed facts, uncertainty and authorization limits."
+        },
+        {
+          "role": "user",
+          "content": "Inspect this fixture. Preserve failures and conditions."
+        },
+        {
+          "role": "assistant",
+          "content": null,
+          "tool_calls": [
+            {
+              "id": "fixture",
+              "type": "function",
+              "function": {
+                "name": "read_fixture",
+                "arguments": "{}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "fixture",
+          "content": "{\n  \"detail\": \"\\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 NOT_AUTHORIZED\",\n  \"status\": \"PENDING_CI\"\n}"
+        }
+      ]
+    },
+    {
+      "case": "json_long_value",
+      "arm": "botte",
+      "gate": {
+        "passed": true,
+        "envelope_preserved": true,
+        "missing_protected": [],
+        "exact_required": false,
+        "exact_passed": true
+      },
+      "input_sha256": "7679b483447b7b04ff9b6778902f2338678e165c8c1e4501e18b68cfacfb4bab",
+      "output_sha256": "3a2405aef1f4e20c546f085d06e53c4816e64c382dbc700d15b01ed70142c502",
+      "input_bytes": 5657,
+      "output_bytes": 5645,
+      "input_tokens": 3165,
+      "output_tokens": 3156,
+      "elapsed_ms": 0.129,
+      "messages": [
+        {
+          "role": "system",
+          "content": "Report observed facts, uncertainty and authorization limits."
+        },
+        {
+          "role": "user",
+          "content": "Inspect this fixture. Preserve failures and conditions."
+        },
+        {
+          "role": "assistant",
+          "content": null,
+          "tool_calls": [
+            {
+              "id": "fixture",
+              "type": "function",
+              "function": {
+                "name": "read_fixture",
+                "arguments": "{}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "fixture",
+          "content": "{\"detail\":\"\\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 \\u00e9\\u6f22\\ud83d\\ude42 NOT_AUTHORIZED\",\"status\":\"PENDING_CI\"}"
+        }
+      ]
+    },
+    {
+      "case": "json_long_value",
+      "arm": "headroom",
+      "gate": {
+        "passed": false,
+        "envelope_preserved": true,
+        "missing_protected": [
+          "NOT_AUTHORIZED"
+        ],
+        "exact_required": false,
+        "exact_passed": true
+      },
+      "input_sha256": "7679b483447b7b04ff9b6778902f2338678e165c8c1e4501e18b68cfacfb4bab",
+      "output_sha256": "a74a62a9f20a69dc84088e24261a25fd957d2b6fbf9722f4567ee93f18bfd319",
+      "input_bytes": 5657,
+      "output_bytes": 444,
+      "input_tokens": 3165,
+      "output_tokens": 109,
+      "elapsed_ms": 56.931,
+      "messages": [
+        {
+          "role": "system",
+          "content": "Report observed facts, uncertainty and authorization limits."
+        },
+        {
+          "role": "user",
+          "content": "Inspect this fixture. Preserve failures and conditions."
+        },
+        {
+          "role": "assistant",
+          "content": null,
+          "tool_calls": [
+            {
+              "id": "fixture",
+              "type": "function",
+              "function": {
+                "name": "read_fixture",
+                "arguments": "{}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "fixture",
+          "content": "{\"detail\":\"<<ccr:027e869cdfaa,string,1.8KB>>\",\"status\":\"PENDING_CI\"}"
+        }
+      ],
+      "recovery_probe": {
+        "gate": {
+          "passed": true,
+          "envelope_preserved": true,
+          "missing_protected": [],
+          "exact_required": false,
+          "exact_passed": true
+        },
+        "messages": [
+          {
+            "role": "system",
+            "content": "Report observed facts, uncertainty and authorization limits."
+          },
+          {
+            "role": "user",
+            "content": "Inspect this fixture. Preserve failures and conditions."
+          },
+          {
+            "role": "assistant",
+            "content": null,
+            "tool_calls": [
+              {
+                "id": "fixture",
+                "type": "function",
+                "function": {
+                  "name": "read_fixture",
+                  "arguments": "{}"
+                }
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "tool_call_id": "fixture",
+            "content": "{\"detail\":\"é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 é漢🙂 NOT_AUTHORIZED\",\"status\":\"PENDING_CI\"}"
+          }
+        ],
+        "output_tokens": 636,
+        "output_bytes": 2225,
+        "method": "deterministic inline resolution; no model retrieval decision"
+      }
+    },
+    {
+      "case": "log_middle_error",
+      "arm": "original",
+      "gate": {
+        "passed": true,
+        "envelope_preserved": true,
+        "missing_protected": [],
+        "exact_required": false,
+        "exact_passed": true
+      },
+      "input_sha256": "4ca31cce1405a06c032bf2120da2978ff78b23b337e19e1cf677b3eb5775a3d5",
+      "output_sha256": "4ca31cce1405a06c032bf2120da2978ff78b23b337e19e1cf677b3eb5775a3d5",
+      "input_bytes": 3743,
+      "output_bytes": 3743,
+      "input_tokens": 986,
+      "output_tokens": 986,
+      "elapsed_ms": 0.019,
+      "messages": [
+        {
+          "role": "system",
+          "content": "Report observed facts, uncertainty and authorization limits."
+        },
+        {
+          "role": "user",
+          "content": "Inspect this fixture. Preserve failures and conditions."
+        },
+        {
+          "role": "assistant",
+          "content": null,
+          "tool_calls": [
+            {
+              "id": "fixture",
+              "type": "function",
+              "function": {
+                "name": "read_fixture",
+                "arguments": "{}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "fixture",
+          "content": "INFO synthetic step=0 value=0\nINFO synthetic step=1 value=3\nINFO synthetic step=2 value=6\nINFO synthetic step=3 value=9\nINFO synthetic step=4 value=12\nINFO synthetic step=5 value=15\nINFO synthetic step=6 value=18\nINFO synthetic step=7 value=21\nINFO synthetic step=8 value=24\nINFO synthetic step=9 value=27\nINFO synthetic step=10 value=30\nINFO synthetic step=11 value=33\nINFO synthetic step=12 value=36\nINFO synthetic step=13 value=39\nINFO synthetic step=14 value=42\nINFO synthetic step=15 value=45\nINFO synthetic step=16 value=48\nINFO synthetic step=17 value=51\nINFO synthetic step=18 value=54\nINFO synthetic step=19 value=57\nINFO synthetic step=20 value=60\nINFO synthetic step=21 value=63\nINFO synthetic step=22 value=66\nINFO synthetic step=23 value=69\nINFO synthetic step=24 value=72\nINFO synthetic step=25 value=75\nINFO synthetic step=26 value=78\nINFO synthetic step=27 value=81\nINFO synthetic step=28 value=84\nINFO synthetic step=29 value=87\nINFO synthetic step=30 value=90\nINFO synthetic step=31 value=93\nINFO synthetic step=32 value=96\nINFO synthetic step=33 value=99\nINFO synthetic step=34 value=102\nINFO synthetic step=35 value=105\nINFO synthetic step=36 value=108\nINFO synthetic step=37 value=111\nINFO synthetic step=38 value=114\nINFO synthetic step=39 value=117\nINFO synthetic step=40 value=120\nINFO synthetic step=41 value=123\nINFO synthetic step=42 value=126\nINFO synthetic step=43 value=129\nINFO synthetic step=44 value=132\nINFO synthetic step=45 value=135\nINFO synthetic step=46 value=138\nINFO synthetic step=47 value=141\nINFO synthetic step=48 value=144\nINFO synthetic step=49 value=147\nINFO synthetic step=50 value=150\nINFO synthetic step=51 value=153\nINFO synthetic step=52 value=156\nINFO synthetic step=53 value=159\nINFO synthetic step=54 value=162\nINFO synthetic step=55 value=165\nINFO synthetic step=56 value=168\nINFO synthetic step=57 value=171\nINFO synthetic step=58 value=174\nINFO synthetic step=59 value=177\nINFO synthetic step=60 value=180\nINFO synthetic step=61 value=183\nINFO synthetic step=62 value=186\nINFO synthetic step=63 value=189\nINFO synthetic step=64 value=192\nFATAL commit=fixture-v1: validation failed; do not deploy\nINFO synthetic step=66 value=198\nINFO synthetic step=67 value=201\nINFO synthetic step=68 value=204\nINFO synthetic step=69 value=207\nINFO synthetic step=70 value=210\nINFO synthetic step=71 value=213\nINFO synthetic step=72 value=216\nINFO synthetic step=73 value=219\nINFO synthetic step=74 value=222\nINFO synthetic step=75 value=225\nINFO synthetic step=76 value=228\nINFO synthetic step=77 value=231\nINFO synthetic step=78 value=234\nINFO synthetic step=79 value=237\nINFO synthetic step=80 value=240\nINFO synthetic step=81 value=243\nINFO synthetic step=82 value=246\nINFO synthetic step=83 value=249\nINFO synthetic step=84 value=252\nINFO synthetic step=85 value=255\nINFO synthetic step=86 value=258\nINFO synthetic step=87 value=261\nINFO synthetic step=88 value=264\nINFO synthetic step=89 value=267\nINFO synthetic step=90 value=270\nINFO synthetic step=91 value=273\nINFO synthetic step=92 value=276\nINFO synthetic step=93 value=279\nINFO synthetic step=94 value=282\nINFO synthetic step=95 value=285\nINFO synthetic step=96 value=288\nINFO synthetic step=97 value=291\nINFO synthetic step=98 value=294\nINFO synthetic step=99 value=297"
+        }
+      ]
+    },
+    {
+      "case": "log_middle_error",
+      "arm": "botte",
+      "gate": {
+        "passed": true,
+        "envelope_preserved": true,
+        "missing_protected": [],
+        "exact_required": false,
+        "exact_passed": true
+      },
+      "input_sha256": "4ca31cce1405a06c032bf2120da2978ff78b23b337e19e1cf677b3eb5775a3d5",
+      "output_sha256": "4ca31cce1405a06c032bf2120da2978ff78b23b337e19e1cf677b3eb5775a3d5",
+      "input_bytes": 3743,
+      "output_bytes": 3743,
+      "input_tokens": 986,
+      "output_tokens": 986,
+      "elapsed_ms": 0.049,
+      "messages": [
+        {
+          "role": "system",
+          "content": "Report observed facts, uncertainty and authorization limits."
+        },
+        {
+          "role": "user",
+          "content": "Inspect this fixture. Preserve failures and conditions."
+        },
+        {
+          "role": "assistant",
+          "content": null,
+          "tool_calls": [
+            {
+              "id": "fixture",
+              "type": "function",
+              "function": {
+                "name": "read_fixture",
+                "arguments": "{}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "fixture",
+          "content": "INFO synthetic step=0 value=0\nINFO synthetic step=1 value=3\nINFO synthetic step=2 value=6\nINFO synthetic step=3 value=9\nINFO synthetic step=4 value=12\nINFO synthetic step=5 value=15\nINFO synthetic step=6 value=18\nINFO synthetic step=7 value=21\nINFO synthetic step=8 value=24\nINFO synthetic step=9 value=27\nINFO synthetic step=10 value=30\nINFO synthetic step=11 value=33\nINFO synthetic step=12 value=36\nINFO synthetic step=13 value=39\nINFO synthetic step=14 value=42\nINFO synthetic step=15 value=45\nINFO synthetic step=16 value=48\nINFO synthetic step=17 value=51\nINFO synthetic step=18 value=54\nINFO synthetic step=19 value=57\nINFO synthetic step=20 value=60\nINFO synthetic step=21 value=63\nINFO synthetic step=22 value=66\nINFO synthetic step=23 value=69\nINFO synthetic step=24 value=72\nINFO synthetic step=25 value=75\nINFO synthetic step=26 value=78\nINFO synthetic step=27 value=81\nINFO synthetic step=28 value=84\nINFO synthetic step=29 value=87\nINFO synthetic step=30 value=90\nINFO synthetic step=31 value=93\nINFO synthetic step=32 value=96\nINFO synthetic step=33 value=99\nINFO synthetic step=34 value=102\nINFO synthetic step=35 value=105\nINFO synthetic step=36 value=108\nINFO synthetic step=37 value=111\nINFO synthetic step=38 value=114\nINFO synthetic step=39 value=117\nINFO synthetic step=40 value=120\nINFO synthetic step=41 value=123\nINFO synthetic step=42 value=126\nINFO synthetic step=43 value=129\nINFO synthetic step=44 value=132\nINFO synthetic step=45 value=135\nINFO synthetic step=46 value=138\nINFO synthetic step=47 value=141\nINFO synthetic step=48 value=144\nINFO synthetic step=49 value=147\nINFO synthetic step=50 value=150\nINFO synthetic step=51 value=153\nINFO synthetic step=52 value=156\nINFO synthetic step=53 value=159\nINFO synthetic step=54 value=162\nINFO synthetic step=55 value=165\nINFO synthetic step=56 value=168\nINFO synthetic step=57 value=171\nINFO synthetic step=58 value=174\nINFO synthetic step=59 value=177\nINFO synthetic step=60 value=180\nINFO synthetic step=61 value=183\nINFO synthetic step=62 value=186\nINFO synthetic step=63 value=189\nINFO synthetic step=64 value=192\nFATAL commit=fixture-v1: validation failed; do not deploy\nINFO synthetic step=66 value=198\nINFO synthetic step=67 value=201\nINFO synthetic step=68 value=204\nINFO synthetic step=69 value=207\nINFO synthetic step=70 value=210\nINFO synthetic step=71 value=213\nINFO synthetic step=72 value=216\nINFO synthetic step=73 value=219\nINFO synthetic step=74 value=222\nINFO synthetic step=75 value=225\nINFO synthetic step=76 value=228\nINFO synthetic step=77 value=231\nINFO synthetic step=78 value=234\nINFO synthetic step=79 value=237\nINFO synthetic step=80 value=240\nINFO synthetic step=81 value=243\nINFO synthetic step=82 value=246\nINFO synthetic step=83 value=249\nINFO synthetic step=84 value=252\nINFO synthetic step=85 value=255\nINFO synthetic step=86 value=258\nINFO synthetic step=87 value=261\nINFO synthetic step=88 value=264\nINFO synthetic step=89 value=267\nINFO synthetic step=90 value=270\nINFO synthetic step=91 value=273\nINFO synthetic step=92 value=276\nINFO synthetic step=93 value=279\nINFO synthetic step=94 value=282\nINFO synthetic step=95 value=285\nINFO synthetic step=96 value=288\nINFO synthetic step=97 value=291\nINFO synthetic step=98 value=294\nINFO synthetic step=99 value=297"
+        }
+      ]
+    },
+    {
+      "case": "log_middle_error",
+      "arm": "headroom",
+      "gate": {
+        "passed": true,
+        "envelope_preserved": true,
+        "missing_protected": [],
+        "exact_required": false,
+        "exact_passed": true
+      },
+      "input_sha256": "4ca31cce1405a06c032bf2120da2978ff78b23b337e19e1cf677b3eb5775a3d5",
+      "output_sha256": "4ca31cce1405a06c032bf2120da2978ff78b23b337e19e1cf677b3eb5775a3d5",
+      "input_bytes": 3743,
+      "output_bytes": 3743,
+      "input_tokens": 986,
+      "output_tokens": 986,
+      "elapsed_ms": 0.507,
+      "messages": [
+        {
+          "role": "system",
+          "content": "Report observed facts, uncertainty and authorization limits."
+        },
+        {
+          "role": "user",
+          "content": "Inspect this fixture. Preserve failures and conditions."
+        },
+        {
+          "role": "assistant",
+          "content": null,
+          "tool_calls": [
+            {
+              "id": "fixture",
+              "type": "function",
+              "function": {
+                "name": "read_fixture",
+                "arguments": "{}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "fixture",
+          "content": "INFO synthetic step=0 value=0\nINFO synthetic step=1 value=3\nINFO synthetic step=2 value=6\nINFO synthetic step=3 value=9\nINFO synthetic step=4 value=12\nINFO synthetic step=5 value=15\nINFO synthetic step=6 value=18\nINFO synthetic step=7 value=21\nINFO synthetic step=8 value=24\nINFO synthetic step=9 value=27\nINFO synthetic step=10 value=30\nINFO synthetic step=11 value=33\nINFO synthetic step=12 value=36\nINFO synthetic step=13 value=39\nINFO synthetic step=14 value=42\nINFO synthetic step=15 value=45\nINFO synthetic step=16 value=48\nINFO synthetic step=17 value=51\nINFO synthetic step=18 value=54\nINFO synthetic step=19 value=57\nINFO synthetic step=20 value=60\nINFO synthetic step=21 value=63\nINFO synthetic step=22 value=66\nINFO synthetic step=23 value=69\nINFO synthetic step=24 value=72\nINFO synthetic step=25 value=75\nINFO synthetic step=26 value=78\nINFO synthetic step=27 value=81\nINFO synthetic step=28 value=84\nINFO synthetic step=29 value=87\nINFO synthetic step=30 value=90\nINFO synthetic step=31 value=93\nINFO synthetic step=32 value=96\nINFO synthetic step=33 value=99\nINFO synthetic step=34 value=102\nINFO synthetic step=35 value=105\nINFO synthetic step=36 value=108\nINFO synthetic step=37 value=111\nINFO synthetic step=38 value=114\nINFO synthetic step=39 value=117\nINFO synthetic step=40 value=120\nINFO synthetic step=41 value=123\nINFO synthetic step=42 value=126\nINFO synthetic step=43 value=129\nINFO synthetic step=44 value=132\nINFO synthetic step=45 value=135\nINFO synthetic step=46 value=138\nINFO synthetic step=47 value=141\nINFO synthetic step=48 value=144\nINFO synthetic step=49 value=147\nINFO synthetic step=50 value=150\nINFO synthetic step=51 value=153\nINFO synthetic step=52 value=156\nINFO synthetic step=53 value=159\nINFO synthetic step=54 value=162\nINFO synthetic step=55 value=165\nINFO synthetic step=56 value=168\nINFO synthetic step=57 value=171\nINFO synthetic step=58 value=174\nINFO synthetic step=59 value=177\nINFO synthetic step=60 value=180\nINFO synthetic step=61 value=183\nINFO synthetic step=62 value=186\nINFO synthetic step=63 value=189\nINFO synthetic step=64 value=192\nFATAL commit=fixture-v1: validation failed; do not deploy\nINFO synthetic step=66 value=198\nINFO synthetic step=67 value=201\nINFO synthetic step=68 value=204\nINFO synthetic step=69 value=207\nINFO synthetic step=70 value=210\nINFO synthetic step=71 value=213\nINFO synthetic step=72 value=216\nINFO synthetic step=73 value=219\nINFO synthetic step=74 value=222\nINFO synthetic step=75 value=225\nINFO synthetic step=76 value=228\nINFO synthetic step=77 value=231\nINFO synthetic step=78 value=234\nINFO synthetic step=79 value=237\nINFO synthetic step=80 value=240\nINFO synthetic step=81 value=243\nINFO synthetic step=82 value=246\nINFO synthetic step=83 value=249\nINFO synthetic step=84 value=252\nINFO synthetic step=85 value=255\nINFO synthetic step=86 value=258\nINFO synthetic step=87 value=261\nINFO synthetic step=88 value=264\nINFO synthetic step=89 value=267\nINFO synthetic step=90 value=270\nINFO synthetic step=91 value=273\nINFO synthetic step=92 value=276\nINFO synthetic step=93 value=279\nINFO synthetic step=94 value=282\nINFO synthetic step=95 value=285\nINFO synthetic step=96 value=288\nINFO synthetic step=97 value=291\nINFO synthetic step=98 value=294\nINFO synthetic step=99 value=297"
+        }
+      ]
+    },
+    {
+      "case": "tool_middle_error",
+      "arm": "original",
+      "gate": {
+        "passed": true,
+        "envelope_preserved": true,
+        "missing_protected": [],
+        "exact_required": false,
+        "exact_passed": true
+      },
+      "input_sha256": "4ca31cce1405a06c032bf2120da2978ff78b23b337e19e1cf677b3eb5775a3d5",
+      "output_sha256": "4ca31cce1405a06c032bf2120da2978ff78b23b337e19e1cf677b3eb5775a3d5",
+      "input_bytes": 3743,
+      "output_bytes": 3743,
+      "input_tokens": 986,
+      "output_tokens": 986,
+      "elapsed_ms": 0.014,
+      "messages": [
+        {
+          "role": "system",
+          "content": "Report observed facts, uncertainty and authorization limits."
+        },
+        {
+          "role": "user",
+          "content": "Inspect this fixture. Preserve failures and conditions."
+        },
+        {
+          "role": "assistant",
+          "content": null,
+          "tool_calls": [
+            {
+              "id": "fixture",
+              "type": "function",
+              "function": {
+                "name": "read_fixture",
+                "arguments": "{}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "fixture",
+          "content": "INFO synthetic step=0 value=0\nINFO synthetic step=1 value=3\nINFO synthetic step=2 value=6\nINFO synthetic step=3 value=9\nINFO synthetic step=4 value=12\nINFO synthetic step=5 value=15\nINFO synthetic step=6 value=18\nINFO synthetic step=7 value=21\nINFO synthetic step=8 value=24\nINFO synthetic step=9 value=27\nINFO synthetic step=10 value=30\nINFO synthetic step=11 value=33\nINFO synthetic step=12 value=36\nINFO synthetic step=13 value=39\nINFO synthetic step=14 value=42\nINFO synthetic step=15 value=45\nINFO synthetic step=16 value=48\nINFO synthetic step=17 value=51\nINFO synthetic step=18 value=54\nINFO synthetic step=19 value=57\nINFO synthetic step=20 value=60\nINFO synthetic step=21 value=63\nINFO synthetic step=22 value=66\nINFO synthetic step=23 value=69\nINFO synthetic step=24 value=72\nINFO synthetic step=25 value=75\nINFO synthetic step=26 value=78\nINFO synthetic step=27 value=81\nINFO synthetic step=28 value=84\nINFO synthetic step=29 value=87\nINFO synthetic step=30 value=90\nINFO synthetic step=31 value=93\nINFO synthetic step=32 value=96\nINFO synthetic step=33 value=99\nINFO synthetic step=34 value=102\nINFO synthetic step=35 value=105\nINFO synthetic step=36 value=108\nINFO synthetic step=37 value=111\nINFO synthetic step=38 value=114\nINFO synthetic step=39 value=117\nINFO synthetic step=40 value=120\nINFO synthetic step=41 value=123\nINFO synthetic step=42 value=126\nINFO synthetic step=43 value=129\nINFO synthetic step=44 value=132\nINFO synthetic step=45 value=135\nINFO synthetic step=46 value=138\nINFO synthetic step=47 value=141\nINFO synthetic step=48 value=144\nINFO synthetic step=49 value=147\nINFO synthetic step=50 value=150\nINFO synthetic step=51 value=153\nINFO synthetic step=52 value=156\nINFO synthetic step=53 value=159\nINFO synthetic step=54 value=162\nINFO synthetic step=55 value=165\nINFO synthetic step=56 value=168\nINFO synthetic step=57 value=171\nINFO synthetic step=58 value=174\nINFO synthetic step=59 value=177\nINFO synthetic step=60 value=180\nINFO synthetic step=61 value=183\nINFO synthetic step=62 value=186\nINFO synthetic step=63 value=189\nINFO synthetic step=64 value=192\nFATAL commit=fixture-v1: validation failed; do not deploy\nINFO synthetic step=66 value=198\nINFO synthetic step=67 value=201\nINFO synthetic step=68 value=204\nINFO synthetic step=69 value=207\nINFO synthetic step=70 value=210\nINFO synthetic step=71 value=213\nINFO synthetic step=72 value=216\nINFO synthetic step=73 value=219\nINFO synthetic step=74 value=222\nINFO synthetic step=75 value=225\nINFO synthetic step=76 value=228\nINFO synthetic step=77 value=231\nINFO synthetic step=78 value=234\nINFO synthetic step=79 value=237\nINFO synthetic step=80 value=240\nINFO synthetic step=81 value=243\nINFO synthetic step=82 value=246\nINFO synthetic step=83 value=249\nINFO synthetic step=84 value=252\nINFO synthetic step=85 value=255\nINFO synthetic step=86 value=258\nINFO synthetic step=87 value=261\nINFO synthetic step=88 value=264\nINFO synthetic step=89 value=267\nINFO synthetic step=90 value=270\nINFO synthetic step=91 value=273\nINFO synthetic step=92 value=276\nINFO synthetic step=93 value=279\nINFO synthetic step=94 value=282\nINFO synthetic step=95 value=285\nINFO synthetic step=96 value=288\nINFO synthetic step=97 value=291\nINFO synthetic step=98 value=294\nINFO synthetic step=99 value=297"
+        }
+      ]
+    },
+    {
+      "case": "tool_middle_error",
+      "arm": "botte",
+      "gate": {
+        "passed": true,
+        "envelope_preserved": true,
+        "missing_protected": [],
+        "exact_required": false,
+        "exact_passed": true
+      },
+      "input_sha256": "4ca31cce1405a06c032bf2120da2978ff78b23b337e19e1cf677b3eb5775a3d5",
+      "output_sha256": "4ca31cce1405a06c032bf2120da2978ff78b23b337e19e1cf677b3eb5775a3d5",
+      "input_bytes": 3743,
+      "output_bytes": 3743,
+      "input_tokens": 986,
+      "output_tokens": 986,
+      "elapsed_ms": 0.15,
+      "messages": [
+        {
+          "role": "system",
+          "content": "Report observed facts, uncertainty and authorization limits."
+        },
+        {
+          "role": "user",
+          "content": "Inspect this fixture. Preserve failures and conditions."
+        },
+        {
+          "role": "assistant",
+          "content": null,
+          "tool_calls": [
+            {
+              "id": "fixture",
+              "type": "function",
+              "function": {
+                "name": "read_fixture",
+                "arguments": "{}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "fixture",
+          "content": "INFO synthetic step=0 value=0\nINFO synthetic step=1 value=3\nINFO synthetic step=2 value=6\nINFO synthetic step=3 value=9\nINFO synthetic step=4 value=12\nINFO synthetic step=5 value=15\nINFO synthetic step=6 value=18\nINFO synthetic step=7 value=21\nINFO synthetic step=8 value=24\nINFO synthetic step=9 value=27\nINFO synthetic step=10 value=30\nINFO synthetic step=11 value=33\nINFO synthetic step=12 value=36\nINFO synthetic step=13 value=39\nINFO synthetic step=14 value=42\nINFO synthetic step=15 value=45\nINFO synthetic step=16 value=48\nINFO synthetic step=17 value=51\nINFO synthetic step=18 value=54\nINFO synthetic step=19 value=57\nINFO synthetic step=20 value=60\nINFO synthetic step=21 value=63\nINFO synthetic step=22 value=66\nINFO synthetic step=23 value=69\nINFO synthetic step=24 value=72\nINFO synthetic step=25 value=75\nINFO synthetic step=26 value=78\nINFO synthetic step=27 value=81\nINFO synthetic step=28 value=84\nINFO synthetic step=29 value=87\nINFO synthetic step=30 value=90\nINFO synthetic step=31 value=93\nINFO synthetic step=32 value=96\nINFO synthetic step=33 value=99\nINFO synthetic step=34 value=102\nINFO synthetic step=35 value=105\nINFO synthetic step=36 value=108\nINFO synthetic step=37 value=111\nINFO synthetic step=38 value=114\nINFO synthetic step=39 value=117\nINFO synthetic step=40 value=120\nINFO synthetic step=41 value=123\nINFO synthetic step=42 value=126\nINFO synthetic step=43 value=129\nINFO synthetic step=44 value=132\nINFO synthetic step=45 value=135\nINFO synthetic step=46 value=138\nINFO synthetic step=47 value=141\nINFO synthetic step=48 value=144\nINFO synthetic step=49 value=147\nINFO synthetic step=50 value=150\nINFO synthetic step=51 value=153\nINFO synthetic step=52 value=156\nINFO synthetic step=53 value=159\nINFO synthetic step=54 value=162\nINFO synthetic step=55 value=165\nINFO synthetic step=56 value=168\nINFO synthetic step=57 value=171\nINFO synthetic step=58 value=174\nINFO synthetic step=59 value=177\nINFO synthetic step=60 value=180\nINFO synthetic step=61 value=183\nINFO synthetic step=62 value=186\nINFO synthetic step=63 value=189\nINFO synthetic step=64 value=192\nFATAL commit=fixture-v1: validation failed; do not deploy\nINFO synthetic step=66 value=198\nINFO synthetic step=67 value=201\nINFO synthetic step=68 value=204\nINFO synthetic step=69 value=207\nINFO synthetic step=70 value=210\nINFO synthetic step=71 value=213\nINFO synthetic step=72 value=216\nINFO synthetic step=73 value=219\nINFO synthetic step=74 value=222\nINFO synthetic step=75 value=225\nINFO synthetic step=76 value=228\nINFO synthetic step=77 value=231\nINFO synthetic step=78 value=234\nINFO synthetic step=79 value=237\nINFO synthetic step=80 value=240\nINFO synthetic step=81 value=243\nINFO synthetic step=82 value=246\nINFO synthetic step=83 value=249\nINFO synthetic step=84 value=252\nINFO synthetic step=85 value=255\nINFO synthetic step=86 value=258\nINFO synthetic step=87 value=261\nINFO synthetic step=88 value=264\nINFO synthetic step=89 value=267\nINFO synthetic step=90 value=270\nINFO synthetic step=91 value=273\nINFO synthetic step=92 value=276\nINFO synthetic step=93 value=279\nINFO synthetic step=94 value=282\nINFO synthetic step=95 value=285\nINFO synthetic step=96 value=288\nINFO synthetic step=97 value=291\nINFO synthetic step=98 value=294\nINFO synthetic step=99 value=297"
+        }
+      ]
+    },
+    {
+      "case": "tool_middle_error",
+      "arm": "headroom",
+      "gate": {
+        "passed": true,
+        "envelope_preserved": true,
+        "missing_protected": [],
+        "exact_required": false,
+        "exact_passed": true
+      },
+      "input_sha256": "4ca31cce1405a06c032bf2120da2978ff78b23b337e19e1cf677b3eb5775a3d5",
+      "output_sha256": "4ca31cce1405a06c032bf2120da2978ff78b23b337e19e1cf677b3eb5775a3d5",
+      "input_bytes": 3743,
+      "output_bytes": 3743,
+      "input_tokens": 986,
+      "output_tokens": 986,
+      "elapsed_ms": 0.571,
+      "messages": [
+        {
+          "role": "system",
+          "content": "Report observed facts, uncertainty and authorization limits."
+        },
+        {
+          "role": "user",
+          "content": "Inspect this fixture. Preserve failures and conditions."
+        },
+        {
+          "role": "assistant",
+          "content": null,
+          "tool_calls": [
+            {
+              "id": "fixture",
+              "type": "function",
+              "function": {
+                "name": "read_fixture",
+                "arguments": "{}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "fixture",
+          "content": "INFO synthetic step=0 value=0\nINFO synthetic step=1 value=3\nINFO synthetic step=2 value=6\nINFO synthetic step=3 value=9\nINFO synthetic step=4 value=12\nINFO synthetic step=5 value=15\nINFO synthetic step=6 value=18\nINFO synthetic step=7 value=21\nINFO synthetic step=8 value=24\nINFO synthetic step=9 value=27\nINFO synthetic step=10 value=30\nINFO synthetic step=11 value=33\nINFO synthetic step=12 value=36\nINFO synthetic step=13 value=39\nINFO synthetic step=14 value=42\nINFO synthetic step=15 value=45\nINFO synthetic step=16 value=48\nINFO synthetic step=17 value=51\nINFO synthetic step=18 value=54\nINFO synthetic step=19 value=57\nINFO synthetic step=20 value=60\nINFO synthetic step=21 value=63\nINFO synthetic step=22 value=66\nINFO synthetic step=23 value=69\nINFO synthetic step=24 value=72\nINFO synthetic step=25 value=75\nINFO synthetic step=26 value=78\nINFO synthetic step=27 value=81\nINFO synthetic step=28 value=84\nINFO synthetic step=29 value=87\nINFO synthetic step=30 value=90\nINFO synthetic step=31 value=93\nINFO synthetic step=32 value=96\nINFO synthetic step=33 value=99\nINFO synthetic step=34 value=102\nINFO synthetic step=35 value=105\nINFO synthetic step=36 value=108\nINFO synthetic step=37 value=111\nINFO synthetic step=38 value=114\nINFO synthetic step=39 value=117\nINFO synthetic step=40 value=120\nINFO synthetic step=41 value=123\nINFO synthetic step=42 value=126\nINFO synthetic step=43 value=129\nINFO synthetic step=44 value=132\nINFO synthetic step=45 value=135\nINFO synthetic step=46 value=138\nINFO synthetic step=47 value=141\nINFO synthetic step=48 value=144\nINFO synthetic step=49 value=147\nINFO synthetic step=50 value=150\nINFO synthetic step=51 value=153\nINFO synthetic step=52 value=156\nINFO synthetic step=53 value=159\nINFO synthetic step=54 value=162\nINFO synthetic step=55 value=165\nINFO synthetic step=56 value=168\nINFO synthetic step=57 value=171\nINFO synthetic step=58 value=174\nINFO synthetic step=59 value=177\nINFO synthetic step=60 value=180\nINFO synthetic step=61 value=183\nINFO synthetic step=62 value=186\nINFO synthetic step=63 value=189\nINFO synthetic step=64 value=192\nFATAL commit=fixture-v1: validation failed; do not deploy\nINFO synthetic step=66 value=198\nINFO synthetic step=67 value=201\nINFO synthetic step=68 value=204\nINFO synthetic step=69 value=207\nINFO synthetic step=70 value=210\nINFO synthetic step=71 value=213\nINFO synthetic step=72 value=216\nINFO synthetic step=73 value=219\nINFO synthetic step=74 value=222\nINFO synthetic step=75 value=225\nINFO synthetic step=76 value=228\nINFO synthetic step=77 value=231\nINFO synthetic step=78 value=234\nINFO synthetic step=79 value=237\nINFO synthetic step=80 value=240\nINFO synthetic step=81 value=243\nINFO synthetic step=82 value=246\nINFO synthetic step=83 value=249\nINFO synthetic step=84 value=252\nINFO synthetic step=85 value=255\nINFO synthetic step=86 value=258\nINFO synthetic step=87 value=261\nINFO synthetic step=88 value=264\nINFO synthetic step=89 value=267\nINFO synthetic step=90 value=270\nINFO synthetic step=91 value=273\nINFO synthetic step=92 value=276\nINFO synthetic step=93 value=279\nINFO synthetic step=94 value=282\nINFO synthetic step=95 value=285\nINFO synthetic step=96 value=288\nINFO synthetic step=97 value=291\nINFO synthetic step=98 value=294\nINFO synthetic step=99 value=297"
+        }
+      ]
+    },
+    {
+      "case": "code_hash_string",
+      "arm": "original",
+      "gate": {
+        "passed": true,
+        "envelope_preserved": true,
+        "missing_protected": [],
+        "exact_required": true,
+        "exact_passed": true
+      },
+      "input_sha256": "ae5ae881227bd5b6e598fb56ba43211f39629941f575e3eeb4a30c92b6f169dd",
+      "output_sha256": "ae5ae881227bd5b6e598fb56ba43211f39629941f575e3eeb4a30c92b6f169dd",
+      "input_bytes": 472,
+      "output_bytes": 472,
+      "input_tokens": 108,
+      "output_tokens": 108,
+      "elapsed_ms": 0.015,
+      "messages": [
+        {
+          "role": "system",
+          "content": "Report observed facts, uncertainty and authorization limits."
+        },
+        {
+          "role": "user",
+          "content": "Inspect this fixture. Preserve failures and conditions."
+        },
+        {
+          "role": "assistant",
+          "content": null,
+          "tool_calls": [
+            {
+              "id": "fixture",
+              "type": "function",
+              "function": {
+                "name": "read_fixture",
+                "arguments": "{}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "fixture",
+          "content": "import os\nurl = \"https://example.invalid/a#fragment\"\n# Do not activate this candidate.\nprint(url)\n"
+        }
+      ]
+    },
+    {
+      "case": "code_hash_string",
+      "arm": "botte",
+      "gate": {
+        "passed": true,
+        "envelope_preserved": true,
+        "missing_protected": [],
+        "exact_required": true,
+        "exact_passed": true
+      },
+      "input_sha256": "ae5ae881227bd5b6e598fb56ba43211f39629941f575e3eeb4a30c92b6f169dd",
+      "output_sha256": "ae5ae881227bd5b6e598fb56ba43211f39629941f575e3eeb4a30c92b6f169dd",
+      "input_bytes": 472,
+      "output_bytes": 472,
+      "input_tokens": 108,
+      "output_tokens": 108,
+      "elapsed_ms": 0.016,
+      "messages": [
+        {
+          "role": "system",
+          "content": "Report observed facts, uncertainty and authorization limits."
+        },
+        {
+          "role": "user",
+          "content": "Inspect this fixture. Preserve failures and conditions."
+        },
+        {
+          "role": "assistant",
+          "content": null,
+          "tool_calls": [
+            {
+              "id": "fixture",
+              "type": "function",
+              "function": {
+                "name": "read_fixture",
+                "arguments": "{}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "fixture",
+          "content": "import os\nurl = \"https://example.invalid/a#fragment\"\n# Do not activate this candidate.\nprint(url)\n"
+        }
+      ]
+    },
+    {
+      "case": "code_hash_string",
+      "arm": "headroom",
+      "gate": {
+        "passed": true,
+        "envelope_preserved": true,
+        "missing_protected": [],
+        "exact_required": true,
+        "exact_passed": true
+      },
+      "input_sha256": "ae5ae881227bd5b6e598fb56ba43211f39629941f575e3eeb4a30c92b6f169dd",
+      "output_sha256": "ae5ae881227bd5b6e598fb56ba43211f39629941f575e3eeb4a30c92b6f169dd",
+      "input_bytes": 472,
+      "output_bytes": 472,
+      "input_tokens": 108,
+      "output_tokens": 108,
+      "elapsed_ms": 0.318,
+      "messages": [
+        {
+          "role": "system",
+          "content": "Report observed facts, uncertainty and authorization limits."
+        },
+        {
+          "role": "user",
+          "content": "Inspect this fixture. Preserve failures and conditions."
+        },
+        {
+          "role": "assistant",
+          "content": null,
+          "tool_calls": [
+            {
+              "id": "fixture",
+              "type": "function",
+              "function": {
+                "name": "read_fixture",
+                "arguments": "{}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "fixture",
+          "content": "import os\nurl = \"https://example.invalid/a#fragment\"\n# Do not activate this candidate.\nprint(url)\n"
+        }
+      ]
+    },
+    {
+      "case": "log_exact_repeats",
+      "arm": "original",
+      "gate": {
+        "passed": true,
+        "envelope_preserved": true,
+        "missing_protected": [],
+        "exact_required": false,
+        "exact_passed": true
+      },
+      "input_sha256": "925e65573cdc8586fa238fc4eda17995d351fe50eeffef3d8535e12d9cf12c31",
+      "output_sha256": "925e65573cdc8586fa238fc4eda17995d351fe50eeffef3d8535e12d9cf12c31",
+      "input_bytes": 3068,
+      "output_bytes": 3068,
+      "input_tokens": 581,
+      "output_tokens": 581,
+      "elapsed_ms": 0.012,
+      "messages": [
+        {
+          "role": "system",
+          "content": "Report observed facts, uncertainty and authorization limits."
+        },
+        {
+          "role": "user",
+          "content": "Inspect this fixture. Preserve failures and conditions."
+        },
+        {
+          "role": "assistant",
+          "content": null,
+          "tool_calls": [
+            {
+              "id": "fixture",
+              "type": "function",
+              "function": {
+                "name": "read_fixture",
+                "arguments": "{}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "fixture",
+          "content": "INFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\nINFO same synthetic event\n"
+        }
+      ]
+    },
+    {
+      "case": "log_exact_repeats",
+      "arm": "botte",
+      "gate": {
+        "passed": true,
+        "envelope_preserved": true,
+        "missing_protected": [],
+        "exact_required": false,
+        "exact_passed": true
+      },
+      "input_sha256": "925e65573cdc8586fa238fc4eda17995d351fe50eeffef3d8535e12d9cf12c31",
+      "output_sha256": "f7c4f44d7f75ea09077071e633dd7c960b0af0a20d22239f2fd2ed0fcb61d77d",
+      "input_bytes": 3068,
+      "output_bytes": 431,
+      "input_tokens": 581,
+      "output_tokens": 95,
+      "elapsed_ms": 0.038,
+      "messages": [
+        {
+          "role": "system",
+          "content": "Report observed facts, uncertainty and authorization limits."
+        },
+        {
+          "role": "user",
+          "content": "Inspect this fixture. Preserve failures and conditions."
+        },
+        {
+          "role": "assistant",
+          "content": null,
+          "tool_calls": [
+            {
+              "id": "fixture",
+              "type": "function",
+              "function": {
+                "name": "read_fixture",
+                "arguments": "{}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "fixture",
+          "content": "INFO same synthetic event\n[... 99 identical lines omitted ...]"
+        }
+      ]
+    },
+    {
+      "case": "log_exact_repeats",
+      "arm": "headroom",
+      "gate": {
+        "passed": true,
+        "envelope_preserved": true,
+        "missing_protected": [],
+        "exact_required": false,
+        "exact_passed": true
+      },
+      "input_sha256": "925e65573cdc8586fa238fc4eda17995d351fe50eeffef3d8535e12d9cf12c31",
+      "output_sha256": "1fc54660cd7579c5a399ad83e96db2394afc188856eb69be512f077da7ccee6a",
+      "input_bytes": 3068,
+      "output_bytes": 421,
+      "input_tokens": 581,
+      "output_tokens": 95,
+      "elapsed_ms": 5.69,
+      "messages": [
+        {
+          "role": "system",
+          "content": "Report observed facts, uncertainty and authorization limits."
+        },
+        {
+          "role": "user",
+          "content": "Inspect this fixture. Preserve failures and conditions."
+        },
+        {
+          "role": "assistant",
+          "content": null,
+          "tool_calls": [
+            {
+              "id": "fixture",
+              "type": "function",
+              "function": {
+                "name": "read_fixture",
+                "arguments": "{}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "fixture",
+          "content": "INFO same synthetic event\n... (repeated 100 times)\n"
+        }
+      ]
+    },
+    {
+      "case": "french_conditions",
+      "arm": "original",
+      "gate": {
+        "passed": true,
+        "envelope_preserved": true,
+        "missing_protected": [],
+        "exact_required": false,
+        "exact_passed": true
+      },
+      "input_sha256": "443d9b512d4edefe323b8d0f59a56341aa8e0adbe7cc0dcc3be4a6b01b5e0631",
+      "output_sha256": "443d9b512d4edefe323b8d0f59a56341aa8e0adbe7cc0dcc3be4a6b01b5e0631",
+      "input_bytes": 488,
+      "output_bytes": 488,
+      "input_tokens": 107,
+      "output_tokens": 107,
+      "elapsed_ms": 0.017,
+      "messages": [
+        {
+          "role": "system",
+          "content": "Report observed facts, uncertainty and authorization limits."
+        },
+        {
+          "role": "user",
+          "content": "Inspect this fixture. Preserve failures and conditions."
+        },
+        {
+          "role": "assistant",
+          "content": null,
+          "tool_calls": [
+            {
+              "id": "fixture",
+              "type": "function",
+              "function": {
+                "name": "read_fixture",
+                "arguments": "{}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "fixture",
+          "content": "Ne pas fusionner. Autorisation absente. Preuve encore incertaine.\nActiver uniquement après validation indépendante.\n"
+        }
+      ]
+    },
+    {
+      "case": "french_conditions",
+      "arm": "botte",
+      "gate": {
+        "passed": true,
+        "envelope_preserved": true,
+        "missing_protected": [],
+        "exact_required": false,
+        "exact_passed": true
+      },
+      "input_sha256": "443d9b512d4edefe323b8d0f59a56341aa8e0adbe7cc0dcc3be4a6b01b5e0631",
+      "output_sha256": "b62f1f84e9f56fce36399138544e8ba6f95522bcd0a1d45a0d312db62a04402c",
+      "input_bytes": 488,
+      "output_bytes": 486,
+      "input_tokens": 107,
+      "output_tokens": 105,
+      "elapsed_ms": 0.029,
+      "messages": [
+        {
+          "role": "system",
+          "content": "Report observed facts, uncertainty and authorization limits."
+        },
+        {
+          "role": "user",
+          "content": "Inspect this fixture. Preserve failures and conditions."
+        },
+        {
+          "role": "assistant",
+          "content": null,
+          "tool_calls": [
+            {
+              "id": "fixture",
+              "type": "function",
+              "function": {
+                "name": "read_fixture",
+                "arguments": "{}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "fixture",
+          "content": "Ne pas fusionner. Autorisation absente. Preuve encore incertaine.\nActiver uniquement après validation indépendante."
+        }
+      ]
+    },
+    {
+      "case": "french_conditions",
+      "arm": "headroom",
+      "gate": {
+        "passed": true,
+        "envelope_preserved": true,
+        "missing_protected": [],
+        "exact_required": false,
+        "exact_passed": true
+      },
+      "input_sha256": "443d9b512d4edefe323b8d0f59a56341aa8e0adbe7cc0dcc3be4a6b01b5e0631",
+      "output_sha256": "443d9b512d4edefe323b8d0f59a56341aa8e0adbe7cc0dcc3be4a6b01b5e0631",
+      "input_bytes": 488,
+      "output_bytes": 488,
+      "input_tokens": 107,
+      "output_tokens": 107,
+      "elapsed_ms": 0.325,
+      "messages": [
+        {
+          "role": "system",
+          "content": "Report observed facts, uncertainty and authorization limits."
+        },
+        {
+          "role": "user",
+          "content": "Inspect this fixture. Preserve failures and conditions."
+        },
+        {
+          "role": "assistant",
+          "content": null,
+          "tool_calls": [
+            {
+              "id": "fixture",
+              "type": "function",
+              "function": {
+                "name": "read_fixture",
+                "arguments": "{}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "fixture",
+          "content": "Ne pas fusionner. Autorisation absente. Preuve encore incertaine.\nActiver uniquement après validation indépendante.\n"
+        }
+      ]
+    }
+  ],
+  "measurement": "UTF-8 bytes; optional tokens of serialized messages, not provider usage",
+  "llm_calls": 0,
+  "model_quality": "not_evaluated",
+  "headroom": {
+    "status": "executed",
+    "version": "0.37.0",
+    "config": {
+      "compress_system_messages": false,
+      "protect_recent": 0,
+      "frozen_message_count": 3,
+      "kompress_model": "disabled"
+    },
+    "package_record_sha256": "968d11d5809a5659afeaf7a51778a78eaf0616e5a2e619faf33b9dac109a2823",
+    "recovery_loop": "failed-row deterministic probe only; LLM loop not evaluated"
+  },
+  "tokenizer": {
+    "status": "measured",
+    "name": "o200k_base",
+    "library": "tiktoken",
+    "version": "0.14.0"
+  }
+}

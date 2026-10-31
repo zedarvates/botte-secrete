@@ -36,7 +36,7 @@ def mcp_config(python_exe: str = "python", cwd: str = ".") -> dict:
     }
 
 
-# OpenAI-function-calling-shaped specs for the 5 tools the roadmap called out —
+# OpenAI-function-calling-shaped specs for the focused tools the roadmap called out —
 # the ones that matter for a second-brain / routing integration, not the full
 # ~35-tool MCP surface (that's what `find_skills`/MCP discovery is for).
 TOOL_SCHEMAS: list[dict] = [
@@ -103,6 +103,23 @@ TOOL_SCHEMAS: list[dict] = [
             "properties": {"scan_subnet": {"type": "boolean", "default": False}},
         },
     },
+    {
+        "name": "botte_qa_agent_run",
+        "description": "Emit a privacy-safe Hermes or Codex run outcome. Backend "
+                       "self-reports remain unverified; external evidence is required "
+                       "before a quality label can be promoted.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "project": {"type": "string", "default": "."},
+                "manifest": {
+                    "type": "object",
+                    "description": "A botte.agent-run/v1 manifest.",
+                },
+            },
+            "required": ["manifest"],
+        },
+    },
 ]
 
 _NAMES = {spec["name"] for spec in TOOL_SCHEMAS}
@@ -156,6 +173,13 @@ def dispatch(name: str, args: dict[str, Any]) -> str:
             from skills.infra_advisor import advise
             return json.dumps(advise(scan_subnet=bool(args.get("scan_subnet", False))),
                               ensure_ascii=False)
+
+        if name == "botte_qa_agent_run":
+            from skills.trajectory.agent_run import emit_agent_run
+            return json.dumps(
+                emit_agent_run(args["manifest"], project_root=args.get("project", ".")),
+                ensure_ascii=False,
+            )
     except Exception as e:
         return json.dumps({"error": f"{type(e).__name__}: {e}"})
 

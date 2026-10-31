@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/zedarvates/botte-secrete/docs/schemas/memory-provenance.schema.json",
+  "title": "Botte Memory Hub provenance",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "source_type",
+    "run_id",
+    "timestamp",
+    "confidence",
+    "trust_class",
+    "executable_instruction"
+  ],
+  "properties": {
+    "source_type": {
+      "enum": ["user", "repo", "web", "tool", "agent", "generated"]
+    },
+    "source_uri": {"type": "string", "maxLength": 512},
+    "source_id": {"type": "string", "maxLength": 512},
+    "run_id": {"type": "string", "minLength": 1, "maxLength": 128},
+    "timestamp": {"type": "number", "exclusiveMinimum": 0},
+    "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+    "trust_class": {
+      "enum": ["trusted_user", "external_observation", "generated_untrusted"]
+    },
+    "executable_instruction": {"const": false}
+  }
+}
