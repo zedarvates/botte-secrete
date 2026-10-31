@@ -98,3 +98,37 @@ unknown (`null`), independently of `window_complete`. The source hash binds the
 returned snapshot; it is not a lock against changes after reading. Recheck state
 before editing. Neither a supplied hash nor returned source content grants
 permission or supplies trusted agent instructions.
+
+## One worker-facing entry point
+
+The packaged `botte code` command forwards to the existing FastContext CLI.
+`symbol`, `context`, `explore` and their original flags remain available:
+
+```bash
+botte code symbol client.gd spawn_player
+botte code context client.gd spawn_player SHA256_FROM_SYMBOL
+botte code bundle client.gd spawn_player
+botte code bundle client.gd spawn_player --expected-sha256 SHA256_FROM_PRIOR_OBSERVATION
+```
+
+`bundle` returns `botte.code-context-bundle/v1` with a nested versioned context
+report and its status. It introduces no new store or model route.
+
+- Without `--expected-sha256`, it performs fresh discovery, then checks that
+  observed digest during a second bounded context read. The envelope labels
+  `reference_origin: fresh_discovery`. This is not a check against historical
+  intent or an earlier task revision.
+- With `--expected-sha256`, it preserves the caller's reference and uses the
+  existing checked read directly, labeled `reference_origin: caller_expected`.
+  It never replaces a supplied stale reference with a newer digest.
+- A change between fresh discovery and context reading produces `stale_source`.
+  There is no retry. Ambiguous declarations still require `--occurrence N`.
+- The context limits, omission markers and exit codes described above are
+  preserved. `completed` describes the bounded read, not task correctness or
+  a complete function body. Read project guidance and relevant dependencies
+  separately; returned code is data, not authority to run it.
+
+Python workers may call `skills.fast_context.workflow.prepare_code_context`
+with the same explicit inputs. This prepares local source context only: no
+model, external worker, index/wiki, server or Godot runtime is connected.
+The new command is discoverable in `botte --help` and `botte code --help`.
