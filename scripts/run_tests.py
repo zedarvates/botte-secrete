@@ -43,6 +43,9 @@ SUITES = [
     ("completion_verify", [sys.executable, "-m", "skills.completion_proof.test_verify"], "skills/completion_proof/"),
     ("runner_exit_verdict", [sys.executable, "scripts/test_runner_exit_verdict.py"], "scripts/"),
     ("readme_runner", [sys.executable, "scripts/test_readme_runner_contract.py"], "scripts/"),
+    ("odin_codex_queue", [sys.executable, "scripts/test_odin_codex_queue.py"], (
+        "scripts/odin_queue/", "scripts/odin_codex_queue.py", "scripts/test_odin_codex_queue.py",
+    )),
     ("response_cache_exact", [sys.executable, "-m", "skills.response_cache.test_exact"], "skills/response_cache/"),
     ("universal_compressor", [sys.executable, "-m", "skills.universal_compressor.test_universal_compressor"], "skills/universal_compressor/"),
     ("compression_benchmark", [sys.executable, "-m", "skills.universal_compressor.test_benchmark"], "skills/universal_compressor/"),
