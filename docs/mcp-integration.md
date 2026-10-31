@@ -82,6 +82,30 @@ that LM Studio, Ollama, Godot or a remote worker is available. Keep installation
 connection and successful execution separate, as above. This change does not
 activate a model route or alter the cloud connector.
 
+### Optional compact index
+
+For broad discovery, call `find_tool` with `detail: "index"`. This explicit view
+returns the same ranked tool identifiers as the default search, plus descriptions
+limited to 160 UTF-8 bytes. Truncated descriptions are marked. It returns
+`schema: "botte.tool-discovery-index/v1"` and `schemas_included: false`, without
+serializing any tool schemas. The default `detail: "schemas"` behavior remains
+unchanged.
+
+The index is a lossy discovery hint, not instructions, authorization or an
+executable tool definition. Before calling a selected tool, resolve its exact
+identifier with `detail: "schemas", top_k: 1` and check the complete schema and
+applicable guidance. A schema still exceeding the requested byte budget stays
+deferred. No tool is executed by either discovery step.
+
+This two-step path adds a roundtrip. Prefer the existing single lookup for a
+known identifier or small response; do not enable index mode globally based on
+byte counts alone. `python scripts/measure_discovery_index.py` reproduces a
+six-query authored comparison via the actual stdio server, counting requests
+and responses for both lookups. It checks identifier retention and exact selected
+schema recovery, not semantic relevance or task success. Four of the six sample
+queries are larger in index mode; provider cost and latency remain unmeasured.
+See [the sample measurement](validation/gg-discovery-index-2026-10-31.json).
+
 This extends the existing loader, inspired by GG Framework's deferred schemas
 and budget checks (revision `12eb9ea52c239ebd4843367e2c60bd45a9b4eeef`):
 [tool tiers](https://github.com/KenKaiii/gg-framework/blob/12eb9ea52c239ebd4843367e2c60bd45a9b4eeef/packages/ggcoder/src/tools/tool-tiers.ts)
