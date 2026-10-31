@@ -20,6 +20,7 @@ from skills.botte_nn.cli import (
     _find_model, _predict_python, _MODEL_META, _MODELS_DIR,
     do_predict, do_list, do_which,
 )
+from skills.botte_nn.features import FeatureSchemaMismatch
 
 
 def _ok(msg, cond, state):
@@ -66,6 +67,9 @@ def main() -> int:
                 all(isinstance(v, float) for v in output), state)
             _ok(f"{name}: softmax sums to ~1.0 (if applicable)",
                 abs(sum(output) - 1.0) < 0.01, state)
+        except FeatureSchemaMismatch:
+            _ok(f"{name}: incompatible historical feature schema abstains",
+                name == "semantic_cache_hit_predictor", state)
         except Exception as e:
             _ok(f"{name}: predict throws '{e}'", False, state)
 

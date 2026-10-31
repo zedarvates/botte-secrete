@@ -21,7 +21,9 @@ force_utf8()
 
 REPO = Path(__file__).resolve().parent.parent
 TIMEOUT = 30
-CHECKUP_TIMEOUT = 90  # Full repository scan can exceed 30 s on Python 3.10 CI.
+# Checkup scans the supplied repository (AST, taint and patterns). The ordinary
+# command-smoke deadline is too short for this growing repository on slower CI.
+CHECKUP_TIMEOUT = 120
 SAFE_BOTTE_COMMANDS = {
     "--help", "belt", "checkup", "discover", "doctor", "gain", "harvest",
     "upstreams",
@@ -93,6 +95,15 @@ def safe_argv(command: str) -> list[str] | None:
     return None
 
 
+def command_timeout(argv: list[str]) -> int:
+    """Keep a bounded repository-scan allowance separate from ordinary smokes."""
+    executable = Path(argv[0]).name.lower()
+    if (argv[1:3] == ["-m", "skills.checkup.cli"] or
+            executable in {"botte", "botte.exe"} and argv[1:2] == ["checkup"]):
+        return CHECKUP_TIMEOUT
+    return TIMEOUT
+
+
 def main():
     readme = REPO / "README.md"
     if not readme.exists():
@@ -108,13 +119,17 @@ def main():
     declared = declared_match.group(1) if declared_match else None
     public_readmes = [readme, REPO / "README.fr.md"]
     badge = f"version-{declared}-" if declared else ""
-    if (declared == __version__
-            and all(badge in path.read_text(encoding="utf-8")
-                    for path in public_readmes)):
+    mismatched_readmes = [
+        path.name for path in public_readmes
+        if badge not in path.read_text(encoding="utf-8")
+    ]
+    if declared == __version__ and not mismatched_readmes:
         passed += 1
     else:
         failed += 1
         print(f"  FAIL version metadata: package={__version__}, pyproject={declared}")
+        for name in mismatched_readmes:
+            print(f"    {name}: expected version badge {badge!r}")
 
     commands = extract_commands(readme)
     for cmd in commands:
@@ -125,24 +140,28 @@ def main():
         if argv is None:
             skipped += 1
             continue
+        deadline = command_timeout(argv)
         try:
-            timeout = (CHECKUP_TIMEOUT if argv[1:3] == ["-m", "skills.checkup.cli"]
-                       else TIMEOUT)
             r = subprocess.run(argv, shell=False, cwd=REPO, capture_output=True,
                                text=True, encoding="utf-8", errors="replace",
-                               timeout=timeout,
+                               timeout=deadline,
                                env={**os.environ, "PYTHONPATH": str(REPO)})
             if r.returncode == 0:
                 passed += 1
             else:
                 failed += 1
-                print(f"  FAIL {cmd[:80]}")
-        except subprocess.TimeoutExpired:
+                print(f"  FAIL {cmd[:80]} (exit={r.returncode})")
+        except Exception as exc:
             failed += 1
-            print(f"  TIMEOUT ({timeout}s) {cmd[:80]}")
-        except OSError as exc:
-            failed += 1
-            print(f"  ERR  {cmd[:80]}: {exc}")
+            detail = type(exc).__name__
+            if isinstance(exc, subprocess.TimeoutExpired):
+                detail += f", timeout={exc.timeout}s"
+            # Keep command failures actionable without printing captured output,
+            # environment values or arbitrary exception messages.
+            if isinstance(exc, subprocess.TimeoutExpired):
+                print(f"  TIMEOUT after {deadline}s  {cmd[:80]} ({detail})")
+            else:
+                print(f"  ERR ({detail})  {cmd[:80]}")
 
     print(f"{passed} passed, {failed} failed, {skipped} skipped")
     return 0 if failed == 0 else 1

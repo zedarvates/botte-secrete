@@ -1,0 +1,258 @@
+"""Read retained observations by ID; never follow recorded resource references."""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import os
+import re
+import stat
+from copy import deepcopy
+from pathlib import Path, PurePosixPath
+
+from skills.capabilities.effects import _unique_object
+from skills.capabilities.observations import MAX_REPORT_BYTES, summarize, validate_report
+
+MAX_DOCUMENT_BYTES = 16 * 1024 * 1024
+MAX_OVERVIEW_RESULTS = 128
+_GROUPS = {"calls": "status", "observations": "comparison", "network": "status"}
+
+
+def _request(selectors, expected_sha256):
+    if expected_sha256 is not None and (not isinstance(expected_sha256, str)
+                                        or not re.fullmatch(r"[0-9a-f]{64}", expected_sha256)):
+        raise ValueError("expected_sha256 must be a lowercase SHA-256 hex digest")
+    if selectors is None:
+        return None
+    if not isinstance(selectors, list) or not 1 <= len(selectors) <= 16:
+        raise ValueError("selectors must be a list of 1 to 16 explicit record paths")
+    parsed = {}
+    for selector in selectors:
+        if not isinstance(selector, str) or len(selector) > 16416:
+            raise ValueError("invalid evidence selector")
+        parts = selector.split("/")
+        if (len(parts) != 3 or parts[0] or parts[1] not in {*_GROUPS, "declarations"}
+                or not parts[2] or re.search(r"~(?![01])", parts[2])):
+            raise ValueError("select /calls/ID, /observations/ID, /network/ID or /declarations/DIGEST")
+        identity = parts[2].replace("~1", "/").replace("~0", "~")
+        if len(identity) > 8192 or (parts[1] == "declarations"
+                                   and not re.fullmatch(r"[0-9a-f]{64}", identity)):
+            raise ValueError("invalid evidence record ID")
+        parsed[selector] = (parts[1], identity)
+    return parsed
+
+
+def _unavailable(reason):
+    return {"selection_status": "unavailable", "reason": reason,
+            "evidence_sha256": None, "matches_expected": None, "selected": {}}
+
+
+def _project(report, parsed, expected_sha256):
+    try:
+        raw = json.dumps(report, sort_keys=True, ensure_ascii=False, allow_nan=False,
+                         separators=(",", ":")).encode("utf-8")
+        if len(raw) > MAX_REPORT_BYTES:
+            return _unavailable("evidence_too_large")
+        errors = validate_report(report)
+    except (ValueError, TypeError, RecursionError):
+        return _unavailable("invalid_evidence")
+    if errors:
+        return {**_unavailable("invalid_evidence"), "error_count": len(errors)}
+    actual = hashlib.sha256(raw).hexdigest()
+    matches = actual == expected_sha256 if expected_sha256 is not None else None
+    result = {"selection_status": "changed" if matches is False else "indexed",
+              "observation_schema": report["schema"], "run_id": report["run_id"],
+              "evidence_sha256": actual, "matches_expected": matches, "selected": {}}
+    if matches is False:
+        return result
+    records = {group: {r["id"]: r for r in report.get(group, [])} for group in _GROUPS}
+    records["declarations"] = report["declarations"]
+    if parsed is not None:
+        missing = [s for s, (group, identity) in parsed.items() if identity not in records[group]]
+        if missing:
+            return {**result, "selection_status": "not_found", "missing_selectors": missing}
+        selected = {s: records[group][identity] for s, (group, identity) in parsed.items()}
+        linked = {}
+        for selector, (group, identity) in parsed.items():
+            record = selected[selector]
+            call_id = (record["parent_id"] if group == "calls" else
+                       record["call_id"] if group in {"observations", "network"} else None)
+            while call_id is not None and call_id not in linked:
+                call = records["calls"][call_id]
+                if ("calls", call_id) not in parsed.values():
+                    linked[call_id] = call
+                # validate_report requires every parent to precede its child.
+                call_id = call["parent_id"]
+        result.update(selection_status="selected", selected=selected, linked_calls=linked)
+    else:
+        index = {}
+        for group, field in _GROUPS.items():
+            if group not in report:  # v1 has no network collection.
+                continue
+            index[group] = {}
+            for record in report[group]:
+                index[group].setdefault(record[field], []).append(record["id"])
+        index["declarations"] = list(report["declarations"])
+        result["index"] = index
+    result.update(context=report["context"], process=report["process"],
+                  problems=report["problems"], limitations=report["limitations"],
+                  summary=summarize(report), task_outcome="unverified")
+    return deepcopy(result)
+
+
+def select_evidence(report: object, selectors: list[str] | None = None, *,
+                    expected_sha256: str | None = None) -> dict:
+    """Project one complete v1/v2 companion supplied by the caller, without I/O.
+
+    Omit selectors for an ID index grouped by recorded status/comparison. Detail
+    reads preserve entire records and their ancestor calls, plus run-wide limits.
+    The digest binds this companion, not its author or current resource state.
+    """
+    return _project(report, _request(selectors, expected_sha256), expected_sha256)
+
+
+def _execution_overview(document, source):
+    """Recompute cues from retained results, never from a saved outcome verdict."""
+    from skills.capabilities.review import METHOD, after
+    states = {"ran": 0, "blocked": 0, "skipped": 0, "failed": 0}
+    if (not isinstance(document, dict) or not isinstance(document.get("goal"), str)
+            or document.get("mode") not in ("safe_only", "confirmed", "dry_run")
+            or not isinstance(document.get("results"), list)
+            or not 1 <= len(document["results"]) <= MAX_OVERVIEW_RESULTS):
+        return _unavailable("invalid_execution_report")
+    for step in document["results"]:
+        if (not isinstance(step, dict) or not isinstance(step.get("status"), str)
+                or step["status"] not in states
+                or any(not isinstance(step.get(field), str) for field in ("capability", "command"))):
+            return _unavailable("invalid_execution_result")
+        status, code = step["status"], step.get("exit_code")
+        if ("exit_code" not in step
+                or (status in {"ran", "failed"} and (type(code) is not int or (code == 0) != (status == "ran")))
+                or (status in {"blocked", "skipped"} and code is not None)
+                or (document["mode"] == "dry_run" and status != "skipped")):
+            return _unavailable("inconsistent_execution_status")
+        states[status] += 1
+    counts = document.get("summary")
+    if (not isinstance(counts, dict) or counts != states
+            or any(type(value) is not int for value in counts.values())):
+        return _unavailable("inconsistent_execution_summary")
+    policy = {}
+    if "stop_on_failure" in document or "stopped_after_result_index" in document:
+        expected_stop = next((i for i, step in enumerate(document["results"])
+                              if step["status"] == "failed"), None)
+        stopped = document.get("stopped_after_result_index")
+        if (document.get("stop_on_failure") is not True
+                or "stopped_after_result_index" not in document
+                or (stopped is not None and type(stopped) is not int)
+                or stopped != expected_stop
+                or (expected_stop is not None and any(step["status"] != "skipped"
+                    for step in document["results"][expected_stop + 1:]))):
+            return _unavailable("inconsistent_stop_policy")
+        policy = {"stop_on_failure": True, "stopped_after_result_index": stopped}
+    try:
+        raw = json.dumps(document, sort_keys=True, ensure_ascii=False, allow_nan=False,
+                         separators=(",", ":")).encode("utf-8")
+    except (ValueError, TypeError, RecursionError):
+        return _unavailable("invalid_execution_report")
+    rows = []
+    for position, step in enumerate(document["results"]):
+        prior = step.get("review_before")
+        prior = ({key: value for key, value in prior.items() if isinstance(value, str)
+                  and key in {"capability_id", "declaration_sha256", "declaration"}}
+                 if isinstance(prior, dict) else {})
+        review = after(step, prior)
+        if "evidence_ref" in review:
+            review["evidence_ref"] = {"source": source, "result_index": position,
+                                      "expected_sha256": review["evidence_sha256"]}
+        rows.append({"result_index": position, **{key: step[key] for key in
+                     ("capability", "command", "status", "exit_code")}, "review_after": review})
+    return {"selection_status": "overview", "source": source,
+            "document_sha256": hashlib.sha256(raw).hexdigest(), "review_method": METHOD,
+            "goal": document["goal"], "mode": document["mode"], **policy, "summary": states, "results": rows}
+
+
+def _read_document(path):
+    def identity(info):
+        return info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns, info.st_ctime_ns
+    before = path.lstat()
+    if not stat.S_ISREG(before.st_mode) or before.st_size > MAX_DOCUMENT_BYTES:
+        raise ValueError("expected bounded regular report file")
+    flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0)
+    with os.fdopen(os.open(path, flags), "rb") as stream:
+        opened = os.fstat(stream.fileno())
+        if not stat.S_ISREG(opened.st_mode) or identity(before) != identity(opened):
+            raise ValueError("report changed while opening")
+        raw = stream.read(MAX_DOCUMENT_BYTES + 1)
+        after = os.fstat(stream.fileno())
+    if (len(raw) > MAX_DOCUMENT_BYTES or identity(opened) != identity(after)
+            or identity(after) != identity(path.lstat())):
+        raise ValueError("report changed while reading or exceeds size limit")
+    def reject_constant(_):
+        raise ValueError("non-finite JSON number")
+    return json.loads(raw.decode("utf-8"), object_pairs_hook=_unique_object,
+                      parse_constant=reject_constant)
+
+
+def read_evidence(path: Path, selectors: list[str] | None = None, *,
+                  result_index: int | None = None, expected_sha256: str | None = None,
+                  overview: bool = False) -> dict:
+    """Read a standalone companion or an explicitly indexed saved execution step.
+
+    The document is bounded to 16 MiB, the selected canonical companion to 2 MiB.
+    overview=True reads all execution result cues without selection options.
+    Other execution fields and all embedded paths are never followed.
+    """
+    parsed = _request(selectors, expected_sha256)
+    if result_index is not None and (type(result_index) is not int or result_index < 0):
+        raise ValueError("result_index must be a non-negative integer")
+    if type(overview) is not bool:
+        raise ValueError("overview must be a boolean")
+    if overview and any(value is not None for value in (selectors, result_index, expected_sha256)):
+        raise ValueError("overview cannot be combined with selectors, result_index or expected_sha256")
+    try:
+        document = _read_document(Path(path))
+    except (OSError, ValueError, TypeError, RecursionError, RuntimeError):
+        return _unavailable("unreadable_document")
+    if overview:
+        return _execution_overview(document, str(path))
+    report = document
+    if result_index is not None:
+        results = document.get("results") if isinstance(document, dict) else None
+        if (not isinstance(results, list) or result_index >= len(results)
+                or not isinstance(results[result_index], dict)):
+            return _unavailable("result_not_found")
+        report = results[result_index].get("effects_observed")
+        if report is None:
+            return _unavailable("not_observed")
+    elif isinstance(document, dict) and "results" in document:
+        return _unavailable("result_index_required")
+    result = _project(report, parsed, expected_sha256)
+    result.update(source=str(path), result_index=result_index)
+    return result
+
+
+def read_saved_evidence(source: str, selectors: list[str] | None = None, *,
+                        result_index: int | None = None, expected_sha256: str | None = None,
+                        overview: bool = False) -> dict:
+    """MCP entry: canonical .botte/reports/<file>.json in the server working tree."""
+    if not isinstance(source, str) or not source or "\\" in source or ":" in source:
+        raise ValueError("source must be a canonical .botte/reports/<file>.json path")
+    relative = PurePosixPath(source)
+    if (relative.parts[:2] != (".botte", "reports") or len(relative.parts) != 3
+            or relative.suffix != ".json" or relative.as_posix() != source):
+        raise ValueError("source must be a canonical .botte/reports/<file>.json path")
+    path = Path.cwd().resolve().joinpath(*relative.parts)
+    try:
+        if path.resolve() != path:
+            raise ValueError("report aliases are unsupported; use a canonical saved report")
+    except (OSError, RuntimeError) as exc:
+        raise ValueError("report source cannot be resolved") from exc
+    result = read_evidence(path, selectors, result_index=result_index,
+                           expected_sha256=expected_sha256, overview=overview)
+    result["source"] = source
+    if result["selection_status"] == "overview":
+        for step in result["results"]:
+            reference = step["review_after"].get("evidence_ref")
+            if reference is not None:
+                reference["source"] = source
+    return result

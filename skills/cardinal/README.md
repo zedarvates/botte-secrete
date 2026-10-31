@@ -37,16 +37,18 @@ Chaque agent a un pré-prompt adversarial :
 
 ## Workflow
 
+The host orchestrates the role prompts and produces the Blue/Red reports.
+To consolidate those existing reports with the provided script:
+
 ```bash
-# 1. Équipe Bleue fait son travail
-botte mousquetaires run ~/projects/mon-projet --output ./blue-reports
-
-# 2. Équipe Rouge attaque
-botte cardinal run ~/projects/mon-projet --blue-reports ./blue-reports --output ./red-reports
-
-# 3. Confrontation
-botte cardinal confront --blue ./blue-reports --red ./red-reports
+python skills/cardinal/scripts/cardinal_confront.py ./blue-reports ./red-reports
 ```
+
+See [SKILL.md](SKILL.md) for required files and accepted field aliases, and
+[effects.json](effects.json) for consequences and reuse limits. Incomplete or
+malformed inputs return exit code 2 without replacing a prior confrontation.
+The score summarizes supplied findings; it does not authenticate the reviews
+or establish that their tests ran. A zero exit also covers unfavorable verdicts.
 
 ## Ce que chaque agent cherche
 

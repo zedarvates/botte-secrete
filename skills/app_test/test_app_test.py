@@ -10,9 +10,13 @@ here; we test the generator and the spec contract, which are deterministic.)
 from __future__ import annotations
 
 import json
+import io
+import subprocess
 import sys
 import tempfile
+from contextlib import redirect_stdout
 from pathlib import Path
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
@@ -69,7 +73,8 @@ def main() -> int:
         finally:
             gen.find_sikulix = _orig
         _ok("run() generates the script + reports runner-absent gracefully",
-            r.get("ran") is False and Path(r["script"]).exists(), state)
+            r.get("ran") is False and r.get("status") == "not_run"
+            and r.get("passed") is False and Path(r["script"]).exists(), state)
 
     # artifacts: step parsing, log tailing, HTML report
     from skills.app_test import artifacts as art
@@ -88,6 +93,89 @@ def main() -> int:
         htmltxt = rpt.read_text(encoding="utf-8")
         _ok("html_report writes a verdict + steps + logs",
             "FAIL (1)" in htmltxt and "click b.png" in htmltxt and "boom" in htmltxt, state)
+
+    # Verdicts require coherent execution evidence. These transcripts model the
+    # runner contract only; neither these tests nor their mocks drive a GUI.
+    cases = [
+        ("empty output", "", 0, "incomplete"),
+        ("crash without markers", "runner crashed\n", 0, "incomplete"),
+        ("nonzero exit with zero errors", "RESULT: 0 errors\n", 1, "failed"),
+        ("failed step with zero errors", "STEP 0 FAIL: type\nRESULT: 0 errors\n", 0, "failed"),
+        ("failed step without result", "STEP 0 FAIL: click\n", 0, "failed"),
+        ("positive result", "RESULT: 1 errors\n", 0, "failed"),
+        ("conflicting results", "RESULT: 1 errors\nRESULT: 0 errors\n", 0, "failed"),
+        ("duplicate zero results", "RESULT: 0 errors\nRESULT: 0 errors\n", 0, "incomplete"),
+        ("embedded result", "[log] RESULT: 0 errors\n", 0, "incomplete"),
+        ("trailing result text", "RESULT: 0 errors ignored\n", 0, "incomplete"),
+        ("oversized result count", "RESULT: " + "9" * 4301 + " errors\n", 0, "incomplete"),
+        ("oversized failing step index", "STEP " + "9" * 4301 + " FAIL: click\nRESULT: 0 errors\n", 0, "failed"),
+        ("unknown exit", "RESULT: 0 errors\n", None, "incomplete"),
+        ("complete action-only run", "RESULT: 0 errors\n", 0, "passed"),
+        ("complete assertion run", "STEP 0 OK: visible a.png\nRESULT: 0 errors\n", 0, "passed"),
+        ("Windows transcript", "STEP 0 OK: visible a.png\r\nRESULT: 0 errors\r\n", 0, "passed"),
+    ]
+    for label, output, exit_code, expected in cases:
+        verdict = art.evaluate_run(output, exit_code=exit_code)
+        _ok(f"verdict: {label}", verdict["status"] == expected
+            and verdict["passed"] is (expected == "passed"), state)
+    huge_steps = art.parse_steps("STEP " + "9" * 4301 + " FAIL: click\n")
+    _ok("oversized step index is omitted without losing failure evidence",
+        huge_steps == [{"index": None, "index_omitted": True,
+                        "status": "FAIL", "detail": "click"}], state)
+
+    with tempfile.TemporaryDirectory() as d:
+        sp = Path(d) / "spec.json"
+        sp.write_text(json.dumps(SPEC), encoding="utf-8")
+        for label, output, exit_code, expected in cases:
+            if exit_code is None:
+                continue
+            proc = subprocess.CompletedProcess([], exit_code, output, "")
+            with patch.object(gen, "find_sikulix", return_value="test-runner"), \
+                    patch.object(gen.subprocess, "run", return_value=proc):
+                result = run(sp, out_dir=d)
+            text = Path(result["report"]).read_text(encoding="utf-8")
+            title = {"passed": "PASS", "failed": "FAIL", "incomplete": "INCOMPLETE"}[expected]
+            _ok(f"API and HTML agree: {label}", result["status"] == expected
+                and result["passed"] is (expected == "passed")
+                and f'<span class="v">{title}' in text, state)
+
+        with patch.object(gen, "find_sikulix", return_value="test-runner"), \
+                patch.object(gen.subprocess, "run", side_effect=OSError("cannot start")):
+            result = run(sp, out_dir=d)
+        _ok("launch error is not_run", result["status"] == "not_run"
+            and result["ran"] is False and result["passed"] is False, state)
+        with patch.object(gen, "find_sikulix", return_value="test-runner"), \
+                patch.object(gen.subprocess, "run", side_effect=subprocess.TimeoutExpired([], 600)):
+            result = run(sp, out_dir=d)
+        _ok("timeout is incomplete", result["status"] == "incomplete"
+            and result["ran"] is True and result["passed"] is False, state)
+
+        rpt = art.html_report("unknown-exit", output="RESULT: 0 errors\n",
+                              out_path=Path(d) / "standalone.html")
+        _ok("standalone HTML needs observed exit code",
+            '<span class="v">INCOMPLETE</span>' in rpt.read_text(encoding="utf-8"), state)
+        rpt = art.html_report("not-started", output="", ran=False,
+                              out_path=Path(d) / "not-run.html")
+        _ok("HTML can report not_run",
+            '<span class="v">NOT RUN</span>' in rpt.read_text(encoding="utf-8"), state)
+        rpt = art.html_report("supplied-failure", output="RESULT: 0 errors\n", exit_code=0,
+                              steps=[{"index": 0, "status": "FAIL", "detail": "provided failure"}],
+                              out_path=Path(d) / "supplied-failure.html")
+        _ok("supplied failure rows cannot produce HTML PASS",
+            '<span class="v">FAIL (1)</span>' in rpt.read_text(encoding="utf-8"), state)
+        _ok("supplied empty steps cannot hide output failures",
+            art.evaluate_run("STEP 0 FAIL: click\nRESULT: 0 errors\n", exit_code=0,
+                             steps=[])["status"] == "failed", state)
+
+    from skills.app_test import cli
+    for status, ran, passed, expected in (("passed", True, True, 0),
+                                         ("failed", True, False, 1),
+                                         ("incomplete", True, False, 2),
+                                         ("not_run", False, False, 2)):
+        with patch.object(cli, "run", return_value={"status": status, "ran": ran, "passed": passed}), \
+                redirect_stdout(io.StringIO()):
+            code = cli.main(["run", "unused.json"])
+        _ok(f"CLI exit reflects {status}", code == expected, state)
 
     # invalid specs rejected
     for bad in ({"steps": [{"do": "frobnicate"}]},

@@ -15,6 +15,7 @@ Signals (cheap, deterministic, no LLM call):
 from __future__ import annotations
 
 import re
+import math
 from dataclasses import dataclass
 
 from skills.tiered_router import Tier, TASK_TIER
@@ -105,12 +106,27 @@ DEFAULT_THRESHOLDS = [0.08, 0.30, 0.55, 0.80]
 _THRESHOLDS_PATH = __import__("pathlib").Path.home() / ".botte" / "routing-thresholds.json"
 
 
+def validate_thresholds(values) -> list[float]:
+    """Require four finite numeric boundaries ordered within the score range."""
+    if (not isinstance(values, (list, tuple)) or len(values) != 4
+            or any(isinstance(x, bool) or not isinstance(x, (int, float)) for x in values)):
+        raise ValueError("thresholds must contain four finite numbers")
+    try:
+        thresholds = [float(x) for x in values]
+    except (ValueError, OverflowError) as exc:
+        raise ValueError("thresholds must contain four finite numbers") from exc
+    if (not all(math.isfinite(x) and 0 <= x <= 1 for x in thresholds)
+            or not all(a < b for a, b in zip(thresholds, thresholds[1:]))):
+        raise ValueError("thresholds must satisfy 0 <= free < local < cheap < standard <= 1")
+    return thresholds
+
+
 def load_thresholds() -> list:
     try:
         import json
-        t = json.loads(_THRESHOLDS_PATH.read_text(encoding="utf-8")).get("thresholds")
-        if isinstance(t, list) and len(t) == 4:
-            return [float(x) for x in t]
+        document = json.loads(_THRESHOLDS_PATH.read_text(encoding="utf-8"))
+        if isinstance(document, dict):
+            return validate_thresholds(document.get("thresholds"))
     except (OSError, ValueError, TypeError):
         pass
     return list(DEFAULT_THRESHOLDS)

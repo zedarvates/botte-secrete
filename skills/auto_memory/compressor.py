@@ -6,25 +6,27 @@ Inspired by WM v2 (noise injection + bottleneck for generalization).
 
 from __future__ import annotations
 
-import re
 import json
+import re
 from collections import Counter
-from typing import Any
 
 from skills.auto_memory.memory_bank import MemoryBank, MemoryEntry
 
 
 def compress_memories(bank: MemoryBank, threshold: int = 3) -> int:
-    """Find and compress similar memories, returning count of merges."""
+    """Find and compress similar trusted memories, returning count of merges.
+
+    Quarantined entries are evidence awaiting review. They must not be merged,
+    rewritten, or deleted by an automatic noise-reduction pass because doing so
+    can destroy provenance or accidentally promote attacker-controlled content.
+    """
     merged = 0
-    entries = list(bank._index.values())
+    entries = [entry for entry in bank._index.values() if not entry.quarantined]
     seen: dict[str, MemoryEntry] = {}
 
     for entry in entries:
-        # Create a normalized key for similarity
         norm_key = _normalize_key(entry.key)
         if norm_key in seen:
-            # Merge into existing
             existing = seen[norm_key]
             existing.tags = list(set(existing.tags) | set(entry.tags))
             existing.access_count += entry.access_count
@@ -40,16 +42,15 @@ def compress_memories(bank: MemoryBank, threshold: int = 3) -> int:
 
 def _normalize_key(key: str) -> str:
     """Normalize a key for similarity matching."""
-    # Remove numeric suffixes, normalize separators
     return re.sub(r'_\d+$', '', key.lower()).replace('-', '_')
 
 
-def extract_patterns(entries: list[MemoryEntry]) -> list[dict]:
-    """Extract common patterns from memory entries."""
+def extract_patterns(entries: list[MemoryEntry], *, include_quarantined: bool = False) -> list[dict]:
+    """Extract common patterns without consuming quarantined text by default."""
     patterns = []
-    text_entries = [e for e in entries if isinstance(e.value, str)]
+    eligible = entries if include_quarantined else [e for e in entries if not e.quarantined]
+    text_entries = [e for e in eligible if isinstance(e.value, str)]
 
-    # Find common substrings
     all_text = "\n".join(e.value for e in text_entries if isinstance(e.value, str))
     word_counts = Counter(all_text.split())
     common_words = [w for w, c in word_counts.most_common(10) if c > 1]
@@ -57,7 +58,6 @@ def extract_patterns(entries: list[MemoryEntry]) -> list[dict]:
     if common_words:
         patterns.append({"type": "common_words", "words": common_words[:5]})
 
-    # Find repeated structures (e.g., JSON keys)
     json_keys = set()
     for e in text_entries:
         try:
@@ -74,8 +74,11 @@ def extract_patterns(entries: list[MemoryEntry]) -> list[dict]:
 
 
 def bottleneck_compress(bank: MemoryBank, keep_pct: float = 0.3) -> int:
-    """Reduce memory by keeping only top confidence * access_count entries."""
-    entries = list(bank._index.values())
+    """Reduce non-quarantined memory while preserving review evidence."""
+    entries = [entry for entry in bank._index.values() if not entry.quarantined]
+    if not entries:
+        return 0
+
     entries.sort(key=lambda e: e.confidence * e.access_count, reverse=True)
     keep_count = max(1, int(len(entries) * keep_pct))
 

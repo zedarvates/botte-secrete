@@ -1,0 +1,14 @@
+F
+======================================================================
+FAIL: test_skipped_run_must_not_verify (__main__.main.<locals>.Regression.test_skipped_run_must_not_verify)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "real_fix.py", line 83, in test_skipped_run_must_not_verify
+    self.assertFalse(value["verified"], "All tests were skipped, yet receipt was verified")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: True is not false : All tests were skipped, yet receipt was verified
+
+----------------------------------------------------------------------
+Ran 1 test in 0.001s
+
+FAILED (failures=1)

@@ -51,9 +51,11 @@ def main(argv=None) -> int:
         else:
             print(json.dumps(auto_route(args.prompt, args.task_type), ensure_ascii=False, indent=2))
     elif args.cmd == "run":
-        print(json.dumps(auto_run(args.prompt, task_type=args.task_type,
-                                  max_tokens=args.max_tokens, project_root=args.project,
-                                  execution_id=args.execution_id), ensure_ascii=False, indent=2))
+        result = auto_run(args.prompt, task_type=args.task_type,
+                          max_tokens=args.max_tokens, project_root=args.project,
+                          execution_id=args.execution_id)
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        return 1 if "error" in result else 0
     elif args.cmd == "providers":
         print(json.dumps(providers.catalog_overview(), ensure_ascii=False, indent=2))
     elif args.cmd == "fusion":
