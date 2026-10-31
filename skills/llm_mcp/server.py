@@ -1673,11 +1673,17 @@ def handle(request: dict):
         args = params.get("arguments", {}) or {}
         if name == "find_tool":
             from skills.llm_mcp.lazy import find_tool
-            import json as _json
-            text = _json.dumps(find_tool(args.get("query", ""), TOOLS,
-                                         top_k=int(args.get("top_k", 5))),
-                               ensure_ascii=False, indent=2)
-            return _result(req_id, {"content": [{"type": "text", "text": text}]})
+            try:
+                if not isinstance(args, dict) or set(args) - {"query", "top_k", "schema_budget_bytes"}:
+                    raise ValueError("unsupported find_tool arguments")
+                text = json.dumps(find_tool(args.get("query", ""), TOOLS,
+                                           top_k=args.get("top_k", 5),
+                                           schema_budget_bytes=args.get("schema_budget_bytes", 8192)),
+                                  ensure_ascii=False, separators=(",", ":"))
+                return _result(req_id, {"content": [{"type": "text", "text": text}]})
+            except (TypeError, ValueError) as error:
+                return _result(req_id, {"content": [{"type": "text", "text": f"ERROR: {error}"}],
+                                        "isError": True})
         fn = DISPATCH.get(name)
         if not fn:
             return _error(req_id, -32602, f"Unknown tool: {name}")
