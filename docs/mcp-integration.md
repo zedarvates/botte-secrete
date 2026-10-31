@@ -49,6 +49,47 @@ project-only inspection. For those, inspect the host's own MCP status and make
 a read-only tool call. Keep configuration, launcher discovery, a protocol
 handshake and successful task execution as separate observations.
 
+## Bounded tool discovery
+
+Lazy mode already lists a small core plus `find_tool`; setting
+`BOTTE_MCP_LAZY_TOOLS=0` retains the full-list compatibility mode. Non-core
+registered tools remain callable by name in either mode.
+
+`find_tool` now ranks an exact identifier first and breaks score ties by name,
+independently of registration order. Accent normalization helps matching supplied
+names/descriptions; it does not translate French requests into English.
+
+```json
+{"query":"review_knowledge_links","top_k":5,"schema_budget_bytes":8192}
+```
+
+The cumulative schema budget defaults to 8192 bytes (range 0–65536), counting
+compact UTF-8 JSON for included `inputSchema` objects only. It does not cap the
+whole response or measure provider tokens. Each returned description is limited
+to 384 UTF-8 bytes, with an explicit truncation flag. Queries are limited to
+2048 UTF-8 bytes and `top_k` to 1–10. Invalid types and unsupported arguments
+return an MCP tool error and leave the server available for the next request.
+
+A strong match carries its complete schema when it fits. Otherwise its name
+remains visible with `schema_status: deferred_budget`; smaller following matches
+can still fit. Increase the budget within its bounds for an explicit lookup.
+Weak matches remain hints and missing schemas remain `unavailable`. A zero
+schema budget permits discovery by names/descriptions only. Returned schemas
+are independent copies of the registered definitions.
+
+Discovery makes no backend probe or model call. A registered tool is not proof
+that LM Studio, Ollama, Godot or a remote worker is available. Keep installation,
+connection and successful execution separate, as above. This change does not
+activate a model route or alter the cloud connector.
+
+This extends the existing loader, inspired by GG Framework's deferred schemas
+and budget checks (revision `12eb9ea52c239ebd4843367e2c60bd45a9b4eeef`):
+[tool tiers](https://github.com/KenKaiii/gg-framework/blob/12eb9ea52c239ebd4843367e2c60bd45a9b4eeef/packages/ggcoder/src/tools/tool-tiers.ts)
+and [tool search](https://github.com/KenKaiii/gg-framework/blob/12eb9ea52c239ebd4843367e2c60bd45a9b4eeef/packages/ggcoder/src/tools/tool-search.ts).
+No upstream implementation is copied. Regression checks:
+`python -m skills.llm_mcp.test_lazy_budget` and the existing
+`python -m skills.llm_mcp.test_lazy`.
+
 ## Safety and troubleshooting
 
 - Keep generated configurations local when they contain absolute paths.
