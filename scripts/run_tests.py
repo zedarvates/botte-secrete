@@ -158,6 +158,7 @@ SUITES = [
     ("asset_quality", [sys.executable, "-m", "skills.asset_quality.test_asset_quality"], "skills/asset_quality/"),
     ("demo", [sys.executable, "-m", "skills.demo.test_demo"], "skills/demo/"),
     ("approx_spatial", [sys.executable, "-m", "skills.approx_spatial.test_approx_spatial"], "skills/approx_spatial/"),
+    ("approx_parallax", [sys.executable, "-m", "skills.approx_spatial.test_parallax"], "skills/approx_spatial/"),
     ("bench", [sys.executable, "-m", "skills.bench.test_bench"], "skills/bench/"),
     ("hermes_bridge", [sys.executable, "-m", "skills.hermes_bridge.test_hermes_bridge"], "skills/hermes_bridge/"),
     ("statusline", [sys.executable, "-m", "skills.statusline.test_statusline"], "skills/statusline/"),
