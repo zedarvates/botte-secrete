@@ -56,3 +56,45 @@ Tests: `python -m skills.fast_context.test_symbols` and
 `python -m skills.fast_context.test_fast_context`. Both run in the canonical
 repository runner. GG Framework's symbol-first retrieval motivated the scoped
 locator; no upstream code was copied.
+
+## Read context from the same source revision
+
+After `symbol`, pass its `source_sha256` to the explicit `context` command:
+
+```bash
+python -m skills.fast_context.cli context client.gd spawn_player SHA256_FROM_SYMBOL --before 3 --after 30
+```
+
+The new `botte.code-symbol-context/v1` envelope contains an exact line window
+from the same bounded read used to verify that hash. It preserves whitespace,
+UTF-8 and CRLF/LF bytes, records source/context SHA-256 and line ranges, and
+writes no files. It does not use the exploration cache.
+
+The default window requests three preceding lines and 30 following lines.
+`--before` accepts 0–20, `--after` 0–100 and `--max-context-bytes` 256–65536
+(default 16384). The byte limit applies to the raw context text, not serialized
+JSON or provider tokens. Whole lines are retained: declaration first, then
+following lines, then preceding lines. If lines do not fit, omission counts and
+`window_complete: false` report that fact. A declaration too long to fit returns
+no partial text.
+
+Multiple declarations require `--occurrence N` (1–20 in source order). Without
+that explicit choice, no context text is returned. Choosing an occurrence is
+not semantic disambiguation. Further candidates beyond the first 20 remain
+counted as omitted by the locator.
+
+| Status | Exit | Context text |
+|---|---:|---|
+| `completed` | 0 | Exact retained window, possibly budget-limited |
+| `not_found` | 0 | Empty; absent symbol or occurrence outside its candidate count |
+| `stale_source` | 3 | Empty; source bytes differ from the supplied digest |
+| `ambiguous` | 4 | Empty; caller must choose a candidate occurrence |
+| `context_over_budget` | 5 | Empty; the declaration alone exceeds the context byte budget |
+| Read/encoding/argument error | 2 | JSON error on stderr, no context envelope |
+
+This is a line window, not a parsed function body: it may omit part of a long
+function or include neighboring declarations. `function_body_complete` stays
+unknown (`null`), independently of `window_complete`. The source hash binds the
+returned snapshot; it is not a lock against changes after reading. Recheck state
+before editing. Neither a supplied hash nor returned source content grants
+permission or supplies trusted agent instructions.
