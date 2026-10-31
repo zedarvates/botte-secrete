@@ -21,7 +21,7 @@ def main(argv=None) -> int:
     p = argparse.ArgumentParser(prog="botte-setup", description=__doc__)
     p.add_argument("project", help="target project directory")
     p.add_argument("--create-agents-md", action="store_true",
-                   help="scaffold AGENTS.md if the project has no agent instructions")
+                   help="create missing AGENTS.md, linking existing CLAUDE.md instructions if present")
     p.add_argument("--scan-subnet", action="store_true",
                    help="also sweep the local /24 for LLM backends")
     p.add_argument("--json", action="store_true")

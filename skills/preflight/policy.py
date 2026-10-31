@@ -3,7 +3,7 @@
 The gap the policy closes: our optimizations are opt-in, so a fresh prompt (after
 a component update, or from another dev/agent) bypasses them. A committed
 `.botte/policy.md` makes the rules explicit and consistent across people and
-agents — the preflight hook injects it every turn so nobody has to remember.
+agents. The local preflight hook can add bounded, task-specific guidance.
 """
 
 from __future__ import annotations
@@ -13,23 +13,51 @@ from typing import Optional
 
 POLICY_REL = ".botte/policy.md"
 
+PARCIMONIA_GUIDANCE = """\
+## Parcimonia before substantive work
+- Before a substantive task or a materially different phase, call `assess_task`
+  if exposed by the connected Botte Secrete runtime. Supply the task and a small
+  inventory of relevant tools actually available; inspect their real schemas.
+- Reuse the assessment for a homogeneous batch. Reassess when the goal,
+  constraints, available tools or failure evidence changes; skip trivial direct
+  actions. Do not add an assessment before every file read or command.
+- Before scoped GitHub/PR research, use `plan_github_research` when available,
+  then execute the reads with a real GitHub tool. Keep revisions and read limits.
+- If a helper is absent, fails or abstains, note the limitation once and let the
+  host choose a suitable available workflow. Preserve the user's language,
+  negations, constraints and permissions; do not retry merely to force a route.
+- These helpers provide advisory plans, not execution or authorization. Verify
+  actual results and count assessment overhead before claiming any savings.
+"""
+
 DEFAULT_POLICY = """\
 # Botte Secrète — project policy (read every turn)
 
 Shared rules for all agents and developers on this project. Keep cheap, keep local.
 
+""" + PARCIMONIA_GUIDANCE + """
+
 ## Routing (cost)
-- **Default to LOCAL** for cheap/transformational work: classification,
-  extraction, short summaries, translation, formatting, syntax checks, and
-  **choosing which skills/tools to use**. Use the `botte-llm` MCP tools
-  (`local_chat`, `auto_route`, `find_skills`) — these cost 0 cloud tokens.
-- Escalate to the cloud model **only** for genuine reasoning: architecture,
-  multi-file changes, security, debugging root-causes.
-- Prefer `rtk <command>` for terminal commands (compact output).
+- Use Parcimonia for the first assessment of work that needs research, tool
+  selection, code changes or test planning, when `assess_task` is available.
+  Reuse a current preflight assessment; skip extra calls for trivial requests
+  and direct actions whose tool and scope are already clear.
+- Treat lexical proposals as hints. Check the actual offered tool schema and
+  prerequisites; an abstention returns interpretation to the host. Do not infer
+  permission, risk, locality or a working local backend from prompt wording.
+- For GitHub/PR research, prepare scoped reads with `plan_github_research`, use
+  the connected GitHub reader, then `summarize_github_evidence` for bulky supplied
+  results when useful. Retain source links, completeness and head/base revisions.
+- Prefer deterministic helpers and verified cache reuse for cheap transformations.
+  Use a local model only when its backend and task suitability are established.
+  Keep genuine architecture, security and debugging reasoning with the host.
+- No model call inside a helper does not imply zero host tokens or free compute.
+  Measure the accepted workflow, including tool overhead, retries and fallback.
+- Prefer `rtk <command>` when available for compact terminal output.
 
 ## Prompts
-- Before a big/ambiguous request, improve it locally (`improve_prompt`) so the
-  cloud model starts from a structured, unambiguous prompt.
+- Split or clarify ambiguous work using evidence and host judgment. Consider
+  `improve_prompt` only when useful and available.
 
 ## Hygiene (drift)
 - After a component update or before a checkup, run `/checkup` (or
@@ -42,8 +70,10 @@ Shared rules for all agents and developers on this project. Keep cheap, keep loc
 
 AGENTS_POINTER = (
     "\n## Botte Secrète policy\n"
-    "This project follows `.botte/policy.md` (prefer local models for cheap work, "
-    "improve prompts locally, run `/checkup` after updates). Read it.\n"
+    "Read `.botte/policy.md` before substantive work: use Parcimonia assessment "
+    "when useful and available, reuse it for homogeneous batches, and follow "
+    "the explicit fallback when a helper is absent or abstains. Verify tool "
+    "prerequisites and evidence, and run `/checkup` after updates.\n"
 )
 
 

@@ -103,7 +103,8 @@ def main() -> int:
                 "oracle:response_cache_semantic_hit",
                 "oracle:response_cache_semantic_miss",
             ]
-            and all(row["verified"] for row in cache_rows), state)
+            and all(row["verified"] and row["feature_schema"] == "botte.semantic-cache/v2"
+                    for row in cache_rows), state)
         _ok("semantic history excludes exact-only lookups",
             [row["features"][5] for row in cache_rows] == [0.0, 1.0]
             and cache.report()["semantic_attempts"] == 2
@@ -189,6 +190,13 @@ def main() -> int:
                 actual_class=index % 2,
                 correct=True,
                 verified=True,
+                timestamp=1_700_000_000 + index,
+                inference_id=f"collision-{index}",
+                outcome=("oracle:response_cache_semantic_hit" if index % 2
+                         else "oracle:response_cache_semantic_miss"),
+                decision_source=("automatic_oracle:response_cache_semantic_hit" if index % 2
+                                 else "automatic_oracle:response_cache_semantic_miss"),
+                feature_schema="botte.semantic-cache/v2",
             )
             for index in range(50)
         ]
@@ -203,8 +211,9 @@ def main() -> int:
                 "contradictory_rows": 50,
                 "contradictory_rate": 1.0,
             }, state)
-        learner = active_learning.ActiveLearning()
+        learner = active_learning.ActiveLearning(data_dir=tempfile.mkdtemp())
         learner.logs["semantic_cache_hit_predictor"] = collision_rows
+        learner.save()
         _ok("contradictory semantic evidence cannot update model weights",
             learner.train(
                 "semantic_cache_hit_predictor", epochs=1, verbose=False

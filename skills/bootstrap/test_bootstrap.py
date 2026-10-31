@@ -42,7 +42,7 @@ def main() -> int:
         _ok("policy .botte/policy.md written", (proj / ".botte" / "policy.md").exists(), state)
         settings = json.loads((proj / ".claude" / "settings.json").read_text(encoding="utf-8"))
         _ok("preflight hook wired in settings.json",
-            "skills.preflight.hook" in json.dumps(settings), state)
+            "preflight/hook.py" in json.dumps(settings).replace("\\\\", "/"), state)
         _ok("oculix MCP wiring reported (added or skipped)",
             rep.get("oculix_mcp", {}).get("action") in ("added", "skipped"), state)
 

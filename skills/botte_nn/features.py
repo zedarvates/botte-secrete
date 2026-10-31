@@ -23,6 +23,26 @@ import re
 from dataclasses import dataclass
 
 
+# Binds both the ordered v2 vector and the conditional semantic-attempt labels.
+# Equal vector length is not evidence that a historical observation is compatible.
+SEMANTIC_CACHE_SCHEMA = "botte.semantic-cache/v2"
+
+
+class FeatureSchemaMismatch(ValueError):
+    """The selected weights do not declare the meaning of current features."""
+
+
+def require_model_feature_schema(model: str, data: dict) -> None:
+    """Check schema compatibility only; this never qualifies or activates weights."""
+    if model != "semantic_cache_hit_predictor" and data.get("model") != "semantic_cache_hit_predictor":
+        return
+    provenance = data.get("provenance", {})
+    if (data.get("feature_schema") != SEMANTIC_CACHE_SCHEMA
+            or not isinstance(provenance, dict)
+            or provenance.get("feature_schema", SEMANTIC_CACHE_SCHEMA) != SEMANTIC_CACHE_SCHEMA):
+        raise FeatureSchemaMismatch("semantic-cache model feature schema mismatch; abstain")
+
+
 @dataclass(frozen=True)
 class FeatureSpec:
     name: str

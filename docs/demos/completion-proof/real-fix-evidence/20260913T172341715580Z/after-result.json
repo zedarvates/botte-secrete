@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "status": "invalid_evidence",
+  "verified": false,
+  "errors": [
+    "no_tests_executed"
+  ],
+  "source_files_checked": [],
+  "cloud_tokens": 0,
+  "scope": "recorded tests and listed files only"
+}

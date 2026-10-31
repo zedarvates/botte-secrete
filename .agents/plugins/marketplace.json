@@ -1,0 +1,15 @@
+{
+  "name": "botte-secrete-marketplace",
+  "interface": { "displayName": "Botte Secrète" },
+  "plugins": [
+    {
+      "name": "botte-secrete",
+      "source": { "source": "local", "path": "./plugins/botte-secrete" },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

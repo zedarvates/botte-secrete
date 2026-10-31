@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "description": "Curated synthetic cases, not a holdout or production sample. Labels describe whether completion is justified in the scenario.",
+  "cases": [
+    {"id":"valid","group":"contract","safe_to_accept":true,"reason":"Consistent passing receipt and unchanged listed source."},
+    {"id":"legacy_valid","group":"contract","safe_to_accept":true,"reason":"No tests skipped in this scenario; legacy receipt omits the count."},
+    {"id":"mixed_skipped","group":"contract","safe_to_accept":true,"reason":"One passed test and one explicitly skipped test, within declared scope."},
+    {"id":"unicode_source","group":"contract","safe_to_accept":true,"reason":"Unchanged source with a Unicode filename."},
+    {"id":"two_sources","group":"contract","safe_to_accept":true,"reason":"Both listed files match the passing receipt."},
+    {"id":"missing_receipt","group":"contract","safe_to_accept":false,"reason":"Referenced receipt absent."},
+    {"id":"missing_log","group":"contract","safe_to_accept":false,"reason":"Recorded log absent."},
+    {"id":"missing_source","group":"contract","safe_to_accept":false,"reason":"Listed source absent."},
+    {"id":"receipt_tampered","group":"contract","safe_to_accept":false,"reason":"Receipt modified after trusted digest capture."},
+    {"id":"log_tampered","group":"contract","safe_to_accept":false,"reason":"Log modified after receipt capture."},
+    {"id":"source_changed","group":"contract","safe_to_accept":false,"reason":"Listed source changed after the recorded test."},
+    {"id":"wrong_run","group":"contract","safe_to_accept":false,"reason":"Report references a different run identity."},
+    {"id":"all_skipped","group":"contract","safe_to_accept":false,"reason":"Receipt explicitly declares that all tests were skipped."},
+    {"id":"failed_test","group":"contract","safe_to_accept":false,"reason":"Recorded test failed."},
+    {"id":"bad_counts","group":"contract","safe_to_accept":false,"reason":"Skipped count exceeds discovered tests."},
+    {"id":"traversal","group":"contract","safe_to_accept":false,"reason":"Log reference exits the allowed evidence root."},
+    {"id":"zero_tests","group":"contract","safe_to_accept":false,"reason":"Receipt records no tests."},
+    {"id":"skips_omitted","group":"limits","safe_to_accept":false,"reason":"Scenario truth: all tests skipped, but the producer omits skipped and reports success."},
+    {"id":"unlisted_change","group":"limits","safe_to_accept":false,"reason":"Scenario truth: a relevant dependency changed, but it was omitted from receipt scope."},
+    {"id":"dishonest_executor","group":"limits","safe_to_accept":false,"reason":"Scenario truth: no test occurred; dishonest executor provides consistent fabricated artifacts and the matching trust digest."}
+  ]
+}

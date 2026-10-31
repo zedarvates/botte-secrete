@@ -6,5 +6,6 @@
 """
 
 from skills.solvers.solvers import assign_balanced, bin_pack, schedule
+from skills.solvers.statistics import compute_statistics
 
-__all__ = ["assign_balanced", "bin_pack", "schedule"]
+__all__ = ["assign_balanced", "bin_pack", "schedule", "compute_statistics"]

@@ -1,0 +1,20 @@
+{
+  "baseline_git_commit": "4cffa4b941979ef84518b12c2b5d139fb07a8550",
+  "source": "skills/completion_proof/verify.py",
+  "actual_tests_discovered": 1,
+  "actual_tests_skipped": 1,
+  "actual_tests_executed": 0,
+  "results": {
+    "before": {
+      "verified": true,
+      "regression_passed": false,
+      "implementation_sha256": "b278037fbc216602fb71114972b88b2b627ab41dc64438aeaa4c82c6afc0913d"
+    },
+    "after": {
+      "verified": false,
+      "regression_passed": true,
+      "implementation_sha256": "fc916d268e0b5f2b08e21ffceea44c100d8f5b53c7fa19d245205da7be58c656"
+    }
+  },
+  "limits": "One actual verifier regression; trusted executor; not an autonomous agent run."
+}
