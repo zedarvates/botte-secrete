@@ -35,6 +35,7 @@ MAX_QUERY_BYTES = 2048
 MAX_SCHEMA_BUDGET_BYTES = 65536
 DEFAULT_SCHEMA_BUDGET_BYTES = 8192
 MAX_DESCRIPTION_BYTES = 384
+MAX_INDEX_DESCRIPTION_BYTES = 160
 
 _WORD = re.compile(r"[a-z0-9]+")
 # Common short words that would otherwise cause spurious matches (e.g. "no",
@@ -70,9 +71,12 @@ def _utf8_prefix(text: str, limit: int) -> str:
 
 
 def find_tool(query: str, tools: list, *, top_k: int = 5,
-              schema_budget_bytes: int = DEFAULT_SCHEMA_BUDGET_BYTES) -> dict:
+              schema_budget_bytes: int = DEFAULT_SCHEMA_BUDGET_BYTES,
+              detail: str = "schemas") -> dict:
     """Return bounded discovery hints, with full schemas only when they fit.
 
+    ``detail="index"`` returns a separate compact hint view; the default
+    schema view retains its existing response shape.
     The schema budget counts compact UTF-8 JSON bytes, not provider tokens.
     A deferred match remains visible and callable by name; discovery does not
     probe its backend, authorize execution or prove its capabilities.
@@ -84,6 +88,8 @@ def find_tool(query: str, tools: list, *, top_k: int = 5,
     if (isinstance(schema_budget_bytes, bool) or not isinstance(schema_budget_bytes, int)
             or not 0 <= schema_budget_bytes <= MAX_SCHEMA_BUDGET_BYTES):
         raise ValueError("schema_budget_bytes must be an integer from 0 through 65536")
+    if not isinstance(detail, str) or detail not in {"schemas", "index"}:
+        raise ValueError("detail must be schemas or index")
     query = query.strip()
     qtok = _tokens(query)
     # An exact identifier must not disappear behind noisy description matches.
@@ -93,6 +99,19 @@ def find_tool(query: str, tools: list, *, top_k: int = 5,
         key=lambda x: (x[1]["name"] != query, -x[0], x[1]["name"]),
     )
     scored = [(score, tool) for score, tool in scored if score > 0][:top_k]
+    if detail == "index":
+        # This view deliberately contains hints only. Do not touch schemas:
+        # resolve the chosen identifier explicitly before constructing a call.
+        matches = []
+        for _, tool in scored:
+            description = tool.get("description", "")
+            entry = {"name": tool["name"],
+                     "description": _utf8_prefix(description, MAX_INDEX_DESCRIPTION_BYTES)}
+            if len(description.encode("utf-8")) > MAX_INDEX_DESCRIPTION_BYTES:
+                entry["description_truncated"] = True
+            matches.append(entry)
+        return {"schema": "botte.tool-discovery-index/v1", "query": query,
+                "matches": matches, "schemas_included": False, "cloud_tokens": 0}
     matches, used = [], 0
     for score, tool in scored:
         description = tool.get("description", "")
@@ -128,10 +147,13 @@ def lazy_tool_list(all_tools: list) -> list:
                        "tool set by default; call find_tool first to discover and load "
                        "a budgeted schema for anything else (security_scan, docs_map, "
                        "solvers, nn_audit, cwe_kb, …). Deferred-budget matches remain hints; "
-                       "raise schema_budget_bytes for an exact lookup. No backend probe is made.",
+                       "raise schema_budget_bytes for an exact lookup. Optional detail=index returns "
+                       "short hints only: resolve a selected exact name with detail=schemas, "
+                       "top_k=1 before calling it. No backend probe is made.",
         "inputSchema": {"type": "object", "properties": {
             "query": {"type": "string", "maxLength": 2048},
             "top_k": {"type": "integer", "minimum": 1, "maximum": 10, "default": 5},
+            "detail": {"type": "string", "enum": ["schemas", "index"], "default": "schemas"},
             "schema_budget_bytes": {"type": "integer", "minimum": 0,
                                     "maximum": 65536, "default": 8192}},
             "required": ["query"]},
