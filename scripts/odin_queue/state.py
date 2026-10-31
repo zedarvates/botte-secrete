@@ -29,13 +29,16 @@ class SupervisorLock:
 
     def __enter__(self):
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        self.handle = self.path.open("a+b")
-        self.handle.seek(0)
-        if not self.handle.read(1):
-            self.handle.write(b"0")
-            self.handle.flush()
-        self.handle.seek(0)
+        # Windows refuses even a read of a byte locked by another process.
+        # Initialize once without inspecting the existing owner's locked byte.
         try:
+            with self.path.open("xb") as initial:
+                initial.write(b"0")
+        except FileExistsError:
+            pass
+        self.handle = self.path.open("r+b")
+        try:
+            self.handle.seek(0)
             if os.name == "nt":
                 import msvcrt
                 msvcrt.locking(self.handle.fileno(), msvcrt.LK_NBLCK, 1)
