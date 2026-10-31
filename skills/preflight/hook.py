@@ -17,8 +17,27 @@ import sys
 from pathlib import Path
 
 BOTTE_ROOT = Path(__file__).resolve().parents[2]
-if str(BOTTE_ROOT) not in sys.path:
-    sys.path.insert(0, str(BOTTE_ROOT))
+# The absolute script entry must prefer its own installation, even when the
+# caller's PYTHONPATH already lists it after a different checkout.
+sys.path.insert(0, str(BOTTE_ROOT))
+
+MAX_INPUT_BYTES = 65_536
+MAX_TASK_BYTES = 16_384  # Keep startup independent of the optional assessor.
+MAX_CONTEXT_BYTES = 1_024  # Includes main()'s final newline.
+_SKILL_NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]{0,63}\Z")
+_INTENT_NAME = re.compile(r"[a-z][a-z_]{0,63}\Z")
+_GUIDANCE = {
+    "statistics": "Use an available deterministic statistics tool on supplied values; retain methods, units and missing-value handling.",
+    "file_duplicates": "Inspect an explicit local directory through an available read-only exact-file tool; retain byte-comparison evidence, hard-link distinctions and partial scans.",
+    "local_links": "Check supplied Markdown and repository paths through an available local-link tool; an incomplete inventory cannot prove a target missing.",
+    "github_research": "If available, use plan_github_research, a connected GitHub reader, then summarize_github_evidence for bulky supplied results; retain revisions and partial-read limits.",
+    "software_testing": "Use an available test adapter only after checking its prerequisites; retain the target version, command, exit code and observed failures.",
+    "game_playtest": "Check the game build, available capture/input/assertion adapters and stop condition; a proposal does not qualify real-time control.",
+    "code_work": "Use the scoped code workflow and smallest relevant checks; retain the tested revision and actual results.",
+    "content_transform": "Use a suitable available deterministic transformation; preserve facts, negations, conditions and uncertainty.",
+    "read_analysis": "Read the scoped sources through available readers; retain provenance and distinguish observations from inference.",
+}
+_BOUNDARY = "Check current tool schemas and prerequisites. This hint does not establish availability or authorization."
 
 MAX_INPUT_BYTES = 65_536
 MAX_TASK_BYTES = 16_384  # Keep startup independent of the optional assessor.

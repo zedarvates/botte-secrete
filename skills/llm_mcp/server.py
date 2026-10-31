@@ -83,6 +83,75 @@ TOOLS = [
                         "idempotentHint": True, "openWorldHint": False},
     },
     {
+        "name": "check_local_links",
+        "description": "Check relative Markdown file/image links against supplied repository paths. "
+                       "Returns source lines and missing or unresolved targets; incomplete inventories "
+                       "cannot prove a target missing. No filesystem access, network, model call or "
+                       "anchor validation. Supplied data only; not a live repository audit.",
+        "inputSchema": {
+            "type": "object", "additionalProperties": False,
+            "properties": {
+                "documents": {"type": "array", "minItems": 1, "maxItems": 200, "items": {
+                    "type": "object", "additionalProperties": False,
+                    "properties": {"path": {"type": "string", "minLength": 1, "maxLength": 4096},
+                                   "text": {"type": "string", "maxLength": 1048576}},
+                    "required": ["path", "text"]}},
+                "available_paths": {"type": "array", "maxItems": 50000,
+                                    "items": {"type": "string", "minLength": 1, "maxLength": 4096}},
+                "inventory_complete": {"type": "boolean", "default": False},
+                "max_links": {"type": "integer", "minimum": 1, "maximum": 50000, "default": 10000},
+            }, "required": ["documents", "available_paths"],
+        },
+        "annotations": {"readOnlyHint": True, "destructiveHint": False,
+                        "idempotentHint": True, "openWorldHint": False},
+    },
+    {
+        "name": "find_file_duplicates",
+        "description": "Read-only exact duplicate file inspection under one explicit local directory. "
+                       "Groups by size and full SHA-256, then confirms bytes; reports hard links "
+                       "separately. Bounded reads, exclusions and partial scans are explicit. "
+                       "No deletion, image similarity, functional-equivalence judgment or model call.",
+        "inputSchema": {
+            "type": "object", "additionalProperties": False,
+            "properties": {
+                "root": {"type": "string", "minLength": 1},
+                "max_files": {"type": "integer", "minimum": 1, "maximum": 50000},
+                "max_file_bytes": {"type": "integer", "minimum": 1, "maximum": 1073741824},
+                "max_total_bytes": {"type": "integer", "minimum": 1, "maximum": 1073741824},
+                "max_entries": {"type": "integer", "minimum": 1, "maximum": 100000},
+                "max_depth": {"type": "integer", "minimum": 0, "maximum": 128},
+                "exclude_dirs": {"type": "array", "maxItems": 100,
+                                 "items": {"type": "string", "minLength": 1}},
+            }, "required": ["root"],
+        },
+        "annotations": {"readOnlyHint": True, "destructiveHint": False,
+                        "idempotentHint": True, "openWorldHint": False},
+    },
+    {
+        "name": "compute_statistics",
+        "description": "Compute deterministic descriptive statistics from supplied numeric values: "
+                       "count, sum, min, max, mean, median, population/sample variance and "
+                       "standard deviation, plus linear type-7 percentiles. No model, network "
+                       "or file access. Rejects invalid inputs; omits nulls only on explicit request.",
+        "inputSchema": {
+            "type": "object", "additionalProperties": False,
+            "properties": {
+                "values": {"type": "array", "minItems": 1, "maxItems": 10000,
+                           "items": {"type": ["number", "null"]}},
+                "operations": {"type": "array", "minItems": 1, "maxItems": 10,
+                               "uniqueItems": True, "items": {"type": "string", "enum": [
+                                   "count", "sum", "min", "max", "mean", "median",
+                                   "variance_population", "variance_sample",
+                                   "stdev_population", "stdev_sample"]}},
+                "percentiles": {"type": "array", "maxItems": 16, "uniqueItems": True,
+                                "items": {"type": "number", "minimum": 0, "maximum": 100}},
+                "missing": {"type": "string", "enum": ["reject", "omit"], "default": "reject"},
+            }, "required": ["values"],
+        },
+        "annotations": {"readOnlyHint": True, "destructiveHint": False,
+                        "idempotentHint": True, "openWorldHint": False},
+    },
+    {
         "name": "assess_task",
         "description": "Parcimonia: propose a bounded first assessment of a task, "
                        "including GitHub/PR research, software tests and game playtests. "
@@ -1554,6 +1623,29 @@ def _tool_assess_task(args: dict) -> str:
     return json.dumps(assess_task(**args), ensure_ascii=False)
 
 
+def _tool_compute_statistics(args: dict) -> str:
+    from skills.solvers import compute_statistics
+    if not isinstance(args, dict) or set(args) - {"values", "operations", "percentiles", "missing"}:
+        raise ValueError("unsupported statistics arguments")
+    return json.dumps(compute_statistics(**args), ensure_ascii=False, allow_nan=False)
+
+
+def _tool_find_file_duplicates(args: dict) -> str:
+    from skills.fallow_like.file_duplicates import find_file_duplicates
+    allowed = {"root", "max_files", "max_file_bytes", "max_total_bytes",
+               "max_entries", "max_depth", "exclude_dirs"}
+    if not isinstance(args, dict) or set(args) - allowed:
+        raise ValueError("unsupported file-duplicate arguments")
+    return json.dumps(find_file_duplicates(**args), ensure_ascii=True, allow_nan=False)
+
+
+def _tool_check_local_links(args: dict) -> str:
+    from skills.fallow_like.local_links import check_local_links
+    if not isinstance(args, dict) or set(args) - {"documents", "available_paths", "inventory_complete", "max_links"}:
+        raise ValueError("unsupported local-link arguments")
+    return json.dumps(check_local_links(**args), ensure_ascii=True, allow_nan=False)
+
+
 def _tool_plan_github_research(args: dict) -> str:
     from skills.preflight.github_plan import plan_github_research
     _assessment_arguments(args, {"repository", "query", "pr_number"})
@@ -1567,6 +1659,9 @@ def _tool_summarize_github_evidence(args: dict) -> str:
 
 
 DISPATCH = {
+    "check_local_links": _tool_check_local_links,
+    "find_file_duplicates": _tool_find_file_duplicates,
+    "compute_statistics": _tool_compute_statistics,
     "review_knowledge_links": _tool_review_knowledge_links,
     "summarize_github_evidence": _tool_summarize_github_evidence,
     "assess_task": _tool_assess_task,

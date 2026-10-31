@@ -16,6 +16,11 @@ The host still interprets the task, reads real tool schemas and verifies results
 Call `assess_task` with the task and a small inventory of tools actually available
 to the current host. This is useful before research, code work, transformations,
 software testing or game playtests. Skip extra calls for obvious trivial work.
+Reuse the result for a homogeneous batch; reassess when the goal, constraints,
+available tools or failure evidence changes. Do not assess every individual read.
+When a helper is absent, fails or abstains, note the limitation once and let the
+host select an available workflow while preserving the user's meaning and
+permissions. Do not retry merely to force a proposed route.
 
 ```json
 {
@@ -85,6 +90,33 @@ and output UTF-8 byte sizes can show reduction or expansion; host tokens, cost
 and total-task latency remain unknown. The MCP wrapper is additional data beyond
 the measured JSON summary. Use the original read for omitted details.
 
+## Exact file duplicate inspection
+
+The Python runtime can inspect an explicit local directory through
+`find_file_duplicates`. Parcimonia assessment can shortlist that tool for
+explicit file-duplicate searches. Size/hash groups require byte comparison;
+hard links, partial scans and omitted results stay distinct. See the
+[file-duplicate contract](file-duplicates.md). This does not change the hosted
+cloud tools or add desktop behavior.
+
+## Supplied local Markdown links
+
+`check_local_links` checks documents and a repository path inventory supplied by
+the host. It reports source lines, missing versus unresolved targets and partial
+coverage. Incomplete inventories cannot establish absence. It performs no file
+access or network request; a host can supply Git-tree filenames and documents at
+one observed commit. See the [local-link contract](local-links.md). This Python
+increment does not update the independent hosted cloud service or desktop plans.
+
+## Deterministic statistics
+
+For an explicit request to compute descriptive statistics, `assess_task` can
+propose the `statistics` intent and shortlist an available `compute_statistics`
+tool. The Python runtime computes supplied values through that separate tool;
+assessment itself remains advisory. See the [statistics contract](statistics.md)
+for operations, input limits, missing-data policy and percentile conventions.
+This Python increment does not update the independently hosted cloud helpers.
+
 ## Software and game tests
 
 `assess_task` can prepare these workflows; it does not run a test. Existing
@@ -139,6 +171,38 @@ The Codex Git marketplace package needs its separately installed compatible
 Python runtime. The Site-hosted cloud tools process supplied inputs in memory
 and do not connect to the user's local machine. Updating either deployment does
 not update the other. No hooks are required for these helpers.
+
+### Portable instructions
+
+New users receive instructions through committed and packaged entry points:
+
+| Entry point | Delivered guidance |
+| --- | --- |
+| Repository `AGENTS.md` | Links the committed `.botte/policy.md` before substantive work |
+| `skills.preflight.policy.DEFAULT_POLICY` | Writes the same Parcimonia section into a new project's `.botte/policy.md` |
+| Bootstrap `--create-agents-md` | Creates a missing `AGENTS.md`, links an existing `CLAUDE.md` when present, and points to the policy |
+| `skills.preflight.hook` | Runs selective local advisory assessment on Claude Code `UserPromptSubmit`; executes no selected tool |
+| Codex plugin `skills/botte-secrete/SKILL.md` | Carries self-contained assessment, reuse and fallback instructions inside the installable subset |
+
+The bootstrap retains existing policy and instruction files. Merge new guidance
+into older custom policies deliberately; rerunning setup does not overwrite them.
+For a new Codex project, run
+`python -m skills.bootstrap.cli /path/to/project --create-agents-md`;
+creation is opt-in. New Claude hooks use absolute interpreter
+and script paths from the configuring installation. Legacy module-based hooks
+are retained and need explicit migration if they resolve an older checkout.
+Claude hook wiring is not evidence of an active Codex or global hook. Each host
+must expose the real tools, load its supported instructions and verify behavior.
+Installing the plugin does not install or activate the separate runtime.
+
+Offline delivery checks from a checkout:
+
+```sh
+python -m pytest --rootdir=. -q skills/preflight/test_portable_guidance.py
+python -m skills.preflight.test_preflight
+python -m skills.bootstrap.test_bootstrap
+python -m skills.plugins.test_distribution
+```
 
 A public Git repository or publicly reachable Site is separate from acceptance
 in the public plugin directory. Verify installation, authentication, listing

@@ -39,6 +39,8 @@ For local cache iteration, use the timestamp procedure in the Update section.
 This recipe is an installation procedure, not evidence that a fresh install has
 already passed on every platform.
 
+For the consolidated three-workflow validation and its recorded limitations,
+see the [candidate guide](../../docs/parcimonia-candidate.md).
 The project checkup now separates a configuration declaration from launcher
 discovery and runtime reachability. Its static `configured` result does not
 qualify the plugin installed in Codex; use Codex's current server status and
@@ -56,6 +58,13 @@ The separate project preflight hook calls Parcimonia locally where that hook is
 installed. Its current integration is Claude Code's `UserPromptSubmit`; the
 Codex plugin ships no lifecycle hook, and Work cloud does not run that local
 hook. Cloud use relies on connected tools and workflow instructions instead.
+
+The bundled workflow skill includes Parcimonia assessment before substantive
+work, reuse for homogeneous batches and a fallback when helpers are absent or
+abstain. These instructions travel with the plugin; no personal skill or global
+hook is required. They guide the host and do not demonstrate that an assessment
+has run; they apply when the host loads or invokes the skill. Repository users also receive `AGENTS.md` and `.botte/policy.md`; the
+bootstrap carries that guidance into newly configured projects.
 
 ## Install the local runtime
 

@@ -13,10 +13,29 @@ from typing import Optional
 
 POLICY_REL = ".botte/policy.md"
 
+PARCIMONIA_GUIDANCE = """\
+## Parcimonia before substantive work
+- Before a substantive task or a materially different phase, call `assess_task`
+  if exposed by the connected Botte Secrete runtime. Supply the task and a small
+  inventory of relevant tools actually available; inspect their real schemas.
+- Reuse the assessment for a homogeneous batch. Reassess when the goal,
+  constraints, available tools or failure evidence changes; skip trivial direct
+  actions. Do not add an assessment before every file read or command.
+- Before scoped GitHub/PR research, use `plan_github_research` when available,
+  then execute the reads with a real GitHub tool. Keep revisions and read limits.
+- If a helper is absent, fails or abstains, note the limitation once and let the
+  host choose a suitable available workflow. Preserve the user's language,
+  negations, constraints and permissions; do not retry merely to force a route.
+- These helpers provide advisory plans, not execution or authorization. Verify
+  actual results and count assessment overhead before claiming any savings.
+"""
+
 DEFAULT_POLICY = """\
 # Botte Secrète — project policy (read every turn)
 
 Shared rules for all agents and developers on this project. Keep cheap, keep local.
+
+""" + PARCIMONIA_GUIDANCE + """
 
 ## Routing (cost)
 - Use Parcimonia for the first assessment of work that needs research, tool
@@ -51,8 +70,10 @@ Shared rules for all agents and developers on this project. Keep cheap, keep loc
 
 AGENTS_POINTER = (
     "\n## Botte Secrète policy\n"
-    "This project follows `.botte/policy.md`: use Parcimonia first assessment when "
-    "useful, verify tool prerequisites and evidence, and run `/checkup` after updates. Read it.\n"
+    "Read `.botte/policy.md` before substantive work: use Parcimonia assessment "
+    "when useful and available, reuse it for homogeneous batches, and follow "
+    "the explicit fallback when a helper is absent or abstains. Verify tool "
+    "prerequisites and evidence, and run `/checkup` after updates.\n"
 )
 
 

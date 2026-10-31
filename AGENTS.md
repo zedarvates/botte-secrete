@@ -48,7 +48,7 @@ Run the relevant tests, keep diffs minimal, and don't commit machine-specific
 generated files (e.g. `configs/llm-endpoints.json`, `.mcp.json` — both ignored).
 
 ## Botte Secrète policy
-This project follows `.botte/policy.md`. Use Parcimonia `assess_task` for meaningful first assessment when available; reuse a current preflight result and skip trivial/direct actions. Use the scoped GitHub plan and evidence summary for research when useful. Verify actual tools, prerequisites and results; run `/checkup` after updates.
+Read [`.botte/policy.md`](.botte/policy.md) before substantive work. Use Parcimonia `assess_task` when available and useful; reuse a current preflight result for homogeneous work and skip trivial/direct actions. Use scoped GitHub plans and evidence summaries when useful. If a helper is absent or abstains, continue with suitable available tools. Verify prerequisites and results; run `/checkup` after updates. See [portable instructions](docs/parcimonia-workflow.md#portable-instructions).
 
 ## Token-efficient workflows
 - **Batch independent tool calls**: read multiple files, search multiple patterns, extract multiple URLs in ONE turn instead of chaining them sequentially. Each round-trip costs context tokens.
