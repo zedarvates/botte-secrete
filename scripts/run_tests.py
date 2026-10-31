@@ -70,6 +70,7 @@ SUITES = [
     ("prompt_improver", [sys.executable, "-m", "skills.prompt_improver.test_prompt_improver"], "skills/prompt_improver/"),
     ("metrics", [sys.executable, "-m", "skills.metrics.test_metrics"], "skills/metrics/"),
     ("preflight", [sys.executable, "-m", "skills.preflight.test_preflight"], "skills/preflight/"),
+    ("portfolio_sync", [sys.executable, "-m", "skills.portfolio_sync.test_cli_contract"], "skills/portfolio_sync/"),
     ("parcimonia", [sys.executable, "-m", "skills.preflight.test_parcimonia"], (
         "skills/preflight/", "skills/llm_mcp/server.py", "skills/llm_mcp/test_assessment_tools.py",
         "skills/skill_finder/", "skills/context_budget/", "scripts/run_tests.py",
