@@ -1,0 +1,85 @@
+name: Parcimonia candidate installation
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'skills/**'
+      - 'plugins/botte-secrete/**'
+      - '.agents/plugins/marketplace.json'
+      - 'pyproject.toml'
+      - 'scripts/verify_parcimonia_candidate.py'
+      - '.github/workflows/parcimonia-candidate.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  installed-workflows:
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.10', '3.12']
+        install: [minimal]
+        include:
+          - os: ubuntu-latest
+            python: '3.12'
+            install: full
+    env:
+      PYTHONUTF8: '1'
+      PYTHONIOENCODING: utf-8
+      CANDIDATE_HEAD: ${{ github.event.pull_request.head.sha }}
+      CANDIDATE_INSTALL: ${{ matrix.install }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Build full-checkout wheel and install into isolated venv
+        shell: python
+        run: |
+          import json, os, pathlib, subprocess, sys, time, venv
+          repo = pathlib.Path(os.environ['GITHUB_WORKSPACE']).resolve()
+          work = pathlib.Path(os.environ['RUNNER_TEMP']) / 'parcimonia-candidate'
+          work.mkdir()
+          wheelhouse = work / 'wheelhouse'
+          wheelhouse.mkdir()
+          env = {key: value for key, value in os.environ.items() if key not in {'PYTHONPATH', 'PYTHONHOME'}}
+          started = time.perf_counter_ns()
+          subprocess.run([sys.executable, '-m', 'pip', 'wheel', '--no-deps', '--wheel-dir', str(wheelhouse), str(repo)], cwd=work, env=env, check=True)
+          build_ns = time.perf_counter_ns() - started
+          wheels = list(wheelhouse.glob('botte_secrete-*.whl'))
+          if len(wheels) != 1:
+              raise RuntimeError('Expected exactly one candidate wheel')
+          target = work / 'venv'
+          venv.EnvBuilder(with_pip=True).create(target)
+          python = target / ('Scripts/python.exe' if os.name == 'nt' else 'bin/python')
+          command = [str(python), '-I', '-m', 'pip', 'install']
+          if os.environ['CANDIDATE_INSTALL'] == 'minimal':
+              command += ['--no-deps', '--no-index']
+          started = time.perf_counter_ns()
+          subprocess.run(command + [str(wheels[0])], cwd=work, env=env, check=True)
+          install_ns = time.perf_counter_ns() - started
+          if os.environ['CANDIDATE_INSTALL'] == 'full':
+              subprocess.run([str(python), '-I', '-m', 'pip', 'check'], cwd=work, env=env, check=True)
+          measurements = {'build_elapsed_ns': build_ns, 'install_elapsed_ns': install_ns, 'install_mode': os.environ['CANDIDATE_INSTALL'], 'source_commit': os.environ['CANDIDATE_HEAD'], 'provider_tokens': None, 'cost': None, 'savings': None}
+          (work / 'installation.json').write_text(json.dumps(measurements, indent=2) + '\n', encoding='utf-8')
+          subprocess.run([str(python), '-I', '-m', 'skills.preflight.evaluation', '--output', str(work / 'assessment-report.json')], cwd=work, env=env, check=True)
+          subprocess.run([str(python), '-I', str(repo / 'scripts/verify_parcimonia_candidate.py'), '--repo', str(repo), '--wheel', str(wheels[0]), '--source-commit', os.environ['CANDIDATE_HEAD'], '--install-mode', os.environ['CANDIDATE_INSTALL'], '--output', str(work / 'candidate-report.json')], cwd=work, env=env, check=True)
+      - name: Upload candidate provenance and workflow measurements
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: parcimonia-${{ matrix.os }}-py${{ matrix.python }}-${{ matrix.install }}
+          path: |
+            ${{ runner.temp }}/parcimonia-candidate/candidate-report.json
+            ${{ runner.temp }}/parcimonia-candidate/installation.json
+            ${{ runner.temp }}/parcimonia-candidate/assessment-report.json
+            ${{ runner.temp }}/parcimonia-candidate/wheelhouse/*.whl
+          if-no-files-found: warn
+          retention-days: 14

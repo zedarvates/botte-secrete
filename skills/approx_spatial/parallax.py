@@ -5,7 +5,7 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass
 
-from .oracle import Interval, SpatialEvidence
+from .oracle import Interval, SpatialEvidence, _finite_number
 
 
 @dataclass(frozen=True)
@@ -23,7 +23,8 @@ class ParallaxObservation:
 
 
 def _finite_nonnegative(value: float, name: str) -> float:
-    if isinstance(value, bool) or not math.isfinite(float(value)) or value < 0:
+    value = _finite_number(value, name)
+    if value < 0:
         raise ValueError(f"{name} must be finite and non-negative")
     return float(value)
 
@@ -39,6 +40,8 @@ def estimate_range(
     The implementation is intentionally calibrated/simple. It does not perform
     feature matching and never guesses when a validity guard fails.
     """
+    min_baseline_m = _finite_nonnegative(min_baseline_m, "min_baseline_m")
+    min_disparity_px = _finite_nonnegative(min_disparity_px, "min_disparity_px")
     b = _finite_nonnegative(observation.baseline_m, "baseline_m")
     f = _finite_nonnegative(observation.focal_px, "focal_px")
     d = _finite_nonnegative(observation.disparity_px, "disparity_px")

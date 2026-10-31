@@ -1,21 +1,25 @@
 #!/usr/bin/env python3
-"""Tests for ingest — offline-deterministic + guarded live (net/Qdrant).
+"""Tests for ingest — hermetic loopback HTTP plus in-memory Qdrant.
 
     python -m skills.ingest.test_ingest
 """
 
 from __future__ import annotations
 
+import importlib
 import sys
-import urllib.request
+import threading
+import urllib.error
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from types import SimpleNamespace
 
 from skills.ingest import extract, scrape, ingest, search, resolve_embed
-from skills.ingest.ingest import _hash_embed, _embed, _qdrant
+from skills.ingest.ingest import _hash_embed, _embed
 
 
 def _ok(msg, cond, state):
@@ -23,16 +27,50 @@ def _ok(msg, cond, state):
     state[0 if cond else 1] += 1
 
 
-def _net_ok() -> bool:
-    try:
-        urllib.request.urlopen("https://example.com", timeout=5)
-        return True
-    except Exception:
-        return False
+class _FixtureHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        body = (
+            b"<html><head><title>Fixture Domain</title></head>"
+            b"<body><p>Hermetic ingestion evidence.</p></body></html>"
+        )
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def log_message(self, *_args):
+        pass
 
 
-def _qdrant_ok(host="192.168.1.47:6333") -> bool:
-    return _qdrant("GET", f"http://{host}", "/collections") is not None
+class _MemoryQdrant:
+    def __init__(self):
+        self.collections: dict[str, list[dict]] = {}
+
+    def request(self, method, _base, path, body=None, timeout=10.0):
+        del timeout
+        parts = [part for part in path.split("/") if part]
+        if method == "GET" and parts == ["collections"]:
+            return {"result": {"collections": [
+                {"name": name} for name in sorted(self.collections)
+            ]}}
+        if len(parts) >= 2 and parts[0] == "collections":
+            collection = parts[1]
+            if method == "PUT" and len(parts) == 2:
+                self.collections.setdefault(collection, [])
+                return {"result": True}
+            if method == "PUT" and parts[2:] == ["points"]:
+                self.collections.setdefault(collection, []).extend(body["points"])
+                return {"result": True}
+            if method == "POST" and parts[2:] == ["points", "search"]:
+                return {"result": [
+                    {"score": 1.0, "payload": point["payload"]}
+                    for point in self.collections.get(collection, [])[:body["limit"]]
+                ]}
+            if method == "DELETE" and len(parts) == 2:
+                self.collections.pop(collection, None)
+                return {"result": True}
+        return None
 
 
 def main() -> int:
@@ -71,26 +109,60 @@ def main() -> int:
     v, dim, src = _embed("hello world", None)
     _ok("_embed without endpoint → hash source, dim 256",
         src == "hash" and dim == 256, state)
-    v, dim, src = _embed("hello world", "http://127.0.0.1:9/v1/embeddings")
+    ingest_module = importlib.import_module("skills.ingest.ingest")
+    with patch.object(ingest_module.urllib.request, "urlopen",
+                      side_effect=urllib.error.URLError("fixture unavailable")):
+        v, dim, src = _embed("hello world", "http://fixture.invalid/v1/embeddings")
     _ok("_embed unreachable endpoint → hash fallback",
         src == "hash" and dim == 256, state)
 
-    # live (guarded)
-    if _net_ok():
-        sc = scrape("https://example.com")
-        _ok("live scrape gets title + text",
-            "Example" in sc.title and sc.chars > 0, state)
-        if _qdrant_ok():
-            r = ingest("https://example.com", collection="botte_selftest")
-            _ok("live ingest stores into Qdrant", r.get("stored") is True, state)
-            hits = search("example domain", collection="botte_selftest")
-            _ok("live search recalls the ingested doc", len(hits.get("hits", [])) >= 1, state)
-            # cleanup
-            _qdrant("DELETE", "http://192.168.1.47:6333", "/collections/botte_selftest")
-        else:
-            print("  [skip] Qdrant offline — ingest/search live tests")
-    else:
-        print("  [skip] no network — live scrape/ingest tests")
+    # End-to-end transport stays on loopback; Qdrant is an in-memory contract
+    # double. The test must never probe public internet or a developer LAN.
+    server = ThreadingHTTPServer(("127.0.0.1", 0), _FixtureHandler)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    fixture_url = f"http://127.0.0.1:{server.server_port}/fixture"
+    memory = _MemoryQdrant()
+    fixture_opener = ingest_module.urllib.request.build_opener(
+        ingest_module.urllib.request.ProxyHandler({})
+    )
+
+    def fixture_only_urlopen(request, *args, **kwargs):
+        url = request if isinstance(request, str) else request.full_url
+        if url != fixture_url:
+            raise AssertionError(f"unexpected test network destination: {url}")
+        return fixture_opener.open(request, *args, **kwargs)
+
+    try:
+        with (
+            patch.object(ingest_module, "_qdrant", side_effect=memory.request),
+            patch.object(ingest_module, "resolve_embed", return_value=(None, None)),
+            patch.object(ingest_module.urllib.request, "urlopen", side_effect=fixture_only_urlopen),
+        ):
+            sc = scrape(fixture_url)
+            _ok("loopback scrape gets deterministic title + text",
+                sc.title == "Fixture Domain"
+                and "Hermetic ingestion evidence." in sc.text, state)
+            result = ingest(
+                fixture_url,
+                collection="botte_selftest",
+                qdrant="127.0.0.1:1",
+                reflect=False,
+            )
+            _ok("hermetic ingest stores into the Qdrant contract",
+                result.get("stored") is True, state)
+            hits = search(
+                "fixture domain",
+                collection="botte_selftest",
+                qdrant="127.0.0.1:1",
+            )
+            _ok("hermetic search recalls the ingested document",
+                len(hits.get("hits", [])) == 1
+                and hits["hits"][0]["title"] == "Fixture Domain", state)
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)
 
     passed, failed = state
     print(f"\nRESULT: {passed} passed, {failed} failed")
