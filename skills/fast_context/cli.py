@@ -37,12 +37,27 @@ def main(argv=None) -> int:
     s.add_argument("--no-color", action="store_true",
                    help="Disable color output")
 
+    s = sub.add_parser("symbol", help="Locate a function declaration in one explicit .zig/.gd file")
+    s.add_argument("file")
+    s.add_argument("name", help="Exact ASCII function name")
+    s.add_argument("--max-results", type=int, default=10)
+
     s = sub.add_parser("query-type", help="Detect query type from a query string")
     s.add_argument("query", help="Query string to classify")
 
     s = sub.add_parser("stats", help="Show cache stats")
 
     args = p.parse_args(argv)
+
+    if args.cmd == "symbol":
+        from skills.fast_context.symbols import locate_symbol_file
+        try:
+            report = locate_symbol_file(args.file, args.name, args.max_results)
+        except (OSError, ValueError) as error:
+            print(json.dumps({"error": str(error)}, ensure_ascii=False), file=sys.stderr)
+            return 2
+        print(json.dumps(report, ensure_ascii=False, separators=(",", ":")))
+        return 0
 
     if args.cmd == "explore":
         root = Path(args.root).resolve()
