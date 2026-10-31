@@ -112,6 +112,8 @@ SUITES = [
     ("nn_audit", [sys.executable, "-m", "skills.nn_audit.test_nn_audit"], "skills/nn_audit/"),
     ("hf_provenance", [sys.executable, "-m", "skills.hf_provenance.test_hf_provenance"], "skills/hf_provenance/"),
     ("security_scanner", [sys.executable, "-m", "skills.security_scanner.test_security_scanner"], "skills/security_scanner/"),
+    ("code_context_batch", [sys.executable, "-m", "skills.fast_context.test_batch"], (
+        "skills/fast_context/", "skills/cli.py")),
     ("code_context_workflow", [sys.executable, "-m", "skills.fast_context.test_workflow"], (
         "skills/fast_context/", "skills/cli.py")),
     ("fast_context", [sys.executable, "-m", "skills.fast_context.test_fast_context"], "skills/fast_context/"),
