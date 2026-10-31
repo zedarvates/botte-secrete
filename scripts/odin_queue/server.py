@@ -13,7 +13,7 @@ import threading
 from urllib.parse import urlsplit
 
 from .codex import CodexEngine, SimulationEngine
-from .state import Queue, SupervisorLock
+from .state import Queue, QueuePersistenceError, SupervisorLock
 
 ASSETS = Path(__file__).parent
 
@@ -30,6 +30,7 @@ class Service:
         try:
             while not self.stop.is_set():
                 self.queue.changed.clear()
+                self.queue.ensure_available()
                 self.engine.tick()
                 if self.engine.ready:
                     while not self.stop.is_set():
@@ -46,7 +47,8 @@ class Service:
     def snapshot(self):
         result = self.queue.snapshot()
         result.update(mode=self.engine.mode, connected=self.engine.ready,
-                      engine_note=self.engine.note, supervisor_error=self.failure)
+                      engine_note=self.engine.note,
+                      supervisor_error=self.failure or ("QueuePersistenceError" if self.queue.storage_failed else None))
         return result
 
     def close(self):
@@ -110,6 +112,7 @@ def make_http(service, port=8775, token=None):
             if not self._trusted(api=True):
                 return
             try:
+                service.queue.ensure_available()
                 if self.headers.get("Content-Type", "").split(";")[0] != "application/json":
                     raise ValueError("Un corps JSON est requis.")
                 length = int(self.headers.get("Content-Length", "0"))
@@ -154,6 +157,10 @@ def make_http(service, port=8775, token=None):
                     else:
                         raise ValueError("Action inconnue.")
                     self._json(200, {"ok": True})
+            except QueuePersistenceError:
+                service.failure = "QueuePersistenceError"
+                service.stop.set()
+                self._json(503, {"error": "Journal indisponible ; vérifier le stockage puis redémarrer le superviseur."})
             except (ValueError, OSError, TypeError, KeyError) as error:
                 self._json(400, {"error": str(error)[:1000]})
             except Exception:

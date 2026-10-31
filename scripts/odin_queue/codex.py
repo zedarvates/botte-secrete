@@ -6,7 +6,7 @@ import subprocess
 import threading
 import time
 
-from .state import OCCUPIED
+from .state import OCCUPIED, QueuePersistenceError
 
 
 class RpcError(RuntimeError):
@@ -127,7 +127,16 @@ class CodexEngine:
         self.note = "Codex déconnecté ; vérifier les anciennes exécutions."
         for job in self.queue.snapshot()["jobs"]:
             if job["status"] in OCCUPIED:
-                self.queue.event(job["id"], "unknown", note=self.note)
+                try:
+                    self.queue.event(job["id"], "unknown", note=self.note)
+                except QueuePersistenceError:
+                    self._storage_failed()
+                    break
+        self.queue.changed.set()
+
+    def _storage_failed(self):
+        self.ready = False
+        self.note = "Journal indisponible ; vérifier les tours actifs avant de reprendre."
         self.queue.changed.set()
 
     def _check_account(self):
@@ -198,11 +207,13 @@ class CodexEngine:
 
     def start(self, job):
         try:
+            self.queue.ensure_available()
             self._check_account()
             method = "thread/resume" if job["thread_id"] else "thread/start"
             params = {"cwd": job["cwd"], "sandbox": "readOnly" if job["audit"] else "workspaceWrite"}
             if job["thread_id"]:
                 params["threadId"] = job["thread_id"]
+            self.queue.ensure_available()
             response = self.rpc.call(method, params)
             thread_id = response["thread"]["id"]
             self.queue.attach(job["id"], thread_id=thread_id)
@@ -210,6 +221,7 @@ class CodexEngine:
                       "Aucune fusion, publication, dépense, intervention matérielle, changement d’accès ou envoi à des tiers "
                       "sans autorisation explicite applicable. Ne pas lancer de sous-agents sans demande applicable. "
                       "Produire les vérifications et les limites du résultat.\n\n" + job["prompt"])
+            self.queue.ensure_available()
             response = self.rpc.call("turn/start", {"threadId": thread_id, "cwd": job["cwd"],
                                                      "input": [{"type": "text", "text": prompt}]})
             turn_id = response["turn"]["id"]
@@ -218,10 +230,18 @@ class CodexEngine:
                 early = self.early_completions.pop(turn_id, None)
             if early:
                 self._message(early)
+        except QueuePersistenceError:
+            self._storage_failed()
         except RpcError as error:
-            self.queue.event(job["id"], "complete", status="failed", note=str(error))
+            try:
+                self.queue.event(job["id"], "complete", status="failed", note=str(error))
+            except QueuePersistenceError:
+                self._storage_failed()
         except (OSError, ValueError, KeyError, TypeError, TimeoutError, ConnectionError) as error:
-            self.queue.event(job["id"], "unknown", note=str(error)[:1000])
+            try:
+                self.queue.event(job["id"], "unknown", note=str(error)[:1000])
+            except QueuePersistenceError:
+                self._storage_failed()
 
     def cancel(self, job):
         if job["status"] == "cancelling":
@@ -232,6 +252,7 @@ class CodexEngine:
                 self.queue.event(job["id"], "unknown", note=str(error)[:1000])
 
     def answer(self, job_id, request_id, decision):
+        self.queue.ensure_available()
         if decision not in {"accept", "decline"}:
             raise ValueError("Décision invalide ; aucune autorisation de session ajoutée.")
         with self.lock:
@@ -265,7 +286,10 @@ class SimulationEngine:
         self.lock = threading.RLock()
 
     def start(self, job):
-        self.queue.attach(job["id"], thread_id="demo-" + job["id"], turn_id="demo-turn-" + job["id"])
+        try:
+            self.queue.attach(job["id"], thread_id="demo-" + job["id"], turn_id="demo-turn-" + job["id"])
+        except QueuePersistenceError:
+            return
         with self.lock:
             self.due[job["id"]] = time.monotonic() + self.duration
 

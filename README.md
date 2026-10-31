@@ -10,11 +10,14 @@
 The RC adds Factory Assurance, independent judging, and evidence gates. Start in
 observe, consultative, or shadow mode; the private/external holdout remains
 unproven. See the release notes for limits and installation at the validated
-commit. The version badge below identifies the stable line on `main`.
+commit. `main` prepares version **1.11.0**; the badge below identifies that
+unreleased candidate, not a published stable release. The
+[Codex plugin guide](plugins/botte-secrete/README.md) documents its separately
+installed Python runtime and Git marketplace catalog.
 
 [![CI](https://github.com/zedarvates/botte-secrete/actions/workflows/ci.yml/badge.svg)](https://github.com/zedarvates/botte-secrete/actions)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
-[![Version](https://img.shields.io/badge/version-1.9.0-55d6be)](pyproject.toml)
+[![Version](https://img.shields.io/badge/version-1.11.0-55d6be)](pyproject.toml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-7b8cff)](LICENSE)
 
 [Français](README.fr.md) · [Documentation](docs/README.md) · [Architecture](docs/ARCHITECTURE.md) · [Development](docs/DEVELOPMENT.md) · [Contributing](CONTRIBUTING.md)
@@ -117,6 +120,7 @@ structured checks, evidence checks, or an explicit escalation path.
 | Context reduction | Compresses logs, JSON, tool output, and selected context | `universal_compressor`, `context_budget` |
 | Micro-NN belt | Runs tiny classifiers for routing hints; these are not LLMs | `botte belt` |
 | Local models | Discovers OpenAI-compatible local backends such as LM Studio or Ollama | `llm_backends` |
+| Adaptive local runtime | Configures task-specific engine profiles and reuses shared or external memory | `botte runtime` |
 | MCP | Exposes routing, discovery, audit, and optimization tools over stdio | `botte-mcp` |
 | Dashboard | Renders public-safe snapshots and local operational views | `botte dashboard` |
 | Strategic outsider | Challenges assumptions shared by blue and red teams before costly decisions | `monte_cristo` |
@@ -124,6 +128,19 @@ structured checks, evidence checks, or an explicit escalation path.
 Detailed module contracts live in each `skills/<name>/SKILL.md`. Cross-module
 flows and trust boundaries are described in the
 [architecture guide](docs/ARCHITECTURE.md).
+
+## Configure Botte with your own LLM
+
+For an installation tailored by **your own LLM**, use the
+[portable runtime setup guide](docs/adaptive-local-runtime.md). It provides a
+copyable agent instruction, offline hardware/configuration tools, shared and
+external memory adapters, and paired trials of preconfigured native engines.
+Draft templates make no hardware, engine-support or speedup assumptions.
+
+```bash
+botte runtime inspect
+botte runtime template --topology single --memory none
+```
 
 ## Strategic agent: Monte Cristo
 
@@ -305,6 +322,7 @@ Report vulnerabilities privately as described in [SECURITY.md](SECURITY.md).
 | Understand the system | [Architecture](docs/ARCHITECTURE.md) |
 | Develop or test Botte | [Development guide](docs/DEVELOPMENT.md) |
 | Integrate MCP | [MCP integration](docs/mcp-integration.md) |
+| Pilot shared agent memory | [Authenticated memory API, MCP bridge and advisory scribe](docs/shared-memory.md) |
 | Connect Hermes | [Hermes integration](docs/integrations/hermes.md) |
 | Understand the loop optimizer | [Loop Optimizer](docs/loop-optimizer.md) |
 | Review changes by release | [Changelog](CHANGELOG.md) |

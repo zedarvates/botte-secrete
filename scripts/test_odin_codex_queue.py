@@ -1,12 +1,14 @@
 """Acceptance: admission, durable restart, lifecycle races and loopback boundary."""
 from concurrent.futures import ThreadPoolExecutor
 import json
+import os
 from pathlib import Path
 import sys
 import tempfile
 import threading
 import time
 import unittest
+from unittest.mock import patch
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
@@ -146,6 +148,111 @@ class QueueTests(QueueFixture):
             pass
 
 
+class PersistenceTests(QueueFixture):
+    def test_rejected_submission_cannot_be_claimed_after_storage_recovers(self):
+        for target, error in [
+            ("os.replace", OSError("replace failed")),
+            ("os.fsync", OSError("fsync failed")),
+            ("tempfile.NamedTemporaryFile", OSError("temporary file failed")),
+            ("json.dump", TypeError("serialization failed")),
+        ]:
+            with self.subTest(target=target):
+                self.queue = Queue(self.root / (target + ".json"), [self.root])
+                before = self.queue.snapshot()
+                with patch("odin_queue.state." + target, side_effect=error):
+                    with self.assertRaises(OSError):
+                        self.add(0)
+                self.assertEqual(self.queue.snapshot(), before)
+                self.assertFalse(self.queue.path.exists())
+                self.assertEqual(list(self.root.glob(".queue-*")), [])
+                with self.assertRaises(OSError):
+                    self.queue.claim()
+                reopened = Queue(self.queue.path, [self.root])
+                self.assertEqual(reopened.snapshot()["jobs"], [])
+                self.assertIsNone(reopened.claim())
+
+    def test_failed_transitions_keep_last_committed_state_and_occupied_slots(self):
+        transitions = ["claim", "attach", "approval", "resolved", "message",
+                       "complete", "unknown", "cancel_queued", "cancel_running",
+                       "confirm_stopped", "pause", "resume"]
+        for name in transitions:
+            with self.subTest(transition=name):
+                self.queue = Queue(self.root / (name + ".json"), [self.root])
+                job = self.add(0)
+                job_id = job["id"]
+                if name not in {"claim", "cancel_queued", "pause", "resume"}:
+                    self.queue.claim()
+                if name not in {"claim", "attach", "cancel_queued", "pause", "resume"}:
+                    self.queue.attach(job_id, thread_id="thread", turn_id="turn")
+                if name == "resolved":
+                    self.queue.event(job_id, "approval", request={"id": 7})
+                if name == "confirm_stopped":
+                    self.queue.event(job_id, "unknown")
+                if name == "resume":
+                    self.queue.pause(True)
+                actions = {
+                    "claim": self.queue.claim,
+                    "attach": lambda: self.queue.attach(job_id, thread_id="new-thread", turn_id="new-turn"),
+                    "approval": lambda: self.queue.event(job_id, "approval", request={"id": 7}),
+                    "resolved": lambda: self.queue.event(job_id, "resolved", request_id=7),
+                    "message": lambda: self.queue.event(job_id, "message", text="new result"),
+                    "complete": lambda: self.queue.event(job_id, "complete", status="completed"),
+                    "unknown": lambda: self.queue.event(job_id, "unknown"),
+                    "cancel_queued": lambda: self.queue.cancel(job_id),
+                    "cancel_running": lambda: self.queue.cancel(job_id),
+                    "confirm_stopped": lambda: self.queue.confirm_stopped(job_id, True),
+                    "pause": lambda: self.queue.pause(True),
+                    "resume": lambda: self.queue.pause(False),
+                }
+                before = self.queue.snapshot()
+                persisted = self.queue.path.read_bytes()
+                with patch("odin_queue.state.os.replace", side_effect=OSError("disk unavailable")):
+                    with self.assertRaises(OSError):
+                        actions[name]()
+                self.assertEqual(self.queue.snapshot(), before)
+                self.assertEqual(self.queue.path.read_bytes(), persisted)
+                with self.assertRaises(OSError):
+                    self.queue.claim()
+                with self.assertRaises(OSError):
+                    self.add(1)
+                self.assertEqual(self.queue.snapshot(), before)
+
+    def test_claim_retains_an_earlier_committed_rejection_if_next_write_fails(self):
+        first = self.add(0)
+        second = self.add(1)
+        Path(self.paths[0]).rmdir()
+        replace = os.replace
+        calls = []
+
+        def fail_second_replace(source, destination):
+            calls.append(destination)
+            if len(calls) == 2:
+                raise OSError("second write failed")
+            return replace(source, destination)
+
+        with patch("odin_queue.state.os.replace", side_effect=fail_second_replace):
+            with self.assertRaises(OSError):
+                self.queue.claim()
+        current = {job["id"]: job for job in self.queue.snapshot()["jobs"]}
+        self.assertEqual(current[first["id"]]["status"], "failed")
+        self.assertEqual(current[second["id"]]["status"], "queued")
+        reopened = Queue(self.queue.path, [self.root])
+        self.assertEqual(reopened.snapshot(), self.queue.snapshot())
+
+    def test_failed_recovery_leaves_occupied_work_for_a_later_restart(self):
+        job = self.add(0)
+        self.queue.claim()
+        persisted = self.queue.path.read_bytes()
+        with patch("odin_queue.state.os.replace", side_effect=OSError("disk unavailable")):
+            with self.assertRaises(OSError):
+                Queue(self.queue.path, [self.root])
+        self.assertEqual(self.queue.path.read_bytes(), persisted)
+        reopened = Queue(self.queue.path, [self.root])
+        self.assertEqual(reopened.snapshot()["jobs"][0]["id"], job["id"])
+        self.assertEqual(reopened.snapshot()["jobs"][0]["status"], "unknown")
+        self.assertIsNone(reopened.claim())
+
+
 class AdapterTests(QueueFixture):
     def setUp(self):
         super().setUp()
@@ -159,6 +266,69 @@ class AdapterTests(QueueFixture):
         with self.assertRaisesRegex(RuntimeError, "connexion ChatGPT"):
             CodexEngine(self.queue, [sys.executable, str(FAKE), "--api-account"], timeout=3)
         self.assertEqual(self.queue.snapshot()["occupied"], 0)
+
+    def _assert_start_write_failure(self, failure_number, expected_turn_starts):
+        self.add(0)
+        job = self.queue.claim()
+        replace = os.replace
+        writes = []
+
+        def fail_selected_write(source, destination):
+            writes.append(destination)
+            if len(writes) == failure_number:
+                raise OSError("disk unavailable")
+            return replace(source, destination)
+
+        with patch.object(self.engine.rpc, "call", wraps=self.engine.rpc.call) as rpc:
+            with patch("odin_queue.state.os.replace", side_effect=fail_selected_write):
+                self.engine.start(job)
+        self.assertEqual(sum(call.args[0] == "turn/start" for call in rpc.call_args_list), expected_turn_starts)
+        self.assertFalse(self.engine.ready)
+        self.assertEqual(self.queue.snapshot()["occupied"], 1)
+        self.assertEqual(self.queue.snapshot()["jobs"][0]["status"], "starting")
+        with self.assertRaises(OSError):
+            self.queue.claim()
+        with self.assertRaises(OSError):
+            self.engine.answer(job["id"], 1, "accept")
+        reopened = Queue(self.queue.path, [self.root])
+        self.assertEqual(reopened.snapshot()["jobs"][0]["status"], "unknown")
+        self.assertIsNone(reopened.claim())
+
+    def test_thread_persistence_failure_prevents_turn_start(self):
+        self._assert_start_write_failure(1, 0)
+
+    def test_turn_persistence_failure_keeps_slot_and_does_not_retry(self):
+        self._assert_start_write_failure(2, 1)
+
+    def _assert_storage_failure_between_start_phases(self, after_thread):
+        self.add(0)
+        job = self.queue.claim()
+        target = self.queue if after_thread else self.engine
+        method = "attach" if after_thread else "_check_account"
+        original = getattr(target, method)
+
+        def finish_phase_then_fail_storage(*args, **kwargs):
+            result = original(*args, **kwargs)
+            with patch("odin_queue.state.os.replace", side_effect=OSError("concurrent write failed")):
+                with self.assertRaises(OSError):
+                    self.queue.pause(True)
+            return result
+
+        with patch.object(self.engine.rpc, "call", wraps=self.engine.rpc.call) as rpc:
+            with patch.object(target, method, side_effect=finish_phase_then_fail_storage):
+                self.engine.start(job)
+        methods = [call.args[0] for call in rpc.call_args_list]
+        self.assertEqual(methods.count("thread/start"), int(after_thread))
+        self.assertNotIn("turn/start", methods)
+        self.assertFalse(self.engine.ready)
+        self.assertEqual(self.queue.snapshot()["occupied"], 1)
+        self.assertEqual(self.queue.snapshot()["jobs"][0]["status"], "starting")
+
+    def test_failure_after_account_check_prevents_starting_thread(self):
+        self._assert_storage_failure_between_start_phases(False)
+
+    def test_failure_after_thread_attach_prevents_starting_turn(self):
+        self._assert_storage_failure_between_start_phases(True)
 
     def test_actual_stdio_completion_before_response_does_not_resurrect(self):
         job = self.add(0, prompt="auto-test")
@@ -230,6 +400,25 @@ class HttpTests(QueueFixture):
             with self.assertRaises(HTTPError) as error: self.request("/api/state", headers=headers)
             self.assertEqual(error.exception.code, code)
         with self.assertRaises(HTTPError): self.request("/api/anything", {"command":"arbitrary"})
+
+    def test_storage_failure_returns_503_and_stops_admission_until_restart(self):
+        self.queue.pause(True)
+        persisted = self.queue.path.read_bytes()
+        with patch("odin_queue.state.os.replace", side_effect=OSError("private-spool-path")):
+            with self.assertRaises(HTTPError) as error:
+                self.request("/api/jobs", {"title": "Rejected", "prompt": "inspect only",
+                                          "cwd": self.paths[0], "dedupe_key": "rejected"})
+        self.assertEqual(error.exception.code, 503)
+        self.assertNotIn("private-spool-path", error.exception.read().decode("utf-8"))
+        wait_for(lambda: not self.service.thread.is_alive())
+        current = self.request("/api/state")
+        self.assertEqual(current["jobs"], [])
+        self.assertTrue(current["supervisor_error"])
+        self.assertEqual(self.queue.path.read_bytes(), persisted)
+        with self.assertRaises(HTTPError) as error:
+            self.request("/api/control", {"paused": False})
+        self.assertEqual(error.exception.code, 503)
+        self.assertTrue(self.request("/api/state")["paused"])
 
     def test_http_demo_has_five_running_and_badges_renumber(self):
         self.request("/api/demo", {"dedupe_key":"demo"})

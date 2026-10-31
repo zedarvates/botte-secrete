@@ -23,6 +23,7 @@ import subprocess
 import sys
 import time
 from dataclasses import asdict, dataclass
+from copy import deepcopy
 from typing import Callable, Optional
 
 
@@ -103,11 +104,16 @@ class StepResult:
 
 def execute(plan_dict: dict, *, confirm: bool = False, dry_run: bool = False,
             timeout: int = 120, cwd: str = ".",
-            runner: Optional[Runner] = None) -> dict:
+            runner: Optional[Runner] = None, observe_effects: bool = False,
+            review_effects: bool = False, stop_on_failure: bool = False) -> dict:
     """Run the runnable steps of a plan; classify and report on the rest.
 
-    Returns a report dict: goal, mode, summary counts, and per-step results.
+    stop_on_failure skips the remaining sequence after a nonzero process exit.
+    It does not verify task outputs, retry work or cancel surviving descendants.
+    Returns a report dict: goal, mode, summary counts, and every step's result.
     """
+    if type(stop_on_failure) is not bool:
+        raise ValueError("stop_on_failure must be a boolean")
     if "error" in plan_dict:
         return {"error": plan_dict["error"]}
     steps = plan_dict.get("steps", [])
@@ -117,18 +123,27 @@ def execute(plan_dict: dict, *, confirm: bool = False, dry_run: bool = False,
     run = runner or _default_runner
     results: list[dict] = []
     counts = {"ran": 0, "skipped": 0, "blocked": 0, "failed": 0}
+    effects_before = [deepcopy(s.get("effects")) for s in steps]
+    reviews = [deepcopy(s.get("review_before")) for s in steps]
+    if review_effects:
+        from skills.capabilities.review import before
+        reviews = [r if r is not None else before(e) for r, e in zip(reviews, effects_before)]
+    observed = []
+    stopped_after = None
 
-    for s in steps:
+    for position, s in enumerate(steps):
         cls = classify(s)
         order = s.get("order")
         cap = s.get("capability", "")
         cmd = s.get("command", "")
         why = s.get("why", "")
 
-        will_run = not dry_run and (cls == SAFE or (cls == GATED and confirm))
+        will_run = stopped_after is None and not dry_run and (cls == SAFE or (cls == GATED and confirm))
 
         if not will_run:
-            if dry_run:
+            if stopped_after is not None:
+                status, note = "skipped", f"not run: stopped after failed result at index {stopped_after}"
+            elif dry_run:
                 status, note = "skipped", f"dry-run: classified {cls}"
             elif cls == NEEDS_ARGS:
                 note = ("command needs arguments (fill the <placeholder>)"
@@ -142,32 +157,76 @@ def execute(plan_dict: dict, *, confirm: bool = False, dry_run: bool = False,
             results.append(StepResult(order, cap, cmd, cls, status, None, 0.0,
                                       note, why).to_dict())
             counts[status] += 1
+            if observe_effects:
+                from skills.capabilities.observations import empty_report
+                report = empty_report()
+                report["process"] = {"status": "not_run", "exit_code": None}
+                observed.append(report)
             continue
 
         t0 = time.time()
-        code, out = run(cmd, cwd, timeout)
+        if observe_effects:
+            from skills.conductor.observed_run import run_observed
+            code, out, report = run_observed(cmd, cwd, timeout, runner=runner)
+            observed.append(report)
+        else:
+            code, out = run(cmd, cwd, timeout)
         dt = round(time.time() - t0, 2)
         status = "ran" if code == 0 else "failed"
         results.append(StepResult(order, cap, cmd, cls, status, code, dt,
                                   _tail(out), why).to_dict())
         counts[status] += 1
+        if stop_on_failure and status == "failed":
+            stopped_after = position
 
-    return {
+    # Retain the planning snapshot for comparison with observed results. It is
+    # descriptive data: classification and executable commands never use it.
+    for snapshot, result in zip(effects_before, results):
+        if snapshot is not None:
+            result["effects_before"] = snapshot
+    if observe_effects:
+        from skills.capabilities.observations import digest, summarize
+        for snapshot, report, result in zip(effects_before, observed, results):
+            result["effects_observed"] = report
+            result["effects_summary"] = summarize(report)
+            # Compare the selected declaration with the first observed call of
+            # the same identity. Unmatched/unavailable is unknown, never equal.
+            contract = (snapshot or {}).get("contract")
+            match = next((c for c in report["calls"] if contract and
+                          c["capability_id"] == contract["capability_id"]), None)
+            result["effects_changed_since_plan"] = (
+                (digest(contract) != match["declaration_ref"] or
+                 snapshot["status"] != match["declaration_status"]) if match else None)
+
+    report = {
         "goal": plan_dict.get("goal", ""),
         "mode": "dry_run" if dry_run else ("confirmed" if confirm else "safe_only"),
         "summary": counts,
         "cloud_tokens": 0,
         "results": results,
     }
+    if stop_on_failure:
+        report.update(stop_on_failure=True, stopped_after_result_index=stopped_after)
+    if any(r is not None for r in reviews):
+        from skills.capabilities.review import METHOD, attach_results
+        attach_results(results, reviews)
+        report["review_method"] = METHOD
+    return report
 
 
 def run_goal(goal: str, *, confirm: bool = False, dry_run: bool = False,
              timeout: int = 120, cwd: str = ".", top_k: int = 6,
-             runner: Optional[Runner] = None) -> dict:
+             runner: Optional[Runner] = None, include_effects: bool = False,
+             observe_effects: bool = False, review_effects: bool = False,
+             stop_on_failure: bool = False) -> dict:
     """Plan a goal, then execute its runnable steps. Convenience wrapper."""
+    if type(stop_on_failure) is not bool:
+        raise ValueError("stop_on_failure must be a boolean")
     from skills.conductor.conductor import plan as _plan
-    p = _plan(goal, top_k=top_k)
+    p = _plan(goal, top_k=top_k, include_effects=include_effects or observe_effects,
+              review_effects=review_effects)
     if "error" in p:
         return p
     return execute(p, confirm=confirm, dry_run=dry_run, timeout=timeout,
-                   cwd=cwd, runner=runner)
+                   cwd=cwd, runner=runner, observe_effects=observe_effects,
+                   review_effects=review_effects, stop_on_failure=stop_on_failure)

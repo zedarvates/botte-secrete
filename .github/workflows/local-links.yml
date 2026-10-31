@@ -1,0 +1,38 @@
+name: Supplied local Markdown link pilot
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'skills/fallow_like/local_links.py'
+      - 'skills/fallow_like/links_cli.py'
+      - 'skills/fallow_like/test_local_links.py'
+      - 'skills/llm_mcp/**'
+      - 'skills/preflight/assessment.py'
+      - 'scripts/check_docs_links.py'
+      - '.github/workflows/local-links.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  local-links:
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.10', '3.12']
+    env:
+      PYTHONUTF8: '1'
+      PYTHONIOENCODING: utf-8
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Verify supplied-data parser and link outcomes
+        run: python -m skills.fallow_like.test_local_links
+      - name: Verify CLI, MCP, routing and legacy entry point
+        run: python -m skills.llm_mcp.test_local_links

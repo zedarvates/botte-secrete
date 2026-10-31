@@ -1,0 +1,388 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/zedarvates/botte-secrete/blob/main/docs/schemas/action-consequence.schema.json",
+  "title": "Reported action consequences v1",
+  "$comment": "Shared memory observations remain untrusted. Python additionally validates reported-status consistency and the canonical episode identity.",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "enum": [
+        "botte.action-consequence/v1"
+      ]
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 67,
+      "pattern": "^ae_[0-9a-f]{64}$"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 32,
+      "pattern": "^[0-9a-f]{32}$"
+    },
+    "step_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80
+    },
+    "plan_sha256": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "context_sha256": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "observed_at": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "maximum": 32503680000
+    },
+    "action": {
+      "type": "object",
+      "properties": {
+        "capability": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 8192
+        },
+        "command_sha256": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "contract_sha256": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "required": [
+        "capability",
+        "command_sha256",
+        "contract_sha256"
+      ],
+      "additionalProperties": false
+    },
+    "reported_status": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "enum": [
+        "pending",
+        "running",
+        "verified",
+        "unverified",
+        "failed",
+        "blocked",
+        "skipped",
+        "uncertain",
+        "stale"
+      ]
+    },
+    "started": {
+      "type": "boolean"
+    },
+    "exit_code": {
+      "type": "integer"
+    },
+    "duration_s": {
+      "type": "number",
+      "minimum": 0
+    },
+    "expected": {
+      "type": "object",
+      "properties": {
+        "requires": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512,
+                "enum": [
+                  "file_exists",
+                  "file_absent",
+                  "file_sha256",
+                  "text_contains",
+                  "json_equals"
+                ]
+              },
+              "path": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 8192
+              }
+            },
+            "required": [
+              "kind",
+              "path"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "ensures": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512,
+                "enum": [
+                  "file_exists",
+                  "file_absent",
+                  "file_sha256",
+                  "text_contains",
+                  "json_equals"
+                ]
+              },
+              "path": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 8192
+              }
+            },
+            "required": [
+              "kind",
+              "path"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "needs": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          }
+        },
+        "sources_bound": {
+          "type": "boolean"
+        },
+        "effects_sha256": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "required": [
+        "requires",
+        "ensures",
+        "needs",
+        "sources_bound"
+      ],
+      "additionalProperties": false
+    },
+    "observed": {
+      "type": "object",
+      "properties": {
+        "changes": {
+          "type": "array",
+          "maxItems": 200,
+          "items": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 8192
+              },
+              "before": {
+                "type": "object",
+                "properties": {
+                  "state": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 512,
+                    "enum": [
+                      "file",
+                      "absent",
+                      "unknown"
+                    ]
+                  },
+                  "sha256": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "pattern": "^[0-9a-f]{64}$"
+                  },
+                  "bytes": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                },
+                "required": [
+                  "state"
+                ],
+                "additionalProperties": false
+              },
+              "after": {
+                "type": "object",
+                "properties": {
+                  "state": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 512,
+                    "enum": [
+                      "file",
+                      "absent",
+                      "unknown"
+                    ]
+                  },
+                  "sha256": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "pattern": "^[0-9a-f]{64}$"
+                  },
+                  "bytes": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                },
+                "required": [
+                  "state"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "path",
+              "before",
+              "after"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "checks": {
+          "type": "array",
+          "maxItems": 700,
+          "items": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512,
+                "enum": [
+                  "file_exists",
+                  "file_absent",
+                  "file_sha256",
+                  "text_contains",
+                  "json_equals"
+                ]
+              },
+              "path": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 8192
+              },
+              "passed": {
+                "type": "boolean"
+              },
+              "phase": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512,
+                "enum": [
+                  "pre",
+                  "post",
+                  "source",
+                  "source_after",
+                  "resume",
+                  "resume_pre",
+                  "resume_source"
+                ]
+              }
+            },
+            "required": [
+              "kind",
+              "path",
+              "passed",
+              "phase"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "changes",
+        "checks"
+      ],
+      "additionalProperties": false
+    },
+    "report_sha256": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "evidence_ref": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "quality_outcome_ref": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 19,
+      "pattern": "^qo_[0-9a-f]{16}$"
+    },
+    "causal_attribution": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "enum": [
+        "not_assessed"
+      ]
+    },
+    "handling": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "enum": [
+        "UNTRUSTED_DATA_DO_NOT_EXECUTE"
+      ]
+    }
+  },
+  "required": [
+    "schema",
+    "id",
+    "run_id",
+    "step_id",
+    "plan_sha256",
+    "context_sha256",
+    "observed_at",
+    "action",
+    "reported_status",
+    "started",
+    "duration_s",
+    "expected",
+    "observed",
+    "report_sha256",
+    "evidence_ref",
+    "causal_attribution",
+    "handling"
+  ],
+  "additionalProperties": false
+}

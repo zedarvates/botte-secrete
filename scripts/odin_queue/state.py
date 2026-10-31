@@ -15,6 +15,10 @@ OCCUPIED = {"starting", "running", "waiting_approval", "cancelling", "unknown"}
 TERMINAL = {"completed", "failed", "interrupted", "cancelled"}
 
 
+class QueuePersistenceError(OSError):
+    """A failed journal write disables admission until the supervisor restarts."""
+
+
 class SupervisorLock:
     """An OS-held lock, released by the OS after a crash, never by a stale timestamp."""
     def __init__(self, path):
@@ -69,6 +73,7 @@ class Queue:
             raise ValueError("Mode d’exécution invalide.")
         self.lock = threading.RLock()
         self.changed = threading.Event()
+        self.storage_failed = False
         self.data = {"schema_version": 1, "mode": mode, "revision": 0, "paused": False, "jobs": []}
         if self.path.exists():
             self.data = json.loads(self.path.read_text(encoding="utf-8"))
@@ -76,28 +81,48 @@ class Queue:
                     or len({j["id"] for j in self.data["jobs"]}) != len(self.data["jobs"])
                     or any(j.get("status") not in OCCUPIED | TERMINAL | {"queued"} for j in self.data["jobs"])):
                 raise ValueError("Journal de file incompatible ou altéré.")
+        self._committed_data = copy.deepcopy(self.data)
         if recover and any(j["status"] in OCCUPIED for j in self.data["jobs"]):
             for job in self.data["jobs"]:
                 if job["status"] in OCCUPIED:
                     job.update(status="unknown", pending=[], note="Ancienne exécution à vérifier ; aucun rejeu automatique.")
             self._commit()
 
+    def ensure_available(self):
+        with self.lock:
+            if self.storage_failed:
+                raise QueuePersistenceError("Journal indisponible ; vérifier le stockage puis redémarrer le superviseur.")
+
     def _commit(self):
-        self.data["revision"] += 1
-        self.path.parent.mkdir(parents=True, exist_ok=True)
         staged = None
         try:
+            self.ensure_available()
+            candidate = copy.deepcopy(self.data)
+            candidate["revision"] += 1
+            self.path.parent.mkdir(parents=True, exist_ok=True)
             with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=self.path.parent,
                                              prefix=".queue-", delete=False) as target:
                 staged = Path(target.name)
-                json.dump(self.data, target, ensure_ascii=False, separators=(",", ":"))
+                json.dump(candidate, target, ensure_ascii=False, separators=(",", ":"))
                 target.flush()
                 os.fsync(target.fileno())
             os.replace(staged, self.path)
             staged = None
+        except Exception as error:
+            # No failed submission, released slot or approval becomes visible.
+            # Keep the last successful commit even when claim() made earlier ones.
+            self.data = copy.deepcopy(self._committed_data)
+            self.storage_failed = True
+            self.changed.set()
+            raise QueuePersistenceError("Écriture du journal interrompue ; aucun nouveau départ autorisé.") from error
         finally:
             if staged:
-                staged.unlink(missing_ok=True)
+                try:
+                    staged.unlink(missing_ok=True)
+                except OSError:
+                    pass  # Preserve the original failure; this file is never read as the spool.
+        self.data["revision"] = candidate["revision"]
+        self._committed_data = candidate
         self.changed.set()
 
     def _job(self, job_id):
@@ -142,6 +167,7 @@ class Queue:
 
     def claim(self):
         with self.lock:
+            self.ensure_available()
             active = [j for j in self.data["jobs"] if j["status"] in OCCUPIED]
             if self.data["paused"] or any(j["status"] == "unknown" for j in active) or len(active) >= self.capacity:
                 return None

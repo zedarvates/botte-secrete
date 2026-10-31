@@ -1,0 +1,264 @@
+{
+  "schema": "botte.action-memory-acceptance/v1",
+  "recorded_at": "2026-09-08T10:04:46.177684+00:00",
+  "status": "local_pilot_validated",
+  "parents": {
+    "verified_skill_runs": "ef005534675efd614d57d3246c419786de8fae85",
+    "shared_memory": "22562f36979f858569673592a5159f99053648ae"
+  },
+  "runtime": {
+    "python": "3.12.13",
+    "platform": "Linux",
+    "test_dependencies": {
+      "pytest": "9.1.1",
+      "jsonschema": "4.26.0",
+      "PyYAML": "6.0.3"
+    },
+    "environment": {
+      "BOTTE_NN_AUTO_LABELS": "0",
+      "PYTHONPATH": "isolated development dependencies plus repository root"
+    }
+  },
+  "tests": {
+    "passed": 328,
+    "failed": 0,
+    "scope": "Selected unit, integration and e2e suites; not the entire repository matrix.",
+    "suites": [
+      {
+        "command": "python -m skills.memory_hub.test_action_memory",
+        "exit_code": 0,
+        "passed": 16,
+        "failed": 0,
+        "seconds": 0.613
+      },
+      {
+        "command": "python -m skills.memory_hub.test_quarantine",
+        "exit_code": 0,
+        "passed": 11,
+        "failed": 0,
+        "seconds": 0.048
+      },
+      {
+        "command": "python -m skills.conductor.test_verified",
+        "exit_code": 0,
+        "passed": 20,
+        "failed": 0,
+        "seconds": 0.174
+      },
+      {
+        "command": "python -m skills.conductor.test_verified_pilots",
+        "exit_code": 0,
+        "passed": 4,
+        "failed": 0,
+        "seconds": 0.277
+      },
+      {
+        "command": "python -m skills.conductor.test_conductor",
+        "exit_code": 0,
+        "passed": 25,
+        "failed": 0,
+        "seconds": 0.247
+      },
+      {
+        "command": "python -m skills.conductor.test_effects",
+        "exit_code": 0,
+        "passed": 16,
+        "failed": 0,
+        "seconds": 0.151
+      },
+      {
+        "command": "python -m skills.conductor.test_observations",
+        "exit_code": 0,
+        "passed": 12,
+        "failed": 0,
+        "seconds": 1.287
+      },
+      {
+        "command": "python -m skills.trajectory.test_outcome",
+        "exit_code": 0,
+        "passed": 10,
+        "failed": 0,
+        "seconds": 0.047
+      },
+      {
+        "command": "python -m skills.trajectory.test_quality",
+        "exit_code": 0,
+        "passed": 16,
+        "failed": 0,
+        "seconds": 0.05
+      },
+      {
+        "command": "python -m skills.llm_mcp.test_lazy",
+        "exit_code": 0,
+        "passed": 34,
+        "failed": 0,
+        "seconds": 7.054
+      },
+      {
+        "command": "python -m skills.capabilities.test_effects",
+        "exit_code": 0,
+        "passed": 19,
+        "failed": 0,
+        "seconds": 0.144
+      },
+      {
+        "command": "python skills/test_e2e.py",
+        "exit_code": 0,
+        "passed": 51,
+        "failed": 0,
+        "seconds": 0.044
+      },
+      {
+        "command": "python -m pytest --rootdir=. -q skills/memory_hub/test_shared_service.py skills/memory_hub/test_shared_transport.py skills/memory_hub/test_memory_hub.py",
+        "exit_code": 0,
+        "passed": 94,
+        "failed": 0,
+        "seconds": 8.68
+      }
+    ],
+    "setup_note": "Two preliminary attempts to import pytest suites as modules failed before pytest was installed. Installed the declared memory-test dependencies and ran those suites through pytest successfully; preliminary import attempts are not counted as tests."
+  },
+  "independent_usage": {
+    "scope": "Separate forward test using documented service and action CLI commands in an isolated local stock project.",
+    "observations": {
+      "expected": {
+        "articles": 3,
+        "quantity": 13,
+        "total_cents": 2740
+      },
+      "initial_complete": true,
+      "initial_assessments": {
+        "calculate": [
+          "local_checks_match"
+        ],
+        "summarize": [
+          "local_checks_match"
+        ]
+      },
+      "modified_output_assessments": {
+        "calculate": [
+          "stale"
+        ],
+        "summarize": [
+          "stale"
+        ]
+      },
+      "restored_output_assessments": {
+        "calculate": [
+          "local_checks_match"
+        ],
+        "summarize": [
+          "local_checks_match"
+        ]
+      },
+      "interrupted_execution_complete": true,
+      "interrupted_memory_complete": false,
+      "interrupted_pending": 1,
+      "capture_retry_replayed": [
+        true,
+        true
+      ],
+      "capture_repeat_replayed": [
+        true,
+        true
+      ],
+      "artifact_and_execution_log_unchanged_by_capture": true,
+      "memory_episode_count": 4,
+      "unique_run_count": 2,
+      "archive_digests_and_source_digests_match": true,
+      "normal_context_episode_count": 0,
+      "quality_verified": false,
+      "final_assessments": {
+        "calculate": [
+          "local_checks_match",
+          "local_checks_match"
+        ],
+        "summarize": [
+          "local_checks_match",
+          "local_checks_match"
+        ]
+      },
+      "demonstrated_defects": [],
+      "observed_file_change_samples_matched": 6,
+      "quality_envelopes": 2,
+      "quality_events": 2,
+      "quality_statuses": [
+        "PARTIAL",
+        "PARTIAL"
+      ],
+      "verifier_and_task_verdict_absent": true,
+      "servers_stopped": true,
+      "repository_edited": false
+    },
+    "limitations": "Synthetic stock inputs, loopback transport and one configured worker identity; no live homelab or external model."
+  },
+  "checks": {
+    "checkup": {
+      "exit_code": 0,
+      "headline": "directives 100/100 · infra 24/100 · 0 duplicate-fn group(s)",
+      "drift": [
+        "MCP not wired here — run `python -m skills.bootstrap.cli .`"
+      ],
+      "security_available": false,
+      "at_risk_models": 0
+    },
+    "memory_hub_skill_validator": "passed",
+    "conductor_skill_validator": "Generic validator rejects pre-existing layer: DECIDE metadata; retained project convention.",
+    "episode_schema_matches_runtime": true,
+    "shared_openapi_unchanged": true,
+    "effects_source_hashes": "passed; both updated effects contracts also validated against runtime and JSON Schema",
+    "markdown_links": {
+      "command": "python scripts/check_docs_links.py",
+      "exit_code": 0,
+      "markdown_files": 67,
+      "broken_local_links": 0
+    },
+    "fast_precommit": {
+      "command": "python scripts/pre-commit-check.py --fast",
+      "exit_code": 0,
+      "staged_python_files": 15,
+      "scope": "Staged Python syntax and heuristic secret checks. Schema equality and JSON Schema validation were run separately; the pre-commit schema check is a placeholder."
+    },
+    "diff_whitespace": {
+      "command": "git diff --cached --check",
+      "exit_code": 0
+    }
+  },
+  "not_validated_or_deployed": [
+    "No merge to main or homelab deployment.",
+    "No full repository test run, Windows run, or Python 3.10/3.11 run.",
+    "No GitHub Actions run observed; current workflow filters pull requests to main.",
+    "Checkup security/taint scanner unavailable; its empty results are not a security clearance.",
+    "No independent task-quality verdict, causal attribution, model training, automatic skill improvement or real-corpus retrieval accuracy measurement."
+  ],
+  "source_sha256": {
+    ".github/workflows/ci.yml": "18c93ec4160262dbc8c68ef148bfbc0c4f8767eff780bf0460ad4833f222a534",
+    "README.md": "e4bc23044d1a6d10047cc0ea522704a4ca3a45d1e6d89011028e975e136ce9e2",
+    "docs/action-consequence-memory.md": "6091d7c7c11441322166da417784f881d8d595850a95239daacd15247e9e9171",
+    "docs/plans/2026-09-08_shared-memory-scribe.md": "f8f4453d57b5f13c3b7900eceb7f13facab88aa0803966dafa24ee14a01b76cb",
+    "docs/schemas/action-consequence.schema.json": "e385096b99088d12551bf3eed66fc56299774e0957a9f4b0b4b1ec4dca83026c",
+    "docs/schemas/shared-memory.openapi.json": "22d7699f7e52e9db5c8b4f26f76497a5248dc59101841cd54734e7e7d9aa6384",
+    "docs/shared-memory.md": "e7545df1ea4be61ea17f00532083fb2a2866efb530b4bc667baf8c0affb33024",
+    "docs/validation/shared-memory-v1.json": "a2f4e81c15d969cfaecdb4a0002bc778e75bd1f068bf8abeeabdf3dce3778bad",
+    "pyproject.toml": "4c796aeab5d777e1b409e32d6606a755332aaa4b67be92ef99fdaaed03818278",
+    "scripts/run_tests.py": "71256cf2933ded02e64cd47a94d7d22597d53eee28a74a4fe4402e6230715084",
+    "skills/conductor/SKILL.md": "7b1d7918df296b94f1cbe171fadf72dc72bb82741a2d9c2d5486934b59b27913",
+    "skills/conductor/effects.json": "62cf62a88dd9a71c112e70409cb33c3fbddfb6b98cf7395ca5ba721ead7df72d",
+    "skills/llm_mcp/server.py": "7b4f8c5ca073b3711ee2bce1cd9fb547d042257171bf7eeee9ccfc3a7e70db67",
+    "skills/memory_hub/SKILL.md": "657b1f9ff210fb6f30ce94c4b0b3d9cb47e0ebd021423d23e194b544793f647f",
+    "skills/memory_hub/action_cli.py": "d7d791cabfea43fc1c12b34b33e2e380a06a3dd32031c96cfdf0be8c4604eb34",
+    "skills/memory_hub/action_contract.py": "6b47483bd6be09fb66bd12a8d2c6b9a8590c9d2f34dc88db988f3aee4c911a87",
+    "skills/memory_hub/action_memory.py": "d06dbd11b998878433e67acd656d89cf9b81c7be524b199a1a9e4cb933a470f6",
+    "skills/memory_hub/cli.py": "18494743fd3142139175f83cd40dfd1a38910e284f167616264e89b52e71e90d",
+    "skills/memory_hub/effects.json": "2106e72cb14b3617961ab69f01a87a89fbd3965534503cf56e4252bcac652778",
+    "skills/memory_hub/scribe.py": "cd6ce4cb7950046867a2243a54c5cdf9fa736ac0166bb943cc2208f511f8d3b4",
+    "skills/memory_hub/shared_contract.py": "da01e4842874b14ba8257653e61caf72ba61f8b687f905b21ab4c5bc0208e7dc",
+    "skills/memory_hub/shared_http.py": "ba98b67ed25277de697068856ce619d1f0a960a4bea1af5d4430cdac0416e6b6",
+    "skills/memory_hub/shared_mcp.py": "17a5ca217827fd559a904cccec655b17ae755e2f6312c05cff90bfb3ba4a31cb",
+    "skills/memory_hub/shared_service.py": "16e20bd41e943975678443efb503284d83e4a22db485045476582a665544bc87",
+    "skills/memory_hub/store.py": "86aaa5c48d109e801af2f3d694faf95ae3f1353951b17c84e9ea373119be1648",
+    "skills/memory_hub/test_action_memory.py": "7585042336d8d10c57ebfbf1b5b15809ad3ac322d37c62965aec32290f310302",
+    "skills/memory_hub/test_shared_service.py": "c49bb1087853053607c00e064c43118527eb12a23ead856fdffa80a1469f7465",
+    "skills/memory_hub/test_shared_transport.py": "3b42a4ef569c3546161430edcc5869507bac1d919a92d33a6b88e79eab0c7a2f"
+  }
+}

@@ -1,10 +1,14 @@
-# File locale Codex sur Odin
+# File locale Codex autonome : une à cinq exécutions
 
 Ce pilote lance au maximum **cinq tours Codex** à la fois. Les suivants portent
 un badge « File nº 1 », « File nº 2 », etc., recalculé à chaque départ ou retrait.
 Le tableau de bord se rafraîchit toutes les secondes, sans appel à un modèle.
 Il gère uniquement les lancements soumis par son formulaire. Les discussions
 ouvertes directement dans l'application Codex échappent à cette limite.
+Ce pilote possède son propre journal et son verrou. Il ne coordonne pas les
+autres superviseurs et n'installe aucun service permanent. Les huit discussions
+de la démonstration signifient cinq actives et trois en attente, jamais huit
+exécutions simultanées.
 
 ## Démarrage réversible
 
@@ -20,8 +24,10 @@ python scripts/odin_codex_queue.py
 
 Ouvrir dans le navigateur local l'URL imprimée. Elle contient un jeton privé :
 ne pas la publier. Le mode par défaut est **Simulation** ; « Essayer avec
-8 discussions » montre cinq exécutions et trois badges, sans lancer de modèle
-ni modifier les dossiers de travail.
+8 discussions » montre cinq exécutions et trois badges, sans lancer de modèle.
+La démonstration crée ses dossiers `demo-1` à `demo-8` sous la première racine
+de simulation ; sans `--root`, cette racine reste dans l'état local du pilote.
+Les missions simulées ne modifient aucun fichier de projet.
 
 Pour le mode réel, remplacer les chemins ci-dessous par les chemins vérifiés
 sur Odin. Répéter `--root` pour chaque dossier de projets autorisé :
@@ -68,6 +74,19 @@ secrets. `--state` permet un emplacement privé explicite. Un verrou système
 empêche deux superviseurs de partager le même fichier. Le fichier est écrit
 atomiquement ; aucun service de base de données n'est nécessaire.
 
+Chaque transition devient visible après l'écriture réussie du journal. Si
+l'écriture échoue, la file restaure le dernier état enregistré, garde les places
+déjà occupées et interdit toute nouvelle admission jusqu'au redémarrage du
+superviseur. Une soumission rejetée ne reste pas dans la file. L'API renvoie
+HTTP 503 et affiche l'indisponibilité du journal sans exposer le chemin de
+l'erreur. Vérifier le stockage, arrêter le pilote puis le redémarrer ; les tours
+potentiellement actifs redeviennent « État à vérifier ». Une écriture échouée
+n'annule pas un effet Codex déjà envoyé et ne justifie aucun rejeu automatique.
+La disponibilité du journal est revérifiée avant chaque phase de lancement
+(`thread/start` ou `thread/resume`, puis `turn/start`) : une panne déjà connue
+empêche la phase suivante. Les échanges déjà envoyés restent à vérifier ; le
+pilote ne garde pas son verrou de file pendant une réponse Codex.
+
 Le serveur écoute uniquement `127.0.0.1`. Les API vérifient le jeton et l'origine.
 Ne pas exposer ce port sur le réseau. Fermer avec Ctrl+C : le pilote ferme
 seulement son propre processus `codex app-server`. Vérifier les tours encore
@@ -81,14 +100,17 @@ python scripts/test_odin_codex_queue.py
 python scripts/pre-commit-check.py --fast
 ```
 
-18 tests couvrent la concurrence réelle du superviseur, les positions et leur
+27 tests couvrent la concurrence réelle du superviseur, les positions et leur
 renumérotation, les conflits de chemins/discussions, la reprise durable, les
 validations, les interruptions, les courses du protocole stdio et les protections
-HTTP. Le raccordement app-server est testé avec un processus factice, sans modèle.
+HTTP. Ils injectent aussi les échecs d'écriture, vérifient douze transitions et
+contrôlent qu'une réservation non enregistrée n'envoie pas de tour, tandis qu'un
+tour déjà envoyé conserve sa place sans être relancé. La suite
+`odin_codex_queue` est inscrite dans `python scripts/run_tests.py -q`.
+Le raccordement app-server est testé avec un processus factice, sans modèle.
 Le contrôle du compte API vérifie le refus avant lancement.
 
 La validation a été réalisée sous Linux. L'essai graphique complet et un vrai
 tour Codex sous Windows restent à réaliser sur Odin avant activation quotidienne.
-Le pont Odin hors ligne ne constitue pas une preuve d'installation.
 
 Protocole officiel : <https://learn.chatgpt.com/docs/app-server>.

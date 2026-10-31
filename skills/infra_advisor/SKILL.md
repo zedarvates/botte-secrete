@@ -43,5 +43,21 @@ function bodies** across files (stdlib AST, free) · **skill catalog** size · p
 pointers to deeper passes (full `mousquetaires`/fallow pipeline, `skill_project_optimizer`,
 `understand-anything`, `botte` terminal compression).
 
+## Consequences, analysis and reuse
+
+Use [effects.json](effects.json) to distinguish `tips`, `auto` and report saving.
+CLI `tips` always refreshes discovery. `auto` uses the cached backend registry
+when nonempty and otherwise probes and overwrites it; a subnet flag does not
+force refresh on that cached path. Read the
+[backend declaration](../llm_backends/effects.json) for inherited effects.
+
+The audit reads project files and host/runtime metadata. `--save` retains its
+report under the audited project; recommendations and deeper-pass commands are
+returned as advice and are not run. Check error/unavailable sections before
+reusing a score. Hardware prices, model fit and token savings are heuristic
+estimates requiring target-context verification before a purchase or routing
+change. Parent hashes do not bind imported dependencies. See the
+[common contract](../../docs/capability-effects.md).
+
 Exposed via [[llm_mcp]] as `infra_tips` and `auto_audit`. Related: [[bootstrap]],
 [[llm_backends]], [[directives_audit]], [[skill_finder]].
