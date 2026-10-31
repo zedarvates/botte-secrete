@@ -17,6 +17,7 @@ the code in `skills/<name>/SKILL.md`.
 
 | Goal | Guide |
 |---|---|
+| Locate a Zig/GDScript function without loading a full file | [FastContext symbols](fast-context-symbols.md) |
 | Connect an MCP-compatible agent | [MCP integration](mcp-integration.md) |
 | Connect Cursor or Windsurf | [Cursor and Windsurf](integrations/cursor-windsurf-mcp.md) |
 | Evaluate a Hermes integration | [Hermes](integrations/hermes.md) |
