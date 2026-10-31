@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import os
 import re
 import sys
@@ -173,7 +174,7 @@ def _check(root: Path, checks: list) -> list[dict]:
                     elif kind == "text_contains":
                         passed = check["value"] in data.decode("utf-8")
                     else:
-                        value = json.loads(data.decode("utf-8"))
+                        value = _decode_json(data)
                         if check["pointer"]:
                             for part in check["pointer"][1:].split("/"):
                                 part = part.replace("~1", "/").replace("~0", "~")
@@ -184,7 +185,7 @@ def _check(root: Path, checks: list) -> list[dict]:
                                 else:
                                     value = value[part]
                         passed = _digest(value) == _digest(check["value"])
-                except (ValueError, UnicodeError, TypeError, KeyError, IndexError):
+                except (ValueError, UnicodeError, TypeError, KeyError, IndexError, RecursionError):
                     passed = False
         results.append({"kind": kind, "path": check["path"], "passed": passed,
                         "observed": observed})
@@ -213,7 +214,8 @@ def _classification(step: dict) -> str:
     return result
 
 
-def read_document(path: str | Path, *, limit: int = MAX_DOCUMENT) -> dict:
+def _decode_json(data: bytes):
+    """Require unambiguous, finite JSON throughout a document or observation."""
     def unique(pairs):
         result = {}
         for key, value in pairs:
@@ -221,12 +223,26 @@ def read_document(path: str | Path, *, limit: int = MAX_DOCUMENT) -> dict:
                 raise ValueError("duplicate JSON key")
             result[key] = value
         return result
+
+    def reject_constant(value):
+        raise ValueError("nonfinite JSON")
+
+    def finite_float(value):
+        number = float(value)
+        if not math.isfinite(number):
+            raise ValueError("nonfinite JSON")
+        return number
+
+    return json.loads(data.decode("utf-8"), object_pairs_hook=unique,
+                      parse_constant=reject_constant, parse_float=finite_float)
+
+
+def read_document(path: str | Path, *, limit: int = MAX_DOCUMENT) -> dict:
     with Path(path).open("rb") as stream:
         data = stream.read(limit + 1)
     if len(data) > limit:
         raise ValueError("document exceeds size limit")
-    return json.loads(data.decode("utf-8"), object_pairs_hook=unique,
-                      parse_constant=lambda _: (_ for _ in ()).throw(ValueError("nonfinite JSON")))
+    return _decode_json(data)
 
 
 @contextmanager
@@ -289,8 +305,10 @@ def execute_verified(plan: dict, *, cwd: str = ".", confirm: bool = False,
                         or [r.get("id") for r in rows] != [s["id"] for s in plan["steps"]]
                         or any(r.get("status") not in STATES
                                or type(r.get("started")) is not bool
+                               or "exit_code" not in r
+                               or (r["exit_code"] is not None and type(r["exit_code"]) is not int)
                                or (r.get("status") == "verified" and
-                                   (r.get("exit_code") != 0 or not r.get("started"))) for r in rows)):
+                                   (r["exit_code"] != 0 or not r.get("started"))) for r in rows)):
                     raise ValueError("invalid checkpoint steps")
             else:
                 if target and target.exists() and not dry_run:

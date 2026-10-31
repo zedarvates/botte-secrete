@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from copy import deepcopy
 
 
 def obj(properties):
@@ -51,6 +52,32 @@ REPORT_SCHEMA = {
            "observations": array(OBSERVATION, 256),
            "problems": array(TEXT, 32), "limitations": array(TEXT, 32)})}
 
+# v1 remains closed and readable. New producers explicitly identify v2.
+TARGET = obj({"id": {"type": "string", "pattern": "^t[1-9][0-9]*$"},
+              "scheme": {"enum": ["tcp", "http", "https", "unknown"]},
+              "address_kind": {"enum": ["loopback", "private", "public", "hostname", "unknown"]}})
+NETWORK = obj({"id": TEXT, "call_id": TEXT,
+               "transport": {"enum": ["tcp", "http"]},
+               "method": {"enum": ["CONNECT", "GET", "POST"]},
+               "target": TARGET,
+               "effect_ref": OBSERVATION["properties"]["effect_ref"],
+               "facet": {"enum": ["transport_response"]},
+               "status": {"enum": ["running", "returned", "raised"]},
+               "http_status": {"type": ["integer", "null"], "minimum": 100, "maximum": 599},
+               "response_target": {**TARGET, "type": ["object", "null"]},
+               "origin_changed": {"type": ["boolean", "null"]},
+               "response_complete": {"type": ["boolean", "null"]},
+               "duration_ms": INTEGER,
+               "error_kind": {"enum": [None, "timeout", "http_error", "network_error",
+                                        "response_error", "interrupted"]},
+               "comparison": {"enum": ["supported", "unknown"]},
+               "remote_effects": {"enum": ["unknown"]}})
+REPORT_SCHEMA_V2 = deepcopy(REPORT_SCHEMA)
+REPORT_SCHEMA_V2["title"] = "Botte effect observations v2"
+REPORT_SCHEMA_V2["properties"]["schema"] = {"enum": ["botte.effect-observations/v2"]}
+REPORT_SCHEMA_V2["properties"]["network"] = array(NETWORK, 256)
+REPORT_SCHEMA_V2["required"].append("network")
+
 
 def validate_shape(value, schema, path="$", errors=None):
     """Validate the bounded keyword subset above; no remote refs or evaluation."""
@@ -92,6 +119,7 @@ def validate_shape(value, schema, path="$", errors=None):
             errors.append(f"{path}: invalid length")
         if "pattern" in schema and not re.search(schema["pattern"], value):
             errors.append(f"{path}: invalid pattern")
-    elif type(value) is int and value < schema.get("minimum", value):
-        errors.append(f"{path}: below minimum")
+    elif type(value) is int:
+        if not schema.get("minimum", value) <= value <= schema.get("maximum", value):
+            errors.append(f"{path}: outside bounds")
     return errors

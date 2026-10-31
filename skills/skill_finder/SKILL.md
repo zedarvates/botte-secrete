@@ -3,16 +3,17 @@ name: skill_finder
 description: Retrieve candidate skills from local SKILL.md files, with optional local-model review of their complete bodies. Use for skill discovery or narrowing a tool shortlist. Results are advisory; choosing an operation also requires checking its instructions, exclusions and task prerequisites.
 ---
 
-# skill_finder — local, zero-token skill & tool search
+# skill_finder — local skill search
 
 Search produces candidates locally. Confirm applicability against the actual
 operation and task before execution; a lexical score does not establish fit.
 
 ## Two tiers
 
-- **Tier 0 — free (0 tokens total):** lexical + fuzzy match over each skill's
-  name, description, tags, triggers and full SKILL.md body. Deterministic.
-- **Tier 1 — local (0 cloud tokens):** a local model (via [[llm_backends]])
+- **Tier 0:** deterministic lexical and fuzzy matching over each skill's name,
+  description, tags, triggers and full SKILL.md body. The search routine does
+  not call an LLM.
+- **Tier 1:** an explicitly configured local model (via [[llm_backends]])
   reviews complete shortlisted `SKILL.md` bodies, can retain a subset in its
   preferred order or explicitly abstain. Local inference costs remain unmeasured.
 
@@ -34,6 +35,13 @@ r["matches"]        # [{name, score, why, description, path, tokens_est}, …]
 `--roots` points at any directory tree containing `SKILL.md` files (your global
 skill library, a project's skills, etc.); defaults to this repo's `skills/`.
 Works whether or not a SKILL.md has YAML frontmatter — the body is always indexed.
+
+Returned descriptions are truncated to 160 characters. The full instructions
+are not loaded into a host agent automatically. The result's `cloud_tokens: 0`
+is an implementation marker for local search, not a provider usage measurement.
+An agent invoking the tool or interpreting its shortlist may still consume
+model tokens; local inference also consumes model tokens and compute. Savings
+and selection quality require measurement on actual tasks.
 
 ## Review and handoff
 

@@ -84,6 +84,26 @@ def main() -> int:
     _ok(f"classify(error_classifier, ValueError tb) → 'runtime' (distilled) [{elabel}]",
         elabel == "runtime", state)
 
+    # 6. Semantic-cache features are derived from the query and cache summary;
+    #    no constant embedding/distance placeholders remain.
+    semantic_values = features.semantic_cache_values(
+        "repeat repeat unique tokens",
+        cache_density=0.25,
+        eligible_cache_density=0.1,
+        eligible_vocabulary_coverage=0.75,
+        length_neighbor_ratio=0.5,
+        cache_hit_history=0.2,
+    )
+    _ok("semantic cache extractor produces the complete v2 schema",
+        set(semantic_values) == set(features.feature_names(
+            "semantic_cache_hit_predictor"
+        )), state)
+    _ok("semantic cache query signals are measured, not placeholders",
+        semantic_values["query_token_diversity"] == 0.75
+        and semantic_values["eligible_vocabulary_coverage"] == 0.75
+        and semantic_values["length_neighbor_ratio"] == 0.5
+        and semantic_values["query_length"] == 4 / 2000, state)
+
     passed, failed = state
     print(f"\nRESULT: {passed} passed, {failed} failed")
     return 0 if failed == 0 else 1

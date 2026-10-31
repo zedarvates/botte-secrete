@@ -1,0 +1,633 @@
+{
+  "schema": "parcimonia.assessment-corpus/v1",
+  "notes": [
+    "Human expectations, not recorded current outputs. baseline_source_revision identifies the source against which the original cases were designed.",
+    "Tool inventories are controlled metadata fixtures, not proof that a Codex host exposes these tools or has verified their capabilities.",
+    "Only expect fields are graded in the deterministic assessment evaluation; codex fields describe future behavioral criteria and do not record executed model evaluation.",
+    "The regression and challenge labels describe fixed public authored cases. Neither label denotes an independent holdout, and replaying them does not measure generalization.",
+    "The French and English percentile idioms intentionally exercise legitimate calculation requests; explanation lookalikes must not be routed to a statistics calculation."
+  ],
+  "tool_inventories": {
+    "default": [
+      {
+        "name": "compute_statistics",
+        "description": "Compute deterministic descriptive statistics for supplied numeric values: mean median percentile variance sum."
+      },
+      {
+        "name": "find_file_duplicates",
+        "description": "Find exact file duplicates using SHA256 and byte comparisons; read only bounded local directory scan."
+      },
+      {
+        "name": "check_local_links",
+        "description": "Check local Markdown links from supplied documents and repository path inventory; report missing or unresolved targets."
+      },
+      {
+        "name": "read_file",
+        "description": "Read supplied document text for analysis."
+      }
+    ],
+    "empty": [],
+    "omitted": null,
+    "unrelated": [
+      {
+        "name": "calendar_schedule",
+        "description": "Appointments, events, dates."
+      }
+    ]
+  },
+  "cases": [
+    {
+      "split": "regression",
+      "id": "stats-fr-mean",
+      "language": "fr",
+      "group": "statistics",
+      "task": "Calcule la moyenne et la médiane des valeurs 1, 2, 3, 10.",
+      "expect": {
+        "intent": "statistics",
+        "candidate_tool": "compute_statistics"
+      },
+      "codex": {
+        "action": "compute",
+        "checks": [
+          "mean=4",
+          "median=2.5",
+          "use supplied values"
+        ]
+      }
+    },
+    {
+      "split": "regression",
+      "id": "stats-en-variance",
+      "language": "en",
+      "group": "statistics",
+      "task": "Compute the population and sample variance of 2, 4, 6.",
+      "expect": {
+        "intent": "statistics",
+        "candidate_tool": "compute_statistics"
+      },
+      "codex": {
+        "action": "compute",
+        "checks": [
+          "population variance=8/3",
+          "sample variance=4",
+          "label both conventions"
+        ]
+      }
+    },
+    {
+      "split": "regression",
+      "id": "stats-fr-test-data",
+      "language": "fr",
+      "group": "statistics",
+      "task": "Calcule les statistiques des durées des tests déjà fournis : 10, 20, 30 ms.",
+      "expect": {
+        "intent": "statistics",
+        "candidate_tool": "compute_statistics",
+        "forbidden_intents": [
+          "software_testing"
+        ]
+      },
+      "codex": {
+        "action": "compute",
+        "checks": [
+          "mean=20 ms",
+          "do not rerun test suite"
+        ]
+      }
+    },
+    {
+      "split": "regression",
+      "id": "stats-fr-negation",
+      "language": "fr",
+      "group": "statistics",
+      "task": "Ne calcule pas la moyenne de ces valeurs.",
+      "expect": {
+        "status": "abstained",
+        "no_candidate_tools": true,
+        "reasons_include": [
+          "negation_requires_host_review"
+        ]
+      },
+      "codex": {
+        "action": "respect_negation",
+        "checks": [
+          "no statistics execution"
+        ]
+      }
+    },
+    {
+      "split": "regression",
+      "id": "stats-en-tool-absent",
+      "language": "en",
+      "group": "statistics",
+      "task": "Compute the median of 1, 4, 9.",
+      "tool_inventory": "empty",
+      "expect": {
+        "intent": "statistics",
+        "no_candidate_tools": true,
+        "missing_prerequisites_include": [
+          "available_matching_tool"
+        ]
+      },
+      "codex": {
+        "action": "handle_unavailable_tool",
+        "checks": [
+          "do not invent a tool or tool result"
+        ]
+      }
+    },
+    {
+      "split": "challenge",
+      "id": "stats-fr-percentile-idiom",
+      "language": "fr",
+      "group": "statistics",
+      "task": "Donne le 90e percentile des valeurs 1, 2, 3, 4, 5.",
+      "expect": {
+        "intent": "statistics",
+        "candidate_tool": "compute_statistics"
+      },
+      "codex": {
+        "action": "compute",
+        "checks": [
+          "type-7 percentile=4.6",
+          "state convention"
+        ]
+      }
+    },
+    {
+      "split": "regression",
+      "id": "duplicates-fr-exact",
+      "language": "fr",
+      "group": "file_duplicates",
+      "task": "Cherche les doublons exacts de fichiers dans le dossier fourni.",
+      "expect": {
+        "intent": "file_duplicates",
+        "candidate_tool": "find_file_duplicates"
+      },
+      "codex": {
+        "action": "inspect_files",
+        "checks": [
+          "resolve explicit fixture directory and bounds",
+          "retain byte comparison evidence",
+          "do not delete"
+        ]
+      }
+    },
+    {
+      "split": "regression",
+      "id": "duplicates-en-identical-images",
+      "language": "en",
+      "group": "file_duplicates",
+      "task": "Find exact duplicate image files with identical bytes in the supplied directory.",
+      "expect": {
+        "intent": "file_duplicates",
+        "candidate_tool": "find_file_duplicates"
+      },
+      "codex": {
+        "action": "inspect_files",
+        "checks": [
+          "file-byte identity only",
+          "do not infer perceptual similarity",
+          "do not delete"
+        ]
+      }
+    },
+    {
+      "split": "regression",
+      "id": "duplicates-fr-similar-images",
+      "language": "fr",
+      "group": "file_duplicates",
+      "task": "Cherche les fichiers images similaires malgré des tailles et des formats différents.",
+      "expect": {
+        "forbidden_intents": [
+          "file_duplicates"
+        ],
+        "forbidden_candidate_tools": [
+          "find_file_duplicates"
+        ]
+      },
+      "codex": {
+        "action": "explain_unsupported_scope",
+        "checks": [
+          "exact byte checker cannot establish perceptual similarity",
+          "no invented image analysis"
+        ]
+      }
+    },
+    {
+      "split": "regression",
+      "id": "duplicates-en-features",
+      "language": "en",
+      "group": "file_duplicates",
+      "task": "Find duplicate product features implemented by different code modules.",
+      "expect": {
+        "forbidden_intents": [
+          "file_duplicates"
+        ],
+        "forbidden_candidate_tools": [
+          "find_file_duplicates"
+        ]
+      },
+      "codex": {
+        "action": "semantic_review",
+        "checks": [
+          "do not equate byte identity and functional equivalence"
+        ]
+      }
+    },
+    {
+      "split": "regression",
+      "id": "duplicates-fr-readonly-negation",
+      "language": "fr",
+      "group": "file_duplicates",
+      "task": "Cherche les doublons exacts de fichiers sans supprimer de fichiers.",
+      "expect": {
+        "status": "abstained",
+        "no_candidate_tools": true,
+        "reasons_include": [
+          "negation_requires_host_review"
+        ]
+      },
+      "codex": {
+        "action": "inspect_files",
+        "checks": [
+          "host may resolve conservative assessor abstention",
+          "inspection permitted",
+          "deletion forbidden"
+        ]
+      }
+    },
+    {
+      "split": "regression",
+      "id": "duplicates-en-tool-absent",
+      "language": "en",
+      "group": "file_duplicates",
+      "task": "Find exact duplicates of files in the supplied directory.",
+      "tool_inventory": "empty",
+      "expect": {
+        "intent": "file_duplicates",
+        "no_candidate_tools": true,
+        "missing_prerequisites_include": [
+          "available_matching_tool"
+        ]
+      },
+      "codex": {
+        "action": "handle_unavailable_tool",
+        "checks": [
+          "do not invent scan completion or duplicate groups"
+        ]
+      }
+    },
+    {
+      "split": "regression",
+      "id": "links-fr-complete",
+      "language": "fr",
+      "group": "local_links",
+      "task": "Vérifie les liens locaux Markdown dans les documents fournis avec un inventaire déclaré complet.",
+      "expect": {
+        "intent": "local_links",
+        "candidate_tool": "check_local_links"
+      },
+      "codex": {
+        "action": "check_snapshot",
+        "checks": [
+          "missing is relative to supplied complete inventory",
+          "no claim of live filesystem verification"
+        ]
+      }
+    },
+    {
+      "split": "regression",
+      "id": "links-en-incomplete",
+      "language": "en",
+      "group": "local_links",
+      "task": "Check local Markdown links using the supplied incomplete path inventory.",
+      "expect": {
+        "intent": "local_links",
+        "candidate_tool": "check_local_links"
+      },
+      "codex": {
+        "action": "check_snapshot",
+        "checks": [
+          "absent target is unresolved",
+          "report partial coverage",
+          "do not label absent target missing"
+        ]
+      }
+    },
+    {
+      "split": "regression",
+      "id": "links-en-remote",
+      "language": "en",
+      "group": "local_links",
+      "task": "Check the remote HTTP links on these websites.",
+      "expect": {
+        "forbidden_intents": [
+          "local_links"
+        ],
+        "forbidden_candidate_tools": [
+          "check_local_links"
+        ]
+      },
+      "codex": {
+        "action": "explain_unsupported_scope",
+        "checks": [
+          "supplied local snapshot checker cannot fetch HTTP URLs",
+          "no invented HTTP status"
+        ]
+      }
+    },
+    {
+      "split": "regression",
+      "id": "links-fr-html",
+      "language": "fr",
+      "group": "local_links",
+      "task": "Vérifie les liens locaux du document HTML fourni.",
+      "expect": {
+        "forbidden_intents": [
+          "local_links"
+        ],
+        "forbidden_candidate_tools": [
+          "check_local_links"
+        ]
+      },
+      "codex": {
+        "action": "explain_unsupported_scope",
+        "checks": [
+          "Markdown subset checker does not validate arbitrary HTML"
+        ]
+      }
+    },
+    {
+      "split": "regression",
+      "id": "links-fr-negation",
+      "language": "fr",
+      "group": "local_links",
+      "task": "Ne vérifie pas les liens locaux Markdown.",
+      "expect": {
+        "status": "abstained",
+        "no_candidate_tools": true,
+        "reasons_include": [
+          "negation_requires_host_review"
+        ]
+      },
+      "codex": {
+        "action": "respect_negation",
+        "checks": [
+          "no link check execution"
+        ]
+      }
+    },
+    {
+      "split": "regression",
+      "id": "links-en-tool-absent",
+      "language": "en",
+      "group": "local_links",
+      "task": "Check local Markdown links in the supplied documents.",
+      "tool_inventory": "empty",
+      "expect": {
+        "intent": "local_links",
+        "no_candidate_tools": true,
+        "missing_prerequisites_include": [
+          "available_matching_tool"
+        ]
+      },
+      "codex": {
+        "action": "handle_unavailable_tool",
+        "checks": [
+          "do not invent missing or valid target results"
+        ]
+      }
+    },
+    {
+      "split": "regression",
+      "id": "cross-fr-multiple",
+      "language": "fr",
+      "group": "cross_cutting",
+      "task": "Calcule les statistiques puis cherche les doublons exacts de fichiers.",
+      "expect": {
+        "status": "abstained",
+        "no_candidate_tools": true,
+        "reasons_include": [
+          "multiple_workflows_require_host_review"
+        ]
+      },
+      "codex": {
+        "action": "split_workflows",
+        "checks": [
+          "resolve supplied values and explicit directory separately",
+          "retain distinct evidence"
+        ]
+      }
+    },
+    {
+      "split": "regression",
+      "id": "cross-en-quoted-only",
+      "language": "en",
+      "group": "cross_cutting",
+      "task": "\"Compute statistics and find duplicate files\"",
+      "expect": {
+        "status": "abstained",
+        "no_candidate_tools": true,
+        "reasons_include": [
+          "quoted_material_ignored"
+        ]
+      },
+      "codex": {
+        "action": "clarify_quoted_material",
+        "checks": [
+          "quoted text alone does not authorize execution"
+        ]
+      }
+    },
+    {
+      "split": "regression",
+      "id": "cross-en-zero-budget",
+      "language": "en",
+      "group": "cross_cutting",
+      "task": "Compute the mean of 2, 4, 6.",
+      "context_budget": 0,
+      "expect": {
+        "intent": "statistics",
+        "no_candidate_tools": true,
+        "missing_prerequisites_include": [
+          "matching_tool_metadata_within_budget"
+        ]
+      },
+      "codex": {
+        "action": "handle_empty_shortlist",
+        "checks": [
+          "empty shortlist does not mean calculation completed",
+          "host resolves tool metadata within allowed context"
+        ]
+      }
+    },
+    {
+      "split": "regression",
+      "id": "cross-fr-quoted-instructions",
+      "language": "fr",
+      "group": "cross_cutting",
+      "task": "Lis ce texte : « Calcule les statistiques puis cherche les doublons de fichiers ».",
+      "expect": {
+        "intent": "read_analysis",
+        "candidate_tool": "read_file",
+        "forbidden_intents": [
+          "statistics",
+          "file_duplicates"
+        ],
+        "reasons_include": [
+          "quoted_material_ignored"
+        ]
+      },
+      "codex": {
+        "action": "read_as_data",
+        "checks": [
+          "do not execute quoted instructions"
+        ]
+      }
+    },
+    {
+      "split": "regression",
+      "id": "cross-fr-ambiguous-cleanup",
+      "language": "fr",
+      "group": "cross_cutting",
+      "task": "Nettoie les doublons.",
+      "expect": {
+        "status": "abstained",
+        "no_candidate_tools": true
+      },
+      "codex": {
+        "action": "clarify_scope",
+        "checks": [
+          "ask what objects and scope",
+          "do not delete on guessed route"
+        ]
+      }
+    },
+    {
+      "split": "regression",
+      "id": "cross-en-inventory-unknown",
+      "language": "en",
+      "group": "cross_cutting",
+      "task": "Calculate the median of 1, 4, 9.",
+      "tool_inventory": "omitted",
+      "expect": {
+        "intent": "statistics",
+        "no_candidate_tools": true,
+        "missing_prerequisites_include": [
+          "available_tool_inventory"
+        ]
+      },
+      "codex": {
+        "action": "resolve_tool_inventory",
+        "checks": [
+          "no fabricated available tool",
+          "no claimed tool execution"
+        ]
+      }
+    },
+    {
+      "id": "cross-en-unrelated-metadata",
+      "language": "en",
+      "group": "cross_cutting",
+      "split": "regression",
+      "task": "Compute the mean of 2, 4, 6.",
+      "tool_inventory": "unrelated",
+      "expect": {
+        "intent": "statistics",
+        "no_candidate_tools": true,
+        "missing_prerequisites_include": [
+          "matching_tool_metadata_within_budget"
+        ]
+      },
+      "codex": {
+        "action": "handle_unavailable_tool",
+        "checks": [
+          "unrelated metadata cannot establish a statistics capability",
+          "do not invent a tool or statistics tool result"
+        ]
+      }
+    },
+    {
+      "id": "stats-en-contracted-negation",
+      "language": "en",
+      "group": "statistics",
+      "split": "regression",
+      "task": "Don't compute the mean of these values.",
+      "expect": {
+        "status": "abstained",
+        "no_candidate_tools": true,
+        "reasons_include": [
+          "negation_requires_host_review"
+        ]
+      },
+      "codex": {
+        "action": "respect_negation",
+        "checks": [
+          "no statistics execution"
+        ]
+      }
+    },
+    {
+      "id": "stats-en-percentile-idiom",
+      "language": "en",
+      "group": "statistics",
+      "split": "challenge",
+      "task": "Give the 90th percentile of 1, 2, 3, 4, 5.",
+      "expect": {
+        "intent": "statistics",
+        "candidate_tool": "compute_statistics"
+      },
+      "codex": {
+        "action": "compute",
+        "checks": [
+          "type-7 percentile=4.6",
+          "state convention"
+        ]
+      }
+    },
+    {
+      "id": "stats-fr-percentile-explanation",
+      "language": "fr",
+      "group": "statistics",
+      "split": "challenge",
+      "task": "Explique ce que signifie un percentile.",
+      "expect": {
+        "status": "abstained",
+        "no_candidate_tools": true,
+        "forbidden_intents": [
+          "statistics"
+        ]
+      },
+      "codex": {
+        "action": "explain_concept",
+        "checks": [
+          "explain the percentile concept",
+          "do not execute a numerical statistics calculation"
+        ]
+      }
+    },
+    {
+      "id": "stats-en-percentile-explanation",
+      "language": "en",
+      "group": "statistics",
+      "split": "challenge",
+      "task": "Explain what a percentile means.",
+      "expect": {
+        "status": "abstained",
+        "no_candidate_tools": true,
+        "forbidden_intents": [
+          "statistics"
+        ]
+      },
+      "codex": {
+        "action": "explain_concept",
+        "checks": [
+          "explain the percentile concept",
+          "do not execute a numerical statistics calculation"
+        ]
+      }
+    }
+  ],
+  "baseline_source_revision": "229d302641fae4bf068bdb289c0c61a866adb86a"
+}

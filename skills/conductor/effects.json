@@ -1,70 +1,71 @@
 {
   "schema": "botte.capability-effects/v1",
   "capability_id": "zedarvates/botte-secrete:skills/conductor",
-  "contract_version": "0.4.1",
+  "contract_version": "0.8.0",
   "source_hashes": {
-    "SKILL.md": "7b1d7918df296b94f1cbe171fadf72dc72bb82741a2d9c2d5486934b59b27913",
+    "SKILL.md": "3839534362318a10d7c63351aefbc5cd3fc8059e394dfc8d062b4ff3637ebb2e",
     "__init__.py": "e9b15c49cb32b65ebb539c65786e92906b6d892449c74e82d0203bf0f972fa4a",
-    "conductor.py": "d7d8ec22e19d8b53adeeb3e3954e0c3fb11971505b3edf3aaec29d0604a3f8c1",
-    "executor.py": "e55b918580ffa9f8affd66ee1dc5071a381573c7473de3f3ba3f1f8d56af4694",
-    "cli.py": "dad275db09a12cee2fc9b7c8f06436ebabf5793b5a946a14e6183b8e33d5b806",
+    "conductor.py": "10b2dcfda55de8d59eb674a946f34fa763974191050cb3bbe061e54ef5659a73",
+    "executor.py": "34e46ba41fbcd9d54beb8324bbbf1e69b3634fa875e15c97de5ba5807cad10ce",
+    "cli.py": "5c1ec208db3f20996716109f1ceaa91757d4391ac2d3866f554807fb90f3bae5",
     "observed_run.py": "beed304d7e6f03622f5ba7106dac5e5d8d2e75b4bb5cdbcea3e83e0eee56e6e0",
-    "verified.py": "d2fb2a143b1dba804d76261784a4795b18588459330e562fdb1ba92a6bb6dcd2"
+    "verified.py": "78a17e9c015bee8626d4804377bb389ed1092665cdb9d5c40e48ee3c1a8c9cce"
   },
   "preconditions": [
     "Distinguish planning, saving, dry-run and execution; their effects differ.",
     "Execution expects a trusted plan and current authorization for each resolved command, project and network scope.",
-    "Legacy execution continues after failures. For artifact prerequisites or resumption, supply a trusted botte.skill-plan/v1 with meaningful local checks and explicit dependencies.",
-    "Use --effects or MCP include_effects for optional declarations. Selection uses source paths; matching hashes are a planning snapshot, not an execution lock."
+    "Inspect placeholders and actual prerequisite outputs. Default execution continues after failures; select stop_on_failure explicitly when the remaining sequence should stop on a nonzero exit.",
+    "Use --review-effects for compact deterministic review cues, --effects for complete declarations, and --observe-effects for optional partial evidence. Selection uses source paths; planning digests are not an execution lock.",
+    "For artifact prerequisites or resumption, supply a trusted botte.skill-plan/v1 with meaningful local checks and explicit dependencies; this separate mode does not use lexical-plan review or stop-on-failure flags."
   ],
   "expected_effects": [
     {
       "effect": "Read the registry, rank capabilities and return an ordered plan; optionally inspect selected effects declarations.",
       "scope": "Local skill metadata, caller memory and stdout.",
       "likelihood": "conditional",
-      "basis": "conductor.plan associates curated entries by source path, uses built-in command hints only for canonical paths, and optionally inspects selected declarations. MCP handlers forward include_effects.",
+      "basis": "conductor.plan associates curated entries by source path and inspects selected declarations once when include_effects or review_effects is enabled. The compact review defers operation-specific prose to its source. MCP forwards both flags.",
       "impact": "Makes task selection and consequences inspectable; reads metadata, consumes CPU/I/O and can expose descriptions.",
       "verification": "Compare default and opt-in fixture plans after removing effects; verify selected-only inspection and distinct metadata/commands for homonymous entries."
     },
     {
-      "effect": "Write Markdown/HTML plan or execution reports with --save; --effects or --observe-effects also saves complete JSON.",
+      "effect": "Write Markdown/HTML reports with --save; --effects, --review-effects, --observe-effects or --stop-on-failure also saves the returned JSON, with only the requested detail.",
       "scope": "The current project .botte/reports directory and any consumer of the generated report.",
       "likelihood": "conditional",
-      "basis": "cli._save_report reserves a unique JSON filename before atomic_json.write_json; report.save handles Markdown/HTML. These writes occur only on requested save paths.",
+      "basis": "cli._save_report reserves a unique JSON filename before atomic_json.write_json; report.save handles Markdown/HTML. The returned effects_json reference is normalized relative to the execution working directory so saved reports can be read through the constrained MCP interface. These writes occur only on requested save paths.",
       "impact": "Preserves expectations for handoff; consumes storage and may retain task text and private declarations.",
-      "verification": "Save into a temporary project; parse the JSON companion and compare it to the full expected declaration."
+      "verification": "Save into a temporary project; parse the complete JSON companion, preserve unique filenames, and follow its project-relative effects_json reference through an execution overview and targeted evidence reads."
     },
     {
       "effect": "Launch runnable commands when execution is requested; gated steps require confirm and placeholders remain skipped.",
       "scope": "Selected project, child processes, and any files, backends or subnet targets reached by their commands.",
       "likelihood": "conditional",
-      "basis": "executor.classify and execute use the existing allowlist, confirm flag and command arguments; declarations never unlock steps.",
+      "basis": "executor.classify and execute use the existing allowlist, confirm flag and command arguments; declarations never unlock steps. An explicit stop_on_failure boolean skips every remaining invocation after the first nonzero exit, preserving classifications and result positions.",
       "impact": "Can produce useful results or mutate state, generate artifacts, contact backends and incur child-model costs; local/safe labels are not proof of absence of side effects.",
-      "verification": "Use an injected runner to verify ran, blocked, skipped and failed cases; inspect actual command scope before a real run."
+      "verification": "Use injected runners to verify default continuation, explicit stopping, dry-run, gates and placeholders; test a partial write followed by failure and confirm that later runners/observers never start. Inspect actual command scope before a real run."
     },
     {
-      "effect": "Return per-step process results and retain optional effects_before snapshots.",
+      "effect": "Return process results, optional effects_before snapshots and compact review_before/review_after cues.",
       "scope": "Caller report, including command output tails.",
       "likelihood": "conditional",
-      "basis": "executor.execute records exit codes and output tails; cli returns nonzero for failed execution in JSON and text modes.",
+      "basis": "executor.execute copies review cues before running and attaches an after-review from each result and optional observation report. Enabled stop reports retain stop_on_failure and stopped_after_result_index. CLI returns nonzero for failed execution in JSON and text modes.",
       "impact": "Supports comparison with expectations; process success alone does not verify the task or every downstream effect.",
       "verification": "Fail an injected step, mutate its source metadata during execution, and verify failure plus the original snapshot are retained."
     },
     {
-      "effect": "With observe_effects, wrap supported child CLI calls and return a versioned partial observation report with call links and execution-time declaration comparisons.",
-      "scope": "Selected child process, private temporary checkpoints, declaration files, sampled backend registry/LRU state and the returned or explicitly saved report.",
+      "effect": "With observe_effects, wrap supported child CLI calls and return a v2 partial observation report with call links, write/network evidence and execution-time declaration comparisons.",
+      "scope": "Selected child process and enrolled discovery workers, private temporary checkpoints, declaration files, sampled registry/LRU state, TCP/HTTP metadata and the returned or explicitly saved report.",
       "likelihood": "conditional",
-      "basis": "observed_run uses the same execution classification and launches a module wrapper for four bundled CLIs. Cooperative observation checkpoints are read and validated after exit or timeout, then the temporary directory is removed.",
-      "impact": "Exposes inherited writes, swallowed failures and unfinished calls, while adding file sampling/checkpoint overhead. Zero process exit and supported file facets do not validate full effects or task success.",
-      "verification": "Exercise real isolated subprocess output, nonzero exits and timeout after a completed write; verify retained evidence, dry-run/gates, planning mismatch and complete MCP/CLI report transport."
+      "basis": "observed_run preserves execution classification and wraps four bundled CLIs. Cooperative checkpoints are read and validated after exit or timeout, then the temporary directory is removed. The reader accepts v1 and v2.",
+      "impact": "Exposes inherited writes, transport attempts, swallowed failures and unfinished calls, while adding sampling/checkpoint overhead. Zero exit and supported file/transport facets do not validate remote work, costs or complete task effects.",
+      "verification": "Exercise isolated child output, nonzero exits, timeout after a write and loopback network attempts; verify dry-run/gates, legacy v1 reading, declaration mismatch and complete MCP/CLI transport."
     },
     {
       "effect": "Execute an explicit skill plan with local pre/postcondition checks, source bindings, dependency gates and optional atomic checkpoints.",
       "scope": "Declared project-relative observations, private checkpoint and lock, dispatched child-command resources, and returned compact evidence.",
       "likelihood": "conditional",
-      "basis": "verified.execute_verified validates the full plan, uses exact canonical command matching for unattended dispatch, observes bounded file state, and rechecks required inputs, outputs and source bindings before dependent consumption or resumption.",
+      "basis": "verified.execute_verified validates the full plan, uses exact canonical command matching for unattended dispatch, observes bounded file state, and rechecks required inputs, outputs and source bindings before dependent consumption or resumption. JSON observations and persisted documents reject duplicate keys and nonfinite numbers throughout; observation parse or recursion-limit errors leave predicates unsatisfied. Checkpoint exit codes must be present and have exact integer or null type; previously verified rows require integer zero and a recorded start.",
       "impact": "Separates process exits from verified local predicates; detects partial file changes, blocks unavailable dependencies and avoids automatically repeating started unresolved work. Unknown child costs and unobserved resources remain explicit.",
-      "verification": "Run test_verified and test_verified_pilots in temporary projects: actual subprocess writes and resumption, incomplete output and interruption, inherited checkup registry creation with fixture discovery, and prefix-context retention."
+      "verification": "Run test_verified and test_verified_pilots in temporary projects: actual subprocess writes and resumption, incomplete output and interruption, inherited checkup registry creation with fixture discovery, and prefix-context retention. Reject ambiguous or nonfinite JSON before descendant dispatch and on resumption; retain independent execution and mark recalled evidence stale. Reject boolean, floating-point and missing checkpoint exit codes without dispatch or checkpoint rewriting."
     }
   ],
   "downstream_effects": [
@@ -77,11 +78,11 @@
       "verification": "Review evidence and actual state before the next action; reassess source freshness and target scope."
     },
     {
-      "effect": "Partial work can remain after failure or timeout. Legacy execution continues; explicit verified plans gate dependent work using declared local predicates.",
+      "effect": "Partial work can remain after failure or timeout. Default execution continues; explicit stopping leaves the whole remaining sequence unexecuted.",
       "scope": "Child-command resources and subsequent steps in the same plan.",
       "likelihood": "conditional",
-      "basis": "Legacy executor.execute continues its loop. verified.execute_verified blocks unavailable dependencies, continues independent branches, and never automatically replays started unresolved work. Neither path is transactional.",
-      "impact": "Blindly repeating a plan can duplicate successful writes or operate on incomplete earlier outputs.",
+      "basis": "The executor stops later invocations only with stop_on_failure=True and a failed process result. It retains all rows, but provides no dependency graph, cancellation, transaction, rollback or automatic retry. Explicit verified plans instead check declared dependencies before consumption and never automatically replay started unresolved work.",
+      "impact": "Stopping can prevent later work on failed prerequisites, but also defers independent steps. Blindly repeating the plan can duplicate completed effects; exit 0 does not verify required output contents.",
       "verification": "Reconcile affected resources and each prior step result before deciding which steps to retry."
     }
   ],
@@ -100,15 +101,16 @@
   },
   "required_scope": "Planning needs read access to selected metadata; saving and execution need the current task authorization for the actual output and child-command resources. --confirm and declarations do not supply that authorization.",
   "analysis": {
-    "summary": "Planning, persistence and execution have distinct consequences. Path-based association preserves each selected entry and its metadata; a matching display name elsewhere does not acquire a built-in command. Optional effects snapshots remain independent of classification and outcome verification. The opt-in verified executor supplies a separate versioned local-evidence and checkpoint companion; declared predicates do not establish complete task quality.",
+    "summary": "Planning, persistence and execution have distinct consequences. Path-based association preserves each selected entry and its metadata; a matching display name elsewhere does not acquire a built-in command. Optional effects snapshots remain independent of classification and outcome verification. A separate explicit-plan mode adds local predicates, dependency gates and conservative checkpoint resumption without establishing complete task quality.",
     "uncertainties": [
       "Child-command effects and total costs are not measured by the orchestration cloud_tokens field.",
       "Source hashes cover listed files only; imported modules, live services and runtime state may differ.",
-      "Legacy execution supplies no automatic dependency gate; optional observation checks declarations at instrumented call entry. The explicit mode checks only listed files and predicates; it is not a transaction, sandbox, authenticated proof store or fleet lease.",
+      "Opt-in stopping checks process exits only; blocked/skipped steps, incorrect output or swallowed errors with exit 0 do not trigger it. Surviving work and unhandled interpreter interruption need caller recovery. Freshness checks cover instrumented call entry only.",
       "The llm_mcp transport is outside these skill-local source bindings; command resolution still relies on the trusted installed environment.",
       "Observation helpers and atomic checkpoint persistence are imported dependencies outside these skill-local hashes. Coverage is cooperative, bounded and not an authenticated attestation.",
-      "The context fingerprint includes the project and Python interpreter but does not inventory remote services or installed packages; observation snapshots do not defend against concurrent hostile filesystem mutation.",
-      "The optional remembered-plan composition is implemented by memory_hub.action_memory; inspect that capability for shared API, archival and trajectory-write consequences."
+      "The compact review helper and shared effect-review instructions are external dependencies outside these skill-local bindings. Review cues do not enforce applicability, inter-step prerequisites or semantic effect verification.",
+      "Explicit verification checks only listed files and predicates; it is not a transaction, sandbox, authenticated proof store or fleet lease. Its context fingerprint includes project and interpreter, not remote services or installed packages; observations do not defend against concurrent hostile filesystem mutation.",
+      "The optional remembered-plan composition is implemented by memory_hub.action_memory; inspect that capability for authenticated API, private archival and trajectory-write consequences."
     ],
     "evidence_refs": [
       "conductor.py:plan",

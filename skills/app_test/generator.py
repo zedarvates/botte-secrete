@@ -167,7 +167,8 @@ def run(spec_path: str | Path, out_dir: str | Path = ".", *, report: bool = True
     name = spec.get("name", "test")
     runner = find_sikulix()
     if not runner:
-        return {"ran": False, "script": str(bundle),
+        return {"ran": False, "status": "not_run", "passed": False,
+                "script": str(bundle),
                 "reason": "No runner — install OculiX (github.com/oculix-org/Oculix"
                           "/releases → ~/.oculix/oculixide.jar) or set OCULIX_JAR. "
                           "Java required.",
@@ -179,19 +180,26 @@ def run(spec_path: str | Path, out_dir: str | Path = ".", *, report: bool = True
         cmd = [runner, "-r", str(bundle)]
     try:
         proc = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
-    except (OSError, subprocess.SubprocessError) as e:
-        return {"ran": False, "script": str(bundle), "reason": str(e)}
+    except OSError as e:
+        return {"ran": False, "status": "not_run", "passed": False,
+                "script": str(bundle), "reason": str(e)}
+    except subprocess.SubprocessError as e:
+        return {"ran": True, "status": "incomplete", "passed": False,
+                "script": str(bundle), "reason": str(e)}
 
     out = (proc.stdout or "") + (proc.stderr or "")
+    from skills.app_test.artifacts import evaluate_run
+    verdict = evaluate_run(out, exit_code=proc.returncode)
     result = {"ran": True, "script": str(bundle), "runner": runner,
-              "exit": proc.returncode, "passed": proc.returncode == 0,
+              "exit": proc.returncode, **verdict,
               "output": out[-3000:]}
     if report:
         from skills.app_test.artifacts import html_report, collect_logs, parse_steps
         logs = collect_logs(spec.get("logs", []))
         rpt = html_report(name, output=out, steps=parse_steps(out), logs=logs,
                           artifacts_dir=bundle / "artifacts",
-                          out_path=Path(out_dir) / f"{name}-report.html")
+                          out_path=Path(out_dir) / f"{name}-report.html",
+                          exit_code=proc.returncode)
         result["report"] = str(rpt)
         result["logs_collected"] = list(logs.keys())
     return result

@@ -5,11 +5,11 @@ Compresses text, JSON, logs, and tool output before they reach the LLM.
 Reversible (CCR-like): can restore originals. Pure stdlib.
 
 Strategies by content type:
-    text     → strip whitespace, dedup lines, truncate repetitions
-    json     → compact (no spaces), array→summary, truncate large objects
-    log      → dedup patterns, count occurrences, sample representative lines
-    tool_out → truncate long outputs, strip ANSI, keep first/last N lines
-    code     → strip comments, collapse imports, summarize structure
+    text     → collapse blank lines, summarize consecutive identical lines
+    json     → remove whitespace outside strings; retain every value and key
+    log      → summarize exact repetitions; retain distinct lines in order
+    tool_out → strip ANSI colours; retain every line
+    code     → unchanged (no verified language-aware transformation)
 
 Usage:
     from skills.universal_compressor.compressor import compress
@@ -22,14 +22,10 @@ from __future__ import annotations
 import json
 import re
 import hashlib
-import time
 from dataclasses import dataclass, field
-from pathlib import Path
-from typing import Optional
 
 # In-memory store for reversible compression
 _REVERSIBLE_STORE: dict[str, str] = {}
-_STORE_PATH = Path.home() / ".botte" / "compressor-store.json"
 
 
 @dataclass(slots=True)
@@ -89,6 +85,9 @@ def _compress_text(content: str) -> CompressedResult:
             for _ in range(repeats):
                 deduped.append(deduped[-1] if deduped else "")
 
+    elif repeats == 1:
+        deduped.append(deduped[-1])
+
     # Collapse multiple blank lines
     result = []
     blank_count = 0
@@ -115,175 +114,76 @@ def _compress_text(content: str) -> CompressedResult:
 # ── Strategy: JSON ────────────────────────────────────────────
 
 def _compress_json(content: str, max_array_items: int = 5) -> CompressedResult:
-    """Compress JSON: compact format, summarize large arrays."""
-    original = content
+    """Minify valid JSON without sampling values or re-encoding number lexemes.
+
+    max_array_items is retained for compatibility, but no longer drops items.
+    """
     try:
-        data = json.loads(content)
-    except json.JSONDecodeError:
-        # Not valid JSON, fall back to text compression
-        return _compress_text(content)
+        json.loads(content)
+    except (ValueError, RecursionError):
+        return CompressedResult(
+            data=content, content_type="json",
+            original_size=len(content), compressed_size=len(content),
+            ratio=1.0, strategy="invalid_json_passthrough",
+            warnings=["JSON could not be validated; original retained"],
+        )
 
-    def _compact(obj, depth=0):
-        if depth > 4:
-            return "..."
-        if isinstance(obj, dict):
-            if len(obj) > 10:
-                keys = list(obj.keys())
-                summary = {k: _compact(obj[k], depth + 1) for k in keys[:5]}
-                summary["..."] = f"{len(obj) - 5} more keys"
-                return summary
-            return {k: _compact(v, depth + 1) for k, v in obj.items()}
-        if isinstance(obj, list):
-            if len(obj) > max_array_items:
-                return [_compact(x, depth + 1) for x in obj[:3]] + [f"... ({len(obj) - 3} more items)"]
-            return [_compact(x, depth + 1) for x in obj]
-        if isinstance(obj, str) and len(obj) > 200:
-            return obj[:200] + "..."
-        return obj
-
-    compacted = _compact(data)
-    compressed = json.dumps(compacted, ensure_ascii=False, separators=(",", ":"))
-    return CompressedResult(
-        data=compressed,
-        content_type="json",
-        original_size=len(original),
-        compressed_size=len(compressed),
-        ratio=round(len(compressed) / max(len(original), 1), 3),
-        strategy="compact+truncate_arrays",
+    # Match complete strings before whitespace so escaped quotes, spaces in
+    # strings, duplicate keys and arbitrarily precise numeric lexemes survive.
+    compressed = re.sub(
+        r'"(?:\\.|[^"\\])*"|\s+',
+        lambda match: match.group() if match.group().startswith('"') else "",
+        content,
     )
-
+    return CompressedResult(
+        data=compressed, content_type="json",
+        original_size=len(content), compressed_size=len(compressed),
+        ratio=round(len(compressed) / max(len(content), 1), 3),
+        strategy="json_whitespace_only",
+    )
 
 # ── Strategy: Log ─────────────────────────────────────────────
 
 def _compress_log(content: str, max_lines: int = 50) -> CompressedResult:
-    """Compress logs: dedup patterns, sample representative lines."""
-    original = content
-    lines = [l.rstrip() for l in content.splitlines() if l.strip()]
+    """Summarize exact repetitions, preserving distinct values and chronology.
 
-    if len(lines) <= max_lines:
+    max_lines is a compression threshold, never a truncation budget.
+    """
+    if len(content.splitlines()) <= max_lines:
         return CompressedResult(
             data=content, content_type="log",
-            original_size=len(original), compressed_size=len(original),
+            original_size=len(content), compressed_size=len(content),
             ratio=1.0, strategy="no_compression_needed",
         )
-
-    # Count patterns (strip timestamps/numbers for grouping)
-    pattern_counts: dict[str, list[str]] = {}
-    for line in lines:
-        normalized = re.sub(r'\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}', '<TS>', line)
-        normalized = re.sub(r'\d+', '<N>', normalized)
-        pattern_counts.setdefault(normalized, []).append(line)
-
-    # Build summary: first occurrence + count + last occurrence
-    result_lines: list[str] = []
-    result_lines.append(f"[Log summary: {len(lines)} lines → {len(pattern_counts)} unique patterns]")
-    for pattern, occurrences in sorted(pattern_counts.items(), key=lambda x: -len(x[1])):
-        if len(occurrences) == 1:
-            result_lines.append(occurrences[0][:120])
-        else:
-            result_lines.append(f"[{len(occurrences)}×] {occurrences[0][:120]}")
-        if len(result_lines) > max_lines:
-            result_lines.append(f"... ({len(pattern_counts) - len(result_lines) + 1} more patterns)")
-            break
-
-    compressed = "\n".join(result_lines)
-    return CompressedResult(
-        data=compressed,
-        content_type="log",
-        original_size=len(original),
-        compressed_size=len(compressed),
-        ratio=round(len(compressed) / max(len(original), 1), 3),
-        strategy="pattern_dedup+sampling",
-    )
-
+    result = _compress_text(content)
+    result.content_type = "log"
+    result.strategy = "exact_repeats+collapse_blanks"
+    return result
 
 # ── Strategy: Tool Output ─────────────────────────────────────
 
 def _compress_tool_output(content: str, max_length: int = 3000) -> CompressedResult:
-    """Compress CLI tool output: keep head+tail, strip ANSI, truncate middle."""
-    original = content
+    """Strip ANSI colours without hiding middle lines or truncating the tail.
 
-    # Strip ANSI escape codes
-    ansi_free = re.sub(r'\x1b\[[0-9;]*[a-zA-Z]', '', content)
-    lines = ansi_free.splitlines()
-
-    if len(ansi_free) <= max_length:
-        return CompressedResult(
-            data=ansi_free, content_type="tool_output",
-            original_size=len(original), compressed_size=len(ansi_free),
-            ratio=1.0, strategy="strip_ansi_only",
-        )
-
-    # Keep head and tail
-    head_lines = 20
-    tail_lines = 10
-    if len(lines) <= head_lines + tail_lines + 2:
-        return CompressedResult(
-            data=ansi_free, content_type="tool_output",
-            original_size=len(original), compressed_size=len(ansi_free),
-            ratio=1.0, strategy="no_truncation_needed",
-        )
-
-    head = lines[:head_lines]
-    tail = lines[-tail_lines:]
-    omitted = len(lines) - head_lines - tail_lines
-    result_lines = (
-        head
-        + [f"\n... [{omitted} lines omitted, {len(ansi_free)} → {max_length} chars] ...\n"]
-        + tail
-    )
-    compressed = "\n".join(result_lines)[:max_length]
-    compressed += f"\n[truncated at {max_length} chars, original: {len(original)} bytes]"
-
+    max_length is retained for compatibility; exceeding it cannot justify loss.
+    """
+    compressed = re.sub(r'\x1b\[[0-9;]*[a-zA-Z]', '', content)
     return CompressedResult(
-        data=compressed,
-        content_type="tool_output",
-        original_size=len(original),
-        compressed_size=len(compressed),
-        ratio=round(len(compressed) / max(len(original), 1), 3),
-        strategy="head_tail+ansi_strip",
+        data=compressed, content_type="tool_output",
+        original_size=len(content), compressed_size=len(compressed),
+        ratio=round(len(compressed) / max(len(content), 1), 3),
+        strategy="strip_ansi_only",
     )
-
 
 # ── Strategy: Code ────────────────────────────────────────────
 
 def _compress_code(content: str) -> CompressedResult:
-    """Compress code: strip comments, collapse imports, summarize structure."""
-    original = content
-    lines = content.splitlines()
-    result_lines: list[str] = []
-    import_count = 0
-
-    for line in lines:
-        stripped = line.strip()
-        # Collapse consecutive imports
-        if stripped.startswith(("import ", "from ")):
-            import_count += 1
-            continue
-        if import_count > 0:
-            result_lines.append(f"# [{import_count} import lines]")
-            import_count = 0
-        # Strip inline comments (but not docstrings)
-        if "#" in line and not stripped.startswith(('"""', "'''")):
-            code_part = line.split("#")[0].rstrip()
-            if code_part.strip():
-                result_lines.append(code_part)
-        else:
-            result_lines.append(line)
-
-    if import_count > 0:
-        result_lines.append(f"# [{import_count} import lines]")
-
-    compressed = "\n".join(result_lines)
+    """Keep source exact until a language-aware transform is independently proven."""
     return CompressedResult(
-        data=compressed,
-        content_type="code",
-        original_size=len(original),
-        compressed_size=len(compressed),
-        ratio=round(len(compressed) / max(len(original), 1), 3),
-        strategy="strip_comments+collapse_imports",
+        data=content, content_type="code",
+        original_size=len(content), compressed_size=len(content),
+        ratio=1.0, strategy="code_passthrough",
     )
-
 
 # ── Strategy: Auto-detect ─────────────────────────────────────
 
@@ -318,7 +218,7 @@ def _detect_type(content: str) -> str:
         return "code"
     # Check for tool output patterns (paths, commands, exit codes)
     for line in lines_sample:
-        if re.search(r'(error:|warning:|FAILED|PASSED|exit code)', line.lower()):
+        if re.search(r'(error:|warning:|failed|passed|exit code)', line.lower()):
             return "tool_output"
     return "text"
 
@@ -357,11 +257,13 @@ def compress(
     compressor = strategies.get(content_type, _compress_text)
     result = compressor(content)
 
-    # Safety net: a compressor's whole job is to shrink content before it hits
-    # an LLM. Some strategies (e.g. strip_comments+collapse_imports on input
-    # with few/no comments) can net-expand short inputs — never hand back
-    # something bigger than what came in.
-    if result.original_size > 0 and result.compressed_size >= result.original_size:
+    # Public sizes and ratio are measured UTF-8 bytes, not character/token estimates.
+    result.original_size = len(content.encode("utf-8"))
+    result.compressed_size = len(result.data.encode("utf-8"))
+    result.ratio = round(result.compressed_size / max(result.original_size, 1), 3) if content else 1.0
+
+    # Repeat markers can expand short input; retain the original in that case.
+    if result.original_size > 0 and result.compressed_size > result.original_size:
         result = CompressedResult(
             data=content, content_type=result.content_type,
             original_size=result.original_size, compressed_size=result.original_size,
@@ -388,7 +290,7 @@ def compress(
 
 def _make_reversible(result: CompressedResult, original: str) -> str:
     """Store original content for later restoration."""
-    key = hashlib.sha256(original.encode()[:256]).hexdigest()[:12]
+    key = hashlib.sha256(original.encode("utf-8")).hexdigest()
     _REVERSIBLE_STORE[key] = original
     return key
 
@@ -407,5 +309,5 @@ def stats() -> dict:
     """Return compression store statistics."""
     return {
         "stored_originals": len(_REVERSIBLE_STORE),
-        "total_original_bytes": sum(len(v) for v in _REVERSIBLE_STORE.values()),
+        "total_original_bytes": sum(len(v.encode("utf-8")) for v in _REVERSIBLE_STORE.values()),
     }

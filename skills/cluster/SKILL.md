@@ -81,7 +81,10 @@ ordinary status may refresh an empty registry too. When chat backends exist,
 selection before any task runs. Consult the [backend declaration](../llm_backends/effects.json)
 for inherited discovery effects.
 
-Delegation sends task text to the configured receiver. `delegated: true` records
+Delegation sends task text to the configured receiver and rejects HTTP redirects
+before forwarding task credentials, including when observation is disabled.
+With an active session, its POST records transport evidence without task text,
+token or response body; remote effects remain unknown. `delegated: true` records
 an HTTP response, not verified completion of the remote task. After timeout,
 reconcile receiver state before repeating a possible mutation; no request
 deduplication or distributed rollback is supplied. Receiver maintenance follows

@@ -14,6 +14,7 @@ data; the optional executor runs the selected commands.
 python -m skills.conductor.cli "test my desktop app and report crashes"
 python -m skills.conductor.cli "reduce token cost and deploy on my project" --json
 python -m skills.conductor.cli "inspect verified outcome history" --effects --json
+python -m skills.conductor.cli "audit my project" --review-effects --json
 
 # Execute the plan (read-only steps run; mutating/cloud steps are gated):
 python -m skills.conductor.cli "audit my project and report metrics" --execute
@@ -55,6 +56,13 @@ The plan can be *run*, not just read. The executor classifies every step:
 yields a non-zero exit so CI can react. The runner is injectable, so the
 behaviour is fully unit-tested without spawning subprocesses.
 
+For a dependent sequence, add `--execute --stop-on-failure`: after the first
+nonzero exit, every remaining step is retained as skipped without being launched.
+Python `execute`/`run_goal` and MCP `execute_plan` accept `stop_on_failure=True`.
+This checks process exits only; verify the actual prerequisite outputs separately.
+Blocked/skipped steps and incorrect outputs with exit 0 do not trigger the stop.
+Default execution continues after failures; this option does not retry or undo work.
+
 ## Consequences and handoff
 
 Read [effects.json](effects.json) before selecting an execution mode. Planning
@@ -62,37 +70,30 @@ reads local declarations; `--save` writes reports, and `--execute` launches
 commands whose effects depend on their capability and arguments. An allowlisted
 "safe" classification is not proof of no network access or cache writes.
 
-Use `--effects` or `plan(..., include_effects=True)` to attach declarations only
-for selected capabilities. MCP `conduct` and `execute_plan` expose
-`include_effects: true` too. Selected paths preserve the association even when
-names repeat; only canonical paths receive built-in command hints.
-Match their scope to the actual command and current task
-authorization. The executor carries the original snapshot as `effects_before`
-for comparison with results; it never uses a declaration to unlock a command.
-The snapshot itself remains unchanged. Review source or context
-changes before relying on it. JSON contains complete details; `--effects --save`
-also writes a JSON companion because Markdown/HTML tables abbreviate values.
+Use the shared [effect-review method](../effect-review/SKILL.md) for task-specific
+assessment. Choose the detail needed:
 
-After execution, distinguish a zero process exit from verified task success.
-Record actual changes, evidence, partial effects, deviations and the next
-action in the task report. In legacy execution a failed step does not stop later steps, and a
-timeout does not prove that no work happened. Inspect state before retrying;
-do not replay already successful mutations blindly. The orchestration's
-`cloud_tokens` value does not account for model calls made by child commands.
+| Option | Returned context |
+|---|---|
+| `--review-effects` | Compact `review_before` and, on execution, `review_after`; no automatic observation or LLM call. |
+| `--effects` | Complete selected declarations, retained as `effects_before` on execution. |
+| `--execute --observe-effects` | Complete declarations plus partial v2 runtime evidence; stored v1 evidence remains readable. |
 
-Treat reuse suggestions as candidates requiring a check in their target
-context. See the [common contract](../../docs/capability-effects.md).
+These options combine. Python uses `review_effects`, `include_effects` and
+`observe_effects`; MCP `conduct`/`execute_plan` expose the same applicable flags.
+`--save` with any of them, or with `--stop-on-failure`, preserves the returned JSON alongside abbreviated
+Markdown/HTML. A compact-only save keeps cues, not the deferred declaration prose.
+`effects_json` is relative to the execution working directory. Pass that path to
+`capabilities evidence --overview` or MCP `effect_evidence` with `overview: true`
+for all saved step outcomes and evidence references, without rerunning the plan.
+See the [integration contract](../../docs/capability-effects.md#compact-shared-review)
+for fields and coverage.
 
-Use `--execute --observe-effects --json` (MCP `observe_effects: true`) to add
-a separate versioned observation report and compare declaration freshness at
-instrumented call entry. The first adapters link checkup/infra/backend/cluster
-calls and sample registry/LRU writes. Follow parent IDs to assess inherited
-effects; `effects_summary` counts each write once and retains swallowed failures
-or unfinished calls. A supported write facet is only partial evidence; network
-effects, task success and costs remain unverified. Dry-run provides no execution
-evidence. Add `--save both` to retain the full execution JSON for handoff. Inspect
-partial state before retrying after errors or timeout. See the common contract's
-observation section for coverage and schema details.
+Reviews never unlock commands or verify complete outcomes. Stopping is a separate
+explicit execution option; the executor provides no transactional rollback. Its
+`cloud_tokens` excludes model calls made by child commands. Runtime observation
+covers enrolled checkup/infra/backend/cluster calls, writes and network attempts;
+other effects remain unassessed.
 
 ## Explicit checks and checkpoints
 
@@ -102,6 +103,8 @@ For a workflow with required artifacts or resumption, read
 source files and explicit dependencies. The lexical plan's layer order does
 not establish those dependencies. The CLI `--plan` and MCP
 `execute_verified_plan` preview by default; Python exposes `execute_verified`.
+The CLI rejects `--review-effects` and `--stop-on-failure` with `--plan`;
+declare dependencies and checks in the explicit plan instead.
 
 This mode distinguishes process exits from verified local predicates, records
 observed file changes, and blocks consumers of unavailable results. A private

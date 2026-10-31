@@ -60,6 +60,10 @@ def main() -> int:
     nm = recommend(_snap(mcp_wired=False))
     _ok("MCP not wired → P1 wire tip",
         any(t.category == "mcp" and t.priority == "P1" for t in nm), state)
+    mcp_tip = next(t for t in nm if t.category == "mcp")
+    _ok("MCP advice distinguishes declaration from unavailable tools",
+        "reachability were not checked" in mcp_tip.why
+        and "does not prove tools are available" in mcp_tip.impact, state)
 
     # vision accelerator suggested when no comfyui backend.
     _ok("no vision backend → Hailo tip",

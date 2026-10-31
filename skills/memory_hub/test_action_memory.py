@@ -94,6 +94,18 @@ class ActionMemoryTests(unittest.TestCase):
         self.assertTrue(any(not c["passed"] for c in stale["checks_now"]))
         self.assertEqual(stale["causal_attribution"], "not_assessed")
 
+    def test_recalled_success_is_stale_when_json_evidence_becomes_invalid(self):
+        self.capture(self.execute())
+        for data in ('{"value":7,"value":6}', '{"value":6,"other":NaN}',
+                     '{"value":6,"other":1e999}'):
+            with self.subTest(data=data):
+                self.write("output.json", data)
+                with patch("skills.conductor.verified._default_runner") as runner:
+                    memory = self.recall()["steps"][0]["memories"][0]
+                runner.assert_not_called()
+                self.assertEqual(memory["assessment"], "stale")
+                self.assertTrue(any(not c["passed"] for c in memory["checks_now"]))
+
     def test_context_and_contract_changes_are_reported_before_file_reads(self):
         self.capture(self.execute())
         for expected in ("context_changed", "contract_changed", "different_action"):

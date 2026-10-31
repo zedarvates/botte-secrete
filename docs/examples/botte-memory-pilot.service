@@ -1,0 +1,16 @@
+[Unit]
+Description=Botte shared memory pilot
+StartLimitIntervalSec=60
+StartLimitBurst=3
+
+[Service]
+Type=simple
+WorkingDirectory=%h/botte-secrete
+ExecStart=/usr/bin/python3 -m skills.memory_hub.cli serve --directory %h/.local/share/botte-memory-pilot --port 8766
+Restart=on-failure
+RestartSec=5
+UMask=0077
+NoNewPrivileges=yes
+
+[Install]
+WantedBy=default.target

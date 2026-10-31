@@ -31,6 +31,7 @@ from typing import Optional
 from skills.llm_backends import registry
 from skills.llm_backends.discovery import Backend
 from skills.capabilities.observations import observed_operation, observed_file_write
+from skills.capabilities.network_observations import network_attempt
 
 _STATE = Path.home() / ".botte-cluster.json"
 
@@ -171,6 +172,14 @@ def _resolve_agent_token(host: str, provided: Optional[str]) -> str:
             or os.environ.get("BOTTE_AGENT_TOKEN", ""))
 
 
+class _NoTaskRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        # The authorized agent endpoint does not authorize another recipient of
+        # task text or X-Botte-Token, including a redirect on the same machine.
+        return None
+
+
+@observed_operation("delegate")
 def delegate(host: str, task: str, *, agent_url: Optional[str] = None,
              token: Optional[str] = None, timeout: float = 30.0) -> dict:
     """Hand a task to a trusted agent on `host` (does NOT run maintenance itself).
@@ -195,8 +204,13 @@ def delegate(host: str, task: str, *, agent_url: Optional[str] = None,
     req = urllib.request.Request(agent_url, data=body, method="POST",
                                  headers=headers)
     try:
-        with urllib.request.urlopen(req, timeout=timeout) as r:
-            return {"delegated": True, "host": host, "agent_url": agent_url,
-                    "response": r.read().decode("utf-8", "replace")[:1000]}
+        opener = urllib.request.build_opener(_NoTaskRedirect())
+        with network_attempt("http", req, "/expected_effects/3", method="POST") as evidence:
+            with opener.open(req, timeout=timeout) as r:
+                evidence.response(r)
+                raw = r.read()
+                evidence.read_complete()
+        return {"delegated": True, "host": host, "agent_url": agent_url,
+                "response": raw.decode("utf-8", "replace")[:1000]}
     except (urllib.error.URLError, OSError) as e:
         return {"delegated": False, "host": host, "agent_url": agent_url, "error": str(e)}

@@ -1,12 +1,12 @@
 {
   "schema": "botte.capability-effects/v1",
   "capability_id": "zedarvates/botte-secrete:skills/bootstrap",
-  "contract_version": "0.1.0",
+  "contract_version": "0.2.0",
   "source_hashes": {
-    "SKILL.md": "dc4ddaba0ed183daeb1c871f095b6cb533a456588b7812068b99ea60712d8f11",
+    "SKILL.md": "b262098f27d1843a81c2c10d09b660f86c8fdcb66bb6806fcd9c8abf9df938dc",
     "__init__.py": "a2c8b5a3c681d28783c39545042a846031a52eaa00c37e634d3bf8e759f16e5a",
-    "cli.py": "e3c67121ded8cd2cb1e96921cb1c96ef03276ea687537fa462af0250da640d0f",
-    "setup.py": "bb46a4140086b3d2d9bfd905d59dba1b8b338f2cc4b705a636fa1b191464c858"
+    "cli.py": "12e74c68ce1f87733f6ae94e3ddfb291541b7f2797ea12a7182f845d65e75581",
+    "setup.py": "3a3aa41cbcc43850f27e077a683284411fcdece0b2d7647cb851caf51d8168d5"
   },
   "preconditions": [
     "An existing target directory and the installed toolkit's Python environment.",
@@ -35,9 +35,9 @@
       "effect": "Write default routing configuration, policy, a preflight hook, directive pointers and a setup report.",
       "scope": "Target .botte/config.json, .botte/policy.md, .claude/settings.json, AGENTS.md or CLAUDE.md, and .botte/setup-report.json.",
       "likelihood": "conditional",
-      "basis": "setup calls write_config, preflight.policy helpers, wire_hook and report writing; ensure_agents_md creates a starter only when requested and instructions are absent.",
+      "basis": "setup calls write_config, preflight.policy helpers, wire_hook and report writing. When requested, ensure_agents_md creates a missing AGENTS.md and links an existing CLAUDE.md instead of replacing its instructions. New hooks pin this installation's interpreter and absolute script path; existing hooks, including legacy module entries, remain unchanged.",
       "impact": "Changes future prompt handling and project configuration. Config/report are replaced, custom config is not merged, and existing directives can gain a pointer even without --create-agents-md.",
-      "verification": "Diff every affected file; verify JSON shape, existing hooks, policy preservation, directive changes and whether all expected setup stages completed."
+      "verification": "Diff every affected file; verify JSON shape, the installation-pinned new hook, preservation of existing legacy/custom hooks and policies, and additive AGENTS.md creation when CLAUDE.md already exists. Confirm all expected setup stages completed."
     },
     {
       "effect": "Return and print setup details containing project/toolkit paths, backend metadata and names of configured cloud-key variables.",
@@ -85,7 +85,8 @@
     "uncertainties": [
       "Imported discovery, policy and audit code is not included in these skill-local hashes.",
       "Existing configuration shape, concurrent edits, consuming-agent behavior and future model costs vary by project.",
-      "There is no built-in dry-run, backup or automatic rollback."
+      "There is no built-in dry-run, backup or automatic rollback.",
+      "The installed hook targets Claude Code; it does not install a Codex or cloud lifecycle hook. Shared Parcimonia guidance still requires the consuming host to read instructions and verify available tools."
     ],
     "evidence_refs": [
       "setup.py:setup",

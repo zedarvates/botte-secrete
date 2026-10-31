@@ -1,11 +1,12 @@
 {
   "schema": "botte.capability-effects/v1",
   "capability_id": "zedarvates/botte-secrete:skills/checkup",
-  "contract_version": "0.3.0",
+  "contract_version": "0.4.0",
   "source_hashes": {
-    "SKILL.md": "36de63508a244feaf69f40e756f5d26e12ba6a9e51bdfd8ec382466760178a48",
+    "SKILL.md": "11d06662689d79c9fb68fd01b16983d3a012eb98ab43e013c398920af56834e5",
     "__init__.py": "ef6b9260d322843b5bdbba8d0af39c54a1e572cc4c0275a6ffd0e9805154bf58",
-    "cli.py": "6cf9bc2414b120bb35b28adcb470f0c1011c00d33b5edf7f6109a2af7e0135d1"
+    "cli.py": "b22eec18ebd4b744cc7c7f95e8e81c6c6a888995f9d55b8b265927eeb7c8618b",
+    "mcp.py": "08d4026838a0da14445f58e2226ea44f7ae7a51e5b4d110178ef29646a4ae6d6"
   },
   "preconditions": [
     "A readable target project and installed dependencies for the intended diagnostics; unavailable scanners must remain explicit in interpretation.",
@@ -19,9 +20,9 @@
       "effect": "Read project files and host metadata, run available diagnostics and return findings, availability indicators and estimates.",
       "scope": "Target project, toolkit metadata and host information used by imported diagnostics.",
       "likelihood": "conditional",
-      "basis": "run composes policy presence, infra/directive/metric analysis, security candidates, NN status and host-prefix estimates; doctor adds machine assessment and ranked actions.",
+      "basis": "run composes policy presence, infra/directive/metric analysis, security candidates, NN status and host-prefix estimates; doctor adds machine assessment and ranked actions. inspect_mcp reads bounded supported project declarations and checks launcher metadata without starting configured commands, resolving remote hosts or checking an MCP handshake. NN learning counts distinguish unique local-ledger samples and invalid/unavailable rows from training or activation qualification.",
       "impact": "Consumes CPU/memory/I/O and reveals diagnostic data. It does not apply fixes; missing diagnostics and heuristic estimates limit coverage.",
-      "verification": "Inspect each section's available/error fields and verify important findings against source or controlled defective fixtures. policy_committed checks existence, not Git tracking."
+      "verification": "Inspect section availability/errors and important findings against fixtures. Assert runtime and reachability remain not_checked for configured MCP declarations; verify unsupported/invalid sources and launcher uncertainty. Check missing/invalid/duplicate ledger cases and that activation_ready stays false. policy_committed checks existence, not Git tracking."
     },
     {
       "effect": "Conditionally probe loopback services, replace the toolkit backend registry and create imported-component state directories.",
@@ -58,11 +59,11 @@
       "verification": "Compare the registry before and after an isolated parent audit and identify the dependency that performed the write."
     },
     {
-      "effect": "A person or agent may use a healthy verdict, incomplete scan or estimated cost to prioritize later changes.",
+      "effect": "A person or agent may treat diagnostic findings, a configured MCP declaration or a local learning sample count as evidence for a later decision.",
       "scope": "Subsequent project work and decisions based on the report.",
       "likelihood": "plausible",
-      "basis": "Verdicts summarize available fields; some diagnostics degrade to unavailable, and machine unavailability can still produce a healthy-looking verdict.",
-      "impact": "Useful triage can become false assurance if omitted checks or heuristic estimates are treated as verified outcomes.",
+      "basis": "Verdicts preserve unverified host routing and backend availability; mcp_wiring separates static declarations from runtime/reachability. Learning sample floors do not consume qualification evidence or activate a model.",
+      "impact": "Useful triage becomes false assurance if a consumer discards unavailable checks or mistakes declaration/sample metadata for operational or activation proof.",
       "verification": "Record coverage, errors, source context and independent checks in the task report; do not equate zero drift with complete correctness."
     },
     {
@@ -95,7 +96,9 @@
       "Scanner availability, false positives/negatives, runtime metadata and heuristic cost estimates vary by environment.",
       "The CLI supplies no automatic fix, outcome verifier or failure gate for drift findings.",
       "policy_committed indicates file presence only, and BOTTE_CHECKUP_CONTEXT=github-pr changes wiring applicability.",
-      "Optional observation reports cover instrumented synchronous calls and selected writes only; uninstrumented, concurrent, remote or background effects remain unverified."
+      "Optional observation reports cover instrumented synchronous calls and selected writes only; uninstrumented, concurrent, remote or background effects remain unverified.",
+      "MCP inspection covers supported project files only, not user/global or installed-plugin configuration. Launcher lookup reflects this process environment; no live handshake or reachability test is performed.",
+      "Learning counters describe the selected local ledger. Even a sufficient unique-sample count does not evaluate model qualification or authorize activation."
     ],
     "evidence_refs": [
       "cli.py:run",

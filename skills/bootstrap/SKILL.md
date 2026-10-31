@@ -1,9 +1,12 @@
 ---
 name: bootstrap
-description: Configure Botte Secrète in a target project by discovering local backends, wiring MCP tools and a preflight hook, auditing directives, and writing routing configuration. Use when installing the toolkit or onboarding a project to local-first routing.
+description: Configure Botte Secrète in a project with MCP wiring, shared Parcimonia and prefer-local guidance, optional AGENTS.md creation and a setup report. Use to install Botte, onboard a repository or diagnose missing project instructions. Configuration alone does not prove routing, model availability or cost savings.
 ---
 
 # bootstrap — configure a project
+
+Configure the installed toolkit for a project. For a new Codex project, include
+`--create-agents-md` so its project-level instructions have an entry point.
 
 ```bash
 python -m skills.bootstrap.cli /path/to/project
@@ -18,14 +21,17 @@ python -m skills.bootstrap.cli /path/to/project --scan-subnet --json
 2. Merge the `botte-llm` entry into the project's `.mcp.json`. If an OculiX MCP
    jar is detected, also register its Java command. Registration does not start
    these servers; the consuming agent controls that later step.
-3. Audit directives. `--create-agents-md` can create a starter `AGENTS.md` if
-   instructions are absent. Independently of that flag, setup can append a
-   policy pointer to an existing `AGENTS.md` or `CLAUDE.md`.
+3. Audit directives. `--create-agents-md` creates a missing `AGENTS.md`; when
+   `CLAUDE.md` exists, the new file points to it instead of replacing its
+   instructions. Independently of that flag, setup can append a policy pointer
+   to an existing `AGENTS.md` or `CLAUDE.md`.
 4. Replace `.botte/config.json` with detected backend/model, cloud-key **names**
    that are present, and default routing/budget values. Existing custom values
    are not merged. Key values are not copied into this report.
 5. Create `.botte/policy.md` if absent and add a `UserPromptSubmit` preflight
-   hook to `.claude/settings.json` if its marker is absent.
+   hook to `.claude/settings.json` if its marker is absent. New hooks pin the
+   interpreter and script path from this installation, so another editable
+   checkout cannot silently supply older guidance.
 6. Replace `.botte/setup-report.json` and print next steps. Configuration and
    reports contain machine paths and backend metadata.
 
@@ -43,17 +49,28 @@ after a later failure. Inspect actual files after an interruption; restore
 specific prior values where needed before rerunning. The tool supplies no
 automatic rollback. Do not delete unrelated MCP servers or hooks during recovery.
 
+The host receives guidance for assessing substantive work with Parcimonia,
+reusing plans and choosing local mechanisms when sufficient. It must load its
+supported instructions and tools, then execute and verify the task. Setup does
+not prove assessment, automatic routing or savings.
+
+Hook wiring targets Claude Code, not Codex or a global hook. Existing custom
+policies and hooks are retained, including legacy module-based hooks; review
+their migration explicitly. `--create-agents-md` never overwrites an existing
+`AGENTS.md`.
+
 ## Verify and reuse
 
-Compare the changed files with their prior state, parse both JSON configurations,
+Compare changed files with their prior state, parse both JSON configurations,
 and check the hook, policy pointer and chosen backend. A setup report is evidence
 of completed setup steps, not proof of subsequent routing or token savings.
 Restart the consuming agent when appropriate and verify its behavior on an
 authorized small task; record actual results and remaining uncertainty.
 
+Keep `.botte/policy.md` committed with the project. MCP, runtime config, hook
+commands and setup reports can hold machine-specific paths; configure those on
+each machine rather than committing generated endpoints or credentials.
+
 For another project, reassess directives, machine paths, network scope and
 existing customization. The reuse candidate in the sidecar requires target
 validation. See the [common contract](../../docs/capability-effects.md).
-
-Related: [[llm_mcp]], [[auto_router]], [[preflight]], [[skill_finder]],
-[[directives_audit]], [[llm_backends]].

@@ -8,6 +8,7 @@ import io
 import json
 import tempfile
 import unittest
+from copy import deepcopy
 from pathlib import Path
 from unittest.mock import patch
 
@@ -81,6 +82,32 @@ class VerifiedRunTests(unittest.TestCase):
         self.assertEqual(result["results"][0]["status"], "stale")
         self.assertEqual(result["results"][1]["status"], "stale")
         self.assertFalse(result["complete"])
+
+    def test_resume_rejects_invalid_exit_codes_without_dispatch_or_checkpoint_changes(self):
+        self.write("work.txt")
+        p = plan(step("work"))
+        missing = object()
+        for status, code, confirm in (("verified", 0, True), ("failed", 2, True),
+                                       ("blocked", 0, False)):
+            report = self.run_plan(p, confirm=confirm, runner=lambda *a: (code, "fixture"))
+            self.assertEqual(report["results"][0]["status"], status)
+            for invalid in (False, 0.0, missing):
+                with self.subTest(status=status, exit_code=invalid):
+                    checkpoint = deepcopy(report)
+                    row = checkpoint["results"][0]
+                    if invalid is missing:
+                        row.pop("exit_code")
+                    else:
+                        row["exit_code"] = invalid
+                    self.write("run.json", json.dumps(checkpoint))
+                    original = (self.root / "run.json").read_bytes()
+                    with patch("skills.conductor.verified._default_runner",
+                               return_value=(0, "fixture")) as runner:
+                        resumed = self.run_plan(p, confirm=True, checkpoint="run.json", resume=True)
+                    self.assertIn("error", resumed)
+                    runner.assert_not_called()
+                    self.assertEqual((self.root / "run.json").read_bytes(), original)
+                    self.assertFalse((self.root / "run.json.lock").exists())
 
     def test_timeout_with_partial_write_is_recorded_and_never_automatically_retried(self):
         p = plan(step("partial"), step("later", needs=["partial"]))
@@ -246,6 +273,65 @@ class VerifiedRunTests(unittest.TestCase):
         self.assertFalse(self.run_plan(plan(step("work", ensures=[c])), confirm=True,
                                        runner=lambda *a: (0, "ok"))["complete"])
 
+    def test_invalid_json_evidence_blocks_descendants_but_not_independent_work(self):
+        cases = [
+            '{"ok":false,"ok":true}',
+            '{"ok":true,"other":{"key":1,"key":2}}',
+            '{"ok":true,"other":NaN}',
+            '{"ok":true,"other":Infinity}',
+            '{"ok":true,"other":-Infinity}',
+            '{"ok":true,"other":1e999}',
+            '{"ok":true,"other":' + '[' * 20000 + '0}',
+        ]
+        check = {"kind": "json_equals", "path": "data.json", "pointer": "/ok", "value": True}
+        p = plan(step("producer", command="python producer.py", ensures=[check]),
+                 step("consumer", command="python consumer.py", needs=["producer"]),
+                 step("independent", command="python independent.py"))
+        for data in cases:
+            with self.subTest(data=data[:80]):
+                self.calls.clear()
+                self.write("data.json", data)
+                def runner(command, cwd, timeout):
+                    self.calls.append(command)
+                    self.write("consumer.txt")
+                    self.write("independent.txt")
+                    return 0, "claimed success"
+                result = self.run_plan(p, confirm=True, runner=runner)
+                self.assertNotIn("error", result)
+                self.assertEqual([r["status"] for r in result["results"]],
+                                 ["unverified", "blocked", "verified"])
+                self.assertEqual(self.calls, ["python producer.py", "python independent.py"])
+                self.assertFalse(result["complete"])
+
+    def test_invalid_json_invalidates_resume_without_replaying_started_work(self):
+        check = {"kind": "json_equals", "path": "data.json", "pointer": "/ok", "value": True}
+        p = plan(step("producer", ensures=[check]), step("consumer", needs=["producer"]))
+        for index, data in enumerate(('{"ok":false,"ok":true}',
+                                      '{"ok":true,"other":NaN}',
+                                      '{"ok":true,"other":1e999}')):
+            with self.subTest(data=data):
+                self.write("data.json", '{"ok":true}')
+                self.write("consumer.txt")
+                checkpoint = f"run-{index}.json"
+                before = self.run_plan(p, confirm=True, checkpoint=checkpoint,
+                                       runner=lambda *a: (0, "ok"))
+                self.assertTrue(before["complete"])
+                self.write("data.json", data)
+                with patch("skills.conductor.verified._default_runner") as call:
+                    after = self.run_plan(p, confirm=True, checkpoint=checkpoint, resume=True)
+                call.assert_not_called()
+                self.assertEqual([r["status"] for r in after["results"]], ["stale", "stale"])
+                self.assertFalse(any(r["reused"] for r in after["results"]))
+                self.assertFalse(after["complete"])
+
+    def test_document_loader_rejects_ambiguous_or_nonfinite_json(self):
+        for data in ('{"value":1,"value":2}', '{"value":NaN}',
+                     '{"value":Infinity}', '{"value":-Infinity}', '{"value":1e999}'):
+            with self.subTest(data=data):
+                self.write("document.json", data)
+                with self.assertRaises(ValueError):
+                    read_document(self.root / "document.json")
+
     def test_real_subprocess_artifact_and_compact_evidence(self):
         self.write("worker.py", "from pathlib import Path\nPath('work.txt').write_text('done', encoding='utf-8')\nprint('private output fixture')\n")
         r = self.run_plan(plan(step("work")), confirm=True, checkpoint="run.json")
@@ -260,6 +346,22 @@ class VerifiedRunTests(unittest.TestCase):
         with contextlib.redirect_stdout(io.StringIO()):
             self.assertEqual(main(args), 0)
             self.assertEqual(main(args + ["--execute"]), 1)
+
+    def test_cli_explicit_plan_rejects_lexical_only_options_before_dispatch(self):
+        from skills.conductor.cli import main
+        self.write("plan.json", json.dumps(plan(step("work"))))
+        args = ["--plan", str(self.root / "plan.json"), "--project", str(self.root),
+                "--checkpoint", "run.json", "--execute"]
+        for option in ("--review-effects", "--stop-on-failure"):
+            with self.subTest(option=option), \
+                 patch("skills.conductor.verified.execute_verified",
+                       return_value={"mode": "dry_run", "complete": False}) as execute, \
+                 contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+                with self.assertRaises(SystemExit) as error:
+                    main(args + [option])
+                self.assertEqual(error.exception.code, 2)
+                execute.assert_not_called()
+                self.assertFalse((self.root / "run.json").exists())
 
     def test_mcp_defaults_to_preview_and_rejects_truthy_string_confirmation(self):
         from skills.llm_mcp.server import handle

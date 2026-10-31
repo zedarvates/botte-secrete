@@ -7,7 +7,10 @@ import os
 import subprocess
 import sys
 import threading
+import queue
+from contextlib import contextmanager
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
 
 import pytest
 
@@ -170,3 +173,166 @@ def test_client_never_forwards_credentials_through_a_redirect():
         server.shutdown()
         server.server_close()
         thread.join(timeout=5)
+
+
+@pytest.mark.parametrize("names", [[], ["operator"], ["Operator"], ["one", "one"],
+                                  ["One", "one"], ["../escape"], ["bad:name"],
+                                  ["a"] * 100, "worker"])
+def test_invalid_worker_sets_fail_before_creating_files(tmp_path, names):
+    with pytest.raises(ValueError):
+        initialize(tmp_path / "invalid", "pilot", names)
+    assert not (tmp_path / "invalid").exists()
+
+
+def test_named_workers_get_separate_unprivileged_credentials(tmp_path):
+    result = initialize(tmp_path / "pilot", "pilot", ["codex", "hermes"])
+    config = decode((tmp_path / "pilot/auth.json").read_text(encoding="utf-8"))
+    registry = AuthRegistry.load(tmp_path / "pilot/auth.json")
+    tokens = []
+    for name, filename in result["worker_token_files"].items():
+        path = tmp_path / "pilot" / filename
+        token = read_token(path)
+        tokens.append(token)
+        principal = registry.authenticate("Bearer " + token)
+        assert principal.actor_id == name and principal.rights == {"read", "write", "forget"}
+        assert token not in json.dumps(result) and token not in json.dumps(config)
+    assert len(set(tokens)) == 2
+    with pytest.raises(FileExistsError):
+        initialize(tmp_path / "pilot", "pilot", ["codex", "hermes"])
+    assert [read_token(tmp_path / "pilot" / name) for name in result["worker_token_files"].values()] == tokens
+    if os.name != "nt":
+        assert not (tmp_path / "pilot/auth.json").stat().st_mode & 0o077
+
+
+def _cli(*args, timeout=60):
+    return subprocess.run([sys.executable, "-m", "skills.memory_hub.cli", *map(str, args)],
+                          capture_output=True, timeout=timeout)
+
+
+@contextmanager
+def _server_process(directory):
+    with subprocess.Popen([sys.executable, "-u", "-m", "skills.memory_hub.cli", "serve",
+                           "--directory", str(directory), "--port", "0"],
+                          stdout=subprocess.PIPE, stderr=subprocess.PIPE) as process:
+        ready = queue.Queue()
+        threading.Thread(target=lambda: ready.put(process.stderr.readline()), daemon=True).start()
+        try:
+            line = ready.get(timeout=10).decode("utf-8")
+            assert "listening on loopback port" in line, line
+            yield "http://127.0.0.1:" + line.strip().split()[-1]
+        finally:
+            process.terminate()
+            process.wait(timeout=10)
+
+
+def test_cli_two_worker_acceptance_after_service_restart_preserves_other_records(tmp_path):
+    root = tmp_path / "pilot"
+    initialized = _cli("init", "--directory", root, "--project", "pilot",
+                       "--agent", "codex", "--agent", "hermes")
+    assert initialized.returncode == 0, initialized.stderr
+    owner_path, peer_path = root / "agent-codex.secret", root / "agent-hermes.secret"
+    with _server_process(root) as url:
+        owner = MemoryHTTPClient(url, read_token(owner_path))
+        owner.call("capture", {"project_id": "pilot", "key": "unrelated-fixture",
+            "request_id": "unrelated-fixture", "record": record("Existing synthetic memory", "agent")})
+    with _server_process(root) as url:
+        completed = _cli("smoke", "--url", url, "--project", "pilot",
+                         "--token-file", owner_path, "--peer-token-file", peer_path)
+        assert completed.returncode == 0, completed.stdout
+        report = decode(completed.stdout)
+        assert report["passed"] and len(report["checks_passed"]) == 10
+        assert report["cleanup"]["complete"] and report["cleanup"]["deleted_records"] == 2
+        assert report["real_machine_pair_verified"] is False
+        for path in root.glob("*.secret"):
+            assert read_token(path).encode() not in completed.stdout + completed.stderr
+        owner = MemoryHTTPClient(url, read_token(owner_path))
+        history = owner.call("history", {"project_id": "pilot", "key": "unrelated-fixture"})
+        assert history["revisions"][0]["version"] == 1
+        configured = _cli("client-config", "--url", url, "--token-file", owner_path)
+        assert configured.returncode == 0, configured.stderr
+        bridge = decode(configured.stdout)["mcpServers"]["botte-shared-memory"]
+        assert bridge["command"] == sys.executable and str(owner_path) in bridge["args"]
+        assert read_token(owner_path).encode() not in configured.stdout
+        assert Path(bridge["cwd"]).joinpath("skills/memory_hub/cli.py").is_file()
+
+
+@pytest.fixture
+def workers(tmp_path):
+    root = tmp_path / "two-workers"
+    initialize(root, "pilot", ["one", "two"])
+    server = MemoryHTTPServer(("127.0.0.1", 0), MemoryService(root / "data"), AuthRegistry.load(root / "auth.json"))
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        yield root, f"http://127.0.0.1:{server.server_port}"
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)
+
+
+def test_smoke_cleans_a_committed_write_when_its_response_is_lost(workers, monkeypatch):
+    from skills.memory_hub.smoke import run_smoke
+    root, url = workers
+    original_call = MemoryHTTPClient.call
+    lost = []
+    def lose_once(client, operation, args):
+        result = original_call(client, operation, args)
+        if operation == "checkpoint" and not lost:
+            lost.append(True)
+            raise ServiceError("unavailable", "Simulated lost response", 503)
+        return result
+    monkeypatch.setattr(MemoryHTTPClient, "call", lose_once)
+    result = run_smoke(url, "pilot", root / "agent-one.secret", root / "agent-two.secret")
+    assert not result["passed"] and result["failed_step"] == "shared_capture"
+    assert result["cleanup"]["complete"] and result["cleanup"]["deleted_records"] == 1
+
+
+def test_smoke_reports_pending_cleanup_without_exposing_transport_errors(workers, monkeypatch):
+    from skills.memory_hub import smoke
+    root, url = workers
+    original_call = MemoryHTTPClient.call
+    def fail_cleanup(client, operation, args):
+        if operation == "forget":
+            raise ServiceError("unavailable", "PRIVATE_TRANSPORT_CANARY", 503)
+        return original_call(client, operation, args)
+    monkeypatch.setattr(MemoryHTTPClient, "call", fail_cleanup)
+    monkeypatch.setattr(smoke, "_peer_recall", lambda *a: (_ for _ in ()).throw(ValueError("PRIVATE_MCP_CANARY")))
+    result = smoke.run_smoke(url, "pilot", root / "agent-one.secret", root / "agent-two.secret")
+    assert not result["passed"] and not result["cleanup"]["complete"]
+    assert len(result["cleanup"]["pending_keys"]) == 2
+    assert "PRIVATE_" not in json.dumps(result)
+
+
+def test_smoke_refuses_one_credential_used_twice(workers):
+    from skills.memory_hub.smoke import run_smoke
+    root, url = workers
+    with pytest.raises(ValueError, match="two distinct"):
+        run_smoke(url, "pilot", root / "agent-one.secret", root / "agent-one.secret")
+
+
+def test_smoke_cleans_a_fixture_recreated_by_a_broken_replay_guard(workers, monkeypatch):
+    import hashlib
+    from skills.memory_hub.smoke import run_smoke
+    from skills.memory_hub.store import MemoryStore
+    root, url = workers
+    original_call = MemoryHTTPClient.call
+    def broken_replay(client, operation, args):
+        try:
+            return original_call(client, operation, args)
+        except ServiceError as error:
+            if operation != "checkpoint" or error.code != "forgotten":
+                raise
+            # Simulate a backend that loses precisely this fixture's deletion ledger.
+            with MemoryStore(root / "data") as store:
+                conn = store._conn("pilot")
+                digest = hashlib.sha256(encode(["pilot", args["key"]])).hexdigest()
+                conn.execute("DELETE FROM shared_tombstones WHERE key_digest = ?", (digest,))
+                conn.commit()
+            return original_call(client, operation, args)
+    monkeypatch.setattr(MemoryHTTPClient, "call", broken_replay)
+    result = run_smoke(url, "pilot", root / "agent-one.secret", root / "agent-two.secret")
+    assert not result["passed"] and result["failed_step"] == "capture_replay_blocked"
+    assert result["cleanup"]["complete"] and result["cleanup"]["deleted_records"] == 3
+    with MemoryStore(root / "data") as store:
+        assert store._conn("pilot").execute("SELECT COUNT(*) FROM memory_quarantine").fetchone()[0] == 0

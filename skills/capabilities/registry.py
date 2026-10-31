@@ -40,7 +40,7 @@ LAYER_MAP = {
     "diff_language": "REMEMBER",
     # GOVERN — consistency & cost
     "clarification": "GOVERN", "checkup": "GOVERN", "dashboard": "GOVERN",
-    "skill_project_optimizer": "GOVERN",
+    "skill_project_optimizer": "GOVERN", "effect-review": "GOVERN",
     "code-rules": "GOVERN", "karpathy-guidelines": "GOVERN",
     # DEPLOY — wire & measure
     "bootstrap": "DEPLOY",

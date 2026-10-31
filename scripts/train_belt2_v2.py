@@ -1,4 +1,7 @@
-"""Train Belt 2.0 with REAL feature extractors for accurate predictions.
+"""Historical synthetic Belt 2.0 experiment, retained as a code reference.
+
+Source-model replacement is disabled. Use active_learning train to export a
+separate candidate from compatible observations, then qualify it independently.
 """
 import json, sys
 from pathlib import Path
@@ -39,24 +42,7 @@ def train_model(X, y, n_hidden, epochs=500, lr=0.02):
     return w1, b1, w2, b2
 
 def save_model(name, w1, b1, w2, b2, labels, extra=None):
-    n_in, n_hidden = w1.shape; n_out = w2.shape[1]
-    model = {
-        "model": name, "architecture": "feedforward",
-        "layers": [n_in, n_hidden, n_out],
-        "layer_config": [
-            {"name": "hidden", "weights": w1.tolist(), "biases": b1.tolist(), "activation": "relu"},
-            {"name": "output", "weights": w2.tolist(), "biases": b2.tolist(), "activation": "softmax"},
-        ],
-        "num_features": n_in, "num_classes": n_out, "labels": labels,
-        "num_samples": extra.get("num_samples", 0) if extra else 0,
-        "accuracy": extra.get("accuracy", 0.0) if extra else 0.0,
-        "trained_on": "real_features_v2",
-        "weights": [w1.flatten().tolist(), w2.flatten().tolist()],
-        "biases": [b1.tolist(), b2.tolist()],
-        "activations": ["relu", "softmax"],
-    }
-    (MODELS_DIR / f"{name}.json").write_text(json.dumps(model, indent=2))
-    print(f"  ✅ {name}: {n_in}f→{n_hidden}h→{n_out}c")
+    raise RuntimeError("legacy source-model replacement disabled; export a separate candidate")
 
 def fvec(model, values):
     """Convert feature dict to ordered list matching the model's schema."""
@@ -133,8 +119,14 @@ def train_semantic_cache():
     print("\n💾 semantic_cache_hit_predictor...")
     X, y = [], []
     for _ in range(100):
-        X.append(fvec("semantic_cache_hit_predictor", features.semantic_cache_values(0.1, "audit", 0.1, 100))); y.append(0)
-        X.append(fvec("semantic_cache_hit_predictor", features.semantic_cache_values(0.9, "analyze", 0.9, 5))); y.append(1)
+        X.append(fvec("semantic_cache_hit_predictor", features.semantic_cache_values(
+            "unknown synthetic query", cache_density=0.1, cache_hit_history=0.1,
+        ))); y.append(0)
+        X.append(fvec("semantic_cache_hit_predictor", features.semantic_cache_values(
+            "matching synthetic query", cache_density=0.9, cache_hit_history=0.9,
+            eligible_cache_density=0.8, eligible_vocabulary_coverage=1.0,
+            length_neighbor_ratio=1.0,
+        ))); y.append(1)
     X = np.array(X); y = np.array(y)
     w1,b1,w2,b2 = train_model(X, y, 14)
     save_model("semantic_cache_hit_predictor", w1,b1,w2,b2, ["miss","hit"], {"num_samples":len(X)})
@@ -154,8 +146,12 @@ def verify():
         ("resp_len", response_length_hint("design", "analyze", 0.9, "long"), "long"),
         ("tool", tool_call_hint(False, False, "ask", 0.3), "llm_only"),
         ("tool", tool_call_hint(True, True, "fix", 0.8), "use_tool"),
-        ("cache", semantic_cache_hint(0.1, "audit", 0.1, 100), "miss"),
-        ("cache", semantic_cache_hint(0.9, "analyze", 0.9, 5), "hit"),
+        ("cache", semantic_cache_hint("unknown synthetic query", cache_density=0.1,
+                                     cache_hit_history=0.1), "miss"),
+        ("cache", semantic_cache_hint("matching synthetic query", cache_density=0.9,
+                                     cache_hit_history=0.9, eligible_cache_density=0.8,
+                                     eligible_vocabulary_coverage=1.0,
+                                     length_neighbor_ratio=1.0), "hit"),
     ]
     ok = True
     for name, result, expected in tests:
@@ -168,13 +164,12 @@ def verify():
             ok = False
     return ok
 
+def main():
+    print("Legacy trainer disabled before training or writes; use "
+          "python -m skills.botte_nn.active_learning train for a separate candidate.",
+          file=sys.stderr)
+    return 2
+
+
 if __name__ == "__main__":
-    print("🧠 Training Belt 2.0 with REAL feature extractors...\n")
-    train_compressibility()
-    train_context_pruning()
-    train_skip_agent()
-    train_cloud_escalation()
-    train_response_length()
-    train_tool_call()
-    train_semantic_cache()
-    print(); verify()
+    raise SystemExit(main())

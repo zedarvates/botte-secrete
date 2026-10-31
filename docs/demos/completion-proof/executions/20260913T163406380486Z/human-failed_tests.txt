@@ -1,0 +1,5 @@
+Test échoué
+Les pièces correspondent au reçu, mais l'exécution enregistrée n'a pas réussi.
+3 test(s) enregistré(s) ; 2 fichier(s) contrôlé(s).
+Suite : Corriger le problème et produire une nouvelle exécution avec ses preuves.
+Portée : uniquement les tests enregistrés et les fichiers listés ; exécuteur de confiance requis.

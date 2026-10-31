@@ -58,11 +58,13 @@ Distinguish `missing`, `invalid`, `stale` and `declared`; the last only confirms
 structure, resolved identity and listed source hashes, including for drafts. It does not verify
 behavior or grant authority. Ordinary registry output remains unchanged.
 
-Relate expected effects to the current task and its existing authorization.
-After use, record observed effects, evidence, deviations, uncertainties and the
-next action through the task's existing report. For plausible reuse, state what
-transfers, adaptations and a check in the target context; do not inherit a prior
-validation or permission automatically.
+Use the shared [effect-review method](../effect-review/SKILL.md) for before/after
+assessment and a concrete reuse proposal. `skills.capabilities.review` generates
+compact deterministic cues for Conductor `--review-effects`, without an LLM call.
+Detailed operation prose stays in sidecars; the compact view defers its assessment.
+Use `effects <skill_dir> --select /retry` or Python `review.read_details` to fetch
+selected sections. Pass `--expect-sha256` / `expected_sha256` from the review to
+detect changed declarations. See the [detail-reading guide](../../docs/capability-effects.md#read-deferred-details).
 
 When creating or updating declarations, use the read-only `template` command and
 the [authoring contract](../../docs/capability-effects.md). Keep substantial
@@ -71,7 +73,18 @@ covers discovery and inspection, not execution of the capabilities it lists.
 
 For runtime comparison, the [observation companion](../../docs/capability-effects.md#observe-and-reconcile-a-run)
 provides `ObservationSession`, `validate_report` and `summarize` in
-`skills.capabilities.observations`. Collection is opt-in and records instrumented
-call links and bounded file evidence. A checkpoint writes a caller-selected
-report file; there is no automatic tracing or execution of verification text.
-Keep whole effects and reuse unverified when only one write facet was sampled.
+`skills.capabilities.observations`. Opt-in v2 collection records instrumented call
+links, bounded file evidence and TCP/HTTP response metadata; v1 reports remain
+readable. Network targets have opaque run-local aliases, with no payloads or
+credentials. A checkpoint writes a caller-selected report file. Propagate worker
+contexts explicitly with `submit_observed` and join them before session closure;
+late completions cannot rewrite a closed report. There is no automatic tracing
+or execution of verification text. Keep whole effects and reuse unverified when
+only a write or transport-response facet was sampled.
+
+Start a saved execution handoff with `evidence <report.json> --overview` for all
+steps and evidence references. Use `--result 0` for one saved Conductor step,
+or omit both options for a standalone companion. An index precedes
+optional `--select /observations/o1` reads; carry `--expect-sha256` from that index
+or `review_after`. Python equivalents are in `skills.capabilities.evidence`.
+See the [evidence-reading guide](../../docs/capability-effects.md#read-retained-evidence).

@@ -87,10 +87,17 @@ Preview does not promise that runtime prerequisites will hold later.
 Supported checks are `file_exists`, `file_absent`, `file_sha256` (`value`),
 `text_contains` (`value`, UTF-8), and `json_equals` (`pointer`, `value`). JSON
 pointers use RFC 6901 escaping; values are compared without equating `true`
-with `1`. Paths stay within the selected project; symlinks, traversal and
-non-regular files produce no positive evidence. Observation reads are limited
+with `1`. JSON observations, plans and checkpoints reject duplicate object keys
+and nonfinite numbers, including overflowing numeric exponents, anywhere in
+the document. When checking an observation, a JSON parse or recursion-limit
+failure leaves the predicate unsatisfied and does not stop independent steps.
+Paths stay within the selected project; symlinks, traversal and non-regular
+files produce no positive evidence. Observation reads are limited
 to 8 MiB per file; plans to 1 MiB and 100 steps. Checkpoints are limited to
 32 MiB when read.
+Every checkpoint row must contain an integer process `exit_code` or `null`;
+boolean and floating-point values are rejected before resumption. A previously
+verified row must have integer zero and a recorded start.
 
 Reports contain hashes and byte counts, not raw subprocess output or file
 contents. They still contain the goal, context, paths and optional declarations,
