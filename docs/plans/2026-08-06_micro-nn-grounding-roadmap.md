@@ -5,6 +5,10 @@ Owner: Botte Secrete maintainers
 Rule: do not add or activate another micro-NN until the existing inventory has
 an auditable label source and a production validation gate.
 
+Operator workflow: [inspect the actual local ledger and export a separate
+training candidate](../micro-nn-candidates.md). Sample counts do not establish
+activation readiness; the checkup reports that qualification as not evaluated.
+
 ## Why this roadmap exists
 
 `nn_audit` currently finds eleven wired micro-NN models. Four have reproducible
