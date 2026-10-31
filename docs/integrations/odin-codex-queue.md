@@ -5,8 +5,9 @@ un badge « File nº 1 », « File nº 2 », etc., recalculé à chaque départ 
 Le tableau de bord se rafraîchit toutes les secondes, sans appel à un modèle.
 Il gère uniquement les lancements soumis par son formulaire. Les discussions
 ouvertes directement dans l'application Codex échappent à cette limite.
-Ce pilote possède son propre journal et son verrou. Il ne coordonne pas les
-autres superviseurs et n'installe aucun service permanent. Les huit discussions
+Ce pilote possède son propre journal et son verrou de file. En mode réel,
+ses budgets mémoire sont partagés avec les superviseurs utilisant le même
+registre local ; il n'installe aucun service permanent. Les huit discussions
 de la démonstration signifient cinq actives et trois en attente, jamais huit
 exécutions simultanées.
 
@@ -41,6 +42,11 @@ refuse un compte API ou un fournisseur sans authentification OpenAI ; il ne
 connecte pas de compte et ne change pas de modèle. La connexion ChatGPT est
 vérifiée avant chaque départ. Les limites de l'abonnement continuent à s'appliquer.
 `--max-running` accepte 1 à 5 ; sa valeur par défaut est 5.
+Le contrôle RAM est obligatoire en mode réel : budget par défaut de 4 Gio par
+tour, marge système d'au moins 2 Gio ou 10 %, mesure fraîche avant lancement.
+`--job-ram-gib`, `--system-ram-gib` et `--resource-state` configurent ces valeurs.
+Voir [admission mémoire et réconciliation](../host-memory-admission.md) pour
+le registre commun, les cas de refus et les limites de couverture.
 
 ## Comportement
 
@@ -64,6 +70,9 @@ vérifiée avant chaque départ. Les limites de l'abonnement continuent à s'app
 - « Tour terminé · à revoir » signifie que Codex a terminé son tour, pas que
   les critères métier sont prouvés. Kanboard conserve le suivi métier et sa
   politique d'autonomie ; ce pilote ne modifie pas cette politique.
+- En mode réel, la réservation RAM reste conservée après la fin du tour :
+  vérifier l'arrêt des sous-processus et services puis utiliser
+  « Confirmer l'arrêt vérifié ». La simulation reste sans réservation mémoire.
 
 ## État local et arrêt
 
@@ -100,7 +109,7 @@ python scripts/test_odin_codex_queue.py
 python scripts/pre-commit-check.py --fast
 ```
 
-27 tests couvrent la concurrence réelle du superviseur, les positions et leur
+Les tests couvrent la concurrence réelle du superviseur, les positions et leur
 renumérotation, les conflits de chemins/discussions, la reprise durable, les
 validations, les interruptions, les courses du protocole stdio et les protections
 HTTP. Ils injectent aussi les échecs d'écriture, vérifient douze transitions et
@@ -109,6 +118,9 @@ tour déjà envoyé conserve sa place sans être relancé. La suite
 `odin_codex_queue` est inscrite dans `python scripts/run_tests.py -q`.
 Le raccordement app-server est testé avec un processus factice, sans modèle.
 Le contrôle du compte API vérifie le refus avant lancement.
+Les cas mémoire couvrent également la pression RAM, les registres communs,
+la reprise des budgets historiques, le démarrage de l'app-server et la chute
+de mémoire entre la création du thread et le lancement du tour.
 
 La validation a été réalisée sous Linux. L'essai graphique complet et un vrai
 tour Codex sous Windows restent à réaliser sur Odin avant activation quotidienne.

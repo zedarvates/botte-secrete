@@ -1,5 +1,6 @@
 """Acceptance: admission, durable restart, lifecycle races and loopback boundary."""
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime, timezone
 import json
 import os
 from pathlib import Path
@@ -12,9 +13,11 @@ from unittest.mock import patch
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from odin_queue.codex import CodexEngine, SimulationEngine
 from odin_queue.server import Service, make_http
 from odin_queue.state import OCCUPIED, Queue, SupervisorLock
+from skills.host_resources import HostMemoryGuard, GiB
 
 FAKE = Path(__file__).parent / "odin_queue" / "fixtures" / "fake_codex.py"
 
@@ -251,6 +254,126 @@ class PersistenceTests(QueueFixture):
         self.assertEqual(reopened.snapshot()["jobs"][0]["id"], job["id"])
         self.assertEqual(reopened.snapshot()["jobs"][0]["status"], "unknown")
         self.assertIsNone(reopened.claim())
+
+
+class MemoryQueueTests(QueueFixture):
+    def setUp(self):
+        super().setUp()
+        self.available = 20 * GiB
+        self.guard = HostMemoryGuard(self.root / "memory.json", probe=self.sample)
+        self.queue = Queue(self.root / "live.json", [self.root], mode="codex", memory_guard=self.guard)
+
+    def sample(self):
+        return {"total_bytes": 32 * GiB, "available_bytes": self.available,
+                "commit_available_bytes": None, "commit_required": False, "source": "linux",
+                "measured_monotonic": time.monotonic(), "measured_at_utc": datetime.now(timezone.utc).isoformat()}
+
+    def test_low_ram_keeps_work_queued_without_spawning(self):
+        self.available = 5 * GiB
+        job = self.add(0)
+        self.assertIsNone(self.queue.claim())
+        state = self.queue.snapshot()
+        self.assertEqual(state["jobs"][0]["status"], "queued")
+        self.assertEqual(state["memory"]["reason"], "insufficient_ram")
+        self.assertFalse(self.guard.check(self.queue.memory_key(job["id"]))["allowed"])
+
+    def test_shared_reservations_prevent_oversubscription_across_spools(self):
+        self.available = 12 * GiB
+        first = self.add(0)
+        self.assertEqual(self.queue.claim()["id"], first["id"])
+        other = Queue(self.root / "other.json", [self.root], mode="codex",
+                      memory_guard=HostMemoryGuard(self.guard.path, probe=self.sample))
+        other.submit(title="other", prompt="hold", cwd=self.paths[1], dedupe_key="other")
+        self.assertIsNotNone(other.claim())
+        self.add(2)
+        self.assertIsNone(self.queue.claim())  # 12 - 3.2 system - 8 reserved < 4.
+
+    def test_unknown_and_interrupt_ack_keep_memory_until_verified_stop(self):
+        job = self.add(0); self.queue.claim()
+        key = self.queue.memory_key(job["id"])
+        self.queue.attach(job["id"], thread_id="t", turn_id="u")
+        self.queue.cancel(job["id"])
+        self.assertTrue(self.guard.check(key)["allowed"])
+        self.queue.event(job["id"], "unknown")
+        reopened = Queue(self.queue.path, [self.root], mode="codex", memory_guard=self.guard)
+        self.assertIsNone(reopened.claim())
+        self.assertTrue(self.guard.check(key)["allowed"])
+        reopened.confirm_stopped(job["id"], True)
+        self.assertEqual(self.guard.check(key)["reason"], "reservation_missing")
+
+    def test_terminal_turn_keeps_memory_until_descendant_shutdown_is_confirmed(self):
+        job = self.add(0); self.queue.claim()
+        self.queue.event(job["id"], "message", text="hello")
+        key = self.queue.memory_key(job["id"])
+        self.assertTrue(self.guard.check(key)["allowed"])
+        self.queue.event(job["id"], "complete", status="completed")
+        self.queue.event(job["id"], "message", text="late")
+        self.assertTrue(self.guard.check(key)["allowed"])
+        self.assertTrue(self.queue.snapshot()["jobs"][0]["memory_reconciliation_required"])
+        with self.assertRaises(ValueError):
+            self.queue.confirm_stopped(job["id"], False)
+        self.queue.confirm_stopped(job["id"], True)
+        self.assertEqual(self.guard.check(key)["reason"], "reservation_missing")
+
+    def test_legacy_occupied_work_is_registered_before_other_spools_can_claim(self):
+        legacy = Queue(self.root / "legacy.json", [self.root], mode="codex", memory_guard=self.guard)
+        job = legacy.submit(title="old", prompt="hold", cwd=self.paths[0], dedupe_key="old")
+        # Reproduce a spool from the pre-guard version, with no reservation yet.
+        legacy.data["jobs"][0]["status"] = "running"
+        legacy._commit()
+        self.available = 8 * GiB
+        Queue(legacy.path, [self.root], mode="codex", memory_guard=self.guard)
+        self.add(1)
+        self.assertIsNone(self.queue.claim())
+        self.assertEqual(self.guard.snapshot()["reserved_bytes"], 4 * GiB)
+
+    def test_failed_terminal_persistence_keeps_memory(self):
+        job = self.add(0); self.queue.claim()
+        with patch("odin_queue.state.os.replace", side_effect=OSError("disk")):
+            with self.assertRaises(OSError):
+                self.queue.event(job["id"], "complete", status="completed")
+        self.assertTrue(self.guard.check(self.queue.memory_key(job["id"]))["allowed"])
+        self.assertEqual(self.queue.snapshot()["jobs"][0]["status"], "starting")
+
+    def test_memory_drop_between_thread_and_turn_prevents_turn_launch(self):
+        job = self.add(0); claimed = self.queue.claim()
+        engine = CodexEngine(self.queue, [sys.executable, str(FAKE)], timeout=3)
+        calls = []
+        original = engine.rpc.call
+        def call(method, params):
+            calls.append(method)
+            result = original(method, params)
+            if method == "thread/start":
+                self.available = GiB
+            return result
+        try:
+            with patch.object(engine.rpc, "call", side_effect=call):
+                engine.start(claimed)
+            self.assertIn("thread/start", calls)
+            self.assertNotIn("turn/start", calls)
+            self.assertEqual(self.queue.snapshot()["jobs"][0]["status"], "unknown")
+            self.assertEqual(self.guard.snapshot()["reservation_count"], 2)  # turn + app-server
+        finally:
+            engine.close()
+
+    def test_low_ram_refuses_app_server_process_itself(self):
+        self.available = GiB
+        with patch("odin_queue.codex.subprocess.Popen") as spawn:
+            with self.assertRaisesRegex(RuntimeError, "app-server non lancé"):
+                CodexEngine(self.queue, [sys.executable, str(FAKE)])
+        spawn.assert_not_called()
+
+    def test_invalid_job_estimates_are_rejected_before_admission(self):
+        for value in [True, False, 0, -1, float("nan"), float("inf"), "4", 1025, 0.1]:
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                self.queue.submit(title="bad", prompt="hold", cwd=self.paths[0],
+                                  dedupe_key="bad", estimated_ram_gib=value)
+        job = self.queue.submit(title="valid", prompt="hold", cwd=self.paths[0],
+                                dedupe_key="valid", estimated_ram_gib=8)
+        self.assertEqual(self.queue.claim()["estimated_ram_bytes"], 8 * GiB)
+        with self.assertRaises(ValueError):
+            self.queue.submit(title="valid", prompt="hold", cwd=self.paths[0],
+                              dedupe_key="valid", estimated_ram_gib=4)
 
 
 class AdapterTests(QueueFixture):

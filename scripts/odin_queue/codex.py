@@ -5,6 +5,7 @@ import json
 import subprocess
 import threading
 import time
+import uuid
 
 from .state import OCCUPIED, QueuePersistenceError
 
@@ -111,6 +112,16 @@ class CodexEngine:
         self.closed_turns = {j["turn_id"] for j in self.queue.snapshot()["jobs"]
                              if j["status"] not in OCCUPIED and j["turn_id"]}
         self.lock = threading.RLock()
+        self.bootstrap_key = None
+        if self.queue.memory_guard:
+            self.bootstrap_key = self.queue.memory_key("app-server-" + uuid.uuid4().hex)
+            result = self.queue.memory_guard.reserve(self.bootstrap_key, 512 * 1024**2)
+            self.queue.memory_status = {"enabled": True, **result}
+            if not result["allowed"]:
+                raise RuntimeError("Mémoire insuffisante ou indisponible ; app-server non lancé.")
+            if not self.queue.memory_guard.check(self.bootstrap_key)["allowed"]:
+                self.queue.memory_guard.release(self.bootstrap_key)
+                raise RuntimeError("Contrôle mémoire refusé ; app-server non lancé.")
         self.rpc = Rpc(command, self._message, self._disconnected, timeout)
         try:
             self.rpc.call("initialize", {"clientInfo": {"name": "botte_odin_queue", "title": "Odin Queue", "version": "0.1.0"}})
@@ -119,7 +130,7 @@ class CodexEngine:
             self.ready = not self.rpc.closed
             self.note = "Codex connecté" if self.ready else "Transport déconnecté"
         except Exception:
-            self.rpc.close()
+            self.close()
             raise
 
     def _disconnected(self):
@@ -208,12 +219,16 @@ class CodexEngine:
     def start(self, job):
         try:
             self.queue.ensure_available()
+            if not self.queue.check_memory(job["id"]):
+                return
             self._check_account()
             method = "thread/resume" if job["thread_id"] else "thread/start"
             params = {"cwd": job["cwd"], "sandbox": "readOnly" if job["audit"] else "workspaceWrite"}
             if job["thread_id"]:
                 params["threadId"] = job["thread_id"]
             self.queue.ensure_available()
+            if not self.queue.check_memory(job["id"]):
+                return
             response = self.rpc.call(method, params)
             thread_id = response["thread"]["id"]
             self.queue.attach(job["id"], thread_id=thread_id)
@@ -222,6 +237,8 @@ class CodexEngine:
                       "sans autorisation explicite applicable. Ne pas lancer de sous-agents sans demande applicable. "
                       "Produire les vérifications et les limites du résultat.\n\n" + job["prompt"])
             self.queue.ensure_available()
+            if not self.queue.check_memory(job["id"]):
+                return
             response = self.rpc.call("turn/start", {"threadId": thread_id, "cwd": job["cwd"],
                                                      "input": [{"type": "text", "text": prompt}]})
             turn_id = response["turn"]["id"]
@@ -272,6 +289,9 @@ class CodexEngine:
 
     def close(self):
         self.rpc.close()
+        if self.bootstrap_key and self.rpc.process.poll() is not None:
+            self.queue.memory_guard.release(self.bootstrap_key)
+            self.bootstrap_key = None
 
 
 class SimulationEngine:
