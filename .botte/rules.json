@@ -13,7 +13,7 @@
       "owner_only": false,
       "enforced": true,
       "enforcement_refs": [
-        "skills/rsi_graph/observer.py#with path.open(\"rb\") as stream:",
+        "skills/rsi_graph/observer.py#with os.fdopen(descriptor, \"rb\") as stream:",
         "skills/rsi_graph/cli.py#sub.add_parser(\"observe\","
       ],
       "probes": [
@@ -30,8 +30,8 @@
       ],
       "supersedes": [],
       "last_verified": {
-        "at": "2026-10-05T15:32:08+00:00",
-        "content_sha256": "1b59c52acb5082c93d64f46f2abbd04055fbac50845cfa66d9c16c4e17374bdb",
+        "at": "2026-10-31T08:25:38+00:00",
+        "content_sha256": "6766f9ead182100bd2664fff0f309b50501387acd9bdb692f06b6614d8caca52",
         "evidence_ref": "skills/rsi_graph/test_observer.py#test_observer_does_not_apply_event_instructions"
       }
     },
@@ -62,12 +62,17 @@
           "id": "rsi.bounded-truthful-source.deny",
           "polarity": "deny",
           "evidence_ref": "skills/rsi_graph/test_observer.py#test_oversized_source_uses_a_bounded_sentinel_read"
+        },
+        {
+          "id": "rsi.bounded-truthful-source.special-file",
+          "polarity": "deny",
+          "evidence_ref": "skills/rsi_graph/test_observer.py#test_special_file_does_not_block_the_observer"
         }
       ],
       "supersedes": [],
       "last_verified": {
-        "at": "2026-10-05T15:32:08+00:00",
-        "content_sha256": "e488836a2afc21c7974b98bc226b0c1475e124ef2f1478b374f053f9a7ba35fd",
+        "at": "2026-10-31T08:25:38+00:00",
+        "content_sha256": "7f74a0cc49c659870003cae122a23fc60147e9e0b5083d1ffaac6eab067ed1c8",
         "evidence_ref": "skills/rsi_graph/test_observer.py#test_source_at_the_exact_byte_limit_is_accepted"
       }
     },
@@ -97,12 +102,17 @@
           "id": "rsi.no-invented-evidence.deny",
           "polarity": "deny",
           "evidence_ref": "skills/rsi_graph/test_observer.py#test_edges_are_observed_adjacency_not_causality"
+        },
+        {
+          "id": "rsi.no-invented-evidence.identity",
+          "polarity": "allow",
+          "evidence_ref": "skills/rsi_graph/test_observer.py#test_identity_encoding_separates_delimiters_and_missing_components"
         }
       ],
       "supersedes": [],
       "last_verified": {
-        "at": "2026-10-05T15:32:08+00:00",
-        "content_sha256": "3cdf26eacb8e3ace955cd5d071838665c88b240b70abee1634cc47fab8cffebe",
+        "at": "2026-10-31T08:25:38+00:00",
+        "content_sha256": "6ab7072cdf656932daec41fa0fdbcc405a7d86ac5759b6206236a3cc912138b2",
         "evidence_ref": "skills/rsi_graph/test_observer.py#test_provenance_is_only_claimed_when_event_records_it"
       }
     }

@@ -1,9 +1,9 @@
 # Contrat RSI enregistré
 
 Ce contrat couvre uniquement l'observateur RSI de cette branche. Il ne remplace
-pas les anciens contrats d'autorité, de bail, de revue indépendante ou de sortie
-sûre : leurs modules ne sont pas présents ici et leur restauration reste hors
-de cette correction. Aucune promotion, fusion, publication ou exécution de mission
+pas les contrats d'autorité, de bail, de revue indépendante ou de sortie
+sûre : ce manifeste ne qualifie pas leur comportement, même lorsque leurs
+modules existent dans le dépôt. Aucune promotion, fusion, publication ou exécution de mission
 n'est autorisée par un résultat vert de ce contrat. Ces opérations conservent
 leurs autorisations propriétaire et leurs preuves distinctes.
 

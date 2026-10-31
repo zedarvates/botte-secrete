@@ -1,33 +1,38 @@
 ---
 name: nn_audit
-description: Audit the micro-NNs — is each model grounded in REAL data, or a synthetic copy of a hand-coded rule? Scans skills/botte_nn and reports, per model, the training data source (real/synthetic/unknown), whether the model file records provenance (trained_on/eval_accuracy), whether a test guards a real-world output, and a grounded/synthetic verdict. Deterministic, 0 cloud tokens. Use to tell which learned components are real vs placeholder, and which should be grounded or replaced by the rule they imitate.
+description: Inspect micro-model training-script keywords, metadata keys, test text and source references. These heuristic labels help prioritize review; they do not verify datasets, model accuracy, executed tests or production use. Use to inspect the evidence behind a grounded, synthetic or unknown label.
 ---
 
-# nn_audit — grounded NNs, or synthetic copies of rules?
-
-A learned component only earns its place if it's trained on **real data a rule
-can't capture**. A net trained on `np.random` + hand-coded labels just
-approximates a deterministic function we already wrote — strictly worse than the
-rule (adds error + opacity, learns nothing). This audits which micro-NNs are real.
+# nn_audit — heuristic micro-model inspection
 
 ```bash
-python -m skills.nn_audit.cli                 # audit skills/botte_nn
+python -m skills.nn_audit.cli                 # inspect skills/botte_nn
 python -m skills.nn_audit.cli <dir> --json
 ```
 
-Per model it reports:
-- **data_source** — `real` | `synthetic` | `unknown`, inferred from the training
-  script's content (distill/corpus/labelled → real; `np.random` → synthetic).
-- **wired** — does any *production* file (not tests/training/registry) consume it,
-  and which (`usage`)? Tells **synthetic-but-driving-behaviour** (real risk) apart
-  from **synthetic-but-orphan** (dead weight).
-- **has_provenance** — does the `.json` record `trained_on` / `eval_accuracy` / `data`?
-- **has_test_guard** — does a test assert a specific real-world output for it?
-- **verdict** — `grounded` | `synthetic — drives behaviour: ground it` |
-  `synthetic + orphan: delete or wire` | `unknown`; **`at_risk` = synthetic AND wired**.
+`audit_models()` inspects files without calling an LLM. Its output is evidence
+for further review, with these limits:
 
-The fix is decided by both axes: a **wired synthetic** net (e.g. `binary_router`
-in the routing belt) must be **grounded** on real data (distillation / active-
-learning, like `error_classifier`); an **orphan synthetic** net is dead weight to
-**delete or wire**. Exposed via [[llm_mcp]] as `nn_audit`; pairs with [[botte_nn]].
-Pure file inspection, 0 cloud tokens.
+- **data_source** — `real`, `synthetic` or `unknown` from training-script keywords.
+  Real-data markers take precedence when both kinds appear. A match does not
+  verify the dataset, labels, licence or collection provenance.
+- **wired** and **usage** — model-name text references in production Python files,
+  excluding the audit's tests and model infrastructure. A reference does not
+  demonstrate an executed integration or reachable model invocation.
+- **has_provenance** and **provenance_keys** — recognized metadata keys are present;
+  their values and reported accuracy have not been validated.
+- **has_test_guard** — the model name appears somewhere in the combined test text
+  and `==` appears somewhere in that text. This does not establish a related
+  model-output assertion or a passing test.
+- **verdict** — heuristic `grounded`, `synthetic` or `unknown` review labels.
+  Per-model **risk** is `synthetic AND wired`; summary **at_risk** counts those
+  flags. Neither field proves a vulnerability or a measured model failure.
+
+Inspect the actual training data, call sites and assertions, then run a suitable
+held-out evaluation before claiming provenance, coverage or accuracy. Compare a
+model with its rule-based alternative on representative tasks before deciding to
+replace, connect or deploy it.
+
+Exposed through [[llm_mcp]] as `nn_audit`; related module: [[botte_nn]]. The
+reported `cloud_tokens: 0` describes this file-inspection routine. A host agent
+can consume model tokens while interpreting its results.

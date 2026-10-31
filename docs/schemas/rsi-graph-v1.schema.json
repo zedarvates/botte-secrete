@@ -83,7 +83,7 @@
     "rejected_records": {
       "type": "integer",
       "minimum": 0,
-      "description": "Parsed lines rejected for invalid JSON or non-object values."
+      "description": "Lines rejected for invalid or duplicate/nonfinite JSON, non-object values or invalid identity fields. Rejected records break adjacency chains."
     },
     "source_max_bytes": {
       "type": "integer",

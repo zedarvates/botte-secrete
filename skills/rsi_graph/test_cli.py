@@ -42,10 +42,9 @@ def test_top_level_cli_fails_on_unavailable_history(tmp_path):
     import contextlib
     import io
     import json
-    from pathlib import Path
     from unittest.mock import patch
     output = io.StringIO()
-    with patch.object(Path, "open", side_effect=PermissionError("synthetic input")):
+    with patch("skills.rsi_graph.observer.os.open", side_effect=PermissionError("synthetic input")):
         with contextlib.redirect_stdout(output):
             code = cli.main(["rsi", "observe", str(tmp_path), "--json"])
     assert code == 2

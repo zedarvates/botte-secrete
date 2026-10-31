@@ -2,9 +2,11 @@
 
 import argparse
 import json
+from skills.console_utf8 import force_utf8
 from .observer import build_graph
 
 def main(argv=None):
+    force_utf8()
     parser = argparse.ArgumentParser(description="Read-only RSI graph observer")
     sub = parser.add_subparsers(dest="command", required=True)
     observe = sub.add_parser("observe", help="reconstruct graph from existing events")

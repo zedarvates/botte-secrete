@@ -1,0 +1,83 @@
+{
+  "schema": "botte.discovery-index-measurement/v1",
+  "origin": "authored-queries-actual-stdio",
+  "catalog_tools": 65,
+  "method": "UTF-8 request plus response JSON-RPC bytes including newlines; both lookup exchanges counted",
+  "selection": "first ranked tool; no task-quality validation",
+  "source_sha256": {
+    "skills/llm_mcp/lazy.py": "53b972d58d29b433b852063d0a0efb724710e4794d2698bf24e1365a582ff040",
+    "skills/llm_mcp/server.py": "e9feb9e3b8a7fed249e728306462e28eac053dd1df974e81edf47c12b6d67934"
+  },
+  "rows": [
+    {
+      "query": "memory",
+      "selected_tool": "forget_memory",
+      "baseline_calls": 1,
+      "index_calls": 2,
+      "baseline_exchange_bytes": 3552,
+      "index_exchange_bytes": 1618,
+      "same_identifiers": true,
+      "selected_schema_exact": true
+    },
+    {
+      "query": "route",
+      "selected_tool": "route_feedback",
+      "baseline_calls": 1,
+      "index_calls": 2,
+      "baseline_exchange_bytes": 3703,
+      "index_exchange_bytes": 2436,
+      "same_identifiers": true,
+      "selected_schema_exact": true
+    },
+    {
+      "query": "verify",
+      "selected_tool": "nn_audit",
+      "baseline_calls": 1,
+      "index_calls": 2,
+      "baseline_exchange_bytes": 870,
+      "index_exchange_bytes": 1501,
+      "same_identifiers": true,
+      "selected_schema_exact": true
+    },
+    {
+      "query": "security",
+      "selected_tool": "security_scan",
+      "baseline_calls": 1,
+      "index_calls": 2,
+      "baseline_exchange_bytes": 1978,
+      "index_exchange_bytes": 2068,
+      "same_identifiers": true,
+      "selected_schema_exact": true
+    },
+    {
+      "query": "compress",
+      "selected_tool": "compress",
+      "baseline_calls": 1,
+      "index_calls": 2,
+      "baseline_exchange_bytes": 1020,
+      "index_exchange_bytes": 1608,
+      "same_identifiers": true,
+      "selected_schema_exact": true
+    },
+    {
+      "query": "docs",
+      "selected_tool": "docs_lifecycle",
+      "baseline_calls": 1,
+      "index_calls": 2,
+      "baseline_exchange_bytes": 1436,
+      "index_exchange_bytes": 1782,
+      "same_identifiers": true,
+      "selected_schema_exact": true
+    }
+  ],
+  "total_baseline_bytes": 12559,
+  "total_index_bytes": 11013,
+  "byte_reduction_fraction": 0.1230989728481567,
+  "limits": [
+    "provider tokens, cost and latency unmeasured",
+    "index descriptions are lossy hints; full schemas must be loaded",
+    "extra host/model roundtrip can outweigh byte reduction",
+    "tools/list and host context registration excluded",
+    "no backend connection or tool execution qualified"
+  ]
+}

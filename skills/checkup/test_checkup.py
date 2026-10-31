@@ -11,12 +11,165 @@ import os
 import sys
 import tempfile
 from pathlib import Path
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from skills.checkup.cli import (
-    run, format_pr_comment, PR_COMMENT_MARKER, doctor, _nn_summary,
+    run, format_pr_comment, PR_COMMENT_MARKER, doctor, _nn_summary, _verdict,
 )
+from skills.checkup.mcp import inspect_mcp, tomllib
+
+
+def _mcp_checks(state):
+    from skills.plugins.installer import install_plugins, SUPPORTED_TOOLS
+    from skills.infra_advisor.advisor import _mcp_wired
+
+    with tempfile.TemporaryDirectory() as d:
+        root = Path(d)
+        config = root / ".mcp.json"
+
+        def write(doc):
+            config.write_text(json.dumps(doc), encoding="utf-8")
+
+        for label, doc in (
+            ("array root", []), ("null root", None),
+            ("array container", {"mcpServers": []}),
+            ("empty entry", {"mcpServers": {"botte-llm": {}}}),
+            ("null entry", {"mcpServers": {"botte-llm": None}}),
+        ):
+            write(doc)
+            summary = inspect_mcp(root)
+            _ok(f"MCP {label} is invalid without a false wired flag",
+                summary["status"] == "invalid" and not _mcp_wired(root), state)
+
+        config.write_text("{", encoding="utf-8")
+        _ok("malformed JSON is a diagnostic, not a traceback",
+            inspect_mcp(root)["status"] == "invalid", state)
+        config.write_bytes(b"\xff")
+        _ok("non-UTF8 MCP configuration is invalid",
+            inspect_mcp(root)["status"] == "invalid", state)
+        config.write_bytes(b" " * (128 * 1024 + 1))
+        _ok("MCP inspection bounds configuration input",
+            inspect_mcp(root)["sources"][0]["reason"] == "configuration_size_limit", state)
+        config.unlink()
+        config.mkdir()
+        _ok("non-regular configuration is unreadable rather than opened",
+            inspect_mcp(root)["status"] == "unreadable", state)
+        config.rmdir()
+
+        for label, entry in (
+            ("disabled", {"disabled": True, "command": "botte-mcp"}),
+            ("not enabled", {"enabled": False, "command": "botte-mcp"}),
+        ):
+            write({"mcpServers": {"botte-llm": entry}})
+            _ok(f"MCP {label} is not an enabled declaration",
+                inspect_mcp(root)["status"] == "disabled" and not _mcp_wired(root), state)
+
+        write({"mcpServers": {"botte-llm": {"command": "botte-mcp"}}})
+        with patch("skills.checkup.mcp.shutil.which", return_value=None):
+            missing = inspect_mcp(root)
+        source = missing["sources"][0]
+        _ok("configured declaration can have a missing launcher",
+            missing["status"] == "configured"
+            and source["launcher"] == {"status": "not_found", "basis": "current_process_PATH"}, state)
+        with patch("skills.checkup.mcp.shutil.which", return_value="/example/botte-mcp"):
+            found = inspect_mcp(root)
+        _ok("found launcher does not imply installed runtime or reachability",
+            found["sources"][0]["launcher"]["status"] == "found"
+            and found["runtime"] == found["reachability"] == "not_checked", state)
+        _ok("diagnostic explicitly limits scope to project files",
+            found["scope"] == "project_files_only"
+            and "installed_plugin_configuration" in found["not_inspected"], state)
+        _ok("PR output labels configuration separately from availability",
+            "MCP declaration **configured**; runtime/reachability not checked"
+            in format_pr_comment({"drift": [], "mcp_wiring": found}), state)
+
+        for entry in (
+            {"command": sys.executable, "cwd": str(root)},
+            {"command": "botte-mcp", "env": {"PATH": "private-value"}},
+        ):
+            write({"mcpServers": {"botte-llm": entry}})
+            result = inspect_mcp(root)
+            _ok("host cwd/env prevents misleading current-process launcher claim",
+                result["sources"][0]["launcher"]["status"] == "not_checked"
+                and "private-value" not in json.dumps(result), state)
+
+        for entry in (
+            {"command": "python", "args": ["\x00"]},
+            {"command": "python", "env": []},
+            {"command": "python", "cwd": False},
+            {"command": "python", "enabled": "false"},
+            {"url": "https://localhost:notaport/mcp"},
+        ):
+            write({"mcpServers": {"botte-llm": entry}})
+            _ok("impossible launch fields are diagnosed as invalid",
+                inspect_mcp(root)["status"] == "invalid", state)
+
+        write({"mcpServers": {"botte-llm": {"command": "/" + "a" * 4000}}})
+        _ok("filesystem launcher errors cannot abort inspection",
+            inspect_mcp(root)["status"] == "configured", state)
+        write({"mcpServers": {"botte-llm": {"url": "https://example.invalid/mcp"}}})
+        remote = inspect_mcp(root)
+        _ok("HTTP declaration is retained without a network probe",
+            remote["status"] == "configured"
+            and remote["sources"][0]["transport"] == "http"
+            and remote["reachability"] == "not_checked", state)
+
+        # The configured file is executable, but inspection must never run it.
+        script = root / "never-run"
+        marker = root / "executed"
+        script.write_text(f"#!{sys.executable}\nfrom pathlib import Path\nPath({str(marker)!r}).touch()\n", encoding="utf-8")
+        script.chmod(0o755)
+        write({"mcpServers": {"botte-llm": {"command": str(script)}}})
+        inspect_mcp(root)
+        _ok("static MCP inspection never executes a configured command", not marker.exists(), state)
+
+        write({"mcpServers": {"botte-llm": {}}})
+        with patch.dict(os.environ, {"BOTTE_CHECKUP_CONTEXT": "github-pr"}):
+            broken_ci = run(root)
+        _ok("ephemeral CI does not hide a malformed configuration",
+            broken_ci["mcp_wiring"]["status"] == "invalid"
+            and any("MCP declaration status is invalid" in x for x in broken_ci["drift"]), state)
+
+    for tool in SUPPORTED_TOOLS:
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            install_plugins(root, tools=(tool,))
+            result = inspect_mcp(root)
+            expected = "unsupported" if tool == "hermes" or (tool == "codex" and tomllib is None) else "configured"
+            _ok(f"generated {tool} adapter is recognized or explicitly unsupported",
+                result["status"] == expected and result["reachability"] == "not_checked", state)
+
+    with tempfile.TemporaryDirectory() as d:
+        root = Path(d)
+        (root / ".codex").mkdir()
+        (root / ".codex" / "config.toml").write_text('[mcp_servers."botte-llm"]\ncommand = "python"\n', encoding="utf-8")
+        with patch("skills.checkup.mcp.tomllib", None):
+            _ok("Python 3.10 TOML parser absence is explicit",
+                inspect_mcp(root)["status"] == "unsupported", state)
+        if tomllib is not None:
+            (root / ".codex" / "config.toml").write_text('[mcp_servers.\n', encoding="utf-8")
+            _ok("malformed TOML is invalid when a parser is available",
+                inspect_mcp(root)["status"] == "invalid", state)
+
+    with tempfile.TemporaryDirectory() as d:
+        root = Path(d)
+        (root / ".mcp.json").write_text('{"mcpServers":{"botte-llm":{"command":"python"}}}', encoding="utf-8")
+        (root / ".cursor").mkdir()
+        (root / ".cursor" / "mcp.json").write_text('[]', encoding="utf-8")
+        mixed = run(root)
+        _ok("valid declaration does not hide an invalid second host source",
+            mixed["mcp_wiring"]["status"] == "configured"
+            and any("could not be validated" in x for x in mixed["drift"]), state)
+
+    for machine in ({}, {"available": False},
+                    {"available": True, "uses_local_models": False},
+                    {"available": True, "uses_local_models": True}):
+        verdict = _verdict({"drift": [], "machine": machine})
+        _ok("doctor never infers active host routing or cloud dispatch",
+            "routing local actif" not in verdict and "chaque tâche part au cloud" not in verdict
+            and "vérifi" in verdict, state)
 
 
 def _ok(msg, cond, state):
@@ -27,6 +180,7 @@ def _ok(msg, cond, state):
 def main() -> int:
     state = [0, 0]
     print("== checkup tests ==")
+    _mcp_checks(state)
 
     with tempfile.TemporaryDirectory() as d:
         proj = Path(d)
@@ -89,7 +243,7 @@ def main() -> int:
         _ok("flags MCP-not-wired as drift",
             any("MCP" in x for x in r["drift"]), state)
         _ok("local MCP status remains actionable",
-            r["mcp_wiring"] == {"status": "missing", "applicable": True}, state)
+            r["mcp_wiring"]["status"] == "missing" and r["mcp_wiring"]["applicable"], state)
 
         previous_context = os.environ.get("BOTTE_CHECKUP_CONTEXT")
         os.environ["BOTTE_CHECKUP_CONTEXT"] = "github-pr"

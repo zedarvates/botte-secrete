@@ -12,7 +12,7 @@ import json
 import sys
 
 from skills.console_utf8 import force_utf8
-from skills.solvers import assign_balanced, bin_pack, schedule
+from skills.solvers import assign_balanced, bin_pack, schedule, compute_statistics
 
 
 def _pairs(specs, default=1.0):
@@ -42,7 +42,25 @@ def main(argv=None) -> int:
     s = sub.add_parser("schedule", help="order steps under deps (step:pre1,pre2)")
     s.add_argument("steps", nargs="+", help="step or step:pre1,pre2 …")
 
+    sub.add_parser("stats", help="compute descriptive statistics from a JSON object on stdin")
+
     args = p.parse_args(argv)
+
+    if args.cmd == "stats":
+        try:
+            raw = sys.stdin.read(1_000_001)
+            if len(raw.encode("utf-8")) > 1_000_000:
+                raise ValueError("statistics JSON input exceeds 1000000 UTF-8 bytes")
+            payload = json.loads(raw)
+            allowed = {"values", "operations", "percentiles", "missing"}
+            if not isinstance(payload, dict) or set(payload) - allowed:
+                raise ValueError("expected statistics arguments as a JSON object")
+            result = compute_statistics(**payload)
+            print(json.dumps(result, ensure_ascii=False, allow_nan=False))
+            return 0
+        except (ValueError, TypeError) as exc:
+            print(json.dumps({"error": str(exc)}, ensure_ascii=False))
+            return 2
 
     if args.cmd == "assign":
         r = assign_balanced(_pairs(args.tasks), args.workers.split(","))
