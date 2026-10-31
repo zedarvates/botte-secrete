@@ -113,6 +113,7 @@ SUITES = [
     ("hf_provenance", [sys.executable, "-m", "skills.hf_provenance.test_hf_provenance"], "skills/hf_provenance/"),
     ("security_scanner", [sys.executable, "-m", "skills.security_scanner.test_security_scanner"], "skills/security_scanner/"),
     ("context_profiler", [sys.executable, "-m", "skills.context_profiler.test_context_profiler"], "skills/context_profiler/"),
+    ("lazy_tool_budgets", [sys.executable, "-m", "skills.llm_mcp.test_lazy_budget"], "skills/llm_mcp/"),
     ("lazy_tools", [sys.executable, "-m", "skills.llm_mcp.test_lazy"], "skills/llm_mcp/"),
     ("loop_stats", [sys.executable, "-m", "skills.llm_mcp.test_loop_stats"], "skills/llm_mcp/"),
     ("events", [sys.executable, "-m", "skills.events.test_events"], "skills/events/"),
