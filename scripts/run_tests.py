@@ -45,9 +45,15 @@ SUITES = [
     ("compression_benchmark", [sys.executable, "-m", "skills.universal_compressor.test_benchmark"], "skills/universal_compressor/"),
     ("caveman", [sys.executable, "-m", "skills.caveman.test_caveman"], "skills/caveman/"),
     ("loop_cost_reporting", [sys.executable, "-m", "skills.loop_optimizer.test_cost_reporting"], "skills/loop_optimizer/"),
+    ("rsi_graph", [sys.executable, "-m", "skills.rsi_graph.test_runner"], (
+        "skills/rsi_graph/", "skills/cli.py", "docs/schemas/rsi-graph-v1.schema.json",
+    )),
     ("cli_router", [sys.executable, "-m", "skills.test_cli"], "skills/"),
     ("llm_backends", [sys.executable, "-m", "skills.llm_backends.test_llm_backends"], "skills/llm_backends/"),
     ("directives_audit", [sys.executable, "-m", "skills.directives_audit.test_directives_audit"], "skills/directives_audit/"),
+    ("committed_rules", [sys.executable, "-m", "skills.directives_audit.test_rules"], (
+        "skills/directives_audit/", ".botte/rules.json", ".botte/rsi-rules.md", "scripts/check_committed_rules.py",
+    )),
     ("auto_router", [sys.executable, "-m", "skills.auto_router.test_auto_router"], "skills/auto_router/"),
     ("router_outcome", [sys.executable, "-m", "skills.auto_router.test_outcome_adapter"], "skills/auto_router/"),
     ("skill_finder", [sys.executable, "-m", "skills.skill_finder.test_skill_finder"], "skills/skill_finder/"),
