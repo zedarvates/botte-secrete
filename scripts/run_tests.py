@@ -115,6 +115,11 @@ SUITES = [
     ("error_provenance", [sys.executable, "-m", "skills.botte_nn.test_error_classifier_provenance"], "skills/botte_nn/"),
     ("auto_labels", [sys.executable, "-m", "skills.botte_nn.test_auto_labels"], "skills/botte_nn/"),
     ("meta_harness", [sys.executable, "-m", "skills.meta_harness.test_meta_harness"], "skills/meta_harness/"),
+    ("safe_exit", [sys.executable, "-m", "skills.safe_exit.test_safe_exit"], "skills/safe_exit/"),
+    ("safe_exit_integration", [sys.executable, "-m", "skills.meta_harness.test_safe_exit_integration"], (
+        "skills/meta_harness/", "skills/safe_exit/",
+    )),
+    ("auto_memory", [sys.executable, "-m", "skills.auto_memory.test_auto_memory"], "skills/auto_memory/"),
     ("local_harness", [sys.executable, "-m", "skills.local_harness.test_verifier"], "skills/local_harness/"),
     ("harness_executor", [sys.executable, "-m", "skills.local_harness.test_executor"], "skills/local_harness/"),
     ("harness_bench", [sys.executable, "-m", "skills.local_harness.test_bench"], "skills/local_harness/"),
