@@ -15,6 +15,33 @@ spec.loader.exec_module(runner)
 
 
 class ExitVerdictTests(unittest.TestCase):
+    def test_readme_command_errors_retain_type_and_timeout_without_changing_verdict(self):
+        spec = importlib.util.spec_from_file_location(
+            'readme_smoke_under_test', Path(__file__).with_name('test_readme_commands.py'))
+        smoke = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(smoke)
+        command = 'python -m skills.checkup.cli .'
+        errors = [
+            (smoke.subprocess.TimeoutExpired(command, 30), 'TimeoutExpired, timeout=30s'),
+            (FileNotFoundError('private diagnostic text'), 'FileNotFoundError'),
+            (RuntimeError('private diagnostic text'), 'RuntimeError'),
+        ]
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            badge = f'version-{smoke.__version__}-'
+            (root / 'README.md').write_text(badge + '\n```bash\n' + command + '\n```\n', encoding='utf-8')
+            (root / 'README.fr.md').write_text(badge, encoding='utf-8')
+            (root / 'pyproject.toml').write_text(f'version = "{smoke.__version__}"\n', encoding='utf-8')
+            for error, expected in errors:
+                with self.subTest(error=expected), patch.object(smoke, 'REPO', root), \
+                     patch.object(smoke.subprocess, 'run', side_effect=error), \
+                     contextlib.redirect_stdout(io.StringIO()) as output:
+                    code = smoke.main()
+                self.assertEqual(code, 1)
+                self.assertIn(expected, output.getvalue())
+                self.assertIn('1 passed, 1 failed', output.getvalue())
+                self.assertNotIn('private diagnostic text', output.getvalue())
+
     def test_parcimonia_behavioral_contracts_are_selected_for_changed_inputs(self):
         for path in ["skills/preflight/assessment.py", "skills/preflight/github_plan.py",
                      "skills/preflight/github_evidence.py", "skills/llm_mcp/server.py",

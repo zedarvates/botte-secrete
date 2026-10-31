@@ -137,10 +137,15 @@ def main():
                 passed += 1
             else:
                 failed += 1
-                print(f"  FAIL {cmd[:80]}")
-        except Exception:
+                print(f"  FAIL {cmd[:80]} (exit={r.returncode})")
+        except Exception as exc:
             failed += 1
-            print(f"  ERR  {cmd[:80]}")
+            detail = type(exc).__name__
+            if isinstance(exc, subprocess.TimeoutExpired):
+                detail += f", timeout={exc.timeout}s"
+            # Keep command failures actionable without printing captured output,
+            # environment values or arbitrary exception messages.
+            print(f"  ERR  {cmd[:80]} ({detail})")
 
     print(f"{passed} passed, {failed} failed, {skipped} skipped")
     return 0 if failed == 0 else 1
