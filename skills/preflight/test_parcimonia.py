@@ -6,6 +6,7 @@ import unittest
 if __name__ == "__main__":
     suite = unittest.defaultTestLoader.loadTestsFromNames([
         "skills.preflight.test_assessment",
+        "skills.preflight.test_evaluation",
         "skills.preflight.test_github_plan",
         "skills.preflight.test_github_evidence",
         "skills.preflight.test_portable_guidance",

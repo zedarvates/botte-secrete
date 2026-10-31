@@ -69,6 +69,7 @@ jobs:
               subprocess.run([str(python), '-I', '-m', 'pip', 'check'], cwd=work, env=env, check=True)
           measurements = {'build_elapsed_ns': build_ns, 'install_elapsed_ns': install_ns, 'install_mode': os.environ['CANDIDATE_INSTALL'], 'source_commit': os.environ['CANDIDATE_HEAD'], 'provider_tokens': None, 'cost': None, 'savings': None}
           (work / 'installation.json').write_text(json.dumps(measurements, indent=2) + '\n', encoding='utf-8')
+          subprocess.run([str(python), '-I', '-m', 'skills.preflight.evaluation', '--output', str(work / 'assessment-report.json')], cwd=work, env=env, check=True)
           subprocess.run([str(python), '-I', str(repo / 'scripts/verify_parcimonia_candidate.py'), '--repo', str(repo), '--wheel', str(wheels[0]), '--source-commit', os.environ['CANDIDATE_HEAD'], '--install-mode', os.environ['CANDIDATE_INSTALL'], '--output', str(work / 'candidate-report.json')], cwd=work, env=env, check=True)
       - name: Upload candidate provenance and workflow measurements
         if: always()
@@ -78,6 +79,7 @@ jobs:
           path: |
             ${{ runner.temp }}/parcimonia-candidate/candidate-report.json
             ${{ runner.temp }}/parcimonia-candidate/installation.json
+            ${{ runner.temp }}/parcimonia-candidate/assessment-report.json
             ${{ runner.temp }}/parcimonia-candidate/wheelhouse/*.whl
           if-no-files-found: warn
           retention-days: 14

@@ -137,6 +137,13 @@ def _task_labels(task: str) -> tuple[list[str], list[str]]:
             labels.remove("code_work")
     if "statistics" in labels:
         calculating = re.search(r"\b(calculate|calculates|calculating|compute|computes|computing|calcul|calculer|calcule|calculez|determiner)\b|\b(mean|median|moyenne|mediane)\s+(of|de|des)\b", normalized)
+        # Direct requests such as "Donne le 90e percentile des valeurs".
+        # Keep explanations/definitions outside this narrow calculation form.
+        calculating = calculating or re.search(
+            r"^\s*(?:(?:please|merci de|veuillez)\s+)?"
+            r"(?:donne|donnez|give|report)\s+(?:(?:le|les|the)\s+)?"
+            r"(?:[0-9]{1,3}(?:e|er|st|nd|rd|th)?\s+)?"
+            r"(?:percentiles?|quantiles?)\s+(?:of|de|des)\b", normalized)
         if not calculating:
             labels.remove("statistics")
         elif "software_testing" in labels and not re.search(r"\b(run|execute|executer|executez|lance|lancer|tester|testez)\b", normalized):

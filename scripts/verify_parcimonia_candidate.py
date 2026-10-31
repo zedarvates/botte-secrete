@@ -243,6 +243,7 @@ def verify_wheel_modules(repo, wheel):
     installed = Path(skills.__file__).resolve().parent
     members = ("__init__.py", "llm_mcp/server.py", "llm_mcp/lazy.py",
                "preflight/assessment.py", "preflight/policy.py", "skill_finder/finder.py",
+               "preflight/evaluation.py", "preflight/evaluation_cases.json",
                "solvers/statistics.py", "fallow_like/file_duplicates.py", "fallow_like/local_links.py")
     hashes = {}
     with zipfile.ZipFile(wheel) as archive:

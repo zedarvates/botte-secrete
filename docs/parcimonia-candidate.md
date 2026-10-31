@@ -55,6 +55,11 @@ projects, including preservation of user policy and existing agent instructions.
 These are controlled qualification scenarios, not measurements of how often a
 model or a real user chooses the right tool on unseen requests.
 
+The [offline assessment corpus](parcimonia-assessment-evaluation.md) adds fixed
+French and English requests, including negations, unavailable tools and nearby
+unsupported tasks. It runs from the installed wheel in all five matrix jobs.
+Its advisory shortlist score remains separate from automatic model selection.
+
 The workflow uploads the wheel, `installation.json` and `candidate-report.json`
 for each job. An upload alone is not a pass: inspect the job conclusion and
 report result. A smoke run built from a selected local source snapshot is kept
