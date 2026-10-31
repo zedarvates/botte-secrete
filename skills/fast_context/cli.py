@@ -42,12 +42,33 @@ def main(argv=None) -> int:
     s.add_argument("name", help="Exact ASCII function name")
     s.add_argument("--max-results", type=int, default=10)
 
+    s = sub.add_parser("context", help="Read a symbol line window only if the source SHA-256 still matches")
+    s.add_argument("file")
+    s.add_argument("name")
+    s.add_argument("expected_sha256")
+    s.add_argument("--occurrence", type=int)
+    s.add_argument("--before", type=int, default=3)
+    s.add_argument("--after", type=int, default=30)
+    s.add_argument("--max-context-bytes", type=int, default=16384)
+
     s = sub.add_parser("query-type", help="Detect query type from a query string")
     s.add_argument("query", help="Query string to classify")
 
     s = sub.add_parser("stats", help="Show cache stats")
 
     args = p.parse_args(argv)
+
+    if args.cmd == "context":
+        from skills.fast_context.symbols import read_symbol_context_file
+        try:
+            report = read_symbol_context_file(args.file, args.name, args.expected_sha256,
+                                              occurrence=args.occurrence, before=args.before,
+                                              after=args.after, max_context_bytes=args.max_context_bytes)
+        except (OSError, ValueError) as error:
+            print(json.dumps({"error": str(error)}, ensure_ascii=False), file=sys.stderr)
+            return 2
+        print(json.dumps(report, ensure_ascii=False, separators=(",", ":")))
+        return {"stale_source": 3, "ambiguous": 4, "context_over_budget": 5}.get(report['status'], 0)
 
     if args.cmd == "symbol":
         from skills.fast_context.symbols import locate_symbol_file
