@@ -21,7 +21,8 @@ from pathlib import Path
 from typing import Optional
 
 DEFAULT_DIR = Path(".botte") / "reports"
-_NAME_RE = re.compile(r"^(?P<name>.+)_(?P<stamp>\d{4}-\d{2}-\d{2}_\d{6})\.(md|html)$")
+_NAME_RE = re.compile(r"^(?P<name>.+)_(?P<stamp>\d{4}-\d{2}-\d{2}_\d{6})"
+                      r"(?:-(?P<sequence>[1-9]\d*))?\.(md|html)$")
 
 
 def timestamped_name(name: str, ext: str) -> str:
@@ -114,17 +115,29 @@ h2,h3,h4{{border-bottom:1px solid #eaecef;padding-bottom:.2rem}}</style>
 def save(name: str, data: dict, *, fmt: str = "both",
          out_dir: Optional[Path] = None, title: Optional[str] = None) -> list[str]:
     """Write a timestamped report. fmt: md | html | both. Returns the paths."""
+    if fmt not in ("md", "html", "both"):
+        raise ValueError("fmt must be md, html or both")
     out_dir = Path(out_dir) if out_dir else DEFAULT_DIR
     out_dir.mkdir(parents=True, exist_ok=True)
     title = title or f"{name} report"
     paths = []
-    if fmt in ("md", "both"):
-        p = out_dir / timestamped_name(name, "md")
-        p.write_text(to_markdown(title, data), encoding="utf-8")
-        paths.append(str(p))
-    if fmt in ("html", "both"):
-        p = out_dir / timestamped_name(name, "html")
-        p.write_text(to_html(title, data), encoding="utf-8")
+    for ext, render in (("md", to_markdown), ("html", to_html)):
+        if fmt not in (ext, "both"):
+            continue
+        content = render(title, data)
+        original = out_dir / timestamped_name(name, ext)
+        sequence = 0
+        while True:
+            p = (original if sequence == 0 else
+                 original.with_name(f"{original.stem}-{sequence}.{ext}"))
+            try:
+                stream = p.open("x", encoding="utf-8")
+            except FileExistsError:
+                sequence += 1
+                continue
+            with stream:
+                stream.write(content)
+            break
         paths.append(str(p))
     return paths
 
@@ -138,6 +151,8 @@ def list_reports(out_dir: Optional[Path] = None) -> list[dict]:
     for f in out_dir.iterdir():
         m = _NAME_RE.match(f.name)
         if m:
-            rows.append({"name": m.group("name"), "when": m.group("stamp"),
-                         "fmt": f.suffix.lstrip("."), "path": str(f)})
-    return sorted(rows, key=lambda r: r["when"], reverse=True)
+            row = {"name": m.group("name"), "when": m.group("stamp"),
+                   "fmt": f.suffix.lstrip("."), "path": str(f)}
+            rows.append((row, int(m.group("sequence") or 0)))
+    return [row for row, _ in sorted(rows, key=lambda pair: (pair[0]["when"], pair[1]),
+                                     reverse=True)]

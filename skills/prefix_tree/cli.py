@@ -1,7 +1,7 @@
-"""Prefix Tree — arbre des préfixes de prompts pour les boucles rétroactives.
+"""Store named prompt prefixes and produce comparison hints.
 
-Chaque agent a un préfixe stable. Les boucles rétroactives n'envoient
-que les diffs, pas le prompt complet. Basé sur un trie compressé.
+Prefixes are full strings in a persisted mapping. This module supplies no
+transport, receiver synchronization or unambiguous wire format.
 
 Usage:
     python -m skills.prefix_tree.cli register agent_name --prefix "system..."
@@ -27,14 +27,14 @@ class PrefixTrie:
     def _load(self):
         if TREE_STORE.exists():
             try:
-                data = json.loads(TREE_STORE.read_text())
+                data = json.loads(TREE_STORE.read_text(encoding="utf-8"))
                 self.agents = data.get("agents", {})
             except (json.JSONDecodeError, TypeError):
                 pass
 
     def _save(self):
         TREE_STORE.parent.mkdir(parents=True, exist_ok=True)
-        TREE_STORE.write_text(json.dumps({"agents": self.agents}, indent=2))
+        TREE_STORE.write_text(json.dumps({"agents": self.agents}, indent=2), encoding="utf-8")
 
     def register(self, agent: str, prefix: str):
         """Register or update an agent's prompt prefix."""
@@ -51,14 +51,12 @@ class PrefixTrie:
         if not prefix:
             return new_content  # No prefix known — send full
 
-        # Find common prefix length
-        min_len = min(len(prefix), len(new_content))
-        if prefix[:min_len] == new_content[:min_len]:
-            # Same prefix — send only the new part
-            diff = new_content[min_len:].strip()
-            if diff:
-                return f"[diff:+{len(diff)}c] {diff}"
+        if new_content == prefix:
             return "[no change]"
+        if new_content.startswith(prefix):
+            # Preserve whitespace exactly; shortening needs a full replacement.
+            delta = new_content[len(prefix):]
+            return f"[diff:+{len(delta)}c] {delta}"
 
         # Different — send full but mark the difference
         return new_content

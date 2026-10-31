@@ -39,22 +39,6 @@ _GUIDANCE = {
 }
 _BOUNDARY = "Check current tool schemas and prerequisites. This hint does not establish availability or authorization."
 
-MAX_INPUT_BYTES = 65_536
-MAX_TASK_BYTES = 16_384  # Keep startup independent of the optional assessor.
-MAX_CONTEXT_BYTES = 1_024  # Includes main()'s final newline.
-_SKILL_NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]{0,63}\Z")
-_INTENT_NAME = re.compile(r"[a-z][a-z_]{0,63}\Z")
-_GUIDANCE = {
-    "github_research": "If available, use plan_github_research, a connected GitHub reader, then summarize_github_evidence for bulky supplied results; retain revisions and partial-read limits.",
-    "software_testing": "Use an available test adapter only after checking its prerequisites; retain the target version, command, exit code and observed failures.",
-    "game_playtest": "Check the game build, available capture/input/assertion adapters and stop condition; a proposal does not qualify real-time control.",
-    "code_work": "Use the scoped code workflow and smallest relevant checks; retain the tested revision and actual results.",
-    "content_transform": "Use a suitable available deterministic transformation; preserve facts, negations, conditions and uncertainty.",
-    "read_analysis": "Read the scoped sources through available readers; retain provenance and distinguish observations from inference.",
-}
-_BOUNDARY = "Check current tool schemas and prerequisites. This hint does not establish availability or authorization."
-
-
 def _read_input() -> tuple[str, Path]:
     cwd = Path.cwd()
     raw = sys.stdin.read(MAX_INPUT_BYTES + 1) if not sys.stdin.isatty() else ""

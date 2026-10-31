@@ -47,6 +47,13 @@ built to lean on local hardware and cheap models wherever possible.
 Run the relevant tests, keep diffs minimal, and don't commit machine-specific
 generated files (e.g. `configs/llm-endpoints.json`, `.mcp.json` — both ignored).
 
+## Effects and reuse
+
+Use the shared [effect review](skills/effect-review/SKILL.md) when assessing a
+selected operation or handing off its results. Conductor `--review-effects`
+returns compact cues; load capability-specific details only as needed. Authoring
+and evidence formats remain in the [effects contract](docs/capability-effects.md).
+
 ## Botte Secrète policy
 Read [`.botte/policy.md`](.botte/policy.md) before substantive work. Use Parcimonia `assess_task` when available and useful; reuse a current preflight result for homogeneous work and skip trivial/direct actions. Use scoped GitHub plans and evidence summaries when useful. If a helper is absent or abstains, continue with suitable available tools. Verify prerequisites and results; run `/checkup` after updates. See [portable instructions](docs/parcimonia-workflow.md#portable-instructions).
 

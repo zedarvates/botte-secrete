@@ -1,0 +1,99 @@
+{
+  "schema": "botte.capability-effects/v1",
+  "capability_id": "zedarvates/botte-secrete:skills/cardinal",
+  "contract_version": "0.1.0",
+  "source_hashes": {
+    "SKILL.md": "282c07d9a61606340a84ce2d5e88d58b9f28c2c140e80969004fe4a0a04b4d39",
+    "__init__.py": "7c0caf311872c2c969cae1e6c2c6f5a4359b6fa6cb65afedb352158ff176bb38",
+    "README.md": "fc826165d4400213b23414a2a2e9058e7edc28c6389763287e340bae21dd3d85",
+    "scripts/cardinal_confront.py": "7225c07185ce88c02596049dca5b2d50cb04492a61bc65f66192b945a0fcef9f",
+    "prompts/cardinal.md": "190d6bc1d9d7454a71a8bf1fe37a9ec63a75ccf888f396146697e056456365c9",
+    "prompts/rochefort.md": "b302c2300272d94758ec58f5a11e81739bbfce3c855e313ef4f26356c3009f7c",
+    "prompts/milady.md": "bc3fb10513f7fb33fa83d270ce225536f07f4fbb41581b2ed606bcbdb51785f1",
+    "prompts/comte_de_wardes.md": "793b160b7d47876743cdddda83f66b3799aacec8c0d0e33907d452a0838dcaec"
+  },
+  "preconditions": [
+    "Select host-orchestrated review or consolidation of existing reports; their effects differ.",
+    "Consolidation needs three Blue report objects and three Red counter-report objects with explicit required finding lists.",
+    "Use the actual reviewed checkout and existing task scope; an absent review must remain absent rather than being represented by fabricated empty findings.",
+    "Preserve useful prior confrontation output and review report recipients before rerunning."
+  ],
+  "expected_effects": [
+    {
+      "effect": "An orchestrated counter-review may delegate role prompts, inspect source and run scoped tests.",
+      "scope": "Host-selected agents, models, source checkout, test resources and their report destinations.",
+      "likelihood": "conditional",
+      "basis": "The role prompts request counter-audit, regression review and optimization review; actual dispatch is performed by the host, outside the consolidation script.",
+      "impact": "Can uncover defects, consume model/test resources and disclose source or reports to configured agents. Role names do not prove independent review.",
+      "verification": "Inspect actual dispatch, model/data scope, test results and reviewed revision; assess proposed commands before the host runs them."
+    },
+    {
+      "effect": "Consolidation reads the six required reports, checks their basic shape and normalizes supported counter-report aliases.",
+      "scope": "Named Blue and Red report directories.",
+      "likelihood": "conditional",
+      "basis": "main uses _load_report and _findings; missing/empty/invalid objects, missing lists, invalid finding types or conflicting aliases return exit 2 before scoring or saving.",
+      "impact": "Prevents absent evidence from silently appearing as a clean review. It checks basic input completeness, not truth, full Blue schemas or source freshness.",
+      "verification": "Run missing, malformed and conflicting-alias fixtures; verify nonzero exit and unchanged prior confrontation bytes."
+    },
+    {
+      "effect": "Complete inputs produce a weighted finding summary on stdout and replace confrontation.json.",
+      "scope": "Red report directory, stdout and output consumers.",
+      "likelihood": "conditional",
+      "basis": "The script counts six finding categories, applies fixed penalties and writes the legacy summary shape. Prompt aliases incomplete and wrongly_excluded contribute to the same categories.",
+      "impact": "Supports review triage but overwrites the previous summary; findings outside the six categories are not scored. Exit zero means consolidation completed even for an unfavorable verdict.",
+      "verification": "Compare a controlled input set with known counts and weights; separately assess actual review coverage and source evidence."
+    }
+  ],
+  "downstream_effects": [
+    {
+      "effect": "A consumer may trust or act on the reported verdict, or mistake a preserved older file for the result of a failed run.",
+      "scope": "Later fixes, merge/release decisions and shared review history.",
+      "likelihood": "plausible",
+      "basis": "The output is a summary of supplied reports; on input validation failure a prior confrontation file remains untouched.",
+      "impact": "Can propagate stale or unverified claims if exit status, input identity or omitted review stages are ignored.",
+      "verification": "Bind the result to the current invocation and reviewed revision; inspect exit status, actual findings, unavailable checks and independent task evidence."
+    }
+  ],
+  "reversibility": {
+    "status": "partial",
+    "strategy": "Restore the previous summary from a prior copy if needed; handle delegated tests, model calls and downstream decisions through their own recovery procedures.",
+    "residual_effects": [
+      "Replaced summary content requires another copy or history to recover.",
+      "Model costs, test side effects and disclosed reports may remain after local output removal."
+    ]
+  },
+  "retry": {
+    "semantics": "conditional",
+    "check_before_retry": "Check report availability, current checkout, partial host review work and whether a previous output belongs to this invocation. Resolve input errors before rescoring.",
+    "stop_condition": "Do not invent successful reviews or replay completed mutating tests to obtain a favorable headline; resolve missing evidence within the existing task scope."
+  },
+  "required_scope": "Existing task authorization for the selected review, source/test resources, model recipients and report read/write destinations. The consolidation script supplies no execution authority for proposed fixes or publication.",
+  "analysis": {
+    "summary": "The host review and local consolidation are separate operations. The script now rejects incomplete inputs and counts the field names used by its prompts, but a weighted score remains an assertion-based triage signal.",
+    "uncertainties": [
+      "Host dispatch, model providers, core guidance, cache behavior and test dependencies are outside the skill-local source bindings.",
+      "Blue reports receive only a non-empty object check; reviewer independence, input freshness and test execution are not verified.",
+      "Inputs are read sequentially and the output is replaced directly, without a lock or transactional snapshot."
+    ],
+    "evidence_refs": [
+      "scripts/cardinal_confront.py:main",
+      "scripts/cardinal_confront.py:_findings",
+      "prompts/cardinal.md",
+      "test_cardinal.py"
+    ]
+  },
+  "reuse": [
+    {
+      "target": "Consolidate another workflow's paired review reports.",
+      "rationale": "The local script can summarize explicitly supplied counter-findings without launching further work.",
+      "adaptations": [
+        "Map report fields, aliases and omission handling explicitly.",
+        "Define target acceptance criteria and evidence requirements independently of the score."
+      ],
+      "validation": "Use representative complete, missing, malformed and conflicting-alias inputs; compare counts, exit status and output preservation, then verify source-linked review evidence in the target workflow.",
+      "status": "adaptation_to_test",
+      "validated_context": null,
+      "evidence_refs": []
+    }
+  ]
+}

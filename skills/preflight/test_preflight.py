@@ -78,6 +78,19 @@ class PreflightTests(unittest.TestCase):
         self.assertNotIn("Relevant skills", context)
         suggestions.assert_not_called()
 
+    def test_deterministic_work_keeps_its_specific_evidence_guidance(self):
+        cases = (
+            ("Compute statistics for values 1, 2, 3", "calculation", "missing-value handling"),
+            ("Find exact file duplicates", "comparison", "byte-comparison evidence"),
+            ("Check local Markdown links", "inventory", "incomplete inventory"),
+        )
+        with patch.object(hook, "_suggested_skills", return_value=[]):
+            for prompt, label, expected in cases:
+                with self.subTest(workflow=label):
+                    context = hook.build_context(prompt, Path("."))
+                    self.assertIn(expected, context)
+                    self.assertIn("does not establish availability or authorization", context)
+
     def test_game_hint_keeps_adapter_and_timing_requirements(self):
         with patch.object(hook, "_suggested_skills", return_value=[]):
             context = hook.build_context("Tester le jeu vidéo", Path("."))

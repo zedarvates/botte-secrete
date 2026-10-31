@@ -35,6 +35,9 @@ os.environ.setdefault("BOTTE_NN_AUTO_LABELS", "0")
 # (label, command, module_prefix) — the e2e script + every module's test_<module>.
 # The third field lists file or directory inputs used for --changed matching.
 SUITES = [
+    ("cardinal", [sys.executable, "-m", "skills.cardinal.test_cardinal"], "skills/cardinal/"),
+    ("report_effects", [sys.executable, "-m", "skills.report.test_effects"], "skills/report/"),
+    ("prefix_effects", [sys.executable, "-m", "skills.prefix_pruner.test_prefix_effects"], "skills/prefix_"),
     ("e2e", [sys.executable, "skills/test_e2e.py"], ""),
     ("completion_proof", [sys.executable, "-m", "skills.completion_proof.test_completion_proof"], "skills/completion_proof/"),
     ("completion_verify", [sys.executable, "-m", "skills.completion_proof.test_verify"], "skills/completion_proof/"),
@@ -56,6 +59,7 @@ SUITES = [
     )),
     ("auto_router", [sys.executable, "-m", "skills.auto_router.test_auto_router"], "skills/auto_router/"),
     ("router_outcome", [sys.executable, "-m", "skills.auto_router.test_outcome_adapter"], "skills/auto_router/"),
+    ("routing_effects", [sys.executable, "-m", "skills.auto_router.test_routing_effects"], "skills/"),
     ("skill_finder", [sys.executable, "-m", "skills.skill_finder.test_skill_finder"], "skills/skill_finder/"),
     ("project_profiler", [sys.executable, "-m", "skills.skill_project_optimizer.test_profiler"], "skills/skill_project_optimizer/"),
     ("bootstrap", [sys.executable, "-m", "skills.bootstrap.test_bootstrap"], "skills/bootstrap/"),
@@ -87,9 +91,18 @@ SUITES = [
         "skills/cli.py", "scripts/run_tests.py", "scripts/test_runner_exit_verdict.py",
     )),
     ("capabilities", [sys.executable, "-m", "skills.capabilities.test_capabilities"], "skills/capabilities/"),
+    ("capability_effects", [sys.executable, "-m", "skills.capabilities.test_effects"], "skills/capabilities/"),
     ("cluster", [sys.executable, "-m", "skills.cluster.test_cluster"], "skills/cluster/"),
     ("conductor", [sys.executable, "-m", "skills.conductor.test_conductor"], "skills/conductor/"),
+    ("conductor_effects", [sys.executable, "-m", "skills.conductor.test_effects"], "skills/conductor/"),
+    ("effects_review", [sys.executable, "-m", "skills.conductor.test_review"], "skills/"),
+    ("effect_details", [sys.executable, "-m", "skills.capabilities.test_details"], "skills/"),
+    ("effect_evidence", [sys.executable, "-m", "skills.capabilities.test_evidence"], "skills/"),
+    ("effects_operations", [sys.executable, "-m", "skills.capabilities.test_effects_operations"], "skills/capabilities/"),
+    ("effect_observations", [sys.executable, "-m", "skills.conductor.test_observations"], "skills/conductor/"),
+    ("network_observations", [sys.executable, "-m", "skills.conductor.test_network_observations"], "skills/conductor/"),
     ("control_loop", [sys.executable, "-m", "skills.control_loop.test_control_loop"], "skills/control_loop/"),
+    ("control_effects", [sys.executable, "-m", "skills.control_loop.test_effects"], "skills/"),
     ("report", [sys.executable, "-m", "skills.report.test_report"], "skills/report/"),
     ("cost_estimator", [sys.executable, "-m", "skills.cost_estimator.test_cost_estimator"], "skills/cost_estimator/"),
     ("trends", [sys.executable, "-m", "skills.trends.test_trends"], "skills/trends/"),
@@ -110,6 +123,7 @@ SUITES = [
     ("taint", [sys.executable, "-m", "skills.fallow_like.test_taint"], "skills/fallow_like/"),
     ("docs_steward", [sys.executable, "-m", "skills.docs_steward.test_docs_steward"], "skills/docs_steward/"),
     ("context_budget", [sys.executable, "-m", "skills.context_budget.test_context_budget"], "skills/context_budget/"),
+    ("context_effects", [sys.executable, "-m", "skills.context_budget.test_effects"], "skills/context_budget/"),
     ("nlp_deterministic", [sys.executable, "-m", "skills.nlp_deterministic.test_nlp_deterministic"], "skills/nlp_deterministic/"),
     ("solvers", [sys.executable, "-m", "skills.solvers.test_solvers"], "skills/solvers/"),
     ("statistics", [sys.executable, "-m", "skills.solvers.test_statistics"], "skills/solvers/"),
@@ -190,10 +204,9 @@ def _suites_for_changes(changed: list[str]) -> set[int]:
 
     A changed file matches a directory input ending in / or an exact file input.
     Suites may declare one input or a tuple covering their cross-module contracts.
-    The e2e suite (index 0) always runs — it tests cross-cutting concerns.
-    Scripts/ changes also trigger e2e.
+    The e2e suite always runs — it tests cross-cutting concerns.
     """
-    affected = {0}  # e2e always runs
+    affected = {idx for idx, (label, _, _) in enumerate(SUITES) if label == "e2e"}
     for f in changed:
         for idx, (label, cmd, prefix) in enumerate(SUITES):
             if not prefix:  # skip e2e (already handled)
@@ -201,9 +214,6 @@ def _suites_for_changes(changed: list[str]) -> set[int]:
             inputs = (prefix,) if isinstance(prefix, str) else prefix
             if any(f.startswith(value) if value.endswith("/") else f == value for value in inputs):
                 affected.add(idx)
-        # scripts/ changes may affect multiple suites
-        if f.startswith("scripts/"):
-            affected.add(0)  # e2e covers script-level behavior
     return affected
 
 
