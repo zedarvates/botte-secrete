@@ -93,8 +93,7 @@ def wire_oculix_mcp(project: Path) -> dict:
 
 def _hook_entry() -> dict:
     return {"type": "command",
-            "command": f'"{sys.executable or "python"}" -m skills.preflight.hook',
-            "cwd": str(BOTTE_ROOT)}
+            "command": f'"{sys.executable or "python"}" "{BOTTE_ROOT / "skills/preflight/hook.py"}"'}
 
 
 def wire_hook(project: Path) -> dict:
@@ -112,10 +111,16 @@ def wire_hook(project: Path) -> dict:
             doc = {}
     hooks = doc.setdefault("hooks", {})
     ups = hooks.setdefault("UserPromptSubmit", [])
-    marker = "skills.preflight.hook"
-    already = any(marker in json.dumps(group) for group in ups)
+    entry = _hook_entry()
+    # Preserve existing hooks, including the legacy module entry, without
+    # duplicating the new checkout-pinned script command on repeated setup.
+    already = any(
+        "skills.preflight.hook" in json.dumps(group)
+        or entry["command"] in [hook.get("command") for hook in group.get("hooks", [])]
+        for group in ups
+    )
     if not already:
-        ups.append({"hooks": [_hook_entry()]})
+        ups.append({"hooks": [entry]})
         settings_path.parent.mkdir(parents=True, exist_ok=True)
         settings_path.write_text(json.dumps(doc, indent=2, ensure_ascii=False), encoding="utf-8")
     return {"path": str(settings_path), "action": "present" if already else "added"}
@@ -139,6 +144,8 @@ edit freely.)
 - Route cheap work (classification, extraction, short summaries) to local models
   via the `botte-llm` MCP tools (auto_route / local_chat) to save cloud tokens.
 - Pick tools with `find_skills` before reaching for the cloud model.
+- Read `.botte/policy.md` before substantive work: assess with Parcimonia when
+  available, reuse the assessment for homogeneous batches, and follow its fallback.
 
 ## Notes
 <project-specific context, intent, decided trade-offs>
@@ -146,7 +153,7 @@ edit freely.)
 
 
 def ensure_agents_md(project: Path, create: bool) -> dict:
-    """If no instruction file exists and create=True, write a starter AGENTS.md."""
+    """When requested, create AGENTS.md without replacing existing instructions."""
     try:
         from skills.directives_audit import audit as dir_audit
     except ImportError:
@@ -155,10 +162,14 @@ def ensure_agents_md(project: Path, create: bool) -> dict:
     out = {"available": True, "score": report["score"],
            "has_instructions": report["has_instructions"],
            "findings": len(report["findings"])}
-    if not report["has_instructions"] and create:
+    if create:
         target = project / "AGENTS.md"
         if not target.exists():
-            target.write_text(_STARTER_AGENTS, encoding="utf-8")
+            text = _STARTER_AGENTS
+            if (project / "CLAUDE.md").is_file():
+                text = ("# AGENTS.md\n\n"
+                        "Read [CLAUDE.md](CLAUDE.md) for the existing project instructions.\n")
+            target.write_text(text, encoding="utf-8")
             out["created"] = "AGENTS.md"
     return out
 

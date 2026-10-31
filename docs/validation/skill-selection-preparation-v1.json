@@ -1,0 +1,36 @@
+{
+  "status": "prepared",
+  "dataset_class": "fixture",
+  "cases": 12,
+  "planned_calls": 24,
+  "sources": {
+    "baseline": {
+      "head": "6651335fa0d96a39d14f3b95c10d8a30763fc835",
+      "code_sha256": "3a9187d8bf96716524c9f6b2503e264f77a5d9f3a2002033a3461116e37e6d42",
+      "source_count": 589,
+      "sources_match_commit": true,
+      "source_scope": [
+        "*.py",
+        "skills/**/SKILL.md",
+        "skills/**/effects.json"
+      ]
+    },
+    "candidate": {
+      "head": "6b802f4012e475ab7e690e3fa754cb9b92549a66",
+      "code_sha256": "b47f866966c6891c8081d3b3a992d3cc290fe3da3dcee2df66a447dd1fbf51d1",
+      "source_count": 593,
+      "sources_match_commit": false,
+      "source_scope": [
+        "*.py",
+        "skills/**/SKILL.md",
+        "skills/**/effects.json"
+      ]
+    }
+  },
+  "corpus_sha256": "15f7870cf8add3672a8625decb2e3fe8f5c09d98a05eb1cc9a2c74d72cffd8ff",
+  "harness_sha256": "5416a65cfa1fe794a047248516f7ad0fb5ac845f2fcf9949d3dc4dae4b63b874",
+  "inference_calls": 0,
+  "quality": "unmeasured",
+  "local_cost": null,
+  "automatic_promotion": false
+}

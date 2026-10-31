@@ -1,0 +1,138 @@
+{
+  "schema": "botte.skill-selection-cpu-protocol/v1",
+  "frozen_at": "2026-09-10T05:34:45Z",
+  "inputs": {
+    "sources": {
+      "baseline": {
+        "head": "6651335fa0d96a39d14f3b95c10d8a30763fc835",
+        "code_sha256": "3a9187d8bf96716524c9f6b2503e264f77a5d9f3a2002033a3461116e37e6d42",
+        "source_count": 589,
+        "sources_match_commit": true,
+        "source_scope": [
+          "*.py",
+          "skills/**/SKILL.md",
+          "skills/**/effects.json"
+        ]
+      },
+      "candidate": {
+        "head": "8f2bd6e7031785a294baa53bf642b73f994d3205",
+        "code_sha256": "b47f866966c6891c8081d3b3a992d3cc290fe3da3dcee2df66a447dd1fbf51d1",
+        "source_count": 593,
+        "sources_match_commit": true,
+        "source_scope": [
+          "*.py",
+          "skills/**/SKILL.md",
+          "skills/**/effects.json"
+        ]
+      }
+    },
+    "corpus_sha256": "15f7870cf8add3672a8625decb2e3fe8f5c09d98a05eb1cc9a2c74d72cffd8ff",
+    "harness_sha256": "5416a65cfa1fe794a047248516f7ad0fb5ac845f2fcf9949d3dc4dae4b63b874",
+    "weights": {
+      "repository": "Qwen/Qwen2.5-0.5B-Instruct-GGUF",
+      "revision": "9217f5db79a29953eb74d5343926648285ec7e67",
+      "filename": "qwen2.5-0.5b-instruct-q8_0.gguf",
+      "bytes": 675710816,
+      "sha256": "ca59ca7f13d0e15a8cfa77bd17e65d24f6844b554a7b6c12e07a5f89ff76844e"
+    },
+    "runtime": {
+      "id": "llama.cpp-b10809-qwen25-05b-q8-cpu4-ctx4096-no-cache-v1",
+      "version": "0.4.0-dev",
+      "build": 10809,
+      "commit_prefix": "5266f24da",
+      "files_sha256": {
+        "libggml-base.so.0.23.0": "c6e214dd722b1924b78594f60b9f31a7b95dbdce5fefd5b6f93e5626952fa872",
+        "libggml-cpu-alderlake.so": "c1398ab6f0e87591e78d1333881c94be94a62631503c0ff17d7e79c9ca48d270",
+        "libggml-cpu-cannonlake.so": "e8952d3d4c3ac0cf950ae56130a15317671ccd7f5e27a03a72136cc36bf9b750",
+        "libggml-cpu-cascadelake.so": "fc5c49b984d0b5f190f0654507826f7c8fed175b0dd2bd46de616c8ebf3c96a9",
+        "libggml-cpu-cooperlake.so": "0d6e1167c637f05c1ac9849663bec7ab381f95f5b67587cb349b31f091a854e0",
+        "libggml-cpu-haswell.so": "ed605907083426e261863166e8bda710888246bbb9c68673308b73c0faabd6c4",
+        "libggml-cpu-icelake.so": "74c07a99818eaa4d790e6159884d1e2cc0332b388675216c2a8f1edf8868f064",
+        "libggml-cpu-ivybridge.so": "e6c1b379250d3e8d313ab55344f12ebf008f844bb6d8744f13f8884efc4bbb08",
+        "libggml-cpu-piledriver.so": "4eb780f5837e54e1de3c5c49f223b81f44b7fe7609b596ff127444d18d0d3999",
+        "libggml-cpu-sandybridge.so": "81f9210528f980e82ca795a0636672fb8583649b4a3f2caccbc392b737b9382a",
+        "libggml-cpu-sapphirerapids.so": "03ce846804b92ed9389a05dd5fd1ace66053c21f5005eadbbb3173c77865fb7a",
+        "libggml-cpu-skylakex.so": "0fa029e32cb778b9a1696ff3dedf3bd02a157aeef98737670aa09e56f3b7271e",
+        "libggml-cpu-sse42.so": "405e5687fcadb2cf4de70a5a38d88396fea69e8d3d7029143239a5aa1add447d",
+        "libggml-cpu-x64.so": "469e17c98128fce2bd9e8397a6ec0e2c4b399e03a35a5c971ff8985f090688df",
+        "libggml-cpu-zen4.so": "354042eb332dfe6397ced854f15ec16e219dcd5ac751a32cd7a3c714a5011dd6",
+        "libggml-rpc.so": "2c0df69075886e29bad5c93e1db65269c0e4951acd772c407f56f480a5c9a288",
+        "libggml.so.0.23.0": "569c53469aceca5dd357d2c3e1570014ed73e676abb08d44971be4cb784d855c",
+        "libllama-batched-bench-impl.so": "45a9f51612a4beda6145b7986f9c7ad807ec5de038d09748cbc91a594518907d",
+        "libllama-bench-impl.so": "9d4eed56903e7ac2b4895922e07605c30ab6e6da21f88df839a330780fdc7d9c",
+        "libllama-cli-impl.so": "8ff3fb742d8933895088eca237f24c590094c858ed1adb70a3e613ef5b885f70",
+        "libllama-common.so.0.4.0": "df391b4c5b99d902960acef9ab10bf4b4d8ed0770d836c2fcafe1cd870015313",
+        "libllama-completion-impl.so": "ad17e1d1aa70099d2a19a90368bdb707d1411e15f081cc93b93620b78f95f50d",
+        "libllama-fit-params-impl.so": "648473a67633d6d9c6cec25780b26050377c1faf5cf24b5bb0fd1a467cabd526",
+        "libllama-perplexity-impl.so": "2de565d078b0676148adcfffef0761e48e33c08d076edd9d3486838065608f59",
+        "libllama-quantize-impl.so": "510e169cfd384703bd504c92be4871959530f593ad5f7dbd32e04fcec6eaf3d5",
+        "libllama-server-impl.so": "f8a2a9f114a036b5d81a263272d2d96576ae50d689d926610143653f87141ae2",
+        "libllama.so.0.4.0": "b01e84199edb0efc7abe25d3669b5fc6beaf7aa87b6fdc4665881549615c5700",
+        "libmtmd.so.0.4.0": "06c356201c167ecf35b75578587a2da814b3bcf8e16bb5b0a5fa5b7e44728824",
+        "llama-server": "07723ae07835bdf11cf0d00d68eb4df8308df0603f689c64c9f841a626cad01d"
+      },
+      "files_aggregate_sha256": "529d4590754314e4e36875ffbb74ec8eb235ff2f40e3f86a423057f83acc53d2",
+      "server_arguments": [
+        "--threads",
+        "4",
+        "--threads-batch",
+        "4",
+        "--parallel",
+        "1",
+        "--ctx-size",
+        "4096",
+        "--gpu-layers",
+        "0",
+        "--device",
+        "none",
+        "--no-op-offload",
+        "--no-kv-offload",
+        "--no-cache-prompt",
+        "--cache-ram",
+        "0",
+        "--no-webui",
+        "--offline",
+        "--seed",
+        "0",
+        "--no-warmup"
+      ],
+      "model_alias": "selection-qwen25-05b-q8",
+      "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]"
+    }
+  },
+  "cases": 12,
+  "positive_cases": 6,
+  "negative_cases": 6,
+  "repetitions": 1,
+  "planned_inference_calls": 24,
+  "dataset_class": "fixture",
+  "model_timeout_seconds": 90,
+  "temperature": 0,
+  "max_tokens": 200,
+  "corrective_retries": 0,
+  "automatic_promotion": false,
+  "selected_operations_executed": false,
+  "order": "alternate baseline/candidate per case, corpus order unchanged",
+  "host": {
+    "machine": "x86_64",
+    "system": "Linux",
+    "kernel": "6.18.35",
+    "cpu_model": "AMD EPYC 9V74 80-Core Processor",
+    "logical_cpus": 9,
+    "affinity_cpus": 9,
+    "cgroup_limits": {
+      "cpu.max": "800000 100000",
+      "memory.max": "21474836480"
+    }
+  },
+  "cache_prompt": false,
+  "startup_empty_warmup": false,
+  "timing_scope": "HTTP round trip; first prompt cold; weights loaded before requests",
+  "acceptance": "Inspect new excluded selections and lost correct selections; fixture cannot promote.",
+  "non_measurements": [
+    "downstream operation quality",
+    "homelab GPU performance",
+    "energy",
+    "monetary cost"
+  ]
+}

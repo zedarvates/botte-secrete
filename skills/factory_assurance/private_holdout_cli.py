@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+from pathlib import Path
 import sys
 
 from .private_holdout import PrivateHoldoutError, run_private_holdout, write_attestation
@@ -15,16 +16,19 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--candidate-sha", required=True, help="40-character candidate git SHA")
     parser.add_argument("--output", required=True, help="public-safe attestation JSON path")
     parser.add_argument("--timeout", type=float, default=30.0)
-    parser.add_argument("evaluator", nargs=argparse.REMAINDER, help="evaluator argv after --")
-    args = parser.parse_args(argv)
-
-    evaluator = list(args.evaluator)
-    if evaluator and evaluator[0] == "--":
-        evaluator = evaluator[1:]
+    raw_args = list(sys.argv[1:] if argv is None else argv)
+    separator = raw_args.index("--") if "--" in raw_args else len(raw_args)
+    args = parser.parse_args(raw_args[:separator])
+    evaluator = raw_args[separator + 1:]
     if not evaluator:
         parser.error("evaluator command is required after --")
 
     try:
+        source, destination = Path(args.private_set), Path(args.output)
+        if source.resolve() == destination.resolve() or (
+            destination.exists() and source.samefile(destination)
+        ):
+            raise PrivateHoldoutError("output must differ from the private input")
         attestation = run_private_holdout(
             private_set_path=args.private_set,
             candidate_sha=args.candidate_sha,
@@ -32,11 +36,9 @@ def main(argv: list[str] | None = None) -> int:
             timeout_seconds=args.timeout,
         )
         write_attestation(attestation, args.output)
-    except PrivateHoldoutError as exc:
-        print(f"holdout error: {exc}", file=sys.stderr)
-        return 2
-    except ValueError as exc:
-        print(f"attestation error: {exc}", file=sys.stderr)
+    except (PrivateHoldoutError, ValueError, OSError):
+        # Input paths, IDs, parser errors and evaluator output can be private.
+        print("holdout error: input, configuration or evaluator validation failed", file=sys.stderr)
         return 2
 
     print(json.dumps({

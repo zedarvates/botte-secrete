@@ -19,8 +19,7 @@ def _ok(label: str, condition: bool, state: list[int]) -> None:
 
 def _write(root: Path, payload: dict) -> Path:
     """Write public synthetic fixtures only, never operator-owned holdout data."""
-    # CodeQL #9: the literal canaries below intentionally test non-disclosure.
-    path = root / "private.json"
+    path = root / "synthetic-tasks.json"
     path.write_text(json.dumps(payload), encoding="utf-8")
     return path
 
@@ -28,15 +27,15 @@ def _write(root: Path, payload: dict) -> Path:
 def main() -> int:
     state = [0, 0]
     sha = "a" * 40
-    secret = "PRIVATE-STORYCORE-CASE-PAYLOAD"
+    text_marker = "PUBLIC-SYNTHETIC-TASK-ONE"
 
     with tempfile.TemporaryDirectory() as tmp:
         root = Path(tmp)
         path = _write(root, {
-            "set_id": "storycore-private-v1",
+            "set_id": "synthetic-tasks-v1",
             "cases": [
-                {"id": "h-001", "input": {"secret": secret, "expected": True}},
-                {"id": "h-002", "input": {"secret": "ANOTHER-PRIVATE-CASE", "expected": True}},
+                {"id": "h-001", "input": {"prompt": text_marker, "expected": True}},
+                {"id": "h-002", "input": {"prompt": "PUBLIC-SYNTHETIC-TASK-TWO", "expected": True}},
             ],
         })
         attestation = run_private_holdout(
@@ -48,7 +47,7 @@ def main() -> int:
         _ok("passing private set emits pass attestation", attestation["status"] == "pass", state)
         _ok("attestation records case count", attestation["case_count"] == 2, state)
         _ok("attestation explicitly contains no cases", attestation["contains_cases"] is False, state)
-        _ok("private payload is absent from public attestation", secret not in rendered and "ANOTHER-PRIVATE-CASE" not in rendered, state)
+        _ok("task payload is absent from public attestation", text_marker not in rendered and "PUBLIC-SYNTHETIC-TASK-TWO" not in rendered, state)
         _ok("attestation binds exact candidate", attestation["candidate_sha"] == sha, state)
         _ok("private set digest is present", len(attestation["set_digest_sha256"]) == 64, state)
 
@@ -74,7 +73,7 @@ def main() -> int:
             _ok(
                 f"{verdict} persisted attestation excludes case data",
                 all(marker not in persisted for marker in (
-                    secret, "ANOTHER-PRIVATE-CASE", "h-001", "h-002",
+                    text_marker, "PUBLIC-SYNTHETIC-TASK-TWO", "h-001", "h-002",
                 )),
                 state,
             )

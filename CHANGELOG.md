@@ -2,6 +2,49 @@
 
 ## Unreleased
 
+## v1.11.0 (unreleased)
+
+- Connect selective local preflight assessment and project policy to Parcimonia,
+  broaden the plugin skill's task triggers, and document candidate installation
+  from one reviewed commit for both runtime and marketplace.
+- Compact supplied GitHub review data while preserving unknown states, revision
+  mismatches, failure counts and source links. Report exact compact-JSON UTF-8
+  sizes separately from unknown token usage and cost.
+- Add an offline, reproducible workflow demonstration and include all Parcimonia
+  behavioral tests in the canonical CI runner. Align the French version badge.
+- Add Parcimonia advisory first-task assessment to the small core MCP surface.
+  Rank only supplied tool metadata within a declared context budget; abstain on
+  unsupported or ambiguous intent. Software tests and game playtests include
+  explicit adapter and evidence prerequisites, without executing them.
+- Add bounded GitHub/PR research plans with progressive reads and revision checks.
+  These helpers make no network or model calls and claim no measured savings.
+- Document the cloud/local boundary and a public-safe English video draft.
+
+## v1.10.0 (unreleased)
+
+### Distribution
+- Add a native Codex plugin and Git marketplace catalog. The plugin connects to
+  the separately installed `botte-mcp` runtime and includes a workflow skill and
+  MIT license; it does not install Python dependencies, models, or credentials.
+- Align the package and plugin versions with the post-1.9.0 source on `main`.
+  This prepares a stable release without merging the separate 2.0.0 RC2 branch.
+  The latest published stable release remains 1.9.0 until a new tag and release
+  are published.
+- Report the installed package version in the MCP initialize handshake instead
+  of the historical hard-coded 1.0.0 server version.
+
+### Fixed
+- Correct runtime skill references indexed by MCP discovery: distinguish heuristic
+  model-audit clues from validation, fixed finding vectors from learned embeddings,
+  proxy transforms from restoration, and the TC1 codec from historical token
+  transforms. Local search and inspection do not measure host-agent token savings.
+- Retain the upstream MIT declaration and attribution for the adapted Karpathy
+  reference, and MITRE's copyright and separate CWE terms beside the bundled
+  catalog. Both notices ship with the Python package.
+- Exact response-cache identity preserves whitespace and indentation. Legacy
+  normalized entries cannot answer a different query; affected queries miss
+  safely until recached, while unchanged legacy identities remain usable.
+
 ### Added
 - Fail-closed, privacy-preserving local-worker benchmark for Granite 4.2 versus
   an existing worker, covering TTFT, throughput, quality, escalation, validator

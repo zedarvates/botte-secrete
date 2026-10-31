@@ -1,0 +1,62 @@
+{
+  "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+  "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+  "checks": [
+    {
+      "name": "installed_identity",
+      "passed": true
+    },
+    {
+      "name": "pip-check",
+      "exit": 0,
+      "passed": true
+    },
+    {
+      "name": "cli-help",
+      "exit": 0,
+      "passed": true
+    },
+    {
+      "name": "cli-belt",
+      "exit": 0,
+      "passed": true
+    },
+    {
+      "name": "test_factory_assurance",
+      "exit": 0,
+      "passed": true
+    },
+    {
+      "name": "test_integrations",
+      "exit": 0,
+      "passed": true
+    },
+    {
+      "name": "test_roles",
+      "exit": 0,
+      "passed": true
+    },
+    {
+      "name": "mcp-stdio",
+      "exit": 0,
+      "passed": true
+    },
+    {
+      "name": "mcp_protocol",
+      "passed": true
+    }
+  ],
+  "version": "2.0.0rc1",
+  "module_version": "2.0.0rc1",
+  "source": {
+    "archive_info": {
+      "hash": "sha256=49ffa989764b26a2a8ee96d19085acb256b49363e43aedd3f51a290283b01f42",
+      "hashes": {
+        "sha256": "49ffa989764b26a2a8ee96d19085acb256b49363e43aedd3f51a290283b01f42"
+      }
+    }
+  },
+  "mcp_tool_count": 5,
+  "passed": true,
+  "installation_mode": "offline-wheel-after-wsl-dns-failure"
+}

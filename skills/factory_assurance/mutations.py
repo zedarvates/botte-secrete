@@ -9,19 +9,24 @@ from typing import Any
 def mutate_assurance_record(run: dict[str, Any], operator: str) -> dict[str, Any]:
     value = deepcopy(run)
     if operator == "identity-drift":
-        tested = str(value.get("identity", {}).get("tested_sha") or "")
-        value.setdefault("identity", {})["tested_sha"] = ("b" * 40 if tested != "b" * 40 else "c" * 40)
+        identity = value.setdefault("identity", {})
+        commits = [identity.get(key) for key in ("source_sha", "build_sha", "tested_sha")]
+        identity["tested_sha"] = next(ch * 40 for ch in "abcdef" if ch * 40 not in commits)
+        if "tested_tree" in identity:
+            trees = [identity.get(key) for key in ("source_tree", "build_tree", "tested_tree")]
+            identity["tested_tree"] = next(ch * 40 for ch in "abcdef" if ch * 40 not in trees)
     elif operator == "undeclared-effect":
         value.setdefault("effects", {}).setdefault("observed", []).append("/__mutation__/unexpected")
     elif operator == "self-judge":
         builder = value.setdefault("actors", {}).get("builder") or "builder"
         value["actors"]["judge"] = builder
     elif operator == "missing-evidence":
-        evidence = value.get("evidence") or []
-        if evidence:
-            evidence[0]["status"] = "missing"
+        evidence = value.setdefault("evidence", [])
+        required = next((item for item in evidence if item.get("required", True) is True), None)
+        if required is not None:
+            required["status"] = "missing"
         else:
-            value["evidence"] = [{"name": "mutation-missing", "status": "missing", "required": True}]
+            evidence.append({"name": "mutation-missing", "status": "missing", "required": True})
     else:
         raise ValueError(f"unknown mutation operator: {operator}")
     return value

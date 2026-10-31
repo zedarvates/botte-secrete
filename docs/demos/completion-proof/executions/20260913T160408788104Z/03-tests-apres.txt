@@ -1,0 +1,8 @@
+test_liste_vide (test_moyenne.TestMoyenne.test_liste_vide) ... ok
+test_valeurs_negatives (test_moyenne.TestMoyenne.test_valeurs_negatives) ... ok
+test_valeurs_positives (test_moyenne.TestMoyenne.test_valeurs_positives) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.000s
+
+OK

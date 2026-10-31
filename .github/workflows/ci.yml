@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main]
+    branches: [main, feat/shared-memory-scribe-v1, feat/verified-skill-runs-v1, feat/action-consequence-memory-v1]
 
 permissions:
   contents: read
@@ -17,19 +17,45 @@ jobs:
         python-version: ["3.10", "3.11", "3.12"]
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Verify exact source SHA
+        env:
+          SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
+          printf 'SOURCE_SHA=%s\n' "$SOURCE_SHA"
       - uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python-version }}
+      - name: Check Python syntax without importing modules
+        run: |
+          python - <<'PYTHON'
+          import ast, pathlib, subprocess
+          files = subprocess.check_output(["git", "ls-files", "--", "*.py"], text=True).splitlines()
+          for file in files:
+              ast.parse(pathlib.Path(file).read_text(encoding="utf-8-sig"), filename=file)
+          print(f"Syntax OK: {len(files)} tracked Python files")
+          PYTHON
+      - name: Require clean registered RSI rules
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: python scripts/check_committed_rules.py
       - name: Cache pip
         uses: actions/cache@v6
         with:
           path: ~/.cache/pip
           key: pip-${{ runner.os }}-${{ matrix.python-version }}
       - name: Install project dependencies
-        run: pip install -e .
+        run: pip install -e '.[memory-test]'
+      - name: Test external-tool inventory (offline fixtures)
+        run: python scripts/test_external_tools_inventory.py
       - name: Run tests (fail-fast)
         id: tests
-        run: python scripts/run_tests.py -q
+        run: |
+          python scripts/run_tests.py -q
+          python -m pytest --rootdir=. -q skills/memory_hub/test_shared_service.py skills/memory_hub/test_shared_transport.py skills/memory_hub/test_memory_hub.py skills/memory_hub/test_recovery.py
         timeout-minutes: 10
       - name: Validate GitHub documentation
         id: docs
@@ -64,6 +90,15 @@ jobs:
     if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Verify exact source SHA
+        env:
+          SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
+          printf 'SOURCE_SHA=%s\n' "$SOURCE_SHA"
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
@@ -86,6 +121,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Verify exact source SHA
+        env:
+          SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
+          printf 'SOURCE_SHA=%s\n' "$SOURCE_SHA"
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"

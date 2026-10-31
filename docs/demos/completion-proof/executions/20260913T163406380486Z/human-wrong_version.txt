@@ -1,0 +1,4 @@
+Preuve invalide
+Le code ou les tests ont changé depuis l'exécution enregistrée.
+Suite : Relancer les tests sur cette version et obtenir un nouveau reçu.
+Portée : uniquement les tests enregistrés et les fichiers listés ; exécuteur de confiance requis.

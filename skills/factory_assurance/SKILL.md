@@ -59,6 +59,15 @@ The JSON run record contains:
 `status=review_ready` means only that the deterministic evidence package is
 complete enough for independent human review.
 
+The gate checks supplied declarations for type, format and consistency. It does
+not resolve Git objects, authenticate the builder or judge, rerun evidence, or
+establish the quality and secrecy of a holdout. Those facts require independent
+evidence. The effect adapters validate the shared transport schemas, preserve
+failed or incomplete execution, and retain unknown remote effects; they do not
+prove that a declaration is current or that every effect has been observed.
+Adapter effect references use `sha256:<declaration-digest>#/<group>/<index>` so
+equal local pointers from different declarations cannot match each other.
+
 The layer always emits:
 
 - `may_merge_automatically=false`
@@ -77,7 +86,8 @@ A blocker yields `status=hold` and `repair_evidence_and_re_evaluate`.
 7. Holdout material must remain private/external to the builder-visible repo.
 8. Exact commit identity is preferred. When GitHub Actions tests a synthetic PR
    merge commit, exact source/build/tested Git tree identity is required instead;
-   tree equality proves repository content, not commit ancestry.
+   supplied hashes are checked for format and equality. Independently verified
+   tree equality establishes repository content, not commit ancestry.
 9. Merge and deployment identities remain separate; a deployment SHA is checked
    only when supplied.
 10. Historical and adversarial corpora are warnings in v1, not invented proof.
@@ -89,10 +99,13 @@ python -m skills.factory_assurance.cli examples/factory-assurance/run.json --pre
 python -m skills.factory_assurance.test_factory_assurance
 python -m skills.factory_assurance.test_integrations
 python -m skills.factory_assurance.test_roles
+python -m skills.factory_assurance.test_private_holdout
+python -m skills.factory_assurance.test_boundaries
 ```
 
-The real StoryCore PR #57 shadow fixture intentionally returns `hold` until its
-private holdout and negative mutation evidence actually exist:
+The historical StoryCore PR #57 shadow fixture contains declared private-holdout
+and negative-mutation evidence and returns `review_ready`. Evaluating it checks
+the stored record; it does not rerun or recertify those historical results:
 
 ```bash
 python -m skills.factory_assurance.cli examples/factory-assurance/storycore-pr57-shadow.json --pretty

@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - "skills/factory_assurance/**"
+      - "skills/capabilities/**"
       - "examples/factory-assurance/**"
       - ".github/workflows/factory-assurance.yml"
 
@@ -26,9 +27,11 @@ jobs:
         run: python -m skills.factory_assurance.test_roles
       - name: Run private holdout runner contract
         run: python -m skills.factory_assurance.test_private_holdout
+      - name: Run verdict and public-output boundary regressions
+        run: python -m skills.factory_assurance.test_boundaries
       - name: Positive control must pass
         run: python -m skills.factory_assurance.cli examples/factory-assurance/run.json
-      - name: Real StoryCore dark lap must become review-ready without promotion authority
+      - name: Historical StoryCore record remains review-ready without promotion authority
         run: |
           python - <<'PY'
           import json

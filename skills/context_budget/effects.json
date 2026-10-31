@@ -1,0 +1,103 @@
+{
+  "schema": "botte.capability-effects/v1",
+  "capability_id": "zedarvates/botte-secrete:skills/context_budget",
+  "contract_version": "0.1.0",
+  "source_hashes": {
+    "SKILL.md": "f23fb24c73a26c39a84b3cc2a90707c8f746a47be7a3240720eac77aeefc33f6",
+    "__init__.py": "4b8cc3b4759c4a3313ec792ff67178b74d86fbb4a9ccc1b1048414267cface5a",
+    "budget.py": "98e669492ec82cfcb51ad253c82c2764e0efffa35d53f87fbfd4e21d41233c7c",
+    "cli.py": "ed6c7da5a6c5756981836a74dbc23aac5f3567602449e7d9e55a9749d6e4e32e"
+  },
+  "preconditions": [
+    "Identify the optional context, actual task and authorized catalog roots; reserve required instructions and dependencies separately.",
+    "Use nonnegative integer budget/pool/costs, a positive integer unit and finite relevance scores.",
+    "Bound the candidate set and DP capacity for available memory; relate token estimates to the actual tokenizer and remaining context."
+  ],
+  "expected_effects": [
+    {
+      "effect": "select_skills reads the catalog, ranks up to the requested pool and returns chosen/dropped shortlist references.",
+      "scope": "SKILL.md contents under selected roots, lexical scores, returned paths/metadata and query text.",
+      "likelihood": "conditional",
+      "basis": "skill_finder.load_catalog reads complete files and estimates tokens from characters; rank receives pool explicitly. Chosen indices distinguish candidates with identical display names.",
+      "impact": "Consumes local file I/O and CPU; returned metadata may expose private paths or task context. Missing/unreadable roots and ranking filters can leave an incomplete candidate set.",
+      "verification": "Use temporary catalogs with more than five candidates and homonyms; compare selected/dropped paths, catalog counts and original files."
+    },
+    {
+      "effect": "knapsack allocates DP tables and chooses items under rounded-up estimated costs.",
+      "scope": "In-memory caller Item objects, effective capacity and returned indices/token/relevance totals.",
+      "likelihood": "conditional",
+      "basis": "Each cost is max(1, ceil(tokens/unit)); capacity is floor(budget/unit), capped at summed weights. The solver is exact in that quantized space, not necessarily in original token costs.",
+      "impact": "Quantization can omit items or combinations that fit the original budget. Small units and large pools/capacities increase CPU/memory; scores and token estimates do not prove task relevance.",
+      "verification": "Compare small fixtures with exhaustive quantized search; test original-budget counterexamples and measure actual tokenizer/quality on representative target tasks."
+    },
+    {
+      "effect": "CLI/MCP output a selection proposal without executing a skill or modifying the catalog.",
+      "scope": "Stdout or tool-result recipients and subsequent context-loading decisions.",
+      "likelihood": "conditional",
+      "basis": "The module returns references, estimated totals, a comparison note and cloud_tokens=0. It makes no inference request and does not read chosen instructions into the consuming agent.",
+      "impact": "A caller can mistake a shortlist or estimated reduction for verified applicability, complete context or measured savings.",
+      "verification": "Inspect complete selected instructions, prerequisites, exclusions and effects before execution; verify actual downstream content and tokenizer usage."
+    }
+  ],
+  "downstream_effects": [
+    {
+      "effect": "A consuming agent may omit mandatory context or execute a similarly named but unsuitable operation.",
+      "scope": "Later model context, selected tool calls and dependent workflow steps.",
+      "likelihood": "plausible",
+      "basis": "Lexical ranking, pool limits and quantized packing have no required-item, dependency or exclusion-group constraint.",
+      "impact": "Missing instructions or prerequisites can propagate incorrect decisions even when the numeric budget is respected.",
+      "verification": "Reserve required context outside selection; compare each candidate operation with the task and verify prerequisites before dependent steps."
+    },
+    {
+      "effect": "Recomputing against changed catalogs can produce a different plan despite an unchanged task.",
+      "scope": "Later shortlists and cross-run comparisons.",
+      "likelihood": "plausible",
+      "basis": "Catalog text, root contents, descriptions and estimates are loaded afresh; the module retains no immutable snapshot or persistent run identity.",
+      "impact": "Names alone can conceal changed paths or instructions, making reuse or comparisons unreliable.",
+      "verification": "Retain authorized query/settings, catalog revisions and full candidate references with the downstream evidence."
+    }
+  ],
+  "reversibility": {
+    "status": "partial",
+    "strategy": "Discard or recompute the proposal and restore necessary full context; reconcile actions already performed by consumers separately.",
+    "residual_effects": [
+      "Captured metadata or task text can remain with output recipients.",
+      "Local recomputation cannot undo downstream actions based on omitted or unsuitable instructions."
+    ]
+  },
+  "retry": {
+    "semantics": "conditional",
+    "check_before_retry": "The module has no intended persistent writes, but a retry reads current files and repeats compute. Confirm catalog/version and settings before treating results as the same proposal.",
+    "stop_condition": "Resolve unsuitable roots, invalid cost parameters, excessive capacity or missing mandatory context before relying on another selection."
+  },
+  "required_scope": "Existing task authority for reading the selected catalog roots and disclosing returned metadata/query. Selection grants no authority to execute candidates or remove mandatory instructions.",
+  "analysis": {
+    "summary": "Deterministic lexical selection and quantized packing create an advisory shortlist. Numeric feasibility is scoped to estimates; correct operation choice and complete instructions remain the consuming agent responsibility.",
+    "uncertainties": [
+      "The finder uses approximate character-based costs and lexical matching, and can omit unreadable files or below-threshold candidates.",
+      "Reading catalog text is not semantic verification or a trusted-source check; follow referenced instructions only within the existing task scope.",
+      "Imported skill_finder behavior, tokenizer/context overhead, linked resources and runtime state are outside these local source bindings.",
+      "There is no complete observation adapter, immutable catalog snapshot or automatic dependency resolution."
+    ],
+    "evidence_refs": [
+      "budget.py:knapsack",
+      "budget.py:select_skills",
+      "cli.py:main",
+      "test_effects.py"
+    ]
+  },
+  "reuse": [
+    {
+      "target": "Shortlist optional documents for another constrained agent workflow.",
+      "rationale": "Item costs/scores and root/pool settings can be supplied and tested independently of inference.",
+      "adaptations": [
+        "Preserve mandatory context separately and use target-tokenizer estimates including linked instructions.",
+        "Bind comparisons to catalog revisions and paths; check each selected operation against suitable cases and exclusions."
+      ],
+      "validation": "Compare selection, instruction retention and independently verified task results against full-context baselines on representative tasks, including homonyms and quantization boundaries.",
+      "status": "adaptation_to_test",
+      "validated_context": null,
+      "evidence_refs": []
+    }
+  ]
+}

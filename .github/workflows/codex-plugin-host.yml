@@ -1,0 +1,96 @@
+name: Codex plugin host qualification
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'skills/**'
+      - 'plugins/botte-secrete/**'
+      - '.agents/plugins/marketplace.json'
+      - 'pyproject.toml'
+      - 'scripts/verify_codex_plugin_host.py'
+      - 'scripts/verify_parcimonia_candidate.py'
+      - '.github/workflows/codex-plugin-host.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  codex-host:
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    env:
+      PYTHONUTF8: '1'
+      PYTHONIOENCODING: utf-8
+      CANDIDATE_HEAD: ${{ github.event.pull_request.head.sha }}
+      CODEX_TEST_VERSION: '0.166.0'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - name: Build and install the runtime and pinned Codex in fresh runner state
+        shell: python
+        run: |
+          import json, os, pathlib, shutil, subprocess, sys, venv
+          repo = pathlib.Path(os.environ['GITHUB_WORKSPACE']).resolve()
+          work = pathlib.Path(os.environ['RUNNER_TEMP']) / 'codex-plugin-host'
+          work.mkdir()
+          wheels = work / 'wheels'
+          wheels.mkdir()
+          env = {k: v for k, v in os.environ.items() if k not in {'PYTHONPATH', 'PYTHONHOME'}}
+          subprocess.run([sys.executable, '-m', 'pip', 'wheel', '--no-deps', '--wheel-dir', str(wheels), str(repo)], cwd=work, env=env, check=True)
+          wheel = list(wheels.glob('botte_secrete-*.whl'))
+          if len(wheel) != 1:
+              raise RuntimeError('Expected one candidate wheel')
+          runtime = work / 'runtime'
+          venv.EnvBuilder(with_pip=True).create(runtime)
+          bindir = runtime / ('Scripts' if os.name == 'nt' else 'bin')
+          python = bindir / ('python.exe' if os.name == 'nt' else 'python')
+          subprocess.run([str(python), '-I', '-m', 'pip', 'install', '--no-index', '--no-deps', str(wheel[0])], cwd=work, env=env, check=True)
+          npm = shutil.which('npm')
+          node = shutil.which('node')
+          if not npm or not node:
+              raise RuntimeError('Node/npm is unavailable on the hosted runner')
+          npm_path = pathlib.Path(npm)
+          npm_candidates = [npm_path.resolve(), npm_path.parent / 'node_modules/npm/bin/npm-cli.js']
+          npm_cli = next((p for p in npm_candidates if p.name == 'npm-cli.js' and p.is_file()), None)
+          if npm_cli is None:
+              raise RuntimeError('Cannot locate the npm JavaScript entry point')
+          codex_prefix = work / 'codex'
+          subprocess.run([node, str(npm_cli), 'install', '--prefix', str(codex_prefix), '--no-audit', '--no-fund', '@openai/codex@' + os.environ['CODEX_TEST_VERSION']], cwd=work, env=env, check=True)
+          candidates = list(codex_prefix.rglob('codex.exe' if os.name == 'nt' else 'codex'))
+          natives = []
+          for path in candidates:
+              if path.is_file():
+                  with path.open('rb') as stream:
+                      magic = stream.read(4)
+                  valid_magic = magic.startswith(b'MZ') if os.name == 'nt' else magic == b'\x7fELF'
+                  if valid_magic:
+                      natives.append(path)
+          if len(natives) != 1:
+              raise RuntimeError('Expected one native Codex binary in the pinned npm package')
+          codex = natives[0]
+          env['PATH'] = str(bindir) + os.pathsep + str(codex.parent) + os.pathsep + str(codex.parent.parent / 'path') + os.pathsep + env['PATH']
+          version = subprocess.check_output([str(codex), '--version'], cwd=work, env=env, text=True, encoding='utf-8').strip()
+          if version != 'codex-cli ' + os.environ['CODEX_TEST_VERSION']:
+              raise RuntimeError('Codex version differs from the pinned version')
+          # HOME and CODEX_HOME retain their hosted runner values. The probe
+          # rejects an existing personal Codex config/auth/plugin installation.
+          subprocess.run([str(python), '-I', str(repo / 'scripts/verify_codex_plugin_host.py'), '--repo', str(repo), '--codex', codex, '--source-commit', os.environ['CANDIDATE_HEAD'], '--runtime-python', str(python), '--wheel', str(wheel[0]), '--output', str(work / 'codex-host-report.json'), '--negative-runtime'], cwd=work, env=env, check=True)
+      - name: Upload host evidence
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: codex-host-${{ matrix.os }}-0.166.0
+          path: |
+            ${{ runner.temp }}/codex-plugin-host/codex-host-report.json
+            ${{ runner.temp }}/codex-plugin-host/wheels/*.whl
+          if-no-files-found: warn
+          retention-days: 14

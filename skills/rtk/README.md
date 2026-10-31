@@ -1,12 +1,15 @@
 # RTK — Rust Token Killer
 
-> A terminal wrapper that compacts command output to cut token usage. Prefix any
-> command with `rtk`; if RTK has a dedicated filter it compacts the output,
-> otherwise it passes through unchanged — so `rtk` is always safe.
+> A terminal wrapper that compacts supported command output to cut token usage.
+> Filtering is lossy: verify failure diagnostics and exit codes for the commands
+> you use, and keep access to unfiltered output.
 
-- Upstream: **https://github.com/rtk-ai/rtk** (install: `cargo install --git https://github.com/rtk-ai/rtk`)
-- Latest release at time of writing: **v0.42.4**. Check yours with `rtk --version`
-  and update if behind — RTK ships fixes frequently.
+- Upstream: **https://github.com/rtk-ai/rtk**
+- Reference release verified on **2026-09-13: v0.49.0**. This is not proof of
+  the installed version or of Botte compatibility. Check yours with `rtk --version`.
+- See the [external-tool inventory and update procedure](../../docs/external-tools.md)
+  and [exact source references](../../configs/external-tools.json) before updating.
+  Use a fixed release/commit rather than installing a moving upstream branch.
 
 ## Use it
 

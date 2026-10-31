@@ -54,8 +54,14 @@ It must emit exactly one JSON object to stdout:
 {"passed": true}
 ```
 
-A timeout, non-zero exit, malformed response, or missing boolean fails closed.
-Evaluator stderr is not copied into the public attestation.
+A timeout, non-zero exit, malformed response, extra field, or missing boolean
+fails closed. Duplicate JSON keys and non-finite numbers are rejected in both
+private sets and evaluator responses. The protocol uses UTF-8. Evaluator stderr,
+case IDs and case payloads are not copied into public results or CLI errors.
+
+An embedded Python evaluator must return an actual `bool`; strings such as
+`"false"` and numeric truthiness are rejected. Its caller controls execution;
+the timeout applies to subprocess evaluators only.
 
 ## Running locally
 
@@ -72,6 +78,14 @@ python -m skills.factory_assurance.private_holdout_cli \
 The resulting `attestation.json` may be shared publicly if its metadata itself
 is not sensitive. Before publishing it, inspect the set ID and any operator
 metadata you choose to add around it.
+
+The runner validates the candidate SHA format and a finite positive timeout
+before invoking an evaluator. The CLI requires `--` before the evaluator argv
+and refuses an output path that refers to the input file. Exit status is 0 for a
+passing set, 1 for a completed failing set, and 2 for invalid input, configuration,
+evaluator execution or output I/O. Status 2 does not confirm a usable attestation.
+Consume the output only after exit status 0 or 1. After an I/O error, an old or
+partial output file may remain and must not be treated as this run's evidence.
 
 ## Public attestation shape
 
@@ -90,6 +104,10 @@ metadata you choose to add around it.
 A digest proves that later reports refer to the same private set; it does **not**
 prove who authored the set, that the set is good, or that it was secret. Signed
 issuer identity remains a later capability.
+
+The candidate SHA is supplied by the operator. Its format is checked, but the
+runner does not check out that commit or inspect which code the evaluator runs.
+The operator must independently bind the evaluator environment to the candidate.
 
 ## StoryCore first dark lap
 
