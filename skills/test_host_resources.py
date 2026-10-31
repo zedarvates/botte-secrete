@@ -4,7 +4,7 @@ import json
 import io
 import multiprocessing
 import os
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import tempfile
 import time
 from types import SimpleNamespace
@@ -25,6 +25,20 @@ def simultaneous_claim(path, key, start, result):
     guard = HostMemoryGuard(path, probe=sample)
     start.wait(timeout=10)
     result.put(guard.reserve(key, 4 * GiB)["allowed"])
+
+
+def posix_files(files):
+    """Model Linux paths without consulting the test runner's native OS flavour."""
+    class FixturePath(PurePosixPath):
+        def read_text(self, *, encoding):
+            if encoding != "utf-8":
+                raise AssertionError("fixture reads must use UTF-8")
+            return files[str(self)]
+
+        def exists(self):
+            return str(self) in files
+
+    return FixturePath
 
 
 class HostMemoryTests(unittest.TestCase):
@@ -223,12 +237,13 @@ class MemoryProbeTests(unittest.TestCase):
 
     def test_hidden_cgroup_mount_does_not_admit_against_host_ram(self):
         files = {"/proc/self/cgroup": "0::/\n", "/proc/self/mountinfo": ""}
-        with patch.object(Path, "read_text", lambda path, **kwargs: files[str(path)]):
+        with patch("skills.host_resources.Path", posix_files(files)):
             with self.assertRaises(OSError):
                 _cgroup_v2(64 * GiB, 32 * GiB)
 
     def test_hybrid_cgroup_v1_memory_controller_cannot_escape_limits(self):
-        with patch.object(Path, "read_text", return_value="5:memory:/limited\n0::/user.slice\n"):
+        files = {"/proc/self/cgroup": "5:memory:/limited\n0::/user.slice\n"}
+        with patch("skills.host_resources.Path", posix_files(files)):
             with self.assertRaises(OSError):
                 _cgroup_v2(64 * GiB, 32 * GiB)
 
@@ -238,16 +253,14 @@ class MemoryProbeTests(unittest.TestCase):
                  "/cgroup/team/worker/memory.max": "max", "/cgroup/team/worker/memory.current": str(GiB),
                  "/cgroup/team/memory.max": str(10 * GiB), "/cgroup/team/memory.current": str(9 * GiB),
                  "/cgroup/memory.max": "max", "/cgroup/memory.current": str(9 * GiB)}
-        with patch.object(Path, "read_text", lambda path, **kwargs: files[str(path)]), \
-                patch.object(Path, "exists", lambda path: str(path) in files):
+        with patch("skills.host_resources.Path", posix_files(files)):
             self.assertEqual(_cgroup_v2(64 * GiB, 32 * GiB), (10 * GiB, GiB))
 
     def test_current_cgroup_limit_and_negative_usage_validation(self):
         files = {"/proc/self/cgroup": "0::/\n",
                  "/proc/self/mountinfo": "1 2 0:1 / /cgroup rw - cgroup2 cgroup rw\n",
                  "/cgroup/memory.max": str(4 * GiB), "/cgroup/memory.current": str(3 * GiB)}
-        with patch.object(Path, "read_text", lambda path, **kwargs: files[str(path)]), \
-                patch.object(Path, "exists", lambda path: str(path) in files):
+        with patch("skills.host_resources.Path", posix_files(files)):
             self.assertEqual(_cgroup_v2(64 * GiB, 32 * GiB), (4 * GiB, GiB))
             files["/cgroup/memory.current"] = "-1"
             with self.assertRaises(ValueError):
