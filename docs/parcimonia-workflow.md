@@ -1,5 +1,11 @@
 # Parcimonia task assessment and research
 
+See the [verification workbench](parcimonia-verification-workbench.md) for
+reproduction reduction, observed test order, cloud/local conformance, mutation,
+interface exploration and intermittent-failure triage. The
+[knowledge inventory](parcimonia-knowledge-inventory.md) locates existing wiki,
+RAG/DAG, memory and LLM work with source-pinned documentary links.
+
 Candidate version: Botte Secrète 1.11.0. The corresponding cloud helpers run
 without a local Python runtime. Both produce advice from supplied data, with
 no model call, network access, execution or persistent storage in the helpers.
@@ -120,6 +126,13 @@ typing and visible/absent assertions. A runner, display, target application and
 reference images are separate prerequisites. The unit tests of the generator
 do not establish end-to-end GUI success on a user's machine.
 
+Treat the runner's completion evidence separately from script generation.
+The CLI returns success only for a completed, coherent passing run. A missing
+runner or launch failure is `not_run`; a zero exit without a final result is
+`incomplete`. A nonzero exit, failed step or nonzero final error count fails.
+The JSON result and HTML report use the same verdict. These checks validate
+the reporting contract; they do not supply a GUI runner or display.
+
 For a game pilot, qualify a menu or deterministic scenario first. Continuous
 gameplay needs an adapter that supplies timestamped observations, bounded inputs
 and independent assertions. Reuse Parcimonia's `DecisionBudget` and
@@ -131,6 +144,26 @@ actions, stop condition and action/duration budgets. Retain transitions,
 failures and capture references. Measure success, total time to verified outcome,
 capture-to-action latency p50/p95, missed deadlines, stale actions and resources.
 No real-time game performance has been established by this increment.
+
+## Reuse prior verification observations
+
+When an explicit local Memory Hub contains verification receipts, use
+[`botte verify recall`](parcimonia-memory-recall.md) to select bounded status and
+counter projections with source/version/report-digest citations. Read a closed
+or checkpointed project database; the command does not create a store. Detailed
+failure signatures, issue prose and raw reports are outside this searchable
+projection. Inspect the cited original report when more detail is needed.
+
+Keep missing, incomplete and unavailable reads distinct. Compare versions only
+against explicitly supplied current references, and retain the observation's
+quarantine label. Recall supplies evidence to review; it does not promote facts,
+change normal context or activate a model route.
+
+When a versioned documentary inventory is supplied, `recall --inventory FILE`
+also checks the selected receipt references against exact URI/version identities.
+It retains missing, unknown, ambiguous and mismatched references, alongside the
+inventory's existing dependency review. No lexical candidate becomes a resolved
+relation, and an incomplete read cannot become a complete documentary review.
 
 ## Distribution and measurement
 
@@ -148,7 +181,7 @@ New users receive instructions through committed and packaged entry points:
 | Repository `AGENTS.md` | Links the committed `.botte/policy.md` before substantive work |
 | `skills.preflight.policy.DEFAULT_POLICY` | Writes the same Parcimonia section into a new project's `.botte/policy.md` |
 | Bootstrap `--create-agents-md` | Creates a missing `AGENTS.md`, links an existing `CLAUDE.md` when present, and points to the policy |
-| `skills.preflight.hook` | Emits the shared guidance on Claude Code `UserPromptSubmit`; does not execute assessment |
+| `skills.preflight.hook` | Runs selective local advisory assessment on Claude Code `UserPromptSubmit`; executes no selected tool |
 | Codex plugin `skills/botte-secrete/SKILL.md` | Carries self-contained assessment, reuse and fallback instructions inside the installable subset |
 
 The bootstrap retains existing policy and instruction files. Merge new guidance
@@ -177,6 +210,9 @@ approval and publication before filming instructions to search and install.
 See the [English video draft](demos/parcimonia-introduction.md).
 The [offline replay](demos/parcimonia-workflow-run.md) runs the authored examples
 and records helper-only timing and size without executing external tools.
+See the [runtime readiness validation](validation/parcimonia-readiness-2026-10-30.md)
+for the isolated installed-runtime check, diagnostic scope and GUI runner
+completion requirements. A generated script alone is not a completed test.
 
 For a paired comparison, keep task, target revision, success criteria and tool
 availability equal. Measure the whole accepted task, including assessment calls,

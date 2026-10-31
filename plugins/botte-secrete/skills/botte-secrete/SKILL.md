@@ -61,3 +61,24 @@ workflow. Qualify capture, input, assertions, stop conditions and target build
 separately. A plan or generator does not prove execution or real-time gameplay.
 The local preflight hook integrates with Claude Code; this plugin supplies no
 Codex or Work-cloud lifecycle hook and cannot force the host to select a skill.
+
+For a compatible local candidate exposing `botte verify --help`, reuse its
+bounded verification workbench: reduce a reproduction with the same failure
+fingerprint, triage repeated observations, compare supplied cloud/local sources,
+challenge Python tests with mutations, or explore explicit allowed interface
+actions. The canonical runner also supports opt-in observed test ordering with
+`--prioritize`, retaining every selected suite. Inspect each installed command's
+help and prerequisites first. Command execution requires explicit trusted local
+adapters and the user's task scope; these capabilities are not cloud execution
+endpoints. Preserve process/source identities, inconclusive states, all observed
+failures and known comparison differences. A model replay or HTTP navigation
+adapter does not establish graphical or real-time game control.
+
+For documentary gaps, use `review_knowledge_links` when its schema is offered.
+Supply an explicit versioned inventory; resolve exact references and distinguish
+missing, unknown and stale versions. Lexical suggestions remain proposals.
+For local verification memory, inspect `botte verify memory --help`: preview
+first, retain the report digest/run/source version, and write only to an explicit
+Memory Hub directory when within the task scope. Receipts remain private,
+non-executable quarantine observations available through explicit review; they
+do not enter normal context or activate a wiki/LLM route.

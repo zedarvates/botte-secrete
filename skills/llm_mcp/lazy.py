@@ -20,13 +20,22 @@ what's callable.
 
 from __future__ import annotations
 
+import copy
+import json
 import os
 import re
+import unicodedata
 
 # The handful of tools worth the agent always seeing — the rest are one
 # find_tool() call away. Kept small on purpose; grow only for genuinely
 # constant-use tools.
 CORE_TOOL_NAMES = {"local_chat", "auto_route", "find_skills", "conduct", "assess_task"}
+
+MAX_QUERY_BYTES = 2048
+MAX_SCHEMA_BUDGET_BYTES = 65536
+DEFAULT_SCHEMA_BUDGET_BYTES = 8192
+MAX_DESCRIPTION_BYTES = 384
+MAX_INDEX_DESCRIPTION_BYTES = 160
 
 _WORD = re.compile(r"[a-z0-9]+")
 # Common short words that would otherwise cause spurious matches (e.g. "no",
@@ -40,7 +49,9 @@ _STOP = {
 
 
 def _tokens(text: str) -> set:
-    return {w for w in _WORD.findall((text or "").lower()) if w not in _STOP}
+    normalized = "".join(c for c in unicodedata.normalize("NFKD", text.casefold())
+                         if not unicodedata.combining(c))
+    return {w for w in _WORD.findall(normalized) if w not in _STOP}
 
 
 def _score(query_tokens: set, tool: dict) -> float:
@@ -55,30 +66,75 @@ def _score(query_tokens: set, tool: dict) -> float:
     return (3 * name_hits + desc_hits) / len(query_tokens)
 
 
-def find_tool(query: str, tools: list, *, top_k: int = 5) -> dict:
-    """Lexical search over tool name+description. 0 cloud tokens.
+def _utf8_prefix(text: str, limit: int) -> str:
+    return text.encode("utf-8")[:limit].decode("utf-8", errors="ignore")
 
-    Strong matches (score >= 1.0, i.e. every query token hit a tool's name)
-    carry their full `inputSchema` so the agent can call them without a second
-    lookup; weaker matches are name-only hints (cheap to list, keeps the
-    response small when the query is broad).
+
+def find_tool(query: str, tools: list, *, top_k: int = 5,
+              schema_budget_bytes: int = DEFAULT_SCHEMA_BUDGET_BYTES,
+              detail: str = "schemas") -> dict:
+    """Return bounded discovery hints, with full schemas only when they fit.
+
+    ``detail="index"`` returns a separate compact hint view; the default
+    schema view retains its existing response shape.
+    The schema budget counts compact UTF-8 JSON bytes, not provider tokens.
+    A deferred match remains visible and callable by name; discovery does not
+    probe its backend, authorize execution or prove its capabilities.
     """
-    query = (query or "").strip()
+    if not isinstance(query, str) or len(query.encode("utf-8")) > MAX_QUERY_BYTES:
+        raise ValueError("query must be a string of at most 2048 UTF-8 bytes")
+    if isinstance(top_k, bool) or not isinstance(top_k, int) or not 1 <= top_k <= 10:
+        raise ValueError("top_k must be an integer from 1 through 10")
+    if (isinstance(schema_budget_bytes, bool) or not isinstance(schema_budget_bytes, int)
+            or not 0 <= schema_budget_bytes <= MAX_SCHEMA_BUDGET_BYTES):
+        raise ValueError("schema_budget_bytes must be an integer from 0 through 65536")
+    if not isinstance(detail, str) or detail not in {"schemas", "index"}:
+        raise ValueError("detail must be schemas or index")
+    query = query.strip()
     qtok = _tokens(query)
+    # An exact identifier must not disappear behind noisy description matches.
+    # Stable name ties make discovery independent of registration order.
     scored = sorted(
         ((_score(qtok, t), t) for t in tools),
-        key=lambda x: x[0], reverse=True,
+        key=lambda x: (x[1]["name"] != query, -x[0], x[1]["name"]),
     )
-    scored = [(s, t) for s, t in scored if s > 0][:top_k]
-
-    matches = []
-    for score, t in scored:
-        entry = {"name": t["name"], "score": round(score, 2),
-                 "description": t.get("description", "")}
-        if score >= 1.0:
-            entry["inputSchema"] = t.get("inputSchema")
+    scored = [(score, tool) for score, tool in scored if score > 0][:top_k]
+    if detail == "index":
+        # This view deliberately contains hints only. Do not touch schemas:
+        # resolve the chosen identifier explicitly before constructing a call.
+        matches = []
+        for _, tool in scored:
+            description = tool.get("description", "")
+            entry = {"name": tool["name"],
+                     "description": _utf8_prefix(description, MAX_INDEX_DESCRIPTION_BYTES)}
+            if len(description.encode("utf-8")) > MAX_INDEX_DESCRIPTION_BYTES:
+                entry["description_truncated"] = True
+            matches.append(entry)
+        return {"schema": "botte.tool-discovery-index/v1", "query": query,
+                "matches": matches, "schemas_included": False, "cloud_tokens": 0}
+    matches, used = [], 0
+    for score, tool in scored:
+        description = tool.get("description", "")
+        entry = {"name": tool["name"], "score": round(score, 2),
+                 "description": _utf8_prefix(description, MAX_DESCRIPTION_BYTES),
+                 "description_truncated": len(description.encode("utf-8")) > MAX_DESCRIPTION_BYTES,
+                 "schema_status": "weak_match"}
+        schema = tool.get("inputSchema")
+        if score >= 1.0 and schema is not None:
+            size = len(json.dumps(schema, ensure_ascii=False, separators=(",", ":"),
+                                  allow_nan=False).encode("utf-8"))
+            entry["schema_bytes"] = size
+            if used + size <= schema_budget_bytes:
+                entry["inputSchema"] = copy.deepcopy(schema)
+                entry["schema_status"] = "included"
+                used += size
+            else:
+                entry["schema_status"] = "deferred_budget"
+        elif score >= 1.0:
+            entry["schema_status"] = "unavailable"
         matches.append(entry)
-    return {"query": query, "matches": matches, "cloud_tokens": 0}
+    return {"query": query, "matches": matches, "cloud_tokens": 0,
+            "schema_budget_bytes": schema_budget_bytes, "schema_bytes_returned": used}
 
 
 def lazy_tool_list(all_tools: list) -> list:
@@ -89,11 +145,17 @@ def lazy_tool_list(all_tools: list) -> list:
         "description": "Find the right botte-llm MCP tool for a task by name/description "
                        "match (0 cloud tokens) — this server exposes only a small core "
                        "tool set by default; call find_tool first to discover and load "
-                       "the full schema for anything else (security_scan, docs_map, "
-                       "solvers, nn_audit, cwe_kb, …).",
+                       "a budgeted schema for anything else (security_scan, docs_map, "
+                       "solvers, nn_audit, cwe_kb, …). Deferred-budget matches remain hints; "
+                       "raise schema_budget_bytes for an exact lookup. Optional detail=index returns "
+                       "short hints only: resolve a selected exact name with detail=schemas, "
+                       "top_k=1 before calling it. No backend probe is made.",
         "inputSchema": {"type": "object", "properties": {
-            "query": {"type": "string"},
-            "top_k": {"type": "integer", "default": 5}},
+            "query": {"type": "string", "maxLength": 2048},
+            "top_k": {"type": "integer", "minimum": 1, "maximum": 10, "default": 5},
+            "detail": {"type": "string", "enum": ["schemas", "index"], "default": "schemas"},
+            "schema_budget_bytes": {"type": "integer", "minimum": 0,
+                                    "maximum": 65536, "default": 8192}},
             "required": ["query"]},
     }
     return [meta] + core

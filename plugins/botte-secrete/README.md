@@ -41,6 +41,11 @@ already passed on every platform.
 
 For the consolidated three-workflow validation and its recorded limitations,
 see the [candidate guide](../../docs/parcimonia-candidate.md).
+The project checkup now separates a configuration declaration from launcher
+discovery and runtime reachability. Its static `configured` result does not
+qualify the plugin installed in Codex; use Codex's current server status and
+the read-only call above. See [MCP diagnostics](../../docs/mcp-integration.md#read-the-installation-diagnostic)
+for supported files and parser limitations.
 
 ## First-assessment behavior
 

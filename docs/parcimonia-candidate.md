@@ -1,5 +1,10 @@
 # Parcimonia consolidated candidate
 
+The qualification receipts below pin the historical candidate `d5ebe47733a6a32e66050b5662a6fd83b8ccba9b`.
+For its reconciliation with the merged code-context work, read
+[the 31 October reconciliation](validation/parcimonia-main-reconciliation-2026-10-31.md).
+Historical Codex/Windows receipts do not qualify the newer combined source.
+
 This validation branch combines task assessment and GitHub evidence helpers,
 portable project/plugin guidance, deterministic statistics, exact-file duplicate
 inspection and supplied Markdown link checks. It is an unreleased candidate;
