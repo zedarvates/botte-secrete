@@ -1,0 +1,99 @@
+{
+  "schema": "botte.parcimonia-candidate-preparation/v1",
+  "date": "2026-10-30",
+  "state": "candidate_prepared_full_checkout_ci_pending",
+  "input_pr_heads": {
+    "147": "cd6b605fd63ca6cb7a5c816f14289f283e5c1918",
+    "148": "6037a26789a9470c78450399d6442c291c094f23",
+    "149": "cf066475cd51e20cc84804136c80084344591390",
+    "150": "a2b370eebae73d85027fe0e993a640747f031283",
+    "151": "acf6edcd4dfee3467ae8867d4509de4e9357dee7"
+  },
+  "integration": {
+    "parent": "151",
+    "additional_parents": [
+      "147",
+      "149"
+    ],
+    "method": "three-way file integration; preserve each existing capability and latest selective hook",
+    "resolved_conflicts": [
+      "MCP registry/dispatch keeps statistics, file duplicates, local links and GitHub evidence",
+      "Assessment retains specialized numeric/file/link filtering and newer GitHub subject filtering",
+      "Portable guidance preserves real selective assessment and user instructions; stale always-guidance assertion updated"
+    ]
+  },
+  "implementation_sha256": {
+    "scripts/verify_parcimonia_candidate.py": "4f2ba1b26df35be3b66ba25c8dd433feb8cf26ffb42d6497968d054131664e8a",
+    ".github/workflows/parcimonia-candidate.yml": "daf351d1d31cfa672e2ca2778937499acff1127f027a219ddc341204e5311b32",
+    "skills/preflight/assessment.py": "be5e00a02fd92ef595cc7fb9dffe619786b128b32581806416db721296027493",
+    "skills/preflight/hook.py": "c8a9719edaf8ea153871eba699ba09fb9f5cfe6cf431b2d714c64babde3d3781",
+    "skills/preflight/policy.py": "842d86bcfd516df035162dc4bfadac29e74cd0b49229ccc600df9e4ff4d700b0",
+    "skills/llm_mcp/server.py": "3a7f7e0d01b89ed8da5a86a194adc54b68eb60c328c6ea4c4bfa93b38b0a4261",
+    "plugins/botte-secrete/skills/botte-secrete/SKILL.md": "6456e0781c65863083ac6ac067e2af827c5a3d722e4ccc2dd5f7d948f96ed511"
+  },
+  "local_checks": [
+    {
+      "check": "actual canonical runner, nine relevant selected suites",
+      "passed": 212,
+      "failed": 0,
+      "partial_runner": true
+    },
+    {
+      "command": "python -m skills.plugins.test_distribution",
+      "passed": 10,
+      "failed": 0
+    },
+    {
+      "check": "fresh venv MCP smoke from selected local sources",
+      "scenarios_passed": 3,
+      "scope": "selected_snapshot; not full repository installation qualification"
+    },
+    {
+      "check": "installed module tamper witness",
+      "status": "correctly_rejected_before_mcp"
+    },
+    {
+      "check": "git diff --check",
+      "status": "passed"
+    }
+  ],
+  "independent_review": {
+    "status": "no remaining blocking finding in integration/harness review",
+    "limits": [
+      "MCP probe and descriptor checks do not establish actual Codex host plugin loading or automatic skill selection.",
+      "No paired baseline, billed token or cost measurement."
+    ]
+  },
+  "qualification_plan": {
+    "workflow": "Parcimonia candidate installation",
+    "minimal": [
+      "Ubuntu Python3.10",
+      "Ubuntu Python3.12",
+      "Windows Python3.10",
+      "Windows Python3.12"
+    ],
+    "normal_install": [
+      "Ubuntu Python3.12 with declared dependencies and pip check"
+    ],
+    "source": "complete Git checkout at exact PR head",
+    "evidence": "per-job wheel, installation.json and candidate-report.json; actual module hashes source=wheel=installed"
+  },
+  "provider_tokens": null,
+  "cost": null,
+  "savings": null,
+  "activation": {
+    "main_merged": false,
+    "host_hooks": false,
+    "hosted_cloud_deployed": false,
+    "desktop_integration": false
+  },
+  "native_fixture_follow_up": {
+    "observed_commit": "6427ed80e51a042376d2c4eb9b655c656933fcbc",
+    "workflow_run": 41118053959,
+    "linux_full_checkout_installations": "three passed, including normal dependency install and pip check",
+    "windows_witness": "both Python versions failed the harness assumption of LF after native Path.write_text",
+    "change": "Record native seed AGENTS bytes after writing; compare existing-content prefix to those exact bytes. Production code and preservation assertion retained.",
+    "local_after_fix": "fresh selected-snapshot venv, all three MCP scenarios passed",
+    "next": "rerun all five clean installation jobs at follow-up commit"
+  }
+}

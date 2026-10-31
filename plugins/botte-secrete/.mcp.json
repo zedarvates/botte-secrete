@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "botte-llm": {
+      "type": "stdio",
+      "command": "botte-mcp"
+    }
+  }
+}

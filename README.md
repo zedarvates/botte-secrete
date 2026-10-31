@@ -10,11 +10,14 @@
 The RC adds Factory Assurance, independent judging, and evidence gates. Start in
 observe, consultative, or shadow mode; the private/external holdout remains
 unproven. See the release notes for limits and installation at the validated
-commit. The version badge below identifies the stable line on `main`.
+commit. `main` prepares version **1.11.0**; the badge below identifies that
+unreleased candidate, not a published stable release. The
+[Codex plugin guide](plugins/botte-secrete/README.md) documents its separately
+installed Python runtime and Git marketplace catalog.
 
 [![CI](https://github.com/zedarvates/botte-secrete/actions/workflows/ci.yml/badge.svg)](https://github.com/zedarvates/botte-secrete/actions)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
-[![Version](https://img.shields.io/badge/version-1.9.0-55d6be)](pyproject.toml)
+[![Version](https://img.shields.io/badge/version-1.11.0-55d6be)](pyproject.toml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-7b8cff)](LICENSE)
 
 [Français](README.fr.md) · [Documentation](docs/README.md) · [Architecture](docs/ARCHITECTURE.md) · [Development](docs/DEVELOPMENT.md) · [Contributing](CONTRIBUTING.md)
@@ -32,6 +35,18 @@ live telemetry._
 The project is in **beta**. Its core workflows run locally, but optional local
 LLM backends, cloud providers, hardware accelerators, and third-party agents
 remain external systems with their own setup and security boundaries.
+
+## See it in action: "done" needs evidence
+
+A prepared agent report claims completion. Botte flags the missing evidence;
+an actual test exposes a defect, and a prepared correction passes all three
+tests. [Follow the replayable demonstration](docs/demos/completion-proof/README.md)
+with recorded outputs and an explicit negative control: A11 detects evidence
+markers but does not authenticate them.
+
+The separate opt-in [receipt verifier](skills/completion_proof/VERIFICATION.md)
+checks actual artifacts and source hashes against a digest supplied by the
+trusted test executor; it does not rely on a hash asserted by the agent report.
 
 ## Understand and inspect the small models
 

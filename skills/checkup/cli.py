@@ -69,18 +69,20 @@ def run(project: Path) -> dict:
     if isinstance(d, dict):
         if d.get("score", 100) < 90:
             out["drift"].append(f"Directives health {d.get('score')}/100 — stale/oversized; fix CLAUDE.md/AGENTS.md.")
-    mcp_missing = any("Wire the MCP" in t.get("title", "")
-                      for t in out["infra_tips"])
-    if not mcp_missing:
-        out["mcp_wiring"] = {"status": "wired", "applicable": True}
-    elif os.environ.get("BOTTE_CHECKUP_CONTEXT", "").strip().lower() == "github-pr":
-        out["mcp_wiring"] = {
-            "status": "not_applicable", "applicable": False,
-            "reason": "ephemeral GitHub PR runner; MCP configuration is machine-local",
-        }
-    else:
-        out["mcp_wiring"] = {"status": "missing", "applicable": True}
-        out["drift"].append("MCP not wired here — run `python -m skills.bootstrap.cli .`")
+    from skills.checkup.mcp import inspect_mcp
+    wiring = out["mcp_wiring"] = inspect_mcp(project)
+    if (wiring["status"] == "missing" and not wiring["sources"]
+            and os.environ.get("BOTTE_CHECKUP_CONTEXT", "").strip().lower() == "github-pr"):
+        wiring.update(status="not_applicable", applicable=False,
+                      reason="ephemeral GitHub PR runner; MCP configuration is machine-local")
+    elif wiring["status"] == "missing":
+        out["drift"].append("No project-local MCP declaration found — configure the intended host or verify its plugin/global configuration.")
+    elif wiring["status"] != "configured":
+        out["drift"].append(f"MCP declaration status is {wiring['status']} — review mcp_wiring.sources; runtime availability is not checked.")
+    if any(s["status"] in ("invalid", "unreadable", "unsupported") for s in wiring["sources"]) and wiring["status"] == "configured":
+        out["drift"].append("Some MCP configuration sources could not be validated — review mcp_wiring.sources.")
+    if any(s.get("launcher", {}).get("status") == "not_found" for s in wiring["sources"]):
+        out["drift"].append("An MCP launch command was not found in this process environment — verify the host runtime installation and PATH.")
     if m.always_on_tokens > 2000:
         out["drift"].append(f"CLAUDE.md ~{m.always_on_tokens} tok (>2000) — trims save tokens every turn.")
     sec = out["security"]
@@ -299,11 +301,13 @@ def _rank_actions(result: dict, project: Path) -> list[dict]:
 def _verdict(result: dict) -> str:
     drift_n = len(result.get("drift", []))
     machine = result.get("machine", {}) or {}
-    if drift_n == 0 and (not machine.get("available") or machine.get("uses_local_models")):
-        return "✅ sain — rien à corriger, routing local actif."
+    if drift_n == 0 and not machine.get("available"):
+        return "✅ aucun écart détecté — disponibilité des backends et routage non vérifiés."
+    if drift_n == 0 and machine.get("uses_local_models"):
+        return "✅ aucun écart détecté — backend local déclaré par l'audit, routage de l'hôte non vérifié."
     if drift_n == 0:
-        return ("⚠️ sain côté code, mais aucun backend local détecté — "
-                "chaque tâche part au cloud. Voir 'machine' ci-dessous.")
+        return ("⚠️ aucun écart détecté, aucun backend local dans cet audit — "
+                "destination des tâches de l'hôte non vérifiée. Voir 'machine' ci-dessous.")
     top = _rank_actions(result, Path(result["project"]))
     tok = sum(a["est_tokens"] or 0 for a in top)
     tok_note = f", ~{tok:,} tokens d'opportunités identifiées" if tok else ""
@@ -382,6 +386,8 @@ def format_pr_comment(result: dict, *, repo: str | None = None,
         facts.append(f"always-on **{cost['always_on_tokens_per_session']:,} tok/session**")
     if result.get("mcp_wiring", {}).get("status") == "not_applicable":
         facts.append("MCP wiring **n/a in ephemeral CI**")
+    elif result.get("mcp_wiring"):
+        facts.append(f"MCP declaration **{result['mcp_wiring']['status']}**; runtime/reachability not checked")
     lines.append(" · ".join(facts))
     lines.append("")
 
@@ -523,6 +529,10 @@ def main(argv=None) -> int:
           f"policy {'✓' if r['policy_committed'] else '✗ (not committed)'}")
     print(f"\n   💰 analysis cost: {r['cost']['analysis_llm_tokens']} LLM tokens · "
           f"always-on: {r['cost']['always_on_tokens_per_session']:,} tok/session")
+    wiring = r.get("mcp_wiring", {})
+    if wiring:
+        print(f"\n   MCP declaration: {wiring['status']} (project files only); "
+              "runtime/reachability not checked")
     sec = r.get("security") or {}
     if sec.get("count"):
         cwes = ", ".join(f"{k}×{v}" for k, v in sorted(sec.get("by_cwe", {}).items()))

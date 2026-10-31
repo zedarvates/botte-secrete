@@ -223,6 +223,8 @@ class MetaHarness:
 
     def execute(self, plan: PipelinePlan) -> Session:
         """Execute a plan step by step, respecting governance and SAFE-EXIT."""
+        if self.session.plan is not None or any(step.status != "pending" for step in plan.steps):
+            raise RuntimeError("A session/plan can execute only once; start a new explicit run")
         self.session.plan = plan
         guard = SafeExitGuard(self.safe_exit_config)
 
@@ -245,8 +247,18 @@ class MetaHarness:
                     self.session.add_result(step)
                     continue
 
+            before = guard.check()
+            if before.decision == RunDecision.UNCERTAIN:
+                self.session.terminate_uncertain(before.reason or "safe_exit")
+                self._skip_remaining_after_safe_exit(plan, i, before.reason or "safe_exit")
+                break
+
             step.status = "running"
-            sandbox = Sandbox(workdir=step.workdir, sandbox_dir=f".botte-sandbox/{step.agent}")
+            sandbox = Sandbox(
+                workdir=step.workdir,
+                sandbox_dir=f".botte-sandbox/{step.agent}",
+                timeout=min(300.0, guard.remaining_seconds()),
+            )
 
             t0 = time.time()
             result = sandbox.run(step.command, args=step.args)
