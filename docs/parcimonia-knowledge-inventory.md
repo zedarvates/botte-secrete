@@ -88,4 +88,8 @@ An optional explicit inventory connects these selected references to the
 existing documentary reviewer by exact URI/version, retaining ambiguity,
 missing/unknown references and version mismatches without creating graph edges.
 The separate Parcimonia episode format still requires its own versioned adapter.
+The [local content adapter](parcimonia-document-context.md) now reads selected
+Markdown/text references through an explicit URI/version/path/SHA-256 catalog.
+It returns pinned excerpts with line citations while preserving recall limits;
+the real private mirror and local model still require runtime qualification.
 This inventory alone adds neither a store nor an automatic memory write.

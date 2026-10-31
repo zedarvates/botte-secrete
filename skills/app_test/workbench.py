@@ -106,6 +106,18 @@ def main(argv=None) -> int:
     s.add_argument("--max-results", type=int, default=8)
     s.add_argument("--max-output-bytes", type=int, default=65536)
     s.add_argument("--max-seconds", type=float, default=3.0)
+    s = sub.add_parser("document-context", help="read explicitly catalogued local Markdown/text with hash and line citations")
+    source = s.add_mutually_exclusive_group(required=True)
+    source.add_argument("--references", help="JSON array of selected uri/version/optional sha256")
+    source.add_argument("--recall", help="plain or linked verification recall JSON; preserve upstream uncertainty")
+    s.add_argument("--catalog", required=True, help="local-document-catalog/v1 JSON")
+    s.add_argument("--root", required=True, type=Path, help="explicit existing document root")
+    s.add_argument("--query", required=True)
+    s.add_argument("--max-documents", type=int, default=8)
+    s.add_argument("--max-file-bytes", type=int, default=131072)
+    s.add_argument("--max-input-bytes", type=int, default=524288)
+    s.add_argument("--max-excerpt-chars", type=int, default=2000)
+    s.add_argument("--max-output-bytes", type=int, default=32768)
     args = p.parse_args(argv)
     try:
         op = args.operation
@@ -199,6 +211,15 @@ def main(argv=None) -> int:
         elif op == "knowledge-links":
             from skills.app_test.knowledge_links import review_knowledge_links
             report = review_knowledge_links(read_json(args.input))
+            code = {"completed": 0, "findings": 1}.get(report.get("status"), 2)
+        elif op == "document-context":
+            from skills.app_test.document_context import prepare_document_context, prepare_recalled_document_context
+            prepare = prepare_recalled_document_context if args.recall else prepare_document_context
+            selected = read_json(args.recall, maximum=262144) if args.recall else read_json(args.references)
+            report = prepare(selected, read_json(args.catalog),
+                args.root, args.query, max_documents=args.max_documents,
+                max_file_bytes=args.max_file_bytes, max_input_bytes=args.max_input_bytes,
+                max_excerpt_chars=args.max_excerpt_chars, max_output_bytes=args.max_output_bytes)
             code = {"completed": 0, "findings": 1}.get(report.get("status"), 2)
         elif op == "recall":
             from skills.app_test.memory_retrieval import retrieve_verification_memory

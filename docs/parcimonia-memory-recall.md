@@ -117,6 +117,11 @@ produce a completed review. Exit codes are 0 for a completed scoped review,
 1 for findings and 2 for incomplete, unavailable or invalid input. These codes
 describe documentary review, not passing software tests.
 
+To read the referenced bytes, use the
+[local document-context adapter](parcimonia-document-context.md) with saved recall
+output, an explicit file catalog/root and raw content pins. It preserves upstream
+uncertainty while returning cited lexical excerpts; it does not call a model.
+
 ## Bound the read
 
 The CLI exposes `--max-rows`, `--max-input-bytes`, `--max-results`,
