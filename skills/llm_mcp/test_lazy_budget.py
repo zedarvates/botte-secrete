@@ -92,7 +92,56 @@ class DiscoveryBudgetTests(unittest.TestCase):
         self.assertTrue(all('inputSchema' not in item for item in payload['matches']))
 
 
+class DiscoveryIndexTests(unittest.TestCase):
+    def test_index_keeps_same_ranked_identifiers(self):
+        for query in ('memory', 'verify', 'route', 'security', 'compress', 'docs'):
+            with self.subTest(query=query):
+                full = find_tool(query, TOOLS)
+                index = find_tool(query, TOOLS, detail='index')
+                self.assertEqual([x['name'] for x in full['matches']], [x['name'] for x in index['matches']])
+                self.assertFalse(index['schemas_included'])
+                self.assertTrue(all('inputSchema' not in x for x in index['matches']))
+
+    def test_every_registered_tool_can_be_resolved_from_index(self):
+        for registered in TOOLS:
+            with self.subTest(name=registered['name']):
+                index = find_tool(registered['name'], TOOLS, detail='index', top_k=1)
+                self.assertEqual(index['matches'][0]['name'], registered['name'])
+                full = find_tool(index['matches'][0]['name'], TOOLS, top_k=1, schema_budget_bytes=65536)
+                self.assertEqual(full['matches'][0]['inputSchema'], registered['inputSchema'])
+
+    def test_index_never_serializes_schemas(self):
+        # A non-JSON sentinel would fail schema serialization in normal mode.
+        tools = [tool('search')]
+        tools[0]['inputSchema'] = object()
+        self.assertEqual(find_tool('search', tools, detail='index')['matches'][0]['name'], 'search')
+
+    def test_index_unicode_bound_and_omissions(self):
+        tools = [tool('search', 'é' * 1000)]
+        item = find_tool('search', tools, detail='index')['matches'][0]
+        self.assertLessEqual(len(item['description'].encode('utf-8')), 160)
+        self.assertTrue(item['description_truncated'])
+        self.assertNotIn('description_truncated', find_tool('search', [tool('search')], detail='index')['matches'][0])
+
+    def test_default_mode_is_unchanged(self):
+        self.assertEqual(find_tool('route', TOOLS), find_tool('route', TOOLS, detail='schemas'))
+
+    def test_empty_index(self):
+        self.assertEqual(find_tool('xyzzy_no_such_concept_qqq', TOOLS, detail='index')['matches'], [])
+
+    def test_invalid_detail_and_protocol_recovery(self):
+        for value in ('other', None, True, [], {}):
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                find_tool('route', TOOLS, detail=value)
+            response = handle({'jsonrpc': '2.0', 'id': 1, 'method': 'tools/call',
+                               'params': {'name': 'find_tool', 'arguments': {'query': 'route', 'detail': value}}})
+            self.assertTrue(response['result']['isError'])
+        good = handle({'jsonrpc': '2.0', 'id': 2, 'method': 'tools/call',
+                       'params': {'name': 'find_tool', 'arguments': {'query': 'route', 'detail': 'index'}}})
+        self.assertEqual(json.loads(good['result']['content'][0]['text'])['schema'], 'botte.tool-discovery-index/v1')
+
+
 if __name__ == '__main__':
-    result = unittest.TextTestRunner().run(unittest.defaultTestLoader.loadTestsFromTestCase(DiscoveryBudgetTests))
+    result = unittest.TextTestRunner().run(unittest.defaultTestLoader.loadTestsFromNames([__name__ + ".DiscoveryBudgetTests", __name__ + ".DiscoveryIndexTests"]))
     print(f'{result.testsRun - len(result.failures) - len(result.errors)} passed, {len(result.failures) + len(result.errors)} failed')
     raise SystemExit(0 if result.wasSuccessful() else 1)
