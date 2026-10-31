@@ -1,0 +1,118 @@
+{
+  "schema": "botte.skill-review-replay/v1",
+  "scope": "injected_reply_protocol_only",
+  "python": "3.12.14",
+  "harness_sha256": "d4b94ceea30e867664c1b388892e7c3767d84957a99343ec61d0e4e4d338afe3",
+  "baseline": {
+    "checkout_head": "6651335fa0d96a39d14f3b95c10d8a30763fc835",
+    "sources_match_commit": true,
+    "source_sha256": {
+      "skills/skill_finder/finder.py": "9c6489eda289ed733981213d7779401648a439f9e7b74210063cc3f476391874",
+      "skills/skill_finder/__init__.py": "a57505304ba548e947fe4e79c698923b6c22f98056a7b08ff100bd807b79a38d",
+      "skills/skill_finder/SKILL.md": "d7b678124bd746df36e873fb1779e5bdc3fe79a66db42055a224a40ebd0d25ff",
+      "skills/llm_backends/client.py": "a0cb44947eca9895ff4a9ce0b71a7d81b8e8e48f560dd1c96bc65192911c1f9c",
+      "skills/llm_backends/registry.py": "760617183d341c44798ebd6682b81e867afc04b26e71db738ce1478442866edd"
+    },
+    "cases": [
+      {
+        "id": "retain_second_only",
+        "injected_reply": "2",
+        "expected_paths": [
+          "b/memory/SKILL.md"
+        ],
+        "observed_paths": [
+          "a/memory/SKILL.md",
+          "b/memory/SKILL.md"
+        ],
+        "path_contract_passed": false,
+        "full_skill_bodies_attached": false,
+        "prompt_bytes": 235
+      },
+      {
+        "id": "respect_reverse_order",
+        "injected_reply": "2,1",
+        "expected_paths": [
+          "b/memory/SKILL.md",
+          "a/memory/SKILL.md"
+        ],
+        "observed_paths": [
+          "a/memory/SKILL.md",
+          "b/memory/SKILL.md"
+        ],
+        "path_contract_passed": false,
+        "full_skill_bodies_attached": false,
+        "prompt_bytes": 235
+      },
+      {
+        "id": "explicit_abstention",
+        "injected_reply": "0",
+        "expected_paths": [],
+        "observed_paths": [
+          "a/memory/SKILL.md",
+          "b/memory/SKILL.md"
+        ],
+        "path_contract_passed": false,
+        "full_skill_bodies_attached": false,
+        "prompt_bytes": 235
+      }
+    ],
+    "path_contract_passed": 0,
+    "full_body_delivery_passed": 0
+  },
+  "candidate": {
+    "checkout_head": "6651335fa0d96a39d14f3b95c10d8a30763fc835",
+    "sources_match_commit": false,
+    "source_sha256": {
+      "skills/skill_finder/finder.py": "33dda027c9e0eefd41ce0f2c738e36d6246e048de1f0ed27f143b2c0aa143430",
+      "skills/skill_finder/__init__.py": "a57505304ba548e947fe4e79c698923b6c22f98056a7b08ff100bd807b79a38d",
+      "skills/skill_finder/SKILL.md": "995b69cb6245381474da33f3499343d011e6bb02bd36d6534b41431bde3fb437",
+      "skills/llm_backends/client.py": "a0cb44947eca9895ff4a9ce0b71a7d81b8e8e48f560dd1c96bc65192911c1f9c",
+      "skills/llm_backends/registry.py": "760617183d341c44798ebd6682b81e867afc04b26e71db738ce1478442866edd"
+    },
+    "cases": [
+      {
+        "id": "retain_second_only",
+        "injected_reply": "2",
+        "expected_paths": [
+          "b/memory/SKILL.md"
+        ],
+        "observed_paths": [
+          "b/memory/SKILL.md"
+        ],
+        "path_contract_passed": true,
+        "full_skill_bodies_attached": true,
+        "prompt_bytes": 1041
+      },
+      {
+        "id": "respect_reverse_order",
+        "injected_reply": "2,1",
+        "expected_paths": [
+          "b/memory/SKILL.md",
+          "a/memory/SKILL.md"
+        ],
+        "observed_paths": [
+          "b/memory/SKILL.md",
+          "a/memory/SKILL.md"
+        ],
+        "path_contract_passed": true,
+        "full_skill_bodies_attached": true,
+        "prompt_bytes": 1041
+      },
+      {
+        "id": "explicit_abstention",
+        "injected_reply": "0",
+        "expected_paths": [],
+        "observed_paths": [],
+        "path_contract_passed": true,
+        "full_skill_bodies_attached": true,
+        "prompt_bytes": 1041
+      }
+    ],
+    "path_contract_passed": 3,
+    "full_body_delivery_passed": 3
+  },
+  "real_model_evaluated": false,
+  "local_inference_cost": null,
+  "representative_task_quality": "unmeasured",
+  "automatic_promotion": false
+}

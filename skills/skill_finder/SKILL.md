@@ -1,41 +1,75 @@
 ---
 name: skill_finder
-description: Rank skills locally by lexical and fuzzy matching over SKILL.md metadata and bodies. Optional reranking uses a configured local model. Use to shortlist relevant tools; returned paths and truncated descriptions are discovery hints, not verified capabilities, permission to execute or measured host-agent token savings.
+description: Retrieve candidate skills from local SKILL.md files, with optional local-model review of their complete bodies. Use for skill discovery or narrowing a tool shortlist. Results are advisory; choosing an operation also requires checking its instructions, exclusions and task prerequisites.
 ---
 
 # skill_finder — local skill search
 
+Search produces candidates locally. Confirm applicability against the actual
+operation and task before execution; a lexical score does not establish fit.
+
 ## Two tiers
 
-- **Tier 0:** deterministic lexical and fuzzy matching over name, description,
-  tags, triggers and full SKILL.md body. The search routine does not call an LLM.
-- **Tier 1:** optional reranking with a configured local model through
-  [[llm_backends]]. Local inference consumes model tokens and compute. If no
-  suitable backend or result is available, the lexical order is retained.
+- **Tier 0:** deterministic lexical and fuzzy matching over each skill's name,
+  description, tags, triggers and full SKILL.md body. The search routine does
+  not call an LLM.
+- **Tier 1:** an explicitly configured local model (via [[llm_backends]])
+  reviews complete shortlisted `SKILL.md` bodies, can retain a subset in its
+  preferred order or explicitly abstain. Local inference costs remain unmeasured.
+
+## Use it
 
 ```bash
 python -m skills.skill_finder.cli "optimize slow postgres queries"
-python -m skills.skill_finder.cli "set up an A/B test" --local
+python -m skills.skill_finder.cli "set up an A/B test" --local      # local-LLM rerank
 python -m skills.skill_finder.cli "audit dead code" --roots ~/.claude/skills --json
 ```
 
 ```python
 from skills.skill_finder import find
-
-result = find("decide local vs cloud routing", top_k=5)
-# matches contain name, score, why, description, path and tokens_est.
+r = find("decide local vs cloud routing", top_k=5)
+r["cloud_tokens"]   # 0
+r["matches"]        # [{name, score, why, description, path, tokens_est}, …]
 ```
 
-`--roots` selects trees containing `SKILL.md` files; the default is the runtime
-package's `skills/` directory. Bodies are indexed with or without frontmatter.
+`--roots` points at any directory tree containing `SKILL.md` files (your global
+skill library, a project's skills, etc.); defaults to this repo's `skills/`.
+Works whether or not a SKILL.md has YAML frontmatter — the body is always indexed.
+
 Returned descriptions are truncated to 160 characters. The full instructions
-are not loaded into a host agent automatically: read the selected reference and
-check the tool schema, prerequisites and evidence before use.
+are not loaded into a host agent automatically. The result's `cloud_tokens: 0`
+is an implementation marker for local search, not a provider usage measurement.
+An agent invoking the tool or interpreting its shortlist may still consume
+model tokens; local inference also consumes model tokens and compute. Savings
+and selection quality require measurement on actual tasks.
 
-The result's `cloud_tokens: 0` is an implementation marker for this local search,
-not a provider usage measurement. An agent invoking the tool or interpreting
-its shortlist may still consume model tokens. Shortlisting can reduce supplied
-context, but savings and selection quality require measurement on actual tasks.
+## Review and handoff
 
-Exposed through [[llm_mcp]] as `find_skills`. Related modules:
-[[skill_project_optimizer]] and [[auto_router]].
+Use the returned paths as identities; equal names can refer to different skills.
+Read the selected instructions completely and inspect relevant referenced
+resources. Check suitable uses, exclusions and prerequisites for the requested
+operation. The local reviewer receives full bodies, but referenced files and
+live environment checks remain the task agent's responsibility.
+
+With `--local`, `local_review.status` is `selected`, `abstained` or `unavailable`.
+Selected results contain only the retained candidates; an explicit `0` response
+leaves no matches. Unavailable or malformed review preserves the lexical
+shortlist and gives a reason; it is not a positive applicability verdict.
+The reviewer reads at most 64 KiB of instruction bytes across the shortlist.
+Missing, invalid UTF-8, empty or over-budget instructions prevent the model call;
+no truncated document is presented as complete. Reduce the shortlist or review
+the full documents directly when this limit applies.
+
+`local_review.instruction_sha256` binds the bodies actually read. Recheck sources
+before reuse: these hashes neither attest model understanding nor verify task
+success. Remembered advice must retain its context and uncertainty. No skill
+command, referenced file, memory write or deployment is triggered by the review.
+The Python `local_rerank` helper retains its legacy name output; use
+`include_paths=True` for unambiguous identities, with `[]` for abstention and
+`None` for unavailable review.
+
+See [selection review evaluation](../../docs/skill-selection-review.md) for the
+replay checks, source binding and limits of the measured evidence.
+
+Exposed via [[llm_mcp]] as the `find_skills` tool. Related:
+`skill_project_optimizer` (rule-based per-project filtering), `auto_router`.

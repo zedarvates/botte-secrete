@@ -1,0 +1,79 @@
+{
+  "schema": "botte.skill-selection-assessment/v1",
+  "status": "assessed",
+  "assessment_harness_sha256": "cdd903e7084a3450b010fca61696fe3835313c6fac6ac109217003cff07174ff",
+  "report_sha256": "7af98eadbd338dafbbb679e3b886082464b7a0b98535bf1de7de42aa7a584089",
+  "corpus_sha256": "15f7870cf8add3672a8625decb2e3fe8f5c09d98a05eb1cc9a2c74d72cffd8ff",
+  "dataset_class": "fixture",
+  "measured_sources": {
+    "baseline": {
+      "head": "6651335fa0d96a39d14f3b95c10d8a30763fc835",
+      "code_sha256": "3a9187d8bf96716524c9f6b2503e264f77a5d9f3a2002033a3461116e37e6d42"
+    },
+    "candidate": {
+      "head": "8f2bd6e7031785a294baa53bf642b73f994d3205",
+      "code_sha256": "b47f866966c6891c8081d3b3a992d3cc290fe3da3dcee2df66a447dd1fbf51d1"
+    }
+  },
+  "acceptance": {
+    "policy": "exact-selection-and-abstention/v1",
+    "state": "not_accepted",
+    "decision": "do_not_promote",
+    "automatic_promotion": false,
+    "operation_quality": "unmeasured",
+    "counts_are_repeated_observations": true,
+    "repetitions": 1,
+    "totals": {
+      "baseline": {
+        "observed": 12,
+        "exact": 2,
+        "positive_exact": 2,
+        "correct_abstentions": 0,
+        "negative_with_selection": 6,
+        "lexical_fallback": 2
+      },
+      "candidate": {
+        "observed": 12,
+        "exact": 5,
+        "positive_exact": 5,
+        "correct_abstentions": 0,
+        "negative_with_selection": 6,
+        "lexical_fallback": 0
+      }
+    },
+    "candidate_failures": [
+      "r0-delete-notes-candidate",
+      "r0-missing-image-candidate",
+      "r0-overwrite-image-candidate",
+      "r0-read-permission-only-candidate",
+      "r0-restart-uncertain-candidate",
+      "r0-two-destinations-candidate",
+      "r0-wrong-owner-candidate"
+    ],
+    "candidate_excluded_selections": [
+      "r0-delete-notes-candidate",
+      "r0-missing-image-candidate",
+      "r0-overwrite-image-candidate",
+      "r0-read-permission-only-candidate",
+      "r0-restart-uncertain-candidate",
+      "r0-wrong-owner-candidate"
+    ],
+    "new_excluded_selections": [],
+    "lost_reviewed_selections": [],
+    "lost_required_paths": [
+      {
+        "job": "r0-two-destinations-candidate",
+        "paths": [
+          "team/memory/SKILL.md"
+        ]
+      }
+    ],
+    "missing_jobs": [],
+    "metric_gaps": [],
+    "reported_evidence_gaps": false,
+    "coverage_gaps": []
+  },
+  "inference_calls": 0,
+  "automatic_promotion": false,
+  "evidence_scope": "Pinned comparison bytes and corpus; no renewed checkpoint, runtime or model attestation."
+}

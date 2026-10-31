@@ -90,7 +90,7 @@ READ_ONLY = frozenset({"recall", "history", "scribe", "wiki"})
 
 def validate(schema, value, path="arguments"):
     kind = schema.get("type")
-    types = {"object": dict, "array": list, "string": str,
+    types = {"object": dict, "array": list, "string": str, "boolean": bool,
              "integer": int, "number": (int, float)}
     if kind in types and (not isinstance(value, types[kind])
                          or kind in {"integer", "number"} and isinstance(value, bool)):

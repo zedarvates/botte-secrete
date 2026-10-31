@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main, feat/shared-memory-scribe-v1]
+    branches: [main, feat/shared-memory-scribe-v1, feat/verified-skill-runs-v1, feat/action-consequence-memory-v1]
 
 permissions:
   contents: read

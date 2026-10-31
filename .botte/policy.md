@@ -34,6 +34,9 @@ Shared rules for all agents and developers on this project. Keep cheap, keep loc
 - No model call inside a helper does not imply zero host tokens or free compute.
   Measure the accepted workflow, including tool overhead, retries and fallback.
 - Prefer `rtk <command>` when available for compact terminal output.
+- Skill search/routing produces candidates. Before execution, read the retained
+  candidates' full instructions and check the requested operation's suitable
+  situations, exclusions and prerequisites against the actual task.
 
 ## Prompts
 - For an ambiguous request, use the existing evidence and host judgment to
@@ -48,6 +51,8 @@ Shared rules for all agents and developers on this project. Keep cheap, keep loc
   before claiming style savings.
 - **Input**: Caveman `compress` is read-only size analysis, not file compression.
   Keep instructions and evidence exact. Select relevant context before compacting it.
+  Selected candidate instructions must be read in full. Preserve acceptance
+  conditions and unresolved state needed for execution or resumption.
 - **JSON reports**: `universal_compressor` removes whitespace without deleting values.
 - **Logs/CI output**: preserve distinct lines, errors and chronology; only exact
   consecutive repetitions may be summarized. Report measured UTF-8 byte reduction
@@ -64,6 +69,11 @@ Shared rules for all agents and developers on this project. Keep cheap, keep loc
 - After a component update or before a checkup, run `/checkup` (or
   `python -m skills.checkup.cli .`) — directives + metrics + infra + drift.
 - Keep `CLAUDE.md`/`AGENTS.md` under ~2000 tokens and free of stale path refs.
+- Apply the [six tool-improvement axes](../docs/tool-improvement-axes.md):
+  selection, consequences, dependency outputs, resumption, contextual experience
+  and measured improvement. Record evidence and remaining gaps for the axes
+  affected by a change; a declared contract or green CI alone proves no task
+  quality gain.
 
 ## Budget
 - Daily token budget: 50000 (auto_router downgrades when exceeded).

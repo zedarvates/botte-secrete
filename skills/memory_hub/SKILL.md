@@ -35,3 +35,12 @@ the existing Memory Hub v2 contract.
 Consult `effects.json` for expected consequences, retry limits and reuse
 conditions. This pilot includes no trained scribe weights, automatic encoder,
 PostgreSQL adapter or general graph traversal.
+
+For memory of skill actions and consequences, read
+[action-consequence memory](../../docs/action-consequence-memory.md). The host
+tools `recall_action_memory`, `remember_skill_run` and `execute_remembered_plan`
+connect explicit plans to this shared service. Inspect relevant episodes before
+work and capture meaningful execution reports afterward. Preserve observations,
+causal hypotheses and independently verified quality as distinct evidence.
+An incomplete memory receipt requires capture-only retry from its archived
+report; it does not justify rerunning successful commands.
