@@ -20,16 +20,27 @@ class Verdict(str, Enum):
     CONFLICT = "CONFLICT"
 
 
+def _finite_number(value: object, name: str) -> float:
+    """Validate JSON numeric values without accepting numeric-looking strings."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise ValueError(f"{name} must be a finite number")
+    try:
+        finite = math.isfinite(value)
+    except OverflowError as exc:
+        raise ValueError(f"{name} must be a finite number") from exc
+    if not finite:
+        raise ValueError(f"{name} must be a finite number")
+    return value
+
+
 @dataclass(frozen=True, order=True)
 class Interval:
     low: float
     high: float
 
     def __post_init__(self) -> None:
-        if isinstance(self.low, bool) or isinstance(self.high, bool):
-            raise ValueError("interval bounds must be finite numbers")
-        if not math.isfinite(float(self.low)) or not math.isfinite(float(self.high)):
-            raise ValueError("interval bounds must be finite numbers")
+        _finite_number(self.low, "interval low")
+        _finite_number(self.high, "interval high")
         if self.low > self.high:
             raise ValueError("interval low must not exceed high")
 
@@ -88,8 +99,7 @@ def evaluate_less_than(evidence: SpatialEvidence, threshold: float) -> Verdict:
     Guard failure or absent measurement means UNKNOWN. An explicitly empty
     admissible set means contradictory constraints (CONFLICT).
     """
-    if isinstance(threshold, bool) or not math.isfinite(float(threshold)):
-        raise ValueError("threshold must be a finite number")
+    threshold = _finite_number(threshold, "threshold")
     if evidence.guard_failures or evidence.admissible is None:
         return Verdict.UNKNOWN
     if not evidence.admissible:

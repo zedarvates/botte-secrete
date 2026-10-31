@@ -15,9 +15,9 @@ built to lean on local hardware and cheap models wherever possible.
 - Language: **Python 3.10+**, standard library only (no runtime dependencies for
   the core modules). On Windows use `python` (not `python3`, which may be a stub).
 - Run a module: `python -m skills.<module>.cli ...`
-- Tests (**214+ passing**, 77 new Fable6 tests via `pytest`):
-  - Full pipeline: `python skills/test_e2e.py`
-  - Fable6 skills: `python -m pytest --rootdir=. -q`
+- Tests:
+  - Canonical full runner: `python scripts/run_tests.py -q`
+  - Integration subset: `python skills/test_e2e.py`
   - Module tests: `python -m skills.<module>.test_<module>` for `llm_backends`,
     `directives_audit`, `auto_router`, `skill_finder`, `bootstrap`, `infra_advisor`.
 - Pre-commit checks: `python scripts/pre-commit-check.py --fast`
@@ -48,7 +48,7 @@ Run the relevant tests, keep diffs minimal, and don't commit machine-specific
 generated files (e.g. `configs/llm-endpoints.json`, `.mcp.json` — both ignored).
 
 ## Botte Secrète policy
-This project follows `.botte/policy.md` (prefer local models for cheap work, improve prompts locally, run `/checkup` after updates). Read it.
+Read [`.botte/policy.md`](.botte/policy.md) before substantive work. Use Parcimonia `assess_task` when available and useful; reuse a current preflight result for homogeneous work and skip trivial/direct actions. Use scoped GitHub plans and evidence summaries when useful. If a helper is absent or abstains, continue with suitable available tools. Verify prerequisites and results; run `/checkup` after updates. See [portable instructions](docs/parcimonia-workflow.md#portable-instructions).
 
 ## Token-efficient workflows
 - **Batch independent tool calls**: read multiple files, search multiple patterns, extract multiple URLs in ONE turn instead of chaining them sequentially. Each round-trip costs context tokens.

@@ -65,6 +65,8 @@ def main(argv=None) -> int:
             print(session.report())
 
         sys.stdout.flush()
+        if session.termination_decision == "UNCERTAIN":
+            return 2
         return 0 if not plan.has_failed else 1
 
     elif args.cmd == "plans":
@@ -92,7 +94,7 @@ def main(argv=None) -> int:
         if not session_path.exists():
             print(f"❌ Session not found: {session_path}")
             return 1
-        data = json.loads(session_path.read_text())
+        data = json.loads(session_path.read_text(encoding="utf-8"))
         print(json.dumps(data, indent=2))
         return 0
 

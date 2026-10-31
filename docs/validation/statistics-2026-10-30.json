@@ -1,0 +1,91 @@
+{
+  "schema": "botte.statistics-validation/v1",
+  "source_commit": "004c6f31631800d0e02290f99d9e14606f830867",
+  "task": "Deterministic descriptive statistics as a Parcimonia-routed task",
+  "runtime": {
+    "python": "3.12.14",
+    "syntax_checked_with_feature_version": "3.10",
+    "python_310_execution": "not_run",
+    "python_311_execution": "not_run"
+  },
+  "tests": [
+    {
+      "command": "python -m skills.solvers.test_statistics",
+      "passed": 26,
+      "failed": 0
+    },
+    {
+      "command": "python -m skills.llm_mcp.test_statistics",
+      "passed": 7,
+      "failed": 0
+    },
+    {
+      "command": "python -m skills.solvers.test_solvers",
+      "passed": 17,
+      "failed": 0
+    },
+    {
+      "command": "python -m unittest skills.preflight.test_assessment skills.preflight.test_github_plan skills.llm_mcp.test_assessment_tools -q",
+      "passed": 28,
+      "failed": 0
+    }
+  ],
+  "additional_checks": [
+    "git diff --check",
+    "Python 3.10 syntax parse for all changed Python sources",
+    "compileall for changed Python modules"
+  ],
+  "independent_review": {
+    "engine_sha256": "7102ef1e90c4323f5a9abdceabf13e48b1ae00e3d65c883fcffc36b2611f99c8",
+    "reported_random_series": 100,
+    "reported_max_difference": "1 ULP against stdlib",
+    "routing_synonyms_fixed": true
+  },
+  "incomplete_checks": [
+    {
+      "command": "python -m skills.llm_mcp.test_lazy",
+      "status": "environment_unavailable",
+      "reason": "Selected source checkout lacks skills.botte_nn; early discovery checks passed before missing module."
+    },
+    {
+      "command": "python -m skills.checkup.cli .",
+      "status": "environment_unavailable",
+      "reason": "Selected source checkout lacks skills.checkup."
+    },
+    {
+      "command": "python scripts/run_tests.py",
+      "status": "not_run",
+      "reason": "Full repository suite requires complete source checkout/CI."
+    }
+  ],
+  "boundaries": {
+    "python_runtime_only": true,
+    "cloud_helper_deployed": false,
+    "standalone_parcimonia_route_activated": false,
+    "model_calls_in_calculator": 0,
+    "network_calls_in_calculator": 0
+  },
+  "measurement": {
+    "provider_tokens": null,
+    "latency_savings": null,
+    "cost_savings": null
+  },
+  "inherited_fix": "Includes the previously prepared PR147 French README 1.11.0 alignment and version-check diagnostic.",
+  "stdio_protocol": {
+    "status": "passed",
+    "checks": [
+      "initialize",
+      "lazy discovery with schema",
+      "statistics tools/call"
+    ],
+    "observed_mean": 25.0,
+    "observed_p95": 38.5
+  },
+  "proposal": {
+    "pull_request": 148,
+    "target": "main",
+    "prerequisite_pr": 147,
+    "code_revision_tested": "3e97e4926b0cd0a9209ae700c8d60ce9b06c8e0f",
+    "ci_matrix": "requested_on_PR"
+  }
+}

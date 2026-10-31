@@ -15,7 +15,7 @@ a runtime route.
 ```bash
 python -m skills.approx_spatial.benchmark
 python -m skills.approx_spatial.benchmark --json
-python -m pytest skills/approx_spatial/test_approx_spatial.py -q
+python -m skills.approx_spatial.test_approx_spatial
 ```
 
 Principles:
@@ -23,6 +23,7 @@ Principles:
 - measurement and decision stay separate;
 - `UNKNOWN` is not `NO`;
 - failed validity guards abstain;
+- bounds and thresholds require finite numbers; strings and booleans are rejected;
 - contradictory admissible constraints produce `CONFLICT`;
 - intervals/exclusions are preserved instead of inventing a midpoint;
 - reports contain deterministic fixture/result hashes and no timestamp.

@@ -6,8 +6,8 @@ description: Run the canonical, already-optimal project checkup in one command �
 # checkup — the canonical project checkup ("botte doctor")
 
 So a "complete checkup" doesn't depend on you writing a good prompt: one command
-runs the standard sequence in the right order and prints a single verdict, all
-local / 0 cloud tokens.
+runs the standard sequence in the right order and prints a single verdict.
+The checks do not call a model; host usage and total task cost are separate.
 
 ```bash
 python -m skills.checkup.cli            # current dir
@@ -27,9 +27,17 @@ python -m skills.checkup.cli . --doctor --fresh   # re-scan for local LLM backen
   estimated token cost (highest first), plus any remaining drift items, capped
   at 3.
 
-Both feed a **one-line verdict**: `✅ sain` when there's no drift and a local
-backend is active, or `⚠️ N optimisation(s), ~X tokens d'opportunités`
-otherwise. Pure assembly of existing modules — no new skill, no new report format.
+Read the machine scan as an observation of available backends, possibly cached,
+not proof of current host routing. An unavailable scan leaves backend availability
+unknown. No backend detected does not prove that every task uses a cloud model.
+The one-line verdict preserves those limits alongside any drift items.
+
+Inspect `mcp_wiring` separately: it reports project declarations and launcher
+lookup only. `configured` does not mean installed, connected or reachable.
+Runtime and reachability remain `not_checked`; check the host's server status
+and make a read-only tool call before relying on the connection. Unsupported
+parsers and malformed or disabled declarations remain explicit. User/global and
+installed-plugin configurations are outside this project-file inspection.
 
 ## Sequence (cheap → deeper)
 
