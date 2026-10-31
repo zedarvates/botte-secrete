@@ -10,12 +10,14 @@
 La RC ajoute Factory Assurance, un juge indépendant et des critères de preuve.
 Commencer en mode observe, consultative ou shadow ; la validation sur un jeu
 privé/externe indépendant reste à établir. Les notes de version précisent les
-limites et l'installation au commit validé. Le badge ci-dessous indique la
-version stable sur `main`.
+limites et l'installation au commit validé. `main` prépare la version
+**1.11.0** ; le badge ci-dessous indique cette candidate non publiée. Le
+[guide du plugin Codex](plugins/botte-secrete/README.md) explique l'installation
+séparée du runtime Python et le catalogue Git.
 
 [![CI](https://github.com/zedarvates/botte-secrete/actions/workflows/ci.yml/badge.svg)](https://github.com/zedarvates/botte-secrete/actions)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
-[![Version](https://img.shields.io/badge/version-1.9.0-55d6be)](pyproject.toml)
+[![Version](https://img.shields.io/badge/version-1.11.0-55d6be)](pyproject.toml)
 [![Licence MIT](https://img.shields.io/badge/licence-MIT-7b8cff)](LICENSE)
 
 [English](README.md) · [Documentation](docs/README.md) · [Architecture](docs/ARCHITECTURE.md) · [Développement](docs/DEVELOPMENT.md) · [Contribuer](CONTRIBUTING.md)
@@ -34,6 +36,18 @@ illustratives et ne constituent pas une télémétrie en direct._
 Le projet est en **bêta**. Ses principaux flux fonctionnent localement, mais les
 serveurs de modèles, fournisseurs cloud, accélérateurs matériels et agents tiers
 restent des systèmes externes avec leurs propres limites de sécurité.
+
+## Voir Botte à l'œuvre : « terminé » mérite une preuve
+
+Un rapport préparé annonce un travail terminé. Botte signale la preuve manquante ;
+un vrai test révèle un défaut, puis une correction préparée fait réussir les trois
+tests. [Découvrir la démonstration rejouable](docs/demos/completion-proof/README.md),
+ses résultats et sa limite : A11 détecte des marqueurs de preuve sans en vérifier
+l'authenticité.
+
+Le [vérificateur de reçus](skills/completion_proof/VERIFICATION.md), activable
+séparément, contrôle les fichiers et leurs empreintes à partir d'une référence
+fournie par l'exécuteur de confiance, hors du rapport de l'agent.
 
 ## Comprendre et inspecter les petits modèles
 

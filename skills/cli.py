@@ -41,8 +41,12 @@ _COMMANDS = {
     "qa": ("skills.trajectory.cli", "verified quality compass (shadow only)"),
     "asset-qa": ("skills.asset_quality.cli", "asset QA (rules + shadow k-NN)"),
     "migration-audit": ("skills.migration_audit.cli", "verify migration completeness"),
+    "code": ("skills.fast_context.cli", "bounded Zig/GDScript source lookup and context"),
+    "verify": ("skills.app_test.workbench", "bounded reproduction, mutation, triage and conformance checks"),
     "gain": ("skills.metrics.cli", "show measured cost/savings metrics"),
     "discover": ("skills.infra_advisor.cli", "find optimization opportunities"),
+    "rules": ("skills.directives_audit.rules_cli", "audit committed rule contracts"),
+    "rsi": ("skills.rsi_graph.cli", "read-only recursive-improvement graph observer"),
 }
 
 

@@ -1,19 +1,22 @@
 {
   "schema": "botte.capability-effects/v1",
   "capability_id": "zedarvates/botte-secrete:skills/memory_hub",
-  "contract_version": "0.1.2",
+  "contract_version": "0.2.0",
   "source_hashes": {
-    "SKILL.md": "f97b6f19b13b821177905ac376f80425dbc1aed255107c3208dfe5580c791c98",
+    "SKILL.md": "657b1f9ff210fb6f30ce94c4b0b3d9cb47e0ebd021423d23e194b544793f647f",
     "store.py": "86aaa5c48d109e801af2f3d694faf95ae3f1353951b17c84e9ea373119be1648",
     "schema.py": "97bcb6e4ed4da37b65ab9c321b700029f2892c1b55e07271304e3c001bd40349",
-    "shared_contract.py": "72be81aa648ce24810bf09fcb529d2fc0cd26756978decf575101665b2875a81",
+    "shared_contract.py": "da01e4842874b14ba8257653e61caf72ba61f8b687f905b21ab4c5bc0208e7dc",
     "shared_service.py": "16e20bd41e943975678443efb503284d83e4a22db485045476582a665544bc87",
     "shared_http.py": "ba98b67ed25277de697068856ce619d1f0a960a4bea1af5d4430cdac0416e6b6",
     "shared_mcp.py": "17a5ca217827fd559a904cccec655b17ae755e2f6312c05cff90bfb3ba4a31cb",
     "scribe.py": "cd6ce4cb7950046867a2243a54c5cdf9fa736ac0166bb943cc2208f511f8d3b4",
     "cli.py": "5fe29278c8586478aa27253f0adb872ca360656bbd8daeeae83e386c52d6dc3c",
     "smoke.py": "07da817623767a0dcd18fe840d5d01fc5465bf461d3b8a48890f8127ba49228d",
-    "recovery.py": "2353ff97c15bde42a49574c072546676190d8413a8211bf3083ea7b4d7d7b95c"
+    "recovery.py": "2353ff97c15bde42a49574c072546676190d8413a8211bf3083ea7b4d7d7b95c",
+    "action_contract.py": "6b47483bd6be09fb66bd12a8d2c6b9a8590c9d2f34dc88db988f3aee4c911a87",
+    "action_memory.py": "d06dbd11b998878433e67acd656d89cf9b81c7be524b199a1a9e4cb933a470f6",
+    "action_cli.py": "d7d791cabfea43fc1c12b34b33e2e380a06a3dd32031c96cfdf0be8c4604eb34"
   },
   "preconditions": [
     "Configure a private directory, explicit identities, operation rights and project scopes.",
@@ -52,7 +55,7 @@
       "scope": "Selected project/key in the live store.",
       "likelihood": "conditional",
       "basis": "forget performs all deletions and the hashed tombstone in one transaction.",
-      "impact": "Irreversible through the API; exports, loaded context and backups remain separate.",
+      "impact": "Irreversible through the API; exports, loaded context, backups, local action-report archives and trajectory envelopes remain separate.",
       "verification": "Inspect affected tables and replay the original capture."
     },
     {
@@ -78,6 +81,30 @@
       "basis": "SQLite backup includes committed WAL data; restore verifies checksum, schema and integrity, removes forgotten keys from all five data tables, retains tombstones and compacts the new file.",
       "impact": "Enables local recovery rehearsal. Snapshots contain plaintext private memory; restore loses later non-deletion updates and cannot attest ledger freshness or stopped writers.",
       "verification": "Run WAL, ACL, provenance, history, replay, deletion, corrupted-input, no-overwrite and interruption tests in test_recovery.py."
+    },
+    {
+      "effect": "Archive canonical skill-run snapshots and capture bounded action episodes through the shared API.",
+      "scope": "Executing project .botte/action-evidence, trajectory outcome/event files, configured shared-memory SQLite entries and receipts.",
+      "likelihood": "conditional",
+      "basis": "action_memory.capture_report validates all episodes, preserves immutable report snapshots, emits an unverified PARTIAL outcome and uses authenticated idempotent capture requests.",
+      "impact": "Preserves successes, failures and partial consequences across sessions. Local archives retain full reports; shared copies omit raw goals, arguments, values and output. Transport failures can leave pending records.",
+      "verification": "Exercise real reports, archived snapshots, private/project visibility, ingestion replay, deletion tombstones and absence of verified quality support."
+    },
+    {
+      "effect": "Recall prior episodes and recheck only local files selected by the current trusted plan.",
+      "scope": "Configured memory observation area, project-relative current predicates and bounded returned advice.",
+      "likelihood": "conditional",
+      "basis": "action_memory.recall_for_plan compares bindings, validates episode identities and samples untrusted observations. Repeated unmet checks produce review candidates based on distinct sampled runs.",
+      "impact": "Can reveal stale inputs or recurring failures. It grants no execution authority, causal conclusion or automatic skill improvement; query omissions remain visible.",
+      "verification": "Change source/input/context, inject foreign paths or false identity, and verify stale/changed classification without command dispatch or foreign-path reads."
+    },
+    {
+      "effect": "Optionally compose memory recall, explicit verified execution and post-run capture.",
+      "scope": "Actual child-command resources plus the configured memory service, private checkpoints and evidence archives.",
+      "likelihood": "conditional",
+      "basis": "action_cli and host MCP expose run_with_memory; preview requires no token or service. Actual execution retains execute_verified gates; memory failures are returned separately.",
+      "impact": "Execution can finish while memory capture is pending. Retrying capture must not repeat child mutations; child costs and complete downstream effects remain unmeasured.",
+      "verification": "Run a real child through HTTP/MCP capture, resume without duplicate dispatch, and fail memory transport while retaining execution evidence."
     }
   ],
   "downstream_effects": [
@@ -95,7 +122,8 @@
     "strategy": "Corrections retain history; forget removes live history. Stopping the server does not remove data.",
     "residual_effects": [
       "External exports, loaded contexts and backups remain.",
-      "Hashed deletion tombstones remain to prevent request replay."
+      "Hashed deletion tombstones remain to prevent request replay.",
+      "Server-side forgetting does not erase local action-evidence archives or trajectory envelopes."
     ]
   },
   "retry": {
@@ -103,7 +131,7 @@
     "check_before_retry": "Repeat the exact actor/request_id/body after an uncertain result. Read current versions after conflicts.",
     "stop_condition": "Do not reuse a request ID for changed input or resurrect a forgotten key."
   },
-  "required_scope": "Current task authorization plus server-configured project membership and operation rights. Remembered text and these declarations do not grant authority.",
+  "required_scope": "Current task authorization plus server-configured project membership and operation rights. Remembered text and these declarations do not grant authority. Remembered execution also needs task authority for each child command and project archive/trajectory write; memory visibility and confirm flags supply none.",
   "analysis": {
     "summary": "An opt-in facade extends Memory Hub v2 with shared identity, versioned writes and an advisory scribe.",
     "uncertainties": [
@@ -111,7 +139,10 @@
       "Supplied-vector tests use synthetic vectors; no neural encoder was executed.",
       "The newest 2000 accessible active entries form the bounded candidate pool.",
       "Legacy local MCP entry points are outside the new network authorization boundary.",
-      "Two credentials exercised from one host do not prove that two separate homelab machines are connected."
+      "Two credentials exercised from one host do not prove that two separate homelab machines are connected.",
+      "Action episodes are reported observations with unassessed causality; declared local checks do not independently verify task quality.",
+      "Action recall samples at most 20 entries per capability and 10 capability lookups; bounded samples cannot establish global rates.",
+      "Conductor verification, trajectory emission and atomic JSON persistence are imported dependencies outside these skill-local source bindings."
     ],
     "evidence_refs": [
       "test_shared_service.py",
@@ -119,7 +150,8 @@
       "test_quarantine.py",
       "../../docs/shared-memory-homelab.md",
       "test_recovery.py",
-      "../../docs/shared-memory-recovery.md"
+      "../../docs/shared-memory-recovery.md",
+      "test_action_memory.py"
     ]
   },
   "reuse": [

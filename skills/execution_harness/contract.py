@@ -8,6 +8,7 @@ which candidate may become the last-known-good artifact.
 from __future__ import annotations
 
 import re
+from copy import deepcopy
 from dataclasses import asdict, dataclass, field
 from typing import Any, Iterable
 
@@ -173,7 +174,9 @@ class ExecutionHarness:
 
     def record_delta(self, delta: ExecutionDelta) -> None:
         delta.validate()
-        self.execution_deltas.append(delta)
+        # A frozen dataclass does not freeze its nested dictionaries. Preserve
+        # the recorded states instead of retaining aliases owned by the caller.
+        self.execution_deltas.append(deepcopy(delta))
 
     def add_evidence(self, evidence: EvidenceRecord) -> None:
         self.evidence.append(evidence)
@@ -203,6 +206,10 @@ class ExecutionHarness:
         self.artifacts.append(artifact)
 
     def build_handoff(self, *, completed: Iterable[str], remaining: Iterable[str]) -> dict[str, Any]:
+        # The public collections remain editable; never emit a handoff whose
+        # current declared deltas violate the same recording invariant.
+        for delta in self.execution_deltas:
+            delta.validate()
         unverified = [item.ref for item in self.evidence if not item.verified]
         self.handoff = {
             "mission": self.mission,

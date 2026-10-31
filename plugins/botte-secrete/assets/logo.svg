@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 128 128">
+  <title>Botte Secrète</title>
+  <rect width="128" height="128" rx="26" fill="#151d2c"/>
+  <path d="M42 28h31v39l20 10c8 4 12 11 12 20H34V80h8V28Z" fill="#7b8cff"/>
+  <path d="M42 38h31M34 98h71" fill="none" stroke="#dce2ff" stroke-width="5" stroke-linecap="round"/>
+  <path d="M27 41v18m-8-9h16" fill="none" stroke="#55d6be" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="93" cy="34" r="6" fill="#55d6be"/>
+</svg>

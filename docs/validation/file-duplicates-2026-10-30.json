@@ -1,0 +1,151 @@
+{
+  "schema": "botte.file-duplicates-validation/v1",
+  "source_parent": "96d27c86669c8f50731fd0f608025e8aa6970688",
+  "runtime": {
+    "python": "3.12.14",
+    "platform": "Linux",
+    "python310_syntax_checked": true,
+    "skipped_linux_case": "Native Windows junction fixture; will execute on Windows when supported."
+  },
+  "checks": [
+    {
+      "command": "python -m skills.fallow_like.test_file_duplicates",
+      "passed": 37,
+      "failed": 0,
+      "skipped": 1
+    },
+    {
+      "command": "python -m skills.llm_mcp.test_file_duplicates",
+      "passed": 7,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "command": "python -m unittest skills.preflight.test_assessment skills.preflight.test_github_plan skills.llm_mcp.test_assessment_tools -q",
+      "passed": 28,
+      "failed": 0
+    },
+    {
+      "command": "python -m skills.llm_mcp.test_statistics",
+      "passed": 7,
+      "failed": 0
+    },
+    {
+      "command": "git diff --check",
+      "exit_code": 0
+    }
+  ],
+  "source_sha256": {
+    "skills/fallow_like/file_duplicates.py": "0cc692aadbfd9614d3324e189f92e4ea7e179b32320ac9ffc12457c0f15e3464",
+    "skills/fallow_like/test_file_duplicates.py": "23379a8d0bbb5cc9dd0992e2ccc1228bcb1f3c6bc23f857ccb20347318d9372d",
+    "skills/fallow_like/duplicates_cli.py": "7c351f28bb70d651f5d1433af06a09fc750d07e7e4ab5b4bdda9d08089dd041c",
+    "skills/llm_mcp/test_file_duplicates.py": "9bf70bfe62c8240497c87f1dc7174d833efca2102d897116e195567b3e2f02c3",
+    "skills/llm_mcp/server.py": "433a767e30936204757f4fc15796e8bb2d7f641fbe44e8673235247bcaea72a5",
+    "skills/preflight/assessment.py": "d2f73287c38acfd95ff4798cb5de546d8d1503fd1e0a9eb10905b14d6f0aa48e",
+    "scripts/run_tests.py": "52a0f41e1a5abd8b2c0d542f2b581d6f43e22519dc9e9fb0ed7abffc9b4dbfd4"
+  },
+  "fixture": {
+    "files": {
+      "a.txt": "shared",
+      "b.bin": "shared",
+      "unique.txt": "x"
+    },
+    "observed_report": {
+      "status": "complete",
+      "scan_partial": false,
+      "report_truncated": false,
+      "group_count": 1,
+      "groups": [
+        {
+          "match": "exact_bytes",
+          "size_bytes": 6,
+          "sha256": "a4d26868017c0ccffe2efe50944ef4211834660cca834c6e9f86dec6a88246fa",
+          "file_count": 2,
+          "paths": [
+            "a.txt",
+            "b.bin"
+          ],
+          "paths_omitted": 0,
+          "logical_duplicate_bytes": 6
+        }
+      ],
+      "summary": {
+        "entries_examined": 3,
+        "files_seen": 3,
+        "unique_files": 3,
+        "hashed_files": 2,
+        "bytes_read": 24,
+        "hash_bytes_read": 12,
+        "comparison_bytes_read": 12,
+        "comparisons": 1,
+        "logical_duplicate_bytes": 6
+      },
+      "atomic_snapshot": false,
+      "filesystem_access": "anchored_dir_fd"
+    },
+    "temporary_directory_removed": true
+  },
+  "review": {
+    "root_replacement_stale_paths": "fixed_and_independently_retested",
+    "non_utf8_unix_path_transport": "fixed_and_independently_retested",
+    "windows_metadata_sources": "Path/descriptor ctime compared only within their own API; common identity/type/size/mtime compared across APIs. Native rerun pending.",
+    "windows_executable_modes": "Compare S_IFMT across path/descriptor; preserve full mode within API.",
+    "windows_reparse_points": "Reject root and exclude observed entry reparse points; native junction fixture added.",
+    "windows_handle_baseline": "Immutable descriptor marker shared by file identity; future opens and final revalidation compare within descriptor API without reading bytes.",
+    "hardlink_extension_modes": "Alias inventory comparison ignores only path-synthesized permission bits; each path and descriptor keeps full markers within its own API.",
+    "portable_change_fixture": "Detected-change fixtures explicitly alter and assert observable mtime without sleeping. A separate real same-size mutation without timestamp adjustment still requires no false group or duplicate bytes.",
+    "atomic_snapshot_limit": "Concurrent same-size writes preserving all observed metadata are not guaranteed detectable; no atomic snapshot is claimed."
+  },
+  "limits": {
+    "complete_repository_suite": "not_run_in_selected_source_checkout",
+    "native_windows_execution": "native Python3.12 passed; portable fixture refinement awaiting final matrix",
+    "python310_execution": "pending_dedicated_CI",
+    "production_directories_scanned": false
+  },
+  "measurement": {
+    "provider_tokens": null,
+    "cost_savings": null,
+    "physical_storage_savings": null
+  },
+  "scope": "Exact-file reports only; no desktop or visual customization work.",
+  "ci_initial": {
+    "head": "074da6ea095811f79bbe60c4dda21ff6d4b12c72",
+    "run_id": 41106134170,
+    "ubuntu_python310": "success",
+    "ubuntu_python312": "success",
+    "windows_python310": "success",
+    "windows_python312": {
+      "status": "failure",
+      "failed": 4,
+      "skipped": 3,
+      "job_id": 124236330102
+    }
+  },
+  "ci_second": {
+    "head": "06e9a910e4b5eb406d8f0a4f8cc7d2595e0b48b5",
+    "run_id": 41107076790,
+    "ubuntu_python310": "success",
+    "ubuntu_python312": "success",
+    "windows_python312": {
+      "failed": 1,
+      "job_id": 124239603416,
+      "remaining_case": "post-comparison same-size change not visible through path metadata"
+    }
+  },
+  "ci_third": {
+    "head": "96d27c86669c8f50731fd0f608025e8aa6970688",
+    "pilot_run_id": 41107738184,
+    "ubuntu_python310": "success",
+    "ubuntu_python312": "success",
+    "windows_python312": "success",
+    "windows_python310": {
+      "failed": 1,
+      "job_id": 124241882455,
+      "remaining_case": "test assumed observable timestamp change after a rapid same-size write"
+    },
+    "main_ci_run_id": 41107738186,
+    "main_ci_python310": "success",
+    "main_ci_python311": "success",
+    "main_ci_python312": "success"
+  }
+}

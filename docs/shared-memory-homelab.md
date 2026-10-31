@@ -6,9 +6,9 @@ Le stockage SQLite reste sur l'hôte du service ; les clients utilisent l'API.
 
 ## 1. Initialiser deux identités
 
-Sur l'hôte choisi, utiliser Python 3.10 ou plus récent et un checkout de la
-branche `feat/shared-memory-scribe-v1` dans `~/botte-secrete`. Vérifier son commit
-avec la [PR #111](https://github.com/zedarvates/botte-secrete/pull/111).
+Sur l'hôte choisi, utiliser Python 3.10 ou plus récent et un checkout de `main`
+dans `~/botte-secrete` contenant la
+[PR #111](https://github.com/zedarvates/botte-secrete/pull/111). Vérifier son commit.
 Les commandes suivantes partent de la racine de ce checkout :
 
 ```bash

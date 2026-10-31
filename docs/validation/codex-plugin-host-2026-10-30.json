@@ -1,0 +1,49 @@
+{
+  "schema": "botte.codex-plugin-host-preparation/v1",
+  "date": "2026-10-30",
+  "state": "fresh_host_ci_pending",
+  "source_parent": "6c050c6ed5fe82452a65a81e5bf02b4e63cd922c",
+  "codex_versions": {
+    "local_probe": "0.166.0-alpha.1",
+    "fresh_ci_pinned": "0.166.0",
+    "public_release_observed": "https://github.com/openai/codex/releases/tag/rust-v0.166.0"
+  },
+  "qualification": {
+    "platforms": [
+      "Ubuntu Python3.12",
+      "Windows Python3.12"
+    ],
+    "profile": "fresh native CI account; HOME and CODEX_HOME unchanged",
+    "thread": "ephemeral/read-only",
+    "rpc_guard": "explicit allowlist excludes turn/start",
+    "positive": "real CLI marketplace/plugin installation, cache/skill provenance, plugin-owned MCP connection and3controlledscenarios",
+    "negative": "fresh host process without runtime command must observe unavailable plugin MCP"
+  },
+  "implementation_sha256": {
+    "scripts/verify_codex_plugin_host.py": "d80367091bbc4a1c2a975670ce057e8fdaf875d8d4e07bd7e7ab8eae34a5ecb6",
+    ".github/workflows/codex-plugin-host.yml": "0bc55274c359ed5e2f7385037dd57ec2e6aa21025ccfc191eddaa75198b02489"
+  },
+  "local_observation": {
+    "status": "partial",
+    "filesystem_isolation": "read-only root with temporary profile mounted over ordinary profile path; environment variable values unchanged",
+    "plugin_installed": true,
+    "plugin_enabled": true,
+    "cache_and_skill_origin_verified": true,
+    "model_turns_started": 0,
+    "thread_mcp_complete": false,
+    "limitation": "managed environment read-only helper cannot initialize NETLINK_ROUTE socket; no requirement relaxation used"
+  },
+  "review": {
+    "status": "no static false-green blocker",
+    "provenance": "pluginId, source/cache hashes and9source/wheel/installed module hashes",
+    "negative": "strict failed/discovery-error plus emptytools, not a merely pending server"
+  },
+  "measurement_limits": [
+    "Scenario timers exclude host startup/connection, unlike direct-runtime candidate timings.",
+    "Host protocol bytes are not MCP-only bytes or model tokens.",
+    "Automatic skill/model selection is not tested."
+  ],
+  "provider_tokens": null,
+  "cost": null,
+  "savings": null
+}

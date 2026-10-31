@@ -141,6 +141,26 @@ def test_propose_does_not_dispatch_any_memory_operation():
     assert result["effects"] == {"memory_writes": 0, "tool_calls_executed": 0}
 
 
+def test_propose_keeps_a_generic_router_candidate_non_executable(monkeypatch):
+    from skills.tool_router.base import LexicalToolRouter
+
+    def forbidden(*args, **kwargs):
+        pytest.fail("advisory proposal must not dispatch a memory operation")
+
+    monkeypatch.setattr(MemoryService, "call", forbidden)
+    monkeypatch.setattr(MCPBridge, "handle", forbidden)
+    router = LexicalToolRouter()
+    # Positive control: the existing router marks schema conformance executable.
+    assert router.route("wiki", memory_tools()).executable is True
+    result = propose("wiki", router, "pilot")
+    assert result["mode"] == "advisory"
+    assert result["route"]["tool_name"] == "memory_wiki"
+    assert result["route"]["executable"] is False
+    assert result["route"]["reason"] == "advisory_only"
+    assert result["executed"] is False and result["activation_allowed"] is False
+    assert result["effects"] == {"memory_writes": 0, "tool_calls_executed": 0}
+
+
 def test_benchmark_joint_accuracy_and_negative_denominator(tmp_path):
     cases = [
         {"id": "yes", "kind": "positive", "query": "yes", "expected_tool": "memory_context", "expected_arguments": {}},

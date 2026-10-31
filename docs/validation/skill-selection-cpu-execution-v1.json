@@ -1,0 +1,393 @@
+{
+  "schema": "botte.skill-selection-cpu-execution/v1",
+  "observed_at": "2026-09-10T05:35:16Z",
+  "protocol_file": "skill-selection-cpu-protocol-v1.json",
+  "protocol_sha256": "8a6dec8843d7fb6c9ae08e73b27528dbe9cd269ae6fc5216e4bc8363d664a01e",
+  "comparison_file": "skill-selection-cpu-v1.json",
+  "comparison_sha256": "7af98eadbd338dafbbb679e3b886082464b7a0b98535bf1de7de42aa7a584089",
+  "evidence_kind": "real_model_inference_on_fixed_synthetic_corpus",
+  "source_reuse": {
+    "weights_url": "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF/tree/9217f5db79a29953eb74d5343926648285ec7e67",
+    "runtime_url": "https://github.com/ggml-org/llama.cpp/releases/tag/b10809",
+    "existing_runtime_provenance": "https://github.com/zedarvates/botte-secrete/blob/3836716f9bdddfc89b73e7bf34188091ce075a98/docs/validation/needle2-study-validation-v1.json",
+    "downloaded_for_this_run": false,
+    "weights_and_runtime_files_rehashed_before_and_after": true
+  },
+  "supervisor": {
+    "started_at": "2026-09-10T05:34:56Z",
+    "server_started": true,
+    "server_stopped": true,
+    "benchmark_exit_code": 0,
+    "model_catalog_matches": true,
+    "inference_warmup_calls": 0,
+    "corrective_retries": 0,
+    "benchmark_finished_at": "2026-09-10T05:35:15Z",
+    "frozen_inputs_still_match": true,
+    "server_return_code": 0,
+    "finished_at": "2026-09-10T05:35:16Z"
+  },
+  "execution": {
+    "planned_calls": 24,
+    "started_calls": 24,
+    "verified_observations": 24,
+    "measured_http_calls": 24,
+    "corrective_retries": 0,
+    "unresolved_operations": 0,
+    "active_operations_at_handoff": 0,
+    "remaining_planned_calls": 0,
+    "benchmark_seconds_scope": "The supervisor interval includes child process startup and source checks.",
+    "checkpoint_summary": {
+      "blocked": 0,
+      "failed": 0,
+      "pending": 0,
+      "running": 0,
+      "skipped": 0,
+      "stale": 0,
+      "uncertain": 0,
+      "unverified": 0,
+      "verified": 24
+    },
+    "checkpoint_coverage": "declared local file checks only; other effects are unobserved",
+    "all_observation_hashes_rechecked": true
+  },
+  "summary": {
+    "baseline": {
+      "reviewed_exact_selections": 2,
+      "positive_cases": 6,
+      "positive_reviewed_exact": 2,
+      "negative_cases": 6,
+      "correct_abstentions": 0,
+      "negative_cases_with_unwanted_selection": 6,
+      "extra_paths_across_all_cases": 12,
+      "positive_oracle_retrieval_complete": 6,
+      "raw_returned_path_sets_equal_oracle": 3,
+      "lexical_fallback_cases": [
+        "two-destinations",
+        "restart-uncertain"
+      ],
+      "latency_median_ms": 334.5563765001316,
+      "latency_sum_ms": 4043.8262059997214,
+      "prompt_bytes_total": 4940
+    },
+    "candidate": {
+      "reviewed_exact_selections": 5,
+      "positive_cases": 6,
+      "positive_reviewed_exact": 5,
+      "negative_cases": 6,
+      "correct_abstentions": 0,
+      "negative_cases_with_unwanted_selection": 6,
+      "extra_paths_across_all_cases": 6,
+      "positive_oracle_retrieval_complete": 6,
+      "raw_returned_path_sets_equal_oracle": 5,
+      "lexical_fallback_cases": [],
+      "latency_median_ms": 845.2242785001545,
+      "latency_sum_ms": 10837.493235000693,
+      "prompt_bytes_total": 17943
+    }
+  },
+  "cases": {
+    "private-note": {
+      "expected_paths": [
+        "personal/memory/SKILL.md"
+      ],
+      "baseline": {
+        "paths": [
+          "personal/memory/SKILL.md",
+          "team/memory/SKILL.md"
+        ],
+        "exact_selection": false,
+        "tier": "local-llm-reranked",
+        "review_status": "legacy_unspecified"
+      },
+      "candidate": {
+        "paths": [
+          "personal/memory/SKILL.md"
+        ],
+        "exact_selection": true,
+        "tier": "local-llm-reranked",
+        "review_status": "selected"
+      }
+    },
+    "project-decision": {
+      "expected_paths": [
+        "team/memory/SKILL.md"
+      ],
+      "baseline": {
+        "paths": [
+          "team/memory/SKILL.md",
+          "personal/memory/SKILL.md"
+        ],
+        "exact_selection": false,
+        "tier": "local-llm-reranked",
+        "review_status": "legacy_unspecified"
+      },
+      "candidate": {
+        "paths": [
+          "team/memory/SKILL.md"
+        ],
+        "exact_selection": true,
+        "tier": "local-llm-reranked",
+        "review_status": "selected"
+      }
+    },
+    "inspect-checkpoint": {
+      "expected_paths": [
+        "runs/checkpoint/SKILL.md"
+      ],
+      "baseline": {
+        "paths": [
+          "runs/checkpoint/SKILL.md"
+        ],
+        "exact_selection": true,
+        "tier": "local-llm-reranked",
+        "review_status": "legacy_unspecified"
+      },
+      "candidate": {
+        "paths": [
+          "runs/checkpoint/SKILL.md"
+        ],
+        "exact_selection": true,
+        "tier": "local-llm-reranked",
+        "review_status": "selected"
+      }
+    },
+    "new-png": {
+      "expected_paths": [
+        "images/convert/SKILL.md"
+      ],
+      "baseline": {
+        "paths": [
+          "images/convert/SKILL.md"
+        ],
+        "exact_selection": true,
+        "tier": "local-llm-reranked",
+        "review_status": "legacy_unspecified"
+      },
+      "candidate": {
+        "paths": [
+          "images/convert/SKILL.md"
+        ],
+        "exact_selection": true,
+        "tier": "local-llm-reranked",
+        "review_status": "selected"
+      }
+    },
+    "ram-usage": {
+      "expected_paths": [
+        "machine/memory/SKILL.md"
+      ],
+      "baseline": {
+        "paths": [
+          "machine/memory/SKILL.md",
+          "personal/memory/SKILL.md",
+          "team/memory/SKILL.md"
+        ],
+        "exact_selection": false,
+        "tier": "local-llm-reranked",
+        "review_status": "legacy_unspecified"
+      },
+      "candidate": {
+        "paths": [
+          "machine/memory/SKILL.md"
+        ],
+        "exact_selection": true,
+        "tier": "local-llm-reranked",
+        "review_status": "selected"
+      }
+    },
+    "two-destinations": {
+      "expected_paths": [
+        "personal/memory/SKILL.md",
+        "team/memory/SKILL.md"
+      ],
+      "baseline": {
+        "paths": [
+          "personal/memory/SKILL.md",
+          "team/memory/SKILL.md"
+        ],
+        "exact_selection": false,
+        "tier": "free-lexical",
+        "review_status": "legacy_unspecified"
+      },
+      "candidate": {
+        "paths": [
+          "personal/memory/SKILL.md"
+        ],
+        "exact_selection": false,
+        "tier": "local-llm-reranked",
+        "review_status": "selected"
+      }
+    },
+    "wrong-owner": {
+      "expected_paths": [],
+      "baseline": {
+        "paths": [
+          "personal/memory/SKILL.md",
+          "team/memory/SKILL.md"
+        ],
+        "exact_selection": false,
+        "tier": "local-llm-reranked",
+        "review_status": "legacy_unspecified"
+      },
+      "candidate": {
+        "paths": [
+          "personal/memory/SKILL.md"
+        ],
+        "exact_selection": false,
+        "tier": "local-llm-reranked",
+        "review_status": "selected"
+      }
+    },
+    "read-permission-only": {
+      "expected_paths": [],
+      "baseline": {
+        "paths": [
+          "team/memory/SKILL.md",
+          "personal/memory/SKILL.md"
+        ],
+        "exact_selection": false,
+        "tier": "local-llm-reranked",
+        "review_status": "legacy_unspecified"
+      },
+      "candidate": {
+        "paths": [
+          "team/memory/SKILL.md"
+        ],
+        "exact_selection": false,
+        "tier": "local-llm-reranked",
+        "review_status": "selected"
+      }
+    },
+    "delete-notes": {
+      "expected_paths": [],
+      "baseline": {
+        "paths": [
+          "personal/memory/SKILL.md"
+        ],
+        "exact_selection": false,
+        "tier": "local-llm-reranked",
+        "review_status": "legacy_unspecified"
+      },
+      "candidate": {
+        "paths": [
+          "personal/memory/SKILL.md"
+        ],
+        "exact_selection": false,
+        "tier": "local-llm-reranked",
+        "review_status": "selected"
+      }
+    },
+    "restart-uncertain": {
+      "expected_paths": [],
+      "baseline": {
+        "paths": [
+          "runs/checkpoint/SKILL.md"
+        ],
+        "exact_selection": false,
+        "tier": "free-lexical",
+        "review_status": "legacy_unspecified"
+      },
+      "candidate": {
+        "paths": [
+          "runs/checkpoint/SKILL.md"
+        ],
+        "exact_selection": false,
+        "tier": "local-llm-reranked",
+        "review_status": "selected"
+      }
+    },
+    "missing-image": {
+      "expected_paths": [],
+      "baseline": {
+        "paths": [
+          "images/convert/SKILL.md"
+        ],
+        "exact_selection": false,
+        "tier": "local-llm-reranked",
+        "review_status": "legacy_unspecified"
+      },
+      "candidate": {
+        "paths": [
+          "images/convert/SKILL.md"
+        ],
+        "exact_selection": false,
+        "tier": "local-llm-reranked",
+        "review_status": "selected"
+      }
+    },
+    "overwrite-image": {
+      "expected_paths": [],
+      "baseline": {
+        "paths": [
+          "images/convert/SKILL.md"
+        ],
+        "exact_selection": false,
+        "tier": "local-llm-reranked",
+        "review_status": "legacy_unspecified"
+      },
+      "candidate": {
+        "paths": [
+          "images/convert/SKILL.md"
+        ],
+        "exact_selection": false,
+        "tier": "local-llm-reranked",
+        "review_status": "selected"
+      }
+    }
+  },
+  "decision": {
+    "candidate_promotion": false,
+    "runtime_qualified_for_autonomous_selection": false,
+    "state": "do_not_promote_insufficient_exclusion_handling",
+    "reason": "Both versions select a candidate in all six abstention-required cases; the candidate misses one of two required destinations.",
+    "measured_gains": [
+      "Three positive cases become exact: private-note, project-decision, ram-usage.",
+      "Extra returned paths fall from 12 to 6 across the 12 cases."
+    ],
+    "losses": [
+      "two-destinations: baseline lexical fallback returns both required paths; candidate reviewed selection returns only the private-note path."
+    ],
+    "new_excluded_case_failures": [],
+    "interpretation": "Full instructions and strict identity handling improve some outputs in this comparison; this does not isolate which change caused the gain or demonstrate reliable prerequisite reasoning.",
+    "next_evidence": "A separately frozen candidate may use this corpus for development; any qualification still needs independently reviewed held-out target cases.",
+    "repeat_current_run": false
+  },
+  "limitations": [
+    "One pass, 12 synthetic cases; repeated/model-independent real-task evidence is absent.",
+    "Exact selection requires an available model review as well as equal path sets. Baseline two-destinations matches paths only via lexical fallback and is not credited.",
+    "The baseline legacy status cannot explain why two model calls fell back; raw replies were intentionally not stored.",
+    "Tokens are reported by the endpoint, not independently metered. HTTP latency includes a cold first prompt and uncontrolled shared-host load; p95 over 12 calls is the maximum.",
+    "The corrected finder changes instruction delivery, identity and abstention parsing together; causal attribution to any single change is not established.",
+    "No selected operation ran. Downstream quality, energy, monetary cost and homelab GPU performance remain unmeasured.",
+    "This is the existing Qwen 0.5B CPU runtime, not Eurekai or the production local model."
+  ],
+  "consequences": {
+    "affected_resources": [
+      "24 temporary candidate libraries and worker processes",
+      "One owned loopback-only CPU model server",
+      "Private registry, manifest, plan, checkpoint and observations",
+      "Three public evidence JSON files and the acceptance guide"
+    ],
+    "verified_results": [
+      "24 checkpoint-bound observation files",
+      "Frozen sources, weights and runtime files unchanged after inference",
+      "Owned server exited successfully"
+    ],
+    "partial_effects": [],
+    "active_effects": [],
+    "deviations": [],
+    "uncertainties": [
+      "Semantic reliability is inadequate on exclusions.",
+      "Shared-host timing has no statistical confidence interval."
+    ],
+    "next_agent_state": "Run complete; do not replay its calls. Review the source-bound failure cases before preparing a distinct candidate or held-out corpus."
+  },
+  "private_artifacts": {
+    "manifest_sha256": "3ea2dfc49b528f5d85fe61201037da7ed45ed9cefaddd14ea56b26fe9910340a",
+    "plan_sha256": "0751cc29902a39fe7483c86d39fadb6aadb34fd7a4f21c2e653b469f154c4790",
+    "checkpoint_sha256": "7153af8e410b00b3e8340f07f0f356039d19035daefa5175dcbbb55a8ffe337f",
+    "server_log_sha256": "b6ee75a282c19c6480d21a22423a259db5956cbad700080f4e513fa6cd9dca36",
+    "supervisor_script_sha256": "2febc4b034ba49b10ff1b0b67cf0f9ba772a9bb815d10abe68891ad0ffadbddf",
+    "public_export": "Protocol and comparison copied byte-for-byte. Private endpoint, PID, command paths, prompts, manifest, checkpoint and raw replies are not published."
+  }
+}

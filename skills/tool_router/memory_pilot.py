@@ -5,7 +5,7 @@ MCP/HTTP client; this module neither reads credentials nor dispatches proposals.
 """
 from __future__ import annotations
 
-from dataclasses import asdict
+from dataclasses import asdict, replace
 import hashlib
 import time
 import uuid
@@ -80,6 +80,10 @@ def memory_call(route: ToolRouteResult, project_id: str):
 def propose(query, router, project_id):
     validate(PROJECT, project_id, "project_id")
     route = router.route(query, memory_tools())
+    # Legacy routers mark schema-conforming candidates executable. This public
+    # advisory boundary must not propagate that flag, regardless of adapter.
+    route = replace(route, executable=False,
+                    reason=route.reason or ("advisory_only" if not route.abstained else None))
     return {"schema_version": CONTRACT_VERSION, "mode": "advisory",
             "catalog_sha256": catalog_sha256(), "route": asdict(route),
             "memory_call": memory_call(route, project_id),

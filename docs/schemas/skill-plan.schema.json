@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/zedarvates/botte-secrete/blob/main/docs/schemas/skill-plan.schema.json",
+  "title": "Explicit skill execution plan v1",
+  "$comment": "The stdlib validator also enforces document size, unique IDs, earlier-only dependencies and project-relative paths. A valid plan grants no execution authority.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "goal", "context", "steps"],
+  "properties": {
+    "schema": {"const": "botte.skill-plan/v1"},
+    "goal": {"$ref": "#/$defs/text"},
+    "context": {"$ref": "#/$defs/text"},
+    "steps": {"type": "array", "minItems": 1, "maxItems": 100, "items": {"$ref": "#/$defs/step"}}
+  },
+  "$defs": {
+    "text": {"type": "string", "minLength": 1, "maxLength": 8192, "pattern": "\\S"},
+    "path": {"allOf": [{"$ref": "#/$defs/text"}, {"pattern": "^(?!\\.$)(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\\\:\\u0000]+$"}]},
+    "hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "step": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "capability", "command", "local", "needs", "requires", "ensures", "observes", "source_hashes"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[A-Za-z0-9_.-]{1,80}$"},
+        "capability": {"$ref": "#/$defs/text"},
+        "command": {"$ref": "#/$defs/text"},
+        "local": {"type": "boolean"},
+        "needs": {"type": "array", "maxItems": 100, "uniqueItems": true, "items": {"$ref": "#/$defs/text"}},
+        "requires": {"type": "array", "maxItems": 100, "items": {"$ref": "#/$defs/check"}},
+        "ensures": {"type": "array", "maxItems": 100, "items": {"$ref": "#/$defs/check"}},
+        "observes": {"type": "array", "maxItems": 100, "items": {"$ref": "#/$defs/path"}},
+        "source_hashes": {"type": "object", "maxProperties": 100, "propertyNames": {"$ref": "#/$defs/path"}, "additionalProperties": {"$ref": "#/$defs/hash"}},
+        "effects_before": {"description": "Optional planning snapshot. Never interpreted as commands, evidence or authorization."}
+      }
+    },
+    "check": {
+      "oneOf": [
+        {"type": "object", "additionalProperties": false, "required": ["kind", "path"], "properties": {
+          "kind": {"enum": ["file_exists", "file_absent"]}, "path": {"$ref": "#/$defs/path"}}},
+        {"type": "object", "additionalProperties": false, "required": ["kind", "path", "value"], "properties": {
+          "kind": {"const": "file_sha256"}, "path": {"$ref": "#/$defs/path"}, "value": {"$ref": "#/$defs/hash"}}},
+        {"type": "object", "additionalProperties": false, "required": ["kind", "path", "value"], "properties": {
+          "kind": {"const": "text_contains"}, "path": {"$ref": "#/$defs/path"}, "value": {"$ref": "#/$defs/text"}}},
+        {"type": "object", "additionalProperties": false, "required": ["kind", "path", "pointer", "value"], "properties": {
+          "kind": {"const": "json_equals"}, "path": {"$ref": "#/$defs/path"},
+          "pointer": {"type": "string", "maxLength": 1024, "pattern": "^(?:/(?:[^~]|~[01])*)?$"}, "value": {}}}
+      ]
+    }
+  }
+}

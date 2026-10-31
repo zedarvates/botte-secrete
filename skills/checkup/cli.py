@@ -24,9 +24,11 @@ import re
 import sys
 from skills.console_utf8 import force_utf8
 from pathlib import Path
+from skills.capabilities.observations import observed_operation
 
 
 
+@observed_operation("run")
 def run(project: Path) -> dict:
     project = Path(project).resolve()
     out: dict = {"project": str(project), "drift": []}
@@ -69,18 +71,20 @@ def run(project: Path) -> dict:
     if isinstance(d, dict):
         if d.get("score", 100) < 90:
             out["drift"].append(f"Directives health {d.get('score')}/100 — stale/oversized; fix CLAUDE.md/AGENTS.md.")
-    mcp_missing = any("Wire the MCP" in t.get("title", "")
-                      for t in out["infra_tips"])
-    if not mcp_missing:
-        out["mcp_wiring"] = {"status": "wired", "applicable": True}
-    elif os.environ.get("BOTTE_CHECKUP_CONTEXT", "").strip().lower() == "github-pr":
-        out["mcp_wiring"] = {
-            "status": "not_applicable", "applicable": False,
-            "reason": "ephemeral GitHub PR runner; MCP configuration is machine-local",
-        }
-    else:
-        out["mcp_wiring"] = {"status": "missing", "applicable": True}
-        out["drift"].append("MCP not wired here — run `python -m skills.bootstrap.cli .`")
+    from skills.checkup.mcp import inspect_mcp
+    wiring = out["mcp_wiring"] = inspect_mcp(project)
+    if (wiring["status"] == "missing" and not wiring["sources"]
+            and os.environ.get("BOTTE_CHECKUP_CONTEXT", "").strip().lower() == "github-pr"):
+        wiring.update(status="not_applicable", applicable=False,
+                      reason="ephemeral GitHub PR runner; MCP configuration is machine-local")
+    elif wiring["status"] == "missing":
+        out["drift"].append("No project-local MCP declaration found — configure the intended host or verify its plugin/global configuration.")
+    elif wiring["status"] != "configured":
+        out["drift"].append(f"MCP declaration status is {wiring['status']} — review mcp_wiring.sources; runtime availability is not checked.")
+    if any(s["status"] in ("invalid", "unreadable", "unsupported") for s in wiring["sources"]) and wiring["status"] == "configured":
+        out["drift"].append("Some MCP configuration sources could not be validated — review mcp_wiring.sources.")
+    if any(s.get("launcher", {}).get("status") == "not_found" for s in wiring["sources"]):
+        out["drift"].append("An MCP launch command was not found in this process environment — verify the host runtime installation and PATH.")
     if m.always_on_tokens > 2000:
         out["drift"].append(f"CLAUDE.md ~{m.always_on_tokens} tok (>2000) — trims save tokens every turn.")
     sec = out["security"]
@@ -225,6 +229,10 @@ def _nn_summary(project: Path) -> dict:
         "observations": 0, "verified": 0, "train_ready": False,
         "activation_ready": False, "activation_required": 2_000,
         "verified_pct": 0.0, "models": {},
+        "unique_verified": 0, "training_sample_ready": False,
+        "activation_sample_ready": False, "activation_status": "not_evaluated",
+        "measurement_scope": "selected_local_ledger_only",
+        "ledger_state": "unavailable", "invalid_rows": 0,
     }
     try:
         from skills.botte_nn.active_learning import ActiveLearning
@@ -232,20 +240,32 @@ def _nn_summary(project: Path) -> dict:
         binary = status.get("models", {}).get("binary_router", {})
         observations = int(binary.get("observations", 0))
         verified = int(binary.get("with_outcome", 0))
+        unique = int(binary.get("unique_verified", 0))
+        count_usable = (status.get("ledger_state") == "present"
+                        and status.get("invalid_rows", 0) == 0)
         model_counts = {
             name: {
                 "observations": int(values.get("observations", 0)),
                 "verified": int(values.get("with_outcome", 0)),
+                "unique_verified": int(values.get("unique_verified", 0)),
             }
             for name, values in status.get("models", {}).items()
         }
         learning.update({
             "observations": observations,
             "verified": verified,
-            "train_ready": verified >= 50,
-            "activation_ready": verified >= 2_000,
+            # Compatibility field: sample floor for candidate training only.
+            # No qualification evidence is consumed by this diagnostic.
+            "train_ready": count_usable and unique >= 50,
+            "training_sample_ready": count_usable and unique >= 50,
+            "activation_sample_ready": count_usable and unique >= 2_000,
+            "activation_ready": False,
+            "unique_verified": unique,
             "verified_pct": round(100 * verified / 2_000, 1),
             "storage": status.get("storage", ""),
+            "ledger_state": status.get("ledger_state", "unavailable"),
+            "ledger_sha256": status.get("ledger_sha256"),
+            "invalid_rows": status.get("invalid_rows", 0),
             "models": model_counts,
         })
     except (ImportError, OSError, ValueError, TypeError):
@@ -299,11 +319,13 @@ def _rank_actions(result: dict, project: Path) -> list[dict]:
 def _verdict(result: dict) -> str:
     drift_n = len(result.get("drift", []))
     machine = result.get("machine", {}) or {}
-    if drift_n == 0 and (not machine.get("available") or machine.get("uses_local_models")):
-        return "✅ sain — rien à corriger, routing local actif."
+    if drift_n == 0 and not machine.get("available"):
+        return "✅ aucun écart détecté — disponibilité des backends et routage non vérifiés."
+    if drift_n == 0 and machine.get("uses_local_models"):
+        return "✅ aucun écart détecté — backend local déclaré par l'audit, routage de l'hôte non vérifié."
     if drift_n == 0:
-        return ("⚠️ sain côté code, mais aucun backend local détecté — "
-                "chaque tâche part au cloud. Voir 'machine' ci-dessous.")
+        return ("⚠️ aucun écart détecté, aucun backend local dans cet audit — "
+                "destination des tâches de l'hôte non vérifiée. Voir 'machine' ci-dessous.")
     top = _rank_actions(result, Path(result["project"]))
     tok = sum(a["est_tokens"] or 0 for a in top)
     tok_note = f", ~{tok:,} tokens d'opportunités identifiées" if tok else ""
@@ -382,6 +404,8 @@ def format_pr_comment(result: dict, *, repo: str | None = None,
         facts.append(f"always-on **{cost['always_on_tokens_per_session']:,} tok/session**")
     if result.get("mcp_wiring", {}).get("status") == "not_applicable":
         facts.append("MCP wiring **n/a in ephemeral CI**")
+    elif result.get("mcp_wiring"):
+        facts.append(f"MCP declaration **{result['mcp_wiring']['status']}**; runtime/reachability not checked")
     lines.append(" · ".join(facts))
     lines.append("")
 
@@ -430,9 +454,10 @@ def format_pr_comment(result: dict, *, repo: str | None = None,
         learning = nn.get("learning", {})
         lines.append(f"- binary_router ledger: {learning.get('observations', 0)} observations, "
                      f"{learning.get('verified', 0)}/2,000 verified "
-                     f"({learning.get('verified_pct', 0)}%); "
-                     f"training {'ready' if learning.get('train_ready') else 'blocked (<50)'}, "
-                     f"activation {'ready' if learning.get('activation_ready') else 'blocked'}")
+                     f"({learning.get('unique_verified', 0)} unique); "
+                     f"local ledger {learning.get('ledger_state', 'unavailable')}; "
+                     f"candidate sample floor {'met' if learning.get('training_sample_ready') else 'not met'}; "
+                     "activation blocked (qualification not evaluated)")
         oracle_models = {
             name: values.get("verified", 0)
             for name, values in learning.get("models", {}).items()
@@ -523,6 +548,10 @@ def main(argv=None) -> int:
           f"policy {'✓' if r['policy_committed'] else '✗ (not committed)'}")
     print(f"\n   💰 analysis cost: {r['cost']['analysis_llm_tokens']} LLM tokens · "
           f"always-on: {r['cost']['always_on_tokens_per_session']:,} tok/session")
+    wiring = r.get("mcp_wiring", {})
+    if wiring:
+        print(f"\n   MCP declaration: {wiring['status']} (project files only); "
+              "runtime/reachability not checked")
     sec = r.get("security") or {}
     if sec.get("count"):
         cwes = ", ".join(f"{k}×{v}" for k, v in sorted(sec.get("by_cwe", {}).items()))
@@ -543,8 +572,10 @@ def main(argv=None) -> int:
         print(f"\n   🧠 Micro-NN: {nn['grounded']}/{nn['total']} grounded{extra}")
         learning = nn.get("learning", {})
         print(f"      binary_router ledger: {learning.get('observations', 0)} observations · "
-              f"{learning.get('verified', 0)}/2,000 verified · "
-              f"activation {'ready' if learning.get('activation_ready') else 'blocked'}")
+              f"{learning.get('verified', 0)}/2,000 verified "
+              f"({learning.get('unique_verified', 0)} unique) · "
+              f"local ledger {learning.get('ledger_state', 'unavailable')} · "
+              "activation blocked (qualification not evaluated)")
         oracle_models = {
             name: values.get("verified", 0)
             for name, values in learning.get("models", {}).items()

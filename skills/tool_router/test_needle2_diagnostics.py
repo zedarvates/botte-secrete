@@ -7,6 +7,7 @@ import pytest
 
 from . import needle2_diagnostics as diagnostics
 from . import needle2_study as study
+from .needle2_test_fixtures import historical_bindings
 
 
 @pytest.mark.parametrize("expected,actual,expected_args,actual_args,outcome", [
@@ -39,16 +40,26 @@ def test_argument_diff_distinguishes_missing_unexpected_and_changed():
     assert result["changed"] == ["changed"]
 
 
-def test_published_archive_is_reproduced_without_model_or_tool_execution(monkeypatch):
+def test_archived_diagnostic_is_retained_and_integrated_sources_are_refused(monkeypatch):
+    """The historical job reproduces this output at its pinned source commit.
+
+    Current sources deliberately do not acquire that old qualification. Here
+    we check the retained report bytes and the integrated verifier's refusal,
+    while keeping all model/runtime entry points forbidden.
+    """
     def forbidden(*args, **kwargs):
         pytest.fail("offline diagnostics attempted runtime work")
 
     monkeypatch.setattr(study.Generalist, "__init__", forbidden)
     monkeypatch.setattr(study.Needle2ToolRouter, "__init__", forbidden)
     monkeypatch.setattr(study, "collect", forbidden)
-    report = diagnostics.diagnose_archive()
-    expected = diagnostics.read_json(study.ROOT / "docs/validation/needle2-error-diagnostics-v1.json")
-    assert report == expected
+    _, _, source_drift, attachment_drift = historical_bindings()
+    assert source_drift and attachment_drift
+    with pytest.raises(ValueError, match="frozen evidence changed"):
+        diagnostics.diagnose_archive()
+    report_path = study.ROOT / "docs/validation/needle2-error-diagnostics-v1.json"
+    assert study.digest(report_path.read_bytes()) == "19a4c735b6b30ee45d68af38a496a7c046476ca526ff9a13fa26218699d988b8"
+    report = diagnostics.read_json(report_path)
     assert report["models"]["needle"]["counts"] == {
         "positive_exact": 4, "positive_wrong_tool": 1, "positive_wrong_arguments": 2,
         "positive_abstention": 3, "negative_proposal": 4, "negative_abstention": 6,
@@ -80,7 +91,10 @@ def test_published_archive_is_reproduced_without_model_or_tool_execution(monkeyp
     diagnostics.PREFIX + "comparison-v1.json",
     "skills/tool_router/needle2_calibration_fr_v1.jsonl",
 ])
-def test_changed_inputs_fail_before_diagnostic_classification(monkeypatch, path):
+def test_mutated_archive_inputs_never_reach_classification_in_integrated_code(monkeypatch, path):
+    # An already-changed historical source attachment can reject before this
+    # particular input is reached. The source-exact job separately exercises
+    # the original per-input negative controls at the pinned historical commit.
     original = Path.read_bytes
 
     def changed(self):
@@ -96,12 +110,20 @@ def test_changed_inputs_fail_before_diagnostic_classification(monkeypatch, path)
         diagnostics.diagnose_archive()
 
 
-def test_cli_writes_reproducible_output_and_refuses_overwrite(tmp_path, capsys, monkeypatch):
+def test_cli_writes_an_explicit_software_fixture_and_refuses_overwrite(tmp_path, capsys, monkeypatch):
+    fixture = {
+        "schema_version": "test.diagnostic-output/v1", "fixture_only": True,
+        "models": {"needle": {"counts": {"fixture": 1}},
+                   "generalist": {"counts": {"fixture": 0}}},
+        **study.BOUNDARY,
+    }
+    monkeypatch.setattr(diagnostics, "diagnose_archive", lambda: copy.deepcopy(fixture))
     output = tmp_path / "diagnostic.json"
     assert diagnostics.main(["--output", str(output)]) == 0
     saved = output.read_bytes()
     result = json.loads(saved)
     printed = json.loads(capsys.readouterr().out)
+    assert result == fixture and printed["fixture_only"] is True
     assert printed["counts"]["needle"] == result["models"]["needle"]["counts"]
 
     def forbidden():
@@ -111,6 +133,21 @@ def test_cli_writes_reproducible_output_and_refuses_overwrite(tmp_path, capsys, 
     assert diagnostics.main(["--output", str(output)]) == 2
     assert output.read_bytes() == saved
     assert json.loads(capsys.readouterr().out)["detail"] == "output exists"
+
+
+def test_real_diagnostic_cli_refuses_old_evidence_on_integrated_sources(tmp_path, capsys, monkeypatch):
+    def forbidden(*args, **kwargs):
+        pytest.fail("stale archive diagnosis reached classification or runtime")
+
+    monkeypatch.setattr(diagnostics, "_diagnose", forbidden)
+    monkeypatch.setattr(study, "Generalist", forbidden)
+    monkeypatch.setattr(study, "Needle2ToolRouter", forbidden)
+    output = tmp_path / "must-not-exist.json"
+    assert diagnostics.main(["--output", str(output)]) == 2
+    printed = json.loads(capsys.readouterr().out)
+    assert printed["detail"].startswith("frozen evidence changed:")
+    assert printed["activation_allowed"] is False
+    assert not output.exists()
 
 
 def test_cli_does_not_write_a_result_for_invalid_evidence(tmp_path, capsys, monkeypatch):

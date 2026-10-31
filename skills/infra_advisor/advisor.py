@@ -16,7 +16,6 @@ Renders an ASCII cluster diagram by default. Pure stdlib.
 
 from __future__ import annotations
 
-import json
 import os
 from dataclasses import dataclass, asdict
 from pathlib import Path
@@ -25,6 +24,7 @@ from typing import Optional
 from skills.llm_backends.audit import profile_hardware, Hardware
 from skills.llm_backends import registry
 from skills.llm_backends.discovery import Backend
+from skills.capabilities.observations import observed_operation
 
 
 @dataclass
@@ -57,15 +57,12 @@ def _cloud_keys() -> list:
 
 
 def _mcp_wired(project: Path) -> bool:
-    p = project / ".mcp.json"
-    if not p.exists():
-        return False
-    try:
-        return "botte-llm" in json.loads(p.read_text(encoding="utf-8")).get("mcpServers", {})
-    except (json.JSONDecodeError, OSError):
-        return False
+    """Compatibility flag: a valid enabled declaration, never runtime reachability."""
+    from skills.checkup.mcp import inspect_mcp
+    return inspect_mcp(project)["status"] == "configured"
 
 
+@observed_operation("gather")
 def gather(project: Optional[Path] = None, scan_subnet: bool = False,
            fresh: bool = False) -> Snapshot:
     backends = registry.refresh(scan_subnet=scan_subnet) if fresh else (
@@ -150,9 +147,9 @@ def recommend(snap: Snapshot) -> list[Tip]:
 
     # --- MCP wiring ---
     if not snap.mcp_wired:
-        tips.append(Tip("P1", "mcp", "Wire the MCP server into this project",
-                        "The agent here can't reach the local tools until .mcp.json registers botte-llm.",
-                        "Run: python -m skills.bootstrap.cli .  → auto_route/local_chat/find_skills available."))
+        tips.append(Tip("P1", "mcp", "Review the project MCP declaration",
+                        "No valid enabled Botte declaration was recognized in supported project files; global/plugin configuration and reachability were not checked.",
+                        "Review checkup's mcp_wiring.sources, then configure the intended host. A declaration alone does not prove tools are available."))
 
     order = {"P0": 0, "P1": 1, "P2": 2, "P3": 3}
     return sorted(tips, key=lambda t: order.get(t.priority, 9))
@@ -185,7 +182,7 @@ def ascii_diagram(snap: Snapshot, width: int = 62) -> str:
     out.append(row(""))
     cloud = ", ".join(snap.cloud_keys) if snap.cloud_keys else "none (fully local)"
     out.append(row(f"cloud keys: {cloud}"))
-    out.append(row(f"MCP wired here: {'yes' if snap.mcp_wired else 'no'}"))
+    out.append(row(f"MCP declaration: {'recognized' if snap.mcp_wired else 'not recognized'}"))
     out.append("└" + "─" * width + "┘")
     if len(snap.network_hosts) >= 2:
         out.append("  network hosts: " + ", ".join(snap.network_hosts))

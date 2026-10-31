@@ -22,6 +22,7 @@ from typing import Optional
 
 from skills.llm_backends import registry
 from skills.llm_backends.discovery import Backend
+from skills.capabilities.observations import observed_operation
 
 
 # ── Hardware profile ─────────────────────────────────────────────────────────
@@ -166,6 +167,7 @@ PROJECT_MODEL_HINTS = {
 
 # ── Full audit ───────────────────────────────────────────────────────────────
 
+@observed_operation("audit")
 def audit(hosts: Optional[list[str]] = None, scan_subnet: bool = False,
           fresh: bool = False) -> dict:
     """Audit local-LLM usage and produce setup recommendations.

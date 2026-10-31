@@ -1,0 +1,18 @@
+{
+  "valid": {
+    "exit_code": 0,
+    "closure_marker_written": true
+  },
+  "missing": {
+    "exit_code": 3,
+    "closure_marker_written": false
+  },
+  "wrong_version": {
+    "exit_code": 4,
+    "closure_marker_written": false
+  },
+  "failed_tests": {
+    "exit_code": 5,
+    "closure_marker_written": false
+  }
+}

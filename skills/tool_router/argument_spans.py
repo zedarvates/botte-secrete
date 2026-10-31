@@ -9,7 +9,9 @@ import argparse
 from dataclasses import asdict
 import hashlib
 import json
+import os
 from pathlib import Path
+import stat
 
 from skills.memory_hub.shared_contract import decode, encode, validate
 from .base import ToolRouteResult
@@ -80,6 +82,25 @@ def bind_argument_spans(query, proposal):
     return ToolRouteResult(tool_name, arguments, SOURCE, 0.0, False, "advisory_only")
 
 
+def _read_input(path):
+    """Read one bounded regular file; refuse detected leaf symlinks and FIFOs.
+
+    The caller selects the path. This is not an OS sandbox, an I/O deadline or
+    protection against concurrent substitutions of parent directories.
+    """
+    if path.is_symlink():
+        raise ValueError("input symlinks are not supported")
+    flags = os.O_RDONLY | getattr(os, "O_BINARY", 0) | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0)
+    descriptor = os.open(path, flags)
+    with os.fdopen(descriptor, "rb") as handle:
+        if not stat.S_ISREG(os.fstat(handle.fileno()).st_mode):
+            raise ValueError("input must be a regular file")
+        raw = handle.read(MAX_INPUT_BYTES + 1)
+    if len(raw) > MAX_INPUT_BYTES:
+        raise ValueError("input too large")
+    return raw
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--input", type=Path, required=True)
@@ -88,10 +109,7 @@ def main(argv=None):
     try:
         if args.output.exists():
             raise ValueError("output exists")
-        with args.input.open("rb") as handle:
-            raw = handle.read(MAX_INPUT_BYTES + 1)
-        if len(raw) > MAX_INPUT_BYTES:
-            raise ValueError("input too large")
+        raw = _read_input(args.input)
         request = decode(raw)
         if not isinstance(request, dict) or set(request) != {"query", "proposal"}:
             raise ValueError("expected query and proposal only")

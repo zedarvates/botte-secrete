@@ -11,6 +11,7 @@ import pytest
 from . import needle2_study as study
 from .base import ToolRouteResult
 from .memory_pilot import memory_tools
+from .needle2_test_fixtures import integration_protocol
 
 
 def row(case, route):
@@ -90,8 +91,8 @@ def test_redirect_cannot_forward_credentials():
         study.NoRedirect().redirect_request(None, None, 307, None, None, "http://8.8.8.8")
 
 
-def test_protocol_and_splits_are_source_bound(tmp_path):
-    protocol, _, splits = study.load_protocol()
+def test_temporary_protocol_and_splits_are_source_bound(tmp_path, integration_protocol):
+    protocol, _, splits = study.load_protocol(integration_protocol)
     assert all(len(cases) == 20 for cases in splits.values())
     changed = copy.deepcopy(protocol)
     changed["splits"]["calibration"]["sha256"] = "0" * 64
@@ -120,8 +121,8 @@ def test_denominators_include_wrong_positive_proposals():
     assert study.summarize(rows, .9)["exact_proposal_precision"] is None
 
 
-def test_sparse_safe_threshold_does_not_open_validation():
-    _, _, splits = study.load_protocol()
+def test_sparse_safe_threshold_does_not_open_validation(integration_protocol):
+    _, _, splits = study.load_protocol(integration_protocol)
     rows = [row(c, ToolRouteResult(c["expected_tool"], c["expected_arguments"], "needle", .8))
             if c["expected_tool"] == "memory_history" else row(c, ToolRouteResult.abstain("needle", "model_abstained"))
             for c in splits["calibration"]]
@@ -131,8 +132,8 @@ def test_sparse_safe_threshold_does_not_open_validation():
     assert not result["activation_allowed"]
 
 
-def test_output_collision_and_unselected_validation_make_no_inference(tmp_path, monkeypatch):
-    protocol, sha, splits = study.load_protocol()
+def test_output_collision_and_unselected_validation_make_no_inference(tmp_path, monkeypatch, integration_protocol):
+    protocol, sha, splits = study.load_protocol(integration_protocol)
     def forbidden(*args, **kwargs):
         pytest.fail("router must not initialize")
     monkeypatch.setattr(study, "Needle2ToolRouter", forbidden)
@@ -145,8 +146,8 @@ def test_output_collision_and_unselected_validation_make_no_inference(tmp_path, 
         study.collect(args, protocol, sha, splits)
 
 
-def test_checked_report_recomputes_labels_and_rejects_incomplete(tmp_path):
-    protocol, sha, splits = study.load_protocol()
+def test_checked_report_recomputes_labels_and_rejects_incomplete(tmp_path, integration_protocol):
+    protocol, sha, splits = study.load_protocol(integration_protocol)
     report = {"schema_version": "botte.needle2-study-run/v1", "protocol_sha256": sha, "split": "calibration",
               "dataset_sha256": protocol["splits"]["calibration"]["sha256"], "complete": True,
               "cases": [row(c, ToolRouteResult.abstain("needle", "model_abstained")) for c in splits["calibration"]],
@@ -173,8 +174,8 @@ def test_absent_generalist_remains_unmeasured_and_mismatch_rejected():
         study.compare(needle, {**needle, "backend": "generalist", "dataset_sha256": "different"})
 
 
-def test_runtime_failure_stops_after_one_attempt_and_preserves_partial(tmp_path, monkeypatch):
-    protocol, sha, splits = study.load_protocol()
+def test_runtime_failure_stops_after_one_attempt_and_preserves_partial(tmp_path, monkeypatch, integration_protocol):
+    protocol, sha, splits = study.load_protocol(integration_protocol)
     attempts = []
     class Unavailable:
         runtime = {"fixture": True}

@@ -32,7 +32,13 @@ def build_checkpoint_proposal(
     not inject agent identity, trust class, review status, or execution
     authority because the shared-memory contract owns those decisions.
     """
-    handoff = harness.handoff or harness.build_handoff(completed=(), remaining=())
+    # Keep the caller's explicit progress lists while rebuilding consequences,
+    # deltas, evidence and uncertainty from the current harness state.
+    prior = harness.handoff
+    handoff = harness.build_handoff(
+        completed=prior.get("completed", ()),
+        remaining=prior.get("remaining", ()),
+    )
     verified_refs = [item.ref for item in harness.evidence if item.verified][:20]
 
     text = json.dumps(handoff, ensure_ascii=False, sort_keys=True, separators=(",", ":"))

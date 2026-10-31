@@ -1,7 +1,13 @@
 """Fresh software-contract examples, not a model-quality evaluation corpus."""
 import copy
+import hashlib
 import json
+import os
 from pathlib import Path
+import stat
+import subprocess
+import sys
+from types import SimpleNamespace
 
 import pytest
 
@@ -122,8 +128,18 @@ def test_example_cli_is_reproducible_and_does_not_overwrite(tmp_path, capsys):
     assert candidate.main(["--input", str(source), "--output", str(output)]) == 0
     saved = output.read_bytes()
     expected = (root / "docs/validation/memory-argument-spans-example-v1.json").read_bytes()
-    assert json.loads(saved) == json.loads(expected)
     result = json.loads(saved)
+    archived = json.loads(expected)
+    # Historical evidence stays pinned to the previous binder. Integrated
+    # behavior is compared separately and carries its own actual source hash.
+    assert hashlib.sha256(expected).hexdigest() == "a2fa5cb756f72204370b9388749a0e7b19cb40429c19f2c9ec959c9208c10250"
+    assert archived["binder_source_sha256"] == "9bf9f4f4e9b8d534d689f0bfceecc3a6107016a26d3bf4f6ebb8f8c067792166"
+    actual_binder = hashlib.sha256(Path(candidate.__file__).read_bytes()).hexdigest()
+    assert result["binder_source_sha256"] == actual_binder
+    assert actual_binder != archived["binder_source_sha256"]
+    assert {k: v for k, v in result.items() if k != "binder_source_sha256"} == {
+        k: v for k, v in archived.items() if k != "binder_source_sha256"
+    }
     assert result["route"]["arguments"] == {"key": "lot_MOTEUR-8"}
     assert result["new_inference_attempts"] == 0 and not result["model_quality_measured"]
     assert all(result[k] == v for k, v in candidate.BOUNDARY.items())
@@ -148,3 +164,79 @@ def test_cli_reports_invalid_proposals_as_abstention_with_error_exit(tmp_path, c
     assert candidate.main(["--input", str(source), "--output", str(output)]) == 2
     result = json.loads(output.read_text(encoding="utf-8"))
     assert not result["valid_proposal"] and result["route"]["tool_name"] is None
+
+
+def test_cli_accepts_a_regular_input_at_the_exact_size_limit(tmp_path):
+    query = "lot_C-9"
+    item = {"query": query, "proposal": proposal(query, spans={"key": {"start": 0, "end": len(query)}})}
+    raw = json.dumps(item).encode("utf-8").ljust(candidate.MAX_INPUT_BYTES, b" ")
+    source, output = tmp_path / "input.json", tmp_path / "output.json"
+    source.write_bytes(raw)
+    assert candidate.main(["--input", str(source), "--output", str(output)]) == 0
+    result = json.loads(output.read_text(encoding="utf-8"))
+    assert result["route"]["arguments"] == {"key": query}
+    assert result["input_sha256"] == hashlib.sha256(raw).hexdigest()
+
+
+def test_cli_refuses_a_directory_before_attempting_to_read_it(tmp_path):
+    output = tmp_path / "output.json"
+    assert candidate.main(["--input", str(tmp_path), "--output", str(output)]) == 2
+    assert not output.exists()
+
+
+def test_cli_refuses_a_detected_symlink_without_output(tmp_path, monkeypatch):
+    source, output = tmp_path / "input.json", tmp_path / "output.json"
+    target = tmp_path / "target.json"
+    target.write_text("{}", encoding="utf-8")
+    try:
+        source.symlink_to(target)
+    except (OSError, NotImplementedError):
+        # Some Windows test accounts cannot create links. Exercise the same
+        # refusal without requiring additional account privileges.
+        monkeypatch.setattr(Path, "is_symlink", lambda self: self == source)
+    assert candidate.main(["--input", str(source), "--output", str(output)]) == 2
+    assert not output.exists() and target.read_text(encoding="utf-8") == "{}"
+
+
+def test_special_input_is_refused_without_blocking(tmp_path, monkeypatch):
+    source, output = tmp_path / "input.json", tmp_path / "output.json"
+    if not hasattr(os, "mkfifo"):
+        source.write_text("{}", encoding="utf-8")
+        monkeypatch.setattr(candidate.os, "fstat", lambda descriptor: SimpleNamespace(st_mode=stat.S_IFCHR))
+        assert candidate.main(["--input", str(source), "--output", str(output)]) == 2
+    else:
+        os.mkfifo(source)
+        process = subprocess.run(
+            [sys.executable, "-m", "skills.tool_router.argument_spans",
+             "--input", str(source), "--output", str(output)],
+            capture_output=True, text=True, encoding="utf-8", timeout=10,
+        )
+        assert process.returncode == 2
+        assert json.loads(process.stdout)["detail"] == "input must be a regular file"
+    assert not output.exists()
+
+
+def test_input_reader_uses_only_one_bounded_sentinel_read(tmp_path, monkeypatch):
+    source = tmp_path / "input.json"
+    source.write_bytes(b"x" * 33)
+    real_fdopen = candidate.os.fdopen
+    requested = []
+
+    class TrackingReader:
+        def __init__(self, stream):
+            self.stream = stream
+        def __enter__(self):
+            return self
+        def __exit__(self, *args):
+            return self.stream.__exit__(*args)
+        def fileno(self):
+            return self.stream.fileno()
+        def read(self, size=-1):
+            requested.append(size)
+            return self.stream.read(size)
+
+    monkeypatch.setattr(candidate, "MAX_INPUT_BYTES", 32)
+    monkeypatch.setattr(candidate.os, "fdopen", lambda *a, **kw: TrackingReader(real_fdopen(*a, **kw)))
+    with pytest.raises(ValueError, match="input too large"):
+        candidate._read_input(source)
+    assert requested == [33]

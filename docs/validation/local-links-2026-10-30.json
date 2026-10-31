@@ -1,0 +1,156 @@
+{
+  "schema": "botte.local-links-validation/v1",
+  "observed_date": "2026-10-30",
+  "candidate_parent": "a2b370eebae73d85027fe0e993a640747f031283",
+  "environment": {
+    "os": "Linux",
+    "python": "3.12.14"
+  },
+  "implementation_sha256": {
+    "skills/fallow_like/local_links.py": "f039269d5c169eb32649ec3d185e449d200f2f6555f8ce3a34cd31831c4e0356",
+    "skills/fallow_like/links_cli.py": "2443ff8ff3f1716207332b77bd8a297cb4a1185e14d6756d474580a3dad8b41d",
+    "skills/fallow_like/test_local_links.py": "b0bd25365e0db8619ba93cea2e3ab1b6362c89378fe6538655ba55535df26c0e",
+    "skills/llm_mcp/test_local_links.py": "d789e06ac99cba9eb643f95d8e30e56020dc3ccb26df93fbd802c4c616fbd0fd",
+    "skills/llm_mcp/server.py": "aba38e7ecaaa65e65d90a867f83585d1ab03228768b8a8d75cc9631c3aff1066",
+    "skills/preflight/assessment.py": "89f9baf1ce2b0d5ec4bf07b8957d7100b94934d8ec9e8743c174f0f746742639",
+    "scripts/run_tests.py": "324bd14c81eff78c9700ca93aebe136995e100e2f8f95164dc670aa3b77c5124",
+    "scripts/check_docs_links.py": "e7482950d52d53bc7a740d365d7cb561db53f30fde48cbac1ce9f1c5af9b51a9"
+  },
+  "checks": [
+    {
+      "command": "python -m skills.fallow_like.test_local_links",
+      "passed": 40,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "command": "python -m skills.llm_mcp.test_local_links",
+      "passed": 9,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "command": "python -m unittest skills.preflight.test_assessment skills.preflight.test_github_plan skills.llm_mcp.test_assessment_tools skills.llm_mcp.test_statistics skills.llm_mcp.test_file_duplicates",
+      "passed": 42,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "command": "python -m unittest skills.fallow_like.test_file_duplicates skills.solvers.test_statistics",
+      "passed": 63,
+      "failed": 0,
+      "skipped": 1
+    },
+    {
+      "check": "Python3.10 syntax parsing",
+      "files": 8,
+      "status": "passed"
+    },
+    {
+      "check": "git diff --check",
+      "status": "passed"
+    },
+    {
+      "check": "actual scripts.run_tests main with its two local-link suites selected",
+      "passed": 49,
+      "failed": 0,
+      "suite_count": 2,
+      "scope": "selected suites only; full repository CI remains separate"
+    }
+  ],
+  "independent_review": {
+    "status": "concrete_findings_corrected",
+    "witnesses": [
+      "comment markers inside code",
+      "multiline code and contextual list or quote markup",
+      "nested links",
+      "HTML attributes and raw blocks",
+      "multiline HTML attributes including quoted greater-than characters",
+      "quadratic link iteration replaced"
+    ],
+    "scope": "documented single-line subset; not a CommonMark renderer"
+  },
+  "repository_observation": {
+    "repository": "zedarvates/botte-secrete",
+    "commit": "a2b370eebae73d85027fe0e993a640747f031283",
+    "tree_sha": "71ed2edf80e9511d4c407f3ece092f66bf834f93",
+    "inventory_source": "GitHub recursive tree (truncated=false), blob paths only; no submodule entries observed",
+    "inventory_paths": 940,
+    "documents": [
+      {
+        "path": "AGENTS.md",
+        "git_blob_sha": "57b6ad6554b8bbd2c0cd0d88ac9d9a5aaba5868d"
+      },
+      {
+        "path": "docs/parcimonia-workflow.md",
+        "git_blob_sha": "a2247e8eb3f9a79ee3853b759c8b499b52c936f2"
+      },
+      {
+        "path": "docs/file-duplicates.md",
+        "git_blob_sha": "b8df85cbe91b16013ff5e0b536f8779ef9987505"
+      },
+      {
+        "path": "docs/statistics.md",
+        "git_blob_sha": "d864c32f298ed48e272c89fc1fa14516f4d5317b"
+      },
+      {
+        "path": "README.md",
+        "git_blob_sha": "4130f23d5ad58571b4ca740e87c27d1d26703d91"
+      }
+    ],
+    "input_sha256": "5c3117122359fb617550e7975c34c7f61b56692dacfd4f3877910aafbb9fb93f",
+    "report": {
+      "schema": "parcimonia.local-links/v1",
+      "status": "complete",
+      "inventory_complete": true,
+      "counts": {
+        "links_examined": 73,
+        "present": 54,
+        "missing": 0,
+        "unresolved": 0,
+        "external": 19,
+        "anchor_only": 0,
+        "outside_root": 0,
+        "unsupported": 0,
+        "documents": 5,
+        "inventory_paths": 940
+      },
+      "findings": [],
+      "findings_omitted": 0,
+      "coverage": {
+        "partial": false,
+        "reasons": []
+      },
+      "report_truncated": false,
+      "methods": {
+        "syntax": "single_line_markdown_subset",
+        "path_case": "sensitive",
+        "percent_decoding": "UTF-8",
+        "anchors": "not_checked",
+        "evidence": "caller_supplied_documents_and_inventory"
+      },
+      "boundaries": {
+        "filesystem": false,
+        "network": false,
+        "model_calls": 0
+      }
+    }
+  },
+  "limits": [
+    "Only the five listed documents were inspected, not the whole repository.",
+    "Targets are compared with supplied names; no live filesystem, remote URL or anchor validation.",
+    "Native Windows/Python3.10 verification and full repository checkup run in CI after publication."
+  ],
+  "measured_usage": {
+    "tokens": null,
+    "cost": null,
+    "savings": null
+  },
+  "runner_integration_fix": {
+    "witness_run": 41111279715,
+    "witness_job": 124253944959,
+    "cause": "Both unittest entry points returned zero but omitted the stdout count summary required by scripts/run_tests.py. Dedicated tests passed; global runner classified missing summary as failure.",
+    "change": "Emit the existing N passed, M failed, K skipped summary while retaining unittest failure exit status. Production checker, CLI, MCP and parser unchanged.",
+    "verified": "Real global runner scoped to both new suites: 49 passed, 0 failed."
+  }
+}

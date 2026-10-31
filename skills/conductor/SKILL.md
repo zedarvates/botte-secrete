@@ -1,22 +1,25 @@
 ---
 name: conductor
 layer: DECIDE
-description: Route a high-level goal to an ordered, local-first plan of capabilities — the generalised router — and optionally EXECUTE the plan's read-only steps. Reads the capability registry/curator, composes steps ordered by the system's layers (SENSE→DECIDE→ACT→REMEMBER→GOVERN→DEPLOY), annotates each local vs cloud with a concrete command, and estimates the goal's effort. The executor runs the safe analysis steps unattended and confirm-gates anything that mutates state or escalates to the cloud. Use when the user states a goal and you need to decide which botte capabilities to use in what order (or run them), or asks "how should I approach X with this toolkit".
+description: Select and order Botte capabilities for a goal, preview their commands, or execute a trusted plan within existing task authority. Use explicit skill plans when local artifact checks, dependencies or checkpointed resumption are needed. Selection is local and lexical; inspect selected skill instructions to confirm applicability before execution.
 ---
 
 # conductor — goal → ordered plan of capabilities
 
 The router, generalised: not "which model tier?" but "given this **goal**, which
-capabilities, in which order, and what stays local?". The plan is the product —
-you (or the agent) execute it; the Conductor never runs anything itself.
+capabilities, in which order, and what stays local?". The planning API produces
+data; the optional executor runs the selected commands.
 
 ```bash
 python -m skills.conductor.cli "test my desktop app and report crashes"
 python -m skills.conductor.cli "reduce token cost and deploy on my project" --json
+python -m skills.conductor.cli "inspect verified outcome history" --effects --json
+python -m skills.conductor.cli "audit my project" --review-effects --json
 
 # Execute the plan (read-only steps run; mutating/cloud steps are gated):
 python -m skills.conductor.cli "audit my project and report metrics" --execute
 python -m skills.conductor.cli "..." --execute --dry-run      # preview, runs nothing
+python -m skills.conductor.cli "..." --effects --execute --dry-run --json
 python -m skills.conductor.cli "..." --execute --confirm      # also run gated steps
 ```
 
@@ -30,6 +33,11 @@ python -m skills.conductor.cli "..." --execute --confirm      # also run gated s
    reason it's there.
 4. **Estimate** — the goal's effort tier ([[auto_router]]) tells you whether any
    step's reasoning will escalate to the cloud.
+
+Selection and metadata association use the registry path, so homonymous skills
+keep their own layer, local flag and effects. Built-in command hints apply only
+to their canonical `skills/<name>/SKILL.md` entry. Other entries retain a
+`see <actual path>` pointer, which the executor skips even with `--confirm`.
 
 Output: an ordered list of steps, **0 cloud tokens** to produce. It composes the
 module collection into a coherent plan per goal — the conductor of the system.
@@ -47,6 +55,73 @@ The plan can be *run*, not just read. The executor classifies every step:
 `--dry-run` classifies everything and runs nothing (a preview). A failing step
 yields a non-zero exit so CI can react. The runner is injectable, so the
 behaviour is fully unit-tested without spawning subprocesses.
+
+For a dependent sequence, add `--execute --stop-on-failure`: after the first
+nonzero exit, every remaining step is retained as skipped without being launched.
+Python `execute`/`run_goal` and MCP `execute_plan` accept `stop_on_failure=True`.
+This checks process exits only; verify the actual prerequisite outputs separately.
+Blocked/skipped steps and incorrect outputs with exit 0 do not trigger the stop.
+Default execution continues after failures; this option does not retry or undo work.
+
+## Consequences and handoff
+
+Read [effects.json](effects.json) before selecting an execution mode. Planning
+reads local declarations; `--save` writes reports, and `--execute` launches
+commands whose effects depend on their capability and arguments. An allowlisted
+"safe" classification is not proof of no network access or cache writes.
+
+Use the shared [effect-review method](../effect-review/SKILL.md) for task-specific
+assessment. Choose the detail needed:
+
+| Option | Returned context |
+|---|---|
+| `--review-effects` | Compact `review_before` and, on execution, `review_after`; no automatic observation or LLM call. |
+| `--effects` | Complete selected declarations, retained as `effects_before` on execution. |
+| `--execute --observe-effects` | Complete declarations plus partial v2 runtime evidence; stored v1 evidence remains readable. |
+
+These options combine. Python uses `review_effects`, `include_effects` and
+`observe_effects`; MCP `conduct`/`execute_plan` expose the same applicable flags.
+`--save` with any of them, or with `--stop-on-failure`, preserves the returned JSON alongside abbreviated
+Markdown/HTML. A compact-only save keeps cues, not the deferred declaration prose.
+`effects_json` is relative to the execution working directory. Pass that path to
+`capabilities evidence --overview` or MCP `effect_evidence` with `overview: true`
+for all saved step outcomes and evidence references, without rerunning the plan.
+See the [integration contract](../../docs/capability-effects.md#compact-shared-review)
+for fields and coverage.
+
+Reviews never unlock commands or verify complete outcomes. Stopping is a separate
+explicit execution option; the executor provides no transactional rollback. Its
+`cloud_tokens` excludes model calls made by child commands. Runtime observation
+covers enrolled checkup/infra/backend/cluster calls, writes and network attempts;
+other effects remain unassessed.
+
+## Explicit checks and checkpoints
+
+For a workflow with required artifacts or resumption, read
+[verified skill runs](../../docs/verified-skill-runs.md). Its separate
+`botte.skill-plan/v1` lists commands, local pre/postcondition checks, bound
+source files and explicit dependencies. The lexical plan's layer order does
+not establish those dependencies. The CLI `--plan` and MCP
+`execute_verified_plan` preview by default; Python exposes `execute_verified`.
+The CLI rejects `--review-effects` and `--stop-on-failure` with `--plan`;
+declare dependencies and checks in the explicit plan instead.
+
+This mode distinguishes process exits from verified local predicates, records
+observed file changes, and blocks consumers of unavailable results. A private
+checkpoint permits resuming unstarted work after rechecking inputs, successful
+outputs and bound sources.
+Started but unresolved work requires state reconciliation. Read the report's
+coverage: file checks cannot establish all downstream effects or model quality.
+Reference the report through existing handoff evidence fields; never equate a
+report's `verified` status with an independently verified task-quality label.
+
+When a shared memory endpoint is configured, use
+[action-consequence memory](../../docs/action-consequence-memory.md) to recall
+relevant episodes before an explicit plan and retain its observed consequences.
+`execute_remembered_plan` previews by default and returns execution and memory
+results separately. If execution completed but ingestion failed, retry capture
+from the archived report. The memory's local-check assessment does not replace
+the current plan's dependency gates or establish a causal claim.
 
 Exposed via [[llm_mcp]] as `conduct` (plan) and `execute_plan` (plan + run safe
 steps). Built on [[capabilities]], [[auto_router]]; pairs with the [[control_loop]]

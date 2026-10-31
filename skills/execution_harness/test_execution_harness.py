@@ -4,6 +4,9 @@
 from __future__ import annotations
 
 import tempfile
+from copy import deepcopy
+import json
+from pathlib import Path
 
 from skills.execution_harness import (
     ArtifactRecord,
@@ -16,15 +19,18 @@ from skills.execution_harness import (
     HarnessInvariantError,
     VerificationResult,
 )
-from skills.execution_harness.atlas_seed import atlas_from_needle2_comparison
+from skills.execution_harness.atlas_seed import (
+    NEEDLE2_COMPARISON_REF, NEEDLE2_COMPARISON_SHA256, _validate_summary,
+    atlas_from_needle2_comparison,
+)
 from skills.execution_harness.memory_adapter import build_checkpoint_proposal
 from skills.execution_harness.trajectory_adapter import emit_harness_outcome
 
 
-def _raises(fn) -> bool:
+def _raises(fn, exception=HarnessInvariantError) -> bool:
     try:
         fn()
-    except HarnessInvariantError:
+    except exception:
         return True
     return False
 
@@ -63,6 +69,23 @@ def main() -> int:
         )
     )
     check("explicit execution delta is retained", len(harness.execution_deltas) == 1)
+
+    requested = {"quality": {"level": "full"}}
+    executed = deepcopy(requested)
+    alias_harness = ExecutionHarness(mission="alias-check", context_snapshot={})
+    alias_harness.record_delta(ExecutionDelta(requested=requested, executed=executed))
+    executed["quality"]["level"] = "reduced"
+    recorded = alias_harness.build_handoff(completed=(), remaining=())["execution_deltas"][0]
+    check(
+        "caller mutation cannot rewrite recorded nested execution states",
+        recorded["requested"] == recorded["executed"] == {"quality": {"level": "full"}}
+        and executed["quality"]["level"] == "reduced",
+    )
+    alias_harness.execution_deltas[0].executed["quality"]["level"] = "reduced"
+    check(
+        "handoff rejects an internally edited unacknowledged degradation",
+        _raises(lambda: alias_harness.build_handoff(completed=(), remaining=())),
+    )
 
     verified = ArtifactRecord(
         artifact_id="build-1",
@@ -169,6 +192,47 @@ def main() -> int:
         and all("promotion" in row.outcome or "stop_" in row.outcome for row in seed_rows),
     )
 
+    source_bytes = Path(NEEDLE2_COMPARISON_REF).read_bytes()
+    with tempfile.TemporaryDirectory() as seed_dir:
+        alternate = Path(seed_dir) / "comparison.json"
+        alternate.write_bytes(source_bytes)
+        copied = atlas_from_needle2_comparison(alternate)
+        check(
+            "seed binds copied historical bytes rather than trusting their filename",
+            len(copied.observations) == 2
+            and all(f"file-sha256:{NEEDLE2_COMPARISON_SHA256}" in row.evidence_refs
+                    for row in copied.observations),
+        )
+        alternate.write_bytes(source_bytes + b"\n")
+        check(
+            "even whitespace drift cannot become source-bound historical observations",
+            _raises(lambda: atlas_from_needle2_comparison(alternate), ValueError),
+        )
+        fabricated = json.loads(source_bytes)
+        fabricated["protocol_sha256"] = "not-a-hash"
+        fabricated["needle_diagnostic"]["positive_exact_coverage"] = 42
+        alternate.write_text(json.dumps(fabricated), encoding="utf-8")
+        check(
+            "fabricated protocol and metrics cannot acquire historical model provenance",
+            _raises(lambda: atlas_from_needle2_comparison(alternate), ValueError),
+        )
+
+    valid_summary = json.loads(source_bytes)["needle_diagnostic"]
+    for field, value in (
+        ("p95_roundtrip_ms", float("nan")),
+        ("p95_roundtrip_ms", -1),
+        ("positive_exact_coverage", 42),
+        ("positive_cases", 0),
+        ("positive_exact_calls", True),
+        ("proposals", 1),
+        ("exact_proposal_precision", 1),
+    ):
+        invalid_summary = {**valid_summary, field: value}
+        check(
+            f"Atlas seed rejects invalid measurement or denominator {field}={value!r}",
+            _raises(lambda: _validate_summary(invalid_summary), ValueError),
+        )
+
     harness.add_evidence(EvidenceRecord(kind="ci", ref="ci:1", verified=True))
     harness.add_evidence(EvidenceRecord(kind="note", ref="unverified:note", verified=False))
     handoff = harness.build_handoff(completed=("contract",), remaining=("integration",))
@@ -222,6 +286,26 @@ def main() -> int:
         and "agent_id" not in proposal["arguments"]
         and "trust_class" not in proposal["arguments"]
         and "status" not in proposal["arguments"],
+    )
+
+    checkpoint_harness = ExecutionHarness(mission="current-checkpoint", context_snapshot={})
+    checkpoint_harness.build_handoff(completed=("first",), remaining=("reconcile",))
+    checkpoint_harness.uncertainties.append("unresolved action")
+    checkpoint_harness.record_delta(ExecutionDelta(
+        requested={"model": "requested"}, executed={"model": "fallback"},
+        reason="backend unavailable", acknowledged=True,
+    ))
+    fresh_proposal = build_checkpoint_proposal(
+        checkpoint_harness, project_id="test-project", key="harness.current.v1",
+        request_id="req-current-1", run_id="run-current-1", observed_at=1_800_000_000.0,
+    )
+    checkpoint = json.loads(fresh_proposal["arguments"]["record"]["text"])
+    check(
+        "checkpoint rebuilds current uncertainty and deltas while retaining progress",
+        checkpoint["uncertainties"] == ["unresolved action"]
+        and len(checkpoint["execution_deltas"]) == 1
+        and checkpoint["completed"] == ["first"]
+        and checkpoint["remaining"] == ["reconcile"],
     )
 
     for declaration in (
