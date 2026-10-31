@@ -50,3 +50,41 @@ The fixture is authored, not an incident or our live game client. No cost,
 provider-token, speed or model-quality gain is established by returning a small
 location report instead of source content. No merge, release, deployment or
 automatic worker/model activation is included.
+
+## Continuation: source-bound context window
+
+Prior head `14065c2148ece6f079dc981b37a22293c70eaeee` completed its three
+observed workflows successfully (CI, PR checkup, RC1 reproduction). Those results
+apply to the locator candidate, not this continuation.
+
+`context FILE NAME EXPECTED_SHA256` now checks the supplied digest and returns
+an exact bounded line window from that same read snapshot. Stale, ambiguous,
+missing and over-budget cases remain distinct. Stale/ambiguous/over-budget
+results return no context text; duplicates require an explicit occurrence.
+The shared regular-file reader retains the locator's bounds and refusal rules.
+
+- Latest canonical changed runner: 123 passed, 0 failed across all four selected
+  suites. This narrower selection is not comparable to the preceding 394-check
+  selection; neither is the full repository suite.
+- Locator/context suite: 29 tests passed, overlapping the canonical total.
+- Actual subprocess sequence: `symbol` found a function in an authored CRLF
+  fixture, `context` returned the exact bytes, then a physical edit made the same
+  context request exit 3 with `stale_source` and an empty text field.
+- Tests also cover duplicate names/explicit occurrence, absent symbols, oversized
+  anchor lines, budget omissions, exact UTF-8 byte counts, CRLF/BOM, no final LF,
+  context digests, malformed parameters and CLI exit codes 2/3/4/5.
+- A controlled write after the one source read demonstrates snapshot binding:
+  the returned digest and context describe the same captured bytes. This is
+  intentionally not proof that the file cannot change after the read.
+- Final wheel installed outside checkout under isolated imports: all 29 tests
+  passed again and symbols.py/cli.py/test_symbols.py hashes match final source.
+- Three Python files parse Python 3.10 grammar under Python 3.12.14; no local
+  Python 3.10 or Windows runtime qualification is inferred. Checkup completed
+  with the existing missing project-local MCP declaration limitation.
+
+The window uses complete source lines, preserving the declaration first and
+marking budget omissions. It can include neighboring declarations or omit part
+of a long body: `function_body_complete` remains unknown, independently of the
+window-completeness flag. Raw-context bytes exclude JSON serialization overhead.
+No code is executed, no task is marked complete, no model/backend is connected
+and no edits/deployments/merges are authorized by a source digest or returned text.
