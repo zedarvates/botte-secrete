@@ -30,6 +30,11 @@ private, proposed, non-executable quarantine observations, excluded from normal
 `context_bundle`. Use existing `review_quarantine` for explicitly labeled data;
 promotion remains blocked.
 
+For a bounded content search with source versions and report digests, use the
+[read-only recall command](parcimonia-memory-recall.md) on a closed or
+checkpointed project database. Missing, incomplete and unavailable reads remain
+distinct; retrieved observations remain quarantined and unverified.
+
 Identity binds project/run, source URI/version, exact report digest and document
 references. Atomic SQLite lookup/write prevents duplicate versions/access writes
 under competing connections. Conflicting or lifecycle-modified entries are not

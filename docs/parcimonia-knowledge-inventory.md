@@ -80,5 +80,9 @@ The [verification-memory connection](parcimonia-verification-memory.md) now
 maps the six helper schemas to private quarantine proposals in the existing
 Memory Hub and reviews supplied documentary links. Preview is read-only;
 persistence needs an explicit destination and does not enter normal context.
+The [recall adapter](parcimonia-memory-recall.md) searches bounded sanitized
+receipt projections in an explicitly selected closed/checkpointed database,
+returning source versions and declared report/document digests. It preserves
+quarantine and distinguishes incomplete or unavailable reads from empty results.
 The separate Parcimonia episode format still requires its own versioned adapter.
 This inventory alone adds neither a store nor an automatic memory write.

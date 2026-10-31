@@ -94,6 +94,17 @@ def main(argv=None) -> int:
     s.add_argument("--memory-dir", type=Path, help="explicit MemoryStore base directory; required for write")
     s = sub.add_parser("knowledge-links", help="review declared source links and missing/versioned dependencies")
     s.add_argument("--input", required=True, help="versioned knowledge inventory JSON")
+    s = sub.add_parser("recall", help="read existing verification receipts with source citations; no store writes")
+    s.add_argument("--memory-dir", required=True, type=Path, help="explicit existing MemoryStore base directory")
+    s.add_argument("--project", required=True)
+    s.add_argument("--query", required=True, help="bounded lexical query, not SQL or instructions")
+    s.add_argument("--agent-id", default="parcimonia-verification")
+    s.add_argument("--current-sources", help="JSON array of caller-declared current uri/version/optional sha256")
+    s.add_argument("--max-rows", type=int, default=256)
+    s.add_argument("--max-input-bytes", type=int, default=2097152)
+    s.add_argument("--max-results", type=int, default=8)
+    s.add_argument("--max-output-bytes", type=int, default=65536)
+    s.add_argument("--max-seconds", type=float, default=3.0)
     args = p.parse_args(argv)
     try:
         op = args.operation
@@ -188,6 +199,15 @@ def main(argv=None) -> int:
             from skills.app_test.knowledge_links import review_knowledge_links
             report = review_knowledge_links(read_json(args.input))
             code = {"completed": 0, "findings": 1}.get(report.get("status"), 2)
+        elif op == "recall":
+            from skills.app_test.memory_retrieval import retrieve_verification_memory
+            report = retrieve_verification_memory(args.memory_dir, args.project, args.query,
+                agent_id=args.agent_id,
+                current_sources=read_json(args.current_sources) if args.current_sources else (),
+                max_rows=args.max_rows, max_input_bytes=args.max_input_bytes,
+                max_results=args.max_results, max_output_bytes=args.max_output_bytes,
+                max_seconds=args.max_seconds)
+            code = 0 if report.get("status") == "completed" else 2
         else:
             from skills.app_test.prioritization import prioritize_checks
             payload = read_json(args.input)

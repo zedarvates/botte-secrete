@@ -9,6 +9,7 @@ MODULES = (
     "skills.app_test.test_workbench_cli", "skills.preflight.test_conformance",
     "skills.app_test.test_memory_bridge", "skills.app_test.test_knowledge_links",
     "skills.app_test.test_memory_cli",
+    "skills.app_test.test_memory_retrieval", "skills.app_test.test_recall_cli",
 )
 
 

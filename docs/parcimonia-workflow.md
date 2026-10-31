@@ -113,6 +113,20 @@ failures and capture references. Measure success, total time to verified outcome
 capture-to-action latency p50/p95, missed deadlines, stale actions and resources.
 No real-time game performance has been established by this increment.
 
+## Reuse prior verification observations
+
+When an explicit local Memory Hub contains verification receipts, use
+[`botte verify recall`](parcimonia-memory-recall.md) to select bounded status and
+counter projections with source/version/report-digest citations. Read a closed
+or checkpointed project database; the command does not create a store. Detailed
+failure signatures, issue prose and raw reports are outside this searchable
+projection. Inspect the cited original report when more detail is needed.
+
+Keep missing, incomplete and unavailable reads distinct. Compare versions only
+against explicitly supplied current references, and retain the observation's
+quarantine label. Recall supplies evidence to review; it does not promote facts,
+change normal context or activate a model route.
+
 ## Distribution and measurement
 
 The Codex Git marketplace package needs its separately installed compatible
