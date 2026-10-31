@@ -41,6 +41,15 @@ SUITES = [
     ("e2e", [sys.executable, "skills/test_e2e.py"], ""),
     ("completion_proof", [sys.executable, "-m", "skills.completion_proof.test_completion_proof"], "skills/completion_proof/"),
     ("completion_verify", [sys.executable, "-m", "skills.completion_proof.test_verify"], "skills/completion_proof/"),
+    ("factory_assurance", [sys.executable, "-m", "skills.factory_assurance.test_factory_assurance"], "skills/factory_assurance/"),
+    ("factory_integrations", [sys.executable, "-m", "skills.factory_assurance.test_integrations"], (
+        "skills/factory_assurance/", "skills/capabilities/",
+    )),
+    ("factory_roles", [sys.executable, "-m", "skills.factory_assurance.test_roles"], "skills/factory_assurance/"),
+    ("private_holdout", [sys.executable, "-m", "skills.factory_assurance.test_private_holdout"], "skills/factory_assurance/"),
+    ("factory_boundaries", [sys.executable, "-m", "skills.factory_assurance.test_boundaries"], (
+        "skills/factory_assurance/", "skills/capabilities/",
+    )),
     ("runner_exit_verdict", [sys.executable, "scripts/test_runner_exit_verdict.py"], "scripts/"),
     ("readme_runner", [sys.executable, "scripts/test_readme_runner_contract.py"], "scripts/"),
     ("odin_codex_queue", [sys.executable, "scripts/test_odin_codex_queue.py"], (
