@@ -63,6 +63,60 @@ When `sha256` is supplied in `current-sources.json`, the source reference compar
 the exact raw report UTF-8 digest, while a documentary reference compares the
 caller's declared document digest. This field is not a source-code commit hash.
 
+## Review the recalled documents against an inventory
+
+To join recall with the existing documentary-link reviewer, supply an explicit
+`parcimonia.knowledge-inventory/v1` snapshot:
+
+```sh
+botte verify recall --memory-dir /explicit/memory-directory \
+  --project demo-project --query "intermittency" --inventory inventory.json
+```
+
+```json
+{
+  "schema":"parcimonia.knowledge-inventory/v1",
+  "completeness":"complete",
+  "nodes":[{"id":"doc/test-recipe","kind":"document",
+            "source_uri":"repo:docs/test-recipe.md","source_version":"v3"}],
+  "links":[]
+}
+```
+
+With this option, output uses the separate
+`parcimonia.verification-memory-linked-retrieval/v1` schema. Plain recall retains
+its existing v1 schema. The wrapper preserves the original retrieval status and
+coverage, reported failures, source versions, report digests, documentary
+references and quarantine labels. It checks selected receipts only; omitted or
+unread receipts remain outside its documentary review.
+
+| Supplied documentary identity | Reference review |
+| --- | --- |
+| One document or recipe node with the exact URI and version | Declared reference resolved |
+| One eligible URI candidate with a different version | Version mismatch |
+| Several plausible node IDs | Ambiguous; no automatic choice |
+| URI absent from an inventory declared complete | Missing in that declared inventory |
+| URI absent from a partial or unknown inventory | Unknown reference |
+| URI appears only under an ineligible node kind | Kind mismatch |
+
+URI matching is exact. Lexical similarity does not create a documentary
+relationship. A declared match does not verify document contents, freshness or
+the truth of the receipt. Existing `current-sources` comparisons stay visible;
+explicit version or digest mismatches also remain findings even when the
+selected inventory matches the old reference.
+
+`inventory_review` separately reports the supplied graph's existing links and
+dependency cycles through `review_knowledge_links`. Receipt references are not
+inserted as synthetic nodes or graph edges. This does not crawl a wiki or
+materialize inferred relationships. Both supplied snapshots remain unchanged.
+
+Linked output requires an 8192-byte minimum output allowance. The final compact
+ASCII JSON envelope is capped, including copied retrieval and graph details.
+Trimming keeps explicit counts, coverage and input digests; omitted rows cannot
+produce a completed review. Exit codes are 0 for a completed scoped review,
+1 for findings and 2 for incomplete, unavailable or invalid input. These codes
+describe documentary review, not passing software tests.
+
 ## Bound the read
 
 The CLI exposes `--max-rows`, `--max-input-bytes`, `--max-results`,

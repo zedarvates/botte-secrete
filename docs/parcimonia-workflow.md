@@ -127,6 +127,12 @@ against explicitly supplied current references, and retain the observation's
 quarantine label. Recall supplies evidence to review; it does not promote facts,
 change normal context or activate a model route.
 
+When a versioned documentary inventory is supplied, `recall --inventory FILE`
+also checks the selected receipt references against exact URI/version identities.
+It retains missing, unknown, ambiguous and mismatched references, alongside the
+inventory's existing dependency review. No lexical candidate becomes a resolved
+relation, and an incomplete read cannot become a complete documentary review.
+
 ## Distribution and measurement
 
 The Codex Git marketplace package needs its separately installed compatible

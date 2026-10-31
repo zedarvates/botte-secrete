@@ -84,5 +84,8 @@ The [recall adapter](parcimonia-memory-recall.md) searches bounded sanitized
 receipt projections in an explicitly selected closed/checkpointed database,
 returning source versions and declared report/document digests. It preserves
 quarantine and distinguishes incomplete or unavailable reads from empty results.
+An optional explicit inventory connects these selected references to the
+existing documentary reviewer by exact URI/version, retaining ambiguity,
+missing/unknown references and version mismatches without creating graph edges.
 The separate Parcimonia episode format still requires its own versioned adapter.
 This inventory alone adds neither a store nor an automatic memory write.

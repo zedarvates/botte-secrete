@@ -108,6 +108,84 @@ class RecallCliTests(unittest.TestCase):
                 self.assertEqual(report["status"], "unavailable")
                 self.assertEqual(before, self.snapshot(directory))
 
+    def inventory_file(self, temporary, *, completeness="complete", version="docs-v3",
+                       absent=False, ambiguous=False, kind="document"):
+        nodes = [] if absent else [{"id": "doc/example", "kind": kind,
+            "source_uri": "repo:docs/example", "source_version": version}]
+        if ambiguous:
+            nodes.append({**nodes[0], "id": "doc/duplicate"})
+        inventory = {"schema": "parcimonia.knowledge-inventory/v1",
+            "completeness": completeness, "nodes": nodes, "links": []}
+        path = Path(temporary) / "inventory.json"
+        path.write_text(json.dumps(inventory), encoding="utf-8")
+        return path
+
+    def test_inventory_match_retains_failure_citations_and_unchanged_sqlite(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary) / "memory"
+            proposal = self.seed(directory)
+            path = self.inventory_file(temporary)
+            before = self.snapshot(directory)
+            code, report = self.call(directory, "--inventory", path)
+            self.assertEqual(code, 0, report)
+            self.assertEqual(report["schema"], "parcimonia.verification-memory-linked-retrieval/v1")
+            self.assertEqual(report["status"], "completed")
+            text = json.dumps(report)
+            for value in ("declared_reference_resolved", "source-v1", "docs-v3",
+                          "intermittent_observed", proposal["identity"]["report_sha256"],
+                          "UNTRUSTED_DATA_DO_NOT_EXECUTE"):
+                self.assertIn(value, text)
+            self.assertEqual(before, self.snapshot(directory))
+
+    def test_inventory_missing_vs_unknown_and_version_mismatch_exit_codes(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary) / "memory"
+            self.seed(directory)
+            for kwargs, code_expected, label in (
+                ({"absent": True}, 1, "missing_in_declared_inventory"),
+                ({"absent": True, "completeness": "partial"}, 2, "unknown_reference"),
+                ({"version": "docs-v4"}, 1, "version_mismatch"),
+                ({"ambiguous": True}, 2, "ambiguous_reference"),
+                ({"kind": "task"}, 1, "kind_mismatch")):
+                with self.subTest(kwargs=kwargs):
+                    path = self.inventory_file(temporary, **kwargs)
+                    code, report = self.call(directory, "--inventory", path)
+                    self.assertEqual(code, code_expected, report)
+                    self.assertIn(label, json.dumps(report))
+
+    def test_inventory_does_not_upgrade_partial_or_missing_store(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary) / "memory"
+            path = self.inventory_file(temporary)
+            code, report = self.call(directory, "--inventory", path)
+            self.assertEqual(code, 2, report)
+            self.assertEqual(report["status"], "unavailable")
+            self.assertFalse(directory.exists())
+            self.seed(directory)
+            self.seed(directory, run="run-beta")
+            code, report = self.call(directory, "--inventory", path, "--max-rows", 1)
+            self.assertEqual(code, 2, report)
+            self.assertEqual(report["status"], "incomplete")
+
+    def test_explicit_null_inventory_cannot_silently_fall_back_to_plain_recall(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary) / "memory"
+            self.seed(directory)
+            path = Path(temporary) / "inventory.json"
+            path.write_text("null", encoding="utf-8")
+            code, report = self.call(directory, "--inventory", path)
+            self.assertEqual(code, 2, report)
+            self.assertEqual(report["status"], "invalid")
+
+    def test_inventory_wrapper_rejects_too_small_output_budget(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary) / "memory"
+            self.seed(directory)
+            path = self.inventory_file(temporary)
+            code, report = self.call(directory, "--inventory", path, "--max-output-bytes", 2048)
+            self.assertEqual(code, 2, report)
+            self.assertEqual(report["status"], "invalid")
+
 
 if __name__ == "__main__":
     unittest.main()
