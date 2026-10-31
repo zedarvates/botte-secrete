@@ -431,5 +431,14 @@ class HttpTests(QueueFixture):
         self.assertEqual([j["queue_position"] for j in self.request("/api/state")["jobs"] if j["status"] == "queued"], [1,2])
 
 
+def main(argv=None):
+    result = unittest.main(module=__name__, argv=argv, verbosity=2, exit=False).result
+    failed = len(result.failures) + len(result.errors) + len(result.unexpectedSuccesses)
+    skipped = len(result.skipped) + len(result.expectedFailures)
+    passed = max(0, result.testsRun - failed - skipped)
+    print(f"RESULT: {passed} passed, {failed} failed, {skipped} skipped")
+    return 0 if result.wasSuccessful() else 1
+
+
 if __name__ == "__main__":
-    unittest.main(verbosity=2)
+    raise SystemExit(main())
