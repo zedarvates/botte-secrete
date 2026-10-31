@@ -11,7 +11,9 @@ The RC adds Factory Assurance, independent judging, and evidence gates. Start in
 observe, consultative, or shadow mode; the private/external holdout remains
 unproven. See the release notes for limits and installation at the validated
 commit. `main` prepares version **1.11.0**; the badge below identifies that
-unreleased candidate, not a published stable release. The
+unreleased upstream candidate. This delivery includes the
+[local stable 1.11.0 release notes](docs/releases/1.11.0.md); its exact artifacts
+and validation are recorded in the accompanying delivery manifest. The
 [Codex plugin guide](plugins/botte-secrete/README.md) documents its separately
 installed Python runtime and Git marketplace catalog.
 

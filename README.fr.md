@@ -11,7 +11,9 @@ La RC ajoute Factory Assurance, un juge indépendant et des critères de preuve.
 Commencer en mode observe, consultative ou shadow ; la validation sur un jeu
 privé/externe indépendant reste à établir. Les notes de version précisent les
 limites et l'installation au commit validé. `main` prépare la version
-**1.11.0** ; le badge ci-dessous indique cette candidate non publiée. Le
+**1.11.0** ; le badge ci-dessous indique cette version non publiée en amont.
+Cette livraison fournit les [notes de la stable locale 1.11.0](docs/releases/1.11.0.md) ;
+son manifeste précise les archives et validations exactes. Le
 [guide du plugin Codex](plugins/botte-secrete/README.md) explique l'installation
 séparée du runtime Python et le catalogue Git.
 

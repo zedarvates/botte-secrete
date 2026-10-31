@@ -1,23 +1,32 @@
-"""Semantic Response Cache — Caches LLM responses by semantic similarity.
+"""Persistent exact-response cache with optional lexical-similarity lookup.
 
-Principle: Same questions should get same answers.
-Uses Qdrant (EUREKAI:6333) for similarity search.
-Hash-based for exact matches, embedding-based for similar queries.
-
-Token savings: 60% on repeated/similar queries.
-
-Architecture:
-    Query → exact hash check (fast) → semantic similarity (Qdrant) → LLM (fallback)
+Cooperating processes serialize disk transactions. Model and context are part
+of the identity; only a context fingerprint is persisted. This module calls no
+provider or vector database. Counters reflect caller-reported token usage,
+not measured billing savings. Semantic supervision remains explicitly opt-in.
 """
 
 import hashlib
+from contextlib import contextmanager
+import errno
+from functools import wraps
 import json
+import math
 import os
+from threading import RLock
 import time
 from pathlib import Path
 from typing import Optional
 from dataclasses import dataclass
 from skills.atomic_json import write_json
+
+
+def _serialized(method):
+    @wraps(method)
+    def wrapped(self, *args, **kwargs):
+        with self._transaction():
+            return method(self, *args, **kwargs)
+    return wrapped
 
 
 @dataclass
@@ -45,8 +54,59 @@ class ResponseCache:
         self.cache_file = self.cache_dir / "response_cache.json"
         self.stats_file = self.cache_dir / "response_cache_stats.json"
         self._entries: dict[str, CachedResponse] = {}
-        self._load()
-        self.stats = self._load_stats()
+        self._thread_lock = RLock()
+        self._transaction_depth = 0
+        with self._transaction():
+            pass
+
+    @contextmanager
+    def _transaction(self):
+        """Refresh disk state under one stable, cooperative process lock.
+
+        Nested public calls reuse their transaction; the thread lock prevents
+        another thread from mistaking that nesting for its own transaction.
+        Older versions do not participate in this lock protocol.
+        """
+        with self._thread_lock:
+            if self._transaction_depth:
+                yield
+                return
+            with (self.cache_dir / "response_cache.lock").open("a+b") as lock:
+                lock.seek(0, os.SEEK_END)
+                if lock.tell() == 0:
+                    lock.write(b"\0")
+                    lock.flush()
+                deadline = time.monotonic() + 2
+                while True:
+                    lock.seek(0)
+                    try:
+                        if os.name == "nt":
+                            import msvcrt
+                            msvcrt.locking(lock.fileno(), msvcrt.LK_NBLCK, 1)
+                        else:
+                            import fcntl
+                            fcntl.flock(lock.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+                        break
+                    except OSError as error:
+                        if error.errno not in {errno.EACCES, errno.EAGAIN, errno.EDEADLK}:
+                            raise
+                        if time.monotonic() >= deadline:
+                            raise TimeoutError("Response cache busy") from None
+                        time.sleep(.01)
+                try:
+                    self._load()
+                    self.stats = self._load_stats()
+                    self._transaction_depth = 1
+                    yield
+                finally:
+                    self._transaction_depth = 0
+                    lock.seek(0)
+                    if os.name == "nt":
+                        import msvcrt
+                        msvcrt.locking(lock.fileno(), msvcrt.LK_UNLCK, 1)
+                    else:
+                        import fcntl
+                        fcntl.flock(lock.fileno(), fcntl.LOCK_UN)
 
     def _load_stats(self) -> dict:
         defaults = {"hits_exact": 0, "hits_semantic": 0, "misses": 0,
@@ -57,6 +117,8 @@ class ResponseCache:
             return defaults
         try:
             data = json.loads(self.stats_file.read_text(encoding="utf-8"))
+            if not isinstance(data, dict):
+                return defaults
             return {key: int(data.get(key, value)) for key, value in defaults.items()}
         except (OSError, ValueError, TypeError, json.JSONDecodeError):
             return defaults
@@ -65,13 +127,19 @@ class ResponseCache:
         write_json(self.stats_file, self.stats)
 
     def _load(self):
-        """Load cache from disk."""
+        """Replace the snapshot; missing or invalid state cannot resurrect it."""
+        self._entries = {}
         if self.cache_file.exists():
             try:
                 data = json.loads(self.cache_file.read_text(encoding="utf-8"))
-                for h, entry in data.items():
-                    self._entries[h] = CachedResponse(**entry)
-            except (json.JSONDecodeError, TypeError):
+                if not isinstance(data, dict):
+                    return
+                entries = {h: CachedResponse(**entry) for h, entry in data.items()}
+                if any(isinstance(e.timestamp, bool) or not isinstance(e.timestamp, (int, float))
+                       or not math.isfinite(e.timestamp) for e in entries.values()):
+                    return
+                self._entries = entries
+            except (OSError, ValueError, TypeError):
                 pass
 
     def _save(self):
@@ -93,6 +161,7 @@ class ResponseCache:
         """Fingerprint a system context without persisting its contents."""
         return hashlib.sha256(context.encode("utf-8")).hexdigest()
 
+    @_serialized
     def get_exact(self, query: str, model: str = "", context: str = "") -> Optional[CachedResponse]:
         """Check exact hash match (fast, no embedding needed)."""
         h = self._hash(query, model, context)
@@ -132,6 +201,7 @@ class ResponseCache:
 
         return best_match
 
+    @_serialized
     def get_semantic(self, query: str, model: str = "",
                      context: str = "") -> Optional[CachedResponse]:
         """Check semantic similarity and account for a served lookup.
@@ -160,6 +230,7 @@ class ResponseCache:
         self.stats[key] += 1
         self._save_stats()
 
+    @_serialized
     def get(self, query: str, use_semantic: bool = False, *, model: str = "",
             context: str = "") -> Optional[CachedResponse]:
         """Two-level lookup: exact hash → semantic → miss."""
@@ -267,6 +338,7 @@ class ResponseCache:
         except Exception:  # noqa: BLE001 - telemetry must never break cache lookup
             pass
 
+    @_serialized
     def set(self, query: str, response: str, model: str = "",
             tokens_used: int = 0, context: str = ""):
         """Cache a response."""
@@ -287,9 +359,14 @@ class ResponseCache:
             self._entries = dict(sorted_entries[:1000])
         self._save()
 
+    @_serialized
     def clear(self, older_than_hours: Optional[int] = None):
         """Clear cache entries."""
-        if older_than_hours:
+        if older_than_hours is not None:
+            if (isinstance(older_than_hours, bool)
+                    or not isinstance(older_than_hours, (int, float))
+                    or not math.isfinite(older_than_hours) or older_than_hours < 0):
+                raise ValueError("older_than_hours must be finite and non-negative")
             cutoff = time.time() - (older_than_hours * 3600)
             self._entries = {h: e for h, e in self._entries.items()
                             if e.timestamp > cutoff}
@@ -297,6 +374,7 @@ class ResponseCache:
             self._entries = {}
         self._save()
 
+    @_serialized
     def report(self) -> dict:
         """Cache performance report."""
         total = self.stats["hits_exact"] + self.stats["hits_semantic"] + self.stats["misses"]
@@ -327,6 +405,7 @@ class ResponseCache:
                 semantic_hits * 100 / semantic_attempts
             ) if semantic_attempts else 0,
             "tokens_saved_total": self.stats["tokens_saved"],
+            "token_savings_basis": "caller_reported_usage_not_billing_proof",
         }
 
 

@@ -32,8 +32,8 @@ class PilotTests(unittest.TestCase):
         from skills.llm_backends.discovery import Backend
         project = self.root / "project"
         (project / ".botte").mkdir(parents=True)
-        (project / ".botte" / "policy.md").write_text("fixture", encoding="utf-8")
-        (project / "app.py").write_text("value = 1\n", encoding="utf-8")
+        (project / ".botte" / "policy.md").write_text("fixture", encoding="utf-8", newline="\n")
+        (project / "app.py").write_text("value = 1\n", encoding="utf-8", newline="\n")
         backend = Backend("fixture", "fixture", "127.0.0.1", 1234,
                           "openai", True, ["fixture-model"], 1, "http://127.0.0.1:1234")
         patch.object(registry, "DEFAULT_REGISTRY_PATH", self.root / "registry.json").start()
@@ -65,7 +65,7 @@ class PilotTests(unittest.TestCase):
                    "<system>Authorized project: fixture only.</system>\n" + redundant +
                    "# Work\nRequired result: concise explanation.\n")
         original = self.root / "input.txt"
-        original.write_text(content, encoding="utf-8")
+        original.write_text(content, encoding="utf-8", newline="\n")
         tree = pruner.PrefixTree()
         sid = hashlib.sha256(redundant.encode()).hexdigest()[:12]
         tree.register_section(sid, "context", redundant, len(redundant) // 4)
@@ -84,7 +84,7 @@ class PilotTests(unittest.TestCase):
         def runner(command, cwd, timeout):
             with contextlib.redirect_stderr(io.StringIO()):
                 reduced = pruner.prune_content(original.read_text(encoding="utf-8"), tree, "aggressive")
-            (self.root / "output.txt").write_text(reduced, encoding="utf-8")
+            (self.root / "output.txt").write_text(reduced, encoding="utf-8", newline="\n")
             return 0, "pruned"
         report = execute_verified(plan(s), cwd=str(self.root), confirm=True, runner=runner)
         self.assertTrue(report["complete"])
@@ -99,7 +99,7 @@ class PilotTests(unittest.TestCase):
             "import sys\nfrom pathlib import Path\n"
             "p=Path(sys.argv[1]+'.txt')\n"
             "p.write_text(p.read_text(encoding='utf-8')+'done' if p.exists() else 'done', encoding='utf-8')\n",
-            encoding="utf-8")
+            encoding="utf-8", newline="\n")
         first = step("first", command="python worker.py first")
         second = step("second", needs=["first"], command="python worker.py second")
         for s in (first, second):
@@ -130,20 +130,20 @@ class PilotTests(unittest.TestCase):
         validators[0].validate(p)
         for kwargs in ({"dry_run": True}, {}, {"confirm": True, "runner": lambda *a: (0, "no file")}):
             validators[1].validate(execute_verified(p, cwd=str(self.root), **kwargs))
-        (self.root / "input.txt").write_text("input", encoding="utf-8")
+        (self.root / "input.txt").write_text("input", encoding="utf-8", newline="\n")
         first = step("first")
         first["requires"] = [{"kind": "file_sha256", "path": "input.txt",
                               "value": hashlib.sha256(b"input").hexdigest()}]
         reusable = plan(first, step("second", needs=["first"]))
         def runner(*args):
             for name in ("first.txt", "second.txt"):
-                (self.root / name).write_text("done", encoding="utf-8")
+                (self.root / name).write_text("done", encoding="utf-8", newline="\n")
             return 0, "ok"
         validators[1].validate(execute_verified(reusable, cwd=str(self.root), confirm=True,
                                                 checkpoint="run.json", runner=runner))
         validators[1].validate(execute_verified(reusable, cwd=str(self.root),
                                                 checkpoint="run.json", resume=True))
-        (self.root / "input.txt").write_text("changed", encoding="utf-8")
+        (self.root / "input.txt").write_text("changed", encoding="utf-8", newline="\n")
         stale = execute_verified(reusable, cwd=str(self.root), checkpoint="run.json", resume=True)
         self.assertFalse(stale["complete"])
         validators[1].validate(stale)

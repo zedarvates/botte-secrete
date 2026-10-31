@@ -180,12 +180,14 @@ def _read_document(path):
     flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0)
     with os.fdopen(os.open(path, flags), "rb") as stream:
         opened = os.fstat(stream.fileno())
-        if not stat.S_ISREG(opened.st_mode) or identity(before) != identity(opened):
+        # Windows path stat exposes creation time as ctime while fstat exposes
+        # change time. Compare that field only within the same API.
+        if not stat.S_ISREG(opened.st_mode) or identity(before)[:4] != identity(opened)[:4]:
             raise ValueError("report changed while opening")
         raw = stream.read(MAX_DOCUMENT_BYTES + 1)
         after = os.fstat(stream.fileno())
     if (len(raw) > MAX_DOCUMENT_BYTES or identity(opened) != identity(after)
-            or identity(after) != identity(path.lstat())):
+            or identity(before) != identity(path.lstat())):
         raise ValueError("report changed while reading or exceeds size limit")
     def reject_constant(_):
         raise ValueError("non-finite JSON number")

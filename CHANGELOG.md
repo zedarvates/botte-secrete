@@ -2,7 +2,19 @@
 
 ## Unreleased
 
-## v1.11.0 (unreleased)
+## v1.11.0 (2026-10-31, local stable build)
+
+- Serialize persistent cache access across cooperating processes and threads;
+  refresh stale instances, preserve clear/expiry decisions, reject invalid
+  expiration inputs and retain semantic supervision/context fingerprints.
+- Fix Windows report and observation reads after overwrites by comparing ctime
+  only within the same stat API. Keep full before/after mutation checks.
+- Fix Windows supervisor-lock cleanup and portable byte-sensitive fixtures,
+  sandbox subprocesses, path expectations and SQLite test connection cleanup.
+- Include real cache lifecycle/concurrency regressions in the canonical runner.
+- See [local release notes](docs/releases/1.11.0.md) and the delivery manifest
+  for exact artifact hashes and platform-specific validation. The published
+  stable release is unchanged until an explicit publication.
 
 - Connect selective local preflight assessment and project policy to Parcimonia,
   broaden the plugin skill's task triggers, and document candidate installation

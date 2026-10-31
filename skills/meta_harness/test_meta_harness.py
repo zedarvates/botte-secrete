@@ -117,14 +117,14 @@ def main() -> int:
 
     # ── Sandbox ──
     sandbox = Sandbox(workdir=".", sandbox_dir=".botte-sandbox/test")
-    result = sandbox.run(["echo", "hello world"])
+    result = sandbox.run([sys.executable, "-c", "print('hello world')"])
     _ok("sandbox runs echo successfully", result.success, state)
     _ok("sandbox captures stdout", "hello world" in result.stdout, state)
     _ok("sandbox exit_code is 0", result.exit_code == 0, state)
     _ok("sandbox duration > 0", result.duration > 0, state)
 
     # ── Sandbox: failed command ──
-    fail = sandbox.run(["false"])
+    fail = sandbox.run([sys.executable, "-c", "raise SystemExit(1)"])
     _ok("sandbox false command fails", not fail.success, state)
 
     # ── Sandbox: nonexistent command ──
@@ -134,7 +134,7 @@ def main() -> int:
 
     # ── Sandbox cleanup ──
     sandbox2 = Sandbox(workdir=".", sandbox_dir=".botte-sandbox/cleanup_test")
-    sandbox2.run(["echo", "create"])
+    sandbox2.run([sys.executable, "-c", "print('create')"])
     _ok("sandbox dir exists", Path(sandbox2.sandbox_dir).exists(), state)
     sandbox2.cleanup()
     _ok("sandbox cleanup removes dir", not Path(sandbox2.sandbox_dir).exists(), state)

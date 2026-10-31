@@ -26,7 +26,7 @@ class TestCaveman(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "instructions.md"
             original = "Do not merge.\n" * 200 + "Proof remains pending.\n"
-            path.write_text(original, encoding="utf-8")
+            path.write_text(original, encoding="utf-8", newline="\n")
             for dry_run in (False, True):
                 result = compress_file(str(path), "ultra", dry_run)
                 self.assertEqual(result["compressed"], original)
@@ -42,7 +42,7 @@ class TestCaveman(unittest.TestCase):
     def test_json_cli_labels_token_counts_as_estimates(self):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "sample.md"
-            path.write_text("é漢🙂", encoding="utf-8")
+            path.write_text("é漢🙂", encoding="utf-8", newline="\n")
             output = io.StringIO()
             with contextlib.redirect_stdout(output):
                 self.assertEqual(main(["compress", str(path), "--format", "json"]), 0)

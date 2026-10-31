@@ -74,9 +74,11 @@ def file_state(path: Path) -> dict:
             after = os.fstat(stream.fileno())
         def identity(s):
             return s.st_dev, s.st_ino, s.st_size, s.st_mtime_ns, s.st_ctime_ns
-        if (len(raw) > MAX_FILE_BYTES or identity(before) != identity(opened)
+        # Path stat and fstat have different ctime semantics on Windows.
+        # Preserve full comparisons within each API to detect concurrent writes.
+        if (len(raw) > MAX_FILE_BYTES or identity(before)[:4] != identity(opened)[:4]
                 or identity(opened) != identity(after)
-                or identity(after) != identity(path.lstat())):
+                or identity(before) != identity(path.lstat())):
             return unknown
         return {"state": "present", "sha256": hashlib.sha256(raw).hexdigest(),
                 "size": len(raw)}

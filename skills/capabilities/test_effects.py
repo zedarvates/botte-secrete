@@ -73,7 +73,7 @@ class EffectsTests(unittest.TestCase):
                 "---\nname: export\ndescription: export records\n---\n", encoding="utf-8")
             contract = contract_template(skill, f"example/repo:skills/{folder}")
             (skill / "effects.json").write_text(json.dumps(contract), encoding="utf-8")
-            expected[str(skill / "SKILL.md")] = contract["capability_id"]
+            expected[(skill / "SKILL.md").as_posix()] = contract["capability_id"]
         caps = self.discover()
         actual = {c.path: c.effects["contract"]["capability_id"]
                   for c in caps if c.name == "export"}
