@@ -48,9 +48,16 @@ https://github.com/oculix-org/Oculix/releases and place it at
 bundle; it executes it via `java -jar <jar> -r <bundle> -c` when a runner is
 found, else it reports how to install one.
 
-Verified: a generated bundle runs end-to-end on OculiX 3.0.4
-(`oculixide-3.0.4-windows.jar`) — Jython executes the steps and returns the exit
-code (0 = pass).
+The project previously recorded a generated bundle run on OculiX 3.0.4
+(`oculixide-3.0.4-windows.jar`). Qualify the current runner, display, application
+and reference images again for each target environment.
+
+Read the returned `status`, rather than treating generation or exit 0 alone as
+success. `passed` requires exit 0, exactly one final zero-error result and no
+failed step. Nonzero exit or reported errors are `failed`; missing completion
+evidence is `incomplete`; an absent runner or launch failure is `not_run`.
+The CLI exits 0 for passed, 1 for failed, and 2 for incomplete/not_run. JSON and
+HTML share this verdict. Unit tests of these states do not establish GUI success.
 
 ## Why local / economical
 

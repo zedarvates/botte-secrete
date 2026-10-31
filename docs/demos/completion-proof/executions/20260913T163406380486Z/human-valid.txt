@@ -1,0 +1,5 @@
+Vérifié sur ces tests
+Les pièces et les fichiers listés correspondent au reçu de tests réussis.
+3 test(s) enregistré(s) ; 2 fichier(s) contrôlé(s).
+Suite : Conserver ce reçu avec le résultat ; revérifier après toute modification.
+Portée : uniquement les tests enregistrés et les fichiers listés ; exécuteur de confiance requis.

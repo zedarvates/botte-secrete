@@ -399,6 +399,8 @@ def record_verified(
     log_event(
         EVENT_KIND,
         project_root=project_root,
+        producer="skills.trajectory.quality",
+        component_kind="verifier",
         trajectory_id=record["id"],
         route=route,
         verdict=verdict,
@@ -466,6 +468,8 @@ def _emit_advice(project_root: str | Path, task_fingerprint: str, advice: RouteA
     log_event(
         ADVICE_EVENT_KIND,
         project_root=project_root,
+        producer="skills.trajectory.quality",
+        component_kind="router",
         task_fingerprint=task_fingerprint,
         status=advice.status,
         recommendation=advice.recommendation,

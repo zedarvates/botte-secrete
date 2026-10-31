@@ -1,5 +1,11 @@
 # Agent plugins
 
+For Codex's native plugin manager, see the
+[Codex plugin guide](../plugins/botte-secrete/README.md). That package supplies a
+workflow skill and a stdio connection to an independently installed `botte-mcp`
+executable. Its Git marketplace catalog is separate from public directory
+submission. Choose one registration for `botte-llm` to avoid duplicate servers.
+
 Botte Secrète exposes one local MCP server and can install the native project
 configuration for seven coding agents:
 
