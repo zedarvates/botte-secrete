@@ -134,15 +134,25 @@ def calibrate_from_logs(model_name: str) -> Optional[dict]:
     Runs the model on each logged feature vector to get probabilities, pairs them
     with the verified actual_class, and fits T. This is the production path once the
     feedback loop has collected ≥30 labeled samples."""
-    from skills.botte_nn.active_learning import ActiveLearning
-    from skills.botte_nn.cli import _predict_python
+    from skills.botte_nn.active_learning import (
+        ActiveLearning, _labelled, _semantic_verdict_compatible,
+    )
+    from skills.botte_nn.cli import _load_model_data, _predict_python
 
     al = ActiveLearning()
     logs = [l for l in al.logs.get(model_name, [])
-            if l.actual_class is not None and l.correct is not None]
+            if _labelled(l)]
     model_path = _MODELS_DIR / f"{model_name}.json"
     if len(logs) < 30 or not model_path.exists():
         return None
+    if model_name == "semantic_cache_hit_predictor":
+        if (al.ledger_state in ("invalid", "unreadable")
+                or any(not _semantic_verdict_compatible(log) for log in logs)):
+            return None
+        try:
+            _load_model_data(str(model_path))
+        except (OSError, ValueError, TypeError):
+            return None
     probs_list, labels = [], []
     for l in logs:
         try:

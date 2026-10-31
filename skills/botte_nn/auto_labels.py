@@ -28,14 +28,18 @@ def compression_label(ratio: float) -> str:
 
 
 def _sample_fingerprint(model_name: str, features: list[float], actual_class: int,
-                        oracle: str, sample_key: str) -> str:
-    material = json.dumps({
+                        oracle: str, sample_key: str, feature_schema: str = "") -> str:
+    fields = {
         "model": model_name,
         "features": [round(float(value), 8) for value in features],
         "actual_class": int(actual_class),
         "oracle": oracle,
         "sample_key": sample_key,
-    }, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    }
+    if feature_schema:
+        fields["feature_schema"] = feature_schema
+    material = json.dumps(fields, ensure_ascii=False, sort_keys=True,
+                          separators=(",", ":"))
     return hashlib.sha256(material.encode("utf-8")).hexdigest()
 
 
@@ -61,28 +65,35 @@ def _seen_fingerprints(log_file: Path) -> set[str]:
 
 def record_oracle_verdict(model_name: str, values: dict[str, float],
                           actual_label: str, *, oracle: str,
-                          sample_key: str) -> Optional[str]:
+                          sample_key: str, feature_schema: str = "") -> Optional[str]:
     """Record one unique verified label from a deterministic local oracle."""
     from skills.botte_nn import calibration, features
     from skills.botte_nn.active_learning import DATA_DIR, record_feedback
     from skills.botte_nn.cli import _MODEL_META, _MODELS_DIR, _predict_python
 
     feature_vector = features.featurize(model_name, values)
-    probabilities = _predict_python(
-        str(_MODELS_DIR / f"{model_name}.json"), feature_vector
-    )
-    probabilities = calibration.apply_temperature(
-        probabilities, calibration.load_temperature(model_name)
-    )
+    try:
+        probabilities = _predict_python(
+            str(_MODELS_DIR / f"{model_name}.json"), feature_vector
+        )
+    except features.FeatureSchemaMismatch:
+        # The oracle still observed an actual outcome. Keep it without inventing
+        # a model prediction or feeding v2 inputs to historical v1 weights.
+        probabilities = []
+    if probabilities:
+        probabilities = calibration.apply_temperature(
+            probabilities, calibration.load_temperature(model_name)
+        )
     labels = _MODEL_META.get(model_name, {}).get("labels") or [
         f"class_{index}" for index in range(len(probabilities))
     ]
     if actual_label not in labels:
         raise ValueError(f"unknown label for {model_name}: {actual_label}")
-    predicted_class = max(range(len(probabilities)), key=probabilities.__getitem__)
+    predicted_class = (max(range(len(probabilities)), key=probabilities.__getitem__)
+                       if probabilities else None)
     actual_class = labels.index(actual_label)
     fingerprint = _sample_fingerprint(
-        model_name, feature_vector, actual_class, oracle, sample_key
+        model_name, feature_vector, actual_class, oracle, sample_key, feature_schema
     )
     log_file = DATA_DIR / "inference_logs.jsonl"
     with _LOCK:
@@ -92,8 +103,9 @@ def record_oracle_verdict(model_name: str, values: dict[str, float],
         inference_id = record_feedback(
             model_name, feature_vector, predicted_class, actual_class,
             decision_source=f"automatic_oracle:{oracle}",
-            confidence=float(max(probabilities)),
+            confidence=float(max(probabilities)) if probabilities else 0.0,
             outcome=f"oracle:{oracle}", sample_fingerprint=fingerprint,
+            feature_schema=feature_schema,
         )
         seen.add(fingerprint)
     return inference_id
@@ -116,11 +128,29 @@ def record_compression_result(content: str, ratio: float, *,
 
 def record_cache_lookup(query: str, values: dict[str, float], *,
                         hit: bool, hit_kind: str) -> Optional[str]:
-    """Label a response-cache lookup from its observed hit or miss result."""
+    """Label one real semantic attempt after an exact-cache miss.
+
+    Exact hits are outside the predictor's target.  Observation-only shadow
+    attempts are accepted because they run the same matcher without serving its
+    candidate response.
+    """
+    semantic_outcomes = {
+        "semantic_hit": True,
+        "semantic_miss": False,
+        "semantic_shadow_hit": True,
+        "semantic_shadow_miss": False,
+    }
+    if hit_kind not in semantic_outcomes:
+        raise ValueError(f"unsupported semantic cache outcome: {hit_kind}")
+    if bool(hit) != semantic_outcomes[hit_kind]:
+        raise ValueError(f"inconsistent semantic cache outcome: {hit_kind}")
+    from skills.botte_nn.features import SEMANTIC_CACHE_SCHEMA
+
     sample_key = hashlib.sha256(query.encode("utf-8")).hexdigest()
     return record_oracle_verdict(
         "semantic_cache_hit_predictor", values, "hit" if hit else "miss",
         oracle=f"response_cache_{hit_kind}", sample_key=sample_key,
+        feature_schema=SEMANTIC_CACHE_SCHEMA,
     )
 
 

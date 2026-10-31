@@ -47,11 +47,44 @@ The checkup's `unavailable` state means the diagnostic itself could not run.
   answer quality or a standalone lossless encoding.
 - Cache: the shared response cache enables labels unless
   `BOTTE_NN_AUTO_LABELS=0`. Explicit `ResponseCache` instances need `learn=True`.
-  Hits and misses describe the cache outcome, not whether the cached answer is
-  correct or reusable for another task.
+  Only real semantic attempts after an exact miss are labelled. Optional shadow
+  attempts observe the same matcher without serving its response. These records
+  declare `feature_schema: botte.semantic-cache/v2`; their outcomes describe the
+  matcher result, not whether the cached answer is correct or reusable.
 - Routing: keep the returned `feedback_id` and use `route_feedback` or
   `active_learning verify <feedback_id> local|cloud` only after the correct route
   is established. Backend completion or failure alone is not a route verdict.
+
+### Preserve historical cache observations
+
+The seven-dimensional semantic-cache v2 vector has different meanings from v1.
+Vector length and old `semantic_hit` outcome names cannot establish compatibility.
+Diagnostics keep historical rows and expose `incompatible_schema_verdicts`.
+Training refuses a semantic-cache ledger containing any labelled row without the
+current schema, a matching conditional outcome/class, and its declared automatic
+oracle origin. Rounded feature collisions also block training before deduplication.
+Neither check deletes, rewrites, relabels or silently upgrades the ledger.
+
+Start an explicitly selected new collection or perform a separately reviewed
+migration from retained original evidence. Adding a version string to an old row
+does not reconstruct the missing v2 features. The marker records declared
+provenance, not an authenticated oracle. Compatible experimental exports retain
+the schema, source and ledger digests and remain separate, inactive candidates.
+
+The bundled historical semantic-cache weights are not relabelled as v2. Python
+and native-wrapper inference reject their incompatible schema; routing hints
+abstain. The collector still records the actual oracle outcome, with
+`predicted_class: null`, `correct: null`, confidence zero and an explicit
+`prediction_abstentions` count instead of inventing a prediction. Candidate
+training requires an explicitly compatible source; calibration also rejects
+incompatible records or weights before inference or persistence. No weights or
+calibration are activated by adding a schema marker.
+
+The historical `scripts/train_belt2_v2.py` synthetic trainer now refuses its CLI
+before any training or write, and its source-model writer is disabled. Its
+reference calls use the current API; running it cannot partially replace six
+models before reaching the semantic-cache step. Use the candidate command below
+for explicitly collected observations.
 
 The collectors record features and fingerprints, not raw content or queries.
 Keep production observations separate from tests, rehearsals and generated

@@ -61,9 +61,11 @@ def _number(value) -> bool:
 
 def _labelled(log) -> bool:
     return (log.verified is True and type(log.actual_class) is int
-            and log.actual_class >= 0 and type(log.predicted_class) is int
-            and log.predicted_class >= 0 and type(log.correct) is bool
-            and log.correct == (log.predicted_class == log.actual_class))
+            and log.actual_class >= 0
+            and ((log.predicted_class is None and log.correct is None)
+                 or (type(log.predicted_class) is int and log.predicted_class >= 0
+                     and type(log.correct) is bool
+                     and log.correct == (log.predicted_class == log.actual_class))))
 
 
 def _unique_verdicts(logs):
@@ -99,7 +101,7 @@ class InferenceLog:
     """Un appel à un micro-NN avec son résultat."""
     model_name: str
     features: list[float]
-    predicted_class: int
+    predicted_class: Optional[int]
     actual_class: Optional[int] = None
     correct: Optional[bool] = None  # None si pas encore vérifié
     timestamp: float = 0.0
@@ -112,6 +114,49 @@ class InferenceLog:
     belt_acted: bool = False
     confidence: float = 0.0
     sample_fingerprint: str = ""
+    feature_schema: str = ""  # Absent in historical ledgers; never infer a version.
+
+
+def feature_label_collision_report(logs: list[InferenceLog], *,
+                                   precision: int = 8) -> dict[str, int | float]:
+    """Count rounded feature vectors with conflicting declared labels."""
+    groups: dict[tuple[float, ...], dict[int, int]] = defaultdict(
+        lambda: defaultdict(int)
+    )
+    verified_rows = 0
+    for log in logs:
+        if not _labelled(log):
+            continue
+        key = tuple(round(float(value), precision) for value in log.features)
+        groups[key][log.actual_class] += 1
+        verified_rows += 1
+    contradictory = [counts for counts in groups.values() if len(counts) > 1]
+    contradictory_rows = sum(sum(counts.values()) for counts in contradictory)
+    return {
+        "verified_rows": verified_rows,
+        "feature_groups": len(groups),
+        "contradictory_groups": len(contradictory),
+        "contradictory_rows": contradictory_rows,
+        "contradictory_rate": round(
+            contradictory_rows / verified_rows if verified_rows else 0.0, 6
+        ),
+    }
+
+
+def _semantic_verdict_compatible(log: InferenceLog) -> bool:
+    """Check declared schema/oracle consistency, without attesting its truth."""
+    from skills.botte_nn.features import SEMANTIC_CACHE_SCHEMA
+
+    outcomes = {
+        "oracle:response_cache_semantic_hit": 1,
+        "oracle:response_cache_semantic_miss": 0,
+        "oracle:response_cache_semantic_shadow_hit": 1,
+        "oracle:response_cache_semantic_shadow_miss": 0,
+    }
+    return (log.feature_schema == SEMANTIC_CACHE_SCHEMA
+            and log.outcome in outcomes
+            and log.actual_class == outcomes[log.outcome]
+            and log.decision_source == "automatic_oracle:" + log.outcome[len("oracle:"):])
 
 
 class ActiveLearning:
@@ -156,8 +201,9 @@ class ActiveLearning:
                             or not re.fullmatch(r"[a-z][a-z0-9_]*", log.model_name)
                             or not isinstance(log.features, list) or not log.features
                             or not all(_number(value) for value in log.features)
-                            or type(log.predicted_class) is not int
-                            or log.predicted_class < 0 or type(log.verified) is not bool
+                            or (log.predicted_class is not None
+                                and (type(log.predicted_class) is not int or log.predicted_class < 0))
+                            or type(log.verified) is not bool
                             or (log.actual_class is not None
                                 and (type(log.actual_class) is not int or log.actual_class < 0))
                             or (log.correct is not None and type(log.correct) is not bool)
@@ -167,7 +213,7 @@ class ActiveLearning:
                             or type(log.belt_acted) is not bool
                             or not all(isinstance(getattr(log, key), str) for key in (
                                 "outcome", "inference_id", "source_observation_id",
-                                "sample_fingerprint", "decision_source"))
+                                "sample_fingerprint", "decision_source", "feature_schema"))
                             or (log.verified and not _labelled(log))):
                         raise ValueError("invalid inference row")
                     self.logs[log.model_name].append(log)
@@ -222,21 +268,37 @@ class ActiveLearning:
             total = len(logs_list)
             observations = sum(1 for log in logs_list if log.verified is False)
             with_outcome = sum(1 for log in logs_list if _labelled(log))
-            correct = sum(1 for log in logs_list if _labelled(log) and log.correct)
+            correct = sum(1 for log in logs_list if _labelled(log) and log.correct is True)
             unique, conflicts = _unique_verdicts(logs_list)
+            collisions = feature_label_collision_report(logs_list)
+            incompatible = sum(
+                _labelled(log) and not _semantic_verdict_compatible(log)
+                for log in logs_list
+            ) if model_name == "semantic_cache_hit_predictor" else 0
             stats[model_name] = {
                 "total": total,
                 "observations": observations,
                 "with_outcome": with_outcome,
+                "prediction_abstentions": sum(
+                    _labelled(log) and log.predicted_class is None for log in logs_list),
                 "correct": correct,
                 "accuracy": round(correct / max(with_outcome, 1), 3),
                 "unique_verified": len(unique),
                 "conflicting_inputs": conflicts,
+                "contradictory_feature_groups": collisions["contradictory_groups"],
+                "contradictory_feature_rate": collisions["contradictory_rate"],
+                "incompatible_schema_verdicts": incompatible,
             }
             if verbose:
                 print(f"  {model_name:<20} {observations:>4} observations, "
                       f"{with_outcome} validés, {correct} corrects "
                       f"({correct/max(with_outcome,1):.0%})")
+                if collisions["contradictory_groups"]:
+                    print(f"    {collisions['contradictory_groups']} groupe(s) "
+                          "de features avec labels contradictoires")
+                if incompatible:
+                    print(f"    {incompatible} verdict(s) sans schéma/origine v2 compatible; "
+                          "entraînement bloqué, registre conservé")
         return stats
 
     # ── Entraînement ──
@@ -262,7 +324,19 @@ class ActiveLearning:
         self._load()
         if self.ledger_state in ("invalid", "unreadable"):
             raise ValueError(f"cannot train from {self.ledger_state} ledger")
-        logs, conflicts = _unique_verdicts(self.logs.get(model_name, []))
+        model_logs = self.logs.get(model_name, [])
+        if model_name == "semantic_cache_hit_predictor":
+            if any(_labelled(log) and not _semantic_verdict_compatible(log)
+                   for log in model_logs):
+                raise ValueError("semantic-cache verdict schema/oracle mismatch; "
+                                 "historical ledger preserved, explicit v2 collection required")
+            # Check before deduplication can hide conflicting declared labels.
+            collisions = feature_label_collision_report(model_logs)
+            if collisions["contradictory_groups"]:
+                if verbose:
+                    print("semantic-cache training blocked by conflicting feature labels")
+                return None
+        logs, conflicts = _unique_verdicts(model_logs)
         if len(logs) < 50:
             if verbose:
                 print(f"  {model_name}: besoin de 50 verdicts uniques "
@@ -305,6 +379,7 @@ class ActiveLearning:
         from skills.botte_nn import features
         from skills.botte_nn.training import train as trainer
 
+        features.require_model_feature_schema(model_name, weight_data)
         code_hashes = {
             name: hashlib.sha256(Path(module.__file__).read_bytes()).hexdigest()
             for name, module in (("trainer", trainer), ("features", features))
@@ -370,6 +445,10 @@ class ActiveLearning:
                 "rollback_test", "intended_host_validation",
             ],
         }
+        if model_name == "semantic_cache_hit_predictor":
+            from skills.botte_nn.features import SEMANTIC_CACHE_SCHEMA
+            candidate["feature_schema"] = SEMANTIC_CACHE_SCHEMA
+            candidate["provenance"]["feature_schema"] = SEMANTIC_CACHE_SCHEMA
         # Serialize before any output mutation. Publish within a fresh private
         # directory so repeated runs cannot replace one another's candidates.
         encoded = json.dumps(candidate, indent=2, ensure_ascii=False, allow_nan=False) + "\n"
@@ -434,12 +513,12 @@ class ActiveLearning:
         }
 
 
-def record_feedback(model_name: str, features: list[float], predicted_class: int,
+def record_feedback(model_name: str, features: list[float], predicted_class: Optional[int],
                     actual_class: int, latency_ms: float = 0.0, *,
                     source_observation_id: str = "", decision_source: str = "",
                     belt_acted: bool = False, confidence: float = 0.0,
                     outcome: str = "explicit_feedback",
-                    sample_fingerprint: str = "") -> str:
+                    sample_fingerprint: str = "", feature_schema: str = "") -> str:
     """Append one *labelled* inference (ground truth known) for the loop to learn from.
 
     O(1) and load-free — the hot path must not read the whole history back. This is
@@ -451,13 +530,15 @@ def record_feedback(model_name: str, features: list[float], predicted_class: int
     inference_id = uuid.uuid4().hex
     log = InferenceLog(
         model_name=model_name, features=[float(x) for x in features],
-        predicted_class=int(predicted_class), actual_class=int(actual_class),
-        correct=(int(predicted_class) == int(actual_class)),
+        predicted_class=int(predicted_class) if predicted_class is not None else None,
+        actual_class=int(actual_class),
+        correct=(int(predicted_class) == int(actual_class)) if predicted_class is not None else None,
         timestamp=time.time(), latency_ms=latency_ms, verified=True,
         outcome=str(outcome), inference_id=inference_id,
         source_observation_id=source_observation_id,
         decision_source=str(decision_source), belt_acted=bool(belt_acted),
         confidence=float(confidence), sample_fingerprint=str(sample_fingerprint),
+        feature_schema=str(feature_schema),
     )
     with open(DATA_DIR / "inference_logs.jsonl", "a", encoding="utf-8") as f:
         f.write(json.dumps(asdict(log)) + "\n")
@@ -467,7 +548,7 @@ def record_feedback(model_name: str, features: list[float], predicted_class: int
 def record_observation(model_name: str, features: list[float], predicted_class: int,
                        outcome: str, latency_ms: float = 0.0, *,
                        decision_source: str = "", belt_acted: bool = False,
-                       confidence: float = 0.0) -> str:
+                       confidence: float = 0.0, feature_schema: str = "") -> str:
     """Append an unverified production observation; never used as a training label."""
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     inference_id = uuid.uuid4().hex
@@ -478,6 +559,7 @@ def record_observation(model_name: str, features: list[float], predicted_class: 
         inference_id=inference_id,
         decision_source=str(decision_source), belt_acted=bool(belt_acted),
         confidence=float(confidence),
+        feature_schema=str(feature_schema),
     )
     with open(DATA_DIR / "inference_logs.jsonl", "a", encoding="utf-8") as f:
         f.write(json.dumps(asdict(log)) + "\n")
@@ -511,6 +593,7 @@ def record_verdict(observation_id: str, actual_class: int) -> str:
         latency_ms=source.latency_ms, source_observation_id=observation_id,
         decision_source=source.decision_source, belt_acted=source.belt_acted,
         confidence=source.confidence, sample_fingerprint=source.sample_fingerprint,
+        feature_schema=source.feature_schema,
     )
 
 

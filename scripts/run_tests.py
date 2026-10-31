@@ -120,6 +120,7 @@ SUITES = [
     ("botte_nn", [sys.executable, "-m", "skills.botte_nn.test_botte_nn"], "skills/botte_nn/"),
     ("features", [sys.executable, "-m", "skills.botte_nn.test_features"], "skills/botte_nn/"),
     ("error_provenance", [sys.executable, "-m", "skills.botte_nn.test_error_classifier_provenance"], "skills/botte_nn/"),
+    ("compressibility_provenance", [sys.executable, "-m", "skills.botte_nn.test_compressibility_provenance"], "skills/botte_nn/"),
     ("auto_labels", [sys.executable, "-m", "skills.botte_nn.test_auto_labels"], "skills/botte_nn/"),
     ("nn_candidates", [sys.executable, "-m", "skills.botte_nn.test_active_learning_candidates"], "skills/botte_nn/"),
     ("meta_harness", [sys.executable, "-m", "skills.meta_harness.test_meta_harness"], "skills/meta_harness/"),

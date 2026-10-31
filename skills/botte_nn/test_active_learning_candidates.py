@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import hashlib
+import importlib.util
 import io
 import subprocess
 import sys
@@ -272,6 +273,213 @@ class CandidateTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             learning.ActiveLearning().train("binary_router", verbose=False)
         self.assertFalse((self.data_dir / "candidates").exists())
+
+    def write_semantic_rows(self):
+        from skills.botte_nn.features import SEMANTIC_CACHE_SCHEMA
+
+        rows = self.write_rows()
+        self.semantic_path = self.models_dir / "semantic_cache_hit_predictor.json"
+        self.semantic_path.write_text(json.dumps({
+            "layers": [7, 2], "activations": ["softmax"],
+            "weights": [[0.0] * 14], "biases": [[0.0, 0.0]],
+            "trained_on": "test-fixture-source",
+            "feature_schema": SEMANTIC_CACHE_SCHEMA,
+        }), encoding="utf-8")
+        for row in rows:
+            oracle = ("response_cache_semantic_hit" if row["actual_class"]
+                      else "response_cache_semantic_miss")
+            row.update(model_name="semantic_cache_hit_predictor",
+                       features=row["features"] + [0.0] * 4,
+                       outcome="oracle:" + oracle,
+                       decision_source="automatic_oracle:" + oracle,
+                       feature_schema=SEMANTIC_CACHE_SCHEMA)
+        self.replace_rows(rows)
+        return rows
+
+    def test_semantic_schema_rejects_legacy_or_inconsistent_verdicts_without_writes(self):
+        for change in ({"feature_schema": ""}, {"feature_schema": "botte.semantic-cache/v1"},
+                       {"outcome": "oracle:response_cache_exact_hit"},
+                       {"outcome": "oracle:response_cache_semantic_hit"},
+                       {"decision_source": "explicit_feedback"}):
+            with self.subTest(change=change):
+                rows = self.write_semantic_rows()
+                rows[0].update(change)
+                self.replace_rows(rows)
+                source = self.semantic_path.read_bytes()
+                ledger = self.ledger_path.read_bytes()
+                learner = learning.ActiveLearning()
+                counts = learner.status()["models"]["semantic_cache_hit_predictor"]
+                self.assertEqual(counts["incompatible_schema_verdicts"], 1)
+                self.assertEqual(counts["with_outcome"], 80)
+                with self.assertRaisesRegex(ValueError, "schema/oracle mismatch"):
+                    learner.train("semantic_cache_hit_predictor", epochs=1, verbose=False)
+                self.assertEqual(self.ledger_path.read_bytes(), ledger)
+                self.assertEqual(self.semantic_path.read_bytes(), source)
+                self.assertFalse((self.data_dir / "candidates").exists())
+
+    def test_semantic_v2_exports_bound_candidate_and_preserves_source(self):
+        from skills.botte_nn.features import SEMANTIC_CACHE_SCHEMA
+
+        self.write_semantic_rows()
+        ledger, source = self.ledger_path.read_bytes(), self.semantic_path.read_bytes()
+        learner = learning.ActiveLearning()
+        score = learner.train("semantic_cache_hit_predictor", epochs=300,
+                              lr=0.15, verbose=False)
+        self.assertGreater(score, 0.5)
+        candidate = json.loads(learner.candidate_paths[
+            "semantic_cache_hit_predictor"].read_text(encoding="utf-8"))
+        self.assertEqual(candidate["provenance"]["feature_schema"], SEMANTIC_CACHE_SCHEMA)
+        self.assertFalse(candidate["provenance"]["activation_allowed"])
+        self.assertEqual(self.ledger_path.read_bytes(), ledger)
+        self.assertEqual(self.semantic_path.read_bytes(), source)
+
+    def test_semantic_collisions_are_rejected_before_deduplication(self):
+        rows = self.write_semantic_rows()
+        # Two distinct vectors collapse at the declared collision precision.
+        rows[1]["features"] = list(rows[0]["features"])
+        rows[1]["features"][0] += 1e-10
+        self.replace_rows(rows)
+        ledger, source = self.ledger_path.read_bytes(), self.semantic_path.read_bytes()
+        learner = learning.ActiveLearning()
+        self.assertIsNone(learner.train("semantic_cache_hit_predictor", epochs=1,
+                                        verbose=False))
+        self.assertEqual(self.ledger_path.read_bytes(), ledger)
+        self.assertEqual(self.semantic_path.read_bytes(), source)
+        self.assertFalse((self.data_dir / "candidates").exists())
+
+    def test_incompatible_semantic_model_abstains_before_python_or_native_service(self):
+        from skills.botte_nn import cli, features
+        from skills.auto_router import nn_belt2
+
+        self.write_semantic_rows()
+        model = json.loads(self.semantic_path.read_text(encoding="utf-8"))
+        model.pop("feature_schema")
+        self.semantic_path.write_text(json.dumps(model), encoding="utf-8")
+        source = self.semantic_path.read_bytes()
+        values = features.semantic_cache_values("public query")
+        with patch.object(cli, "_MODELS_DIR", self.models_dir), \
+                patch.object(cli.subprocess, "run") as native:
+            with self.assertRaises(features.FeatureSchemaMismatch):
+                cli._predict_python(str(self.semantic_path), [0.1] * 7)
+            with self.assertRaises(features.FeatureSchemaMismatch):
+                cli._predict_rust("unused", str(self.semantic_path), [0.1] * 7)
+            with self.assertRaises(features.FeatureSchemaMismatch):
+                features.classify("semantic_cache_hit_predictor", values)
+            self.assertIsNone(nn_belt2.semantic_cache_hint("public query"))
+            native.assert_not_called()
+        self.assertEqual(self.semantic_path.read_bytes(), source)
+
+    def test_semantic_oracle_survives_prediction_abstention_without_fake_prediction(self):
+        from skills.botte_nn import cli, features, auto_labels
+
+        self.write_semantic_rows()
+        self.ledger_path.unlink()
+        model = json.loads(self.semantic_path.read_text(encoding="utf-8"))
+        model.pop("feature_schema")
+        self.semantic_path.write_text(json.dumps(model), encoding="utf-8")
+        source = self.semantic_path.read_bytes()
+        with patch.object(cli, "_MODELS_DIR", self.models_dir):
+            receipt = auto_labels.record_cache_lookup(
+                "public query", features.semantic_cache_values("public query"),
+                hit=True, hit_kind="semantic_shadow_hit")
+        self.assertTrue(receipt)
+        row = json.loads(self.ledger_path.read_text(encoding="utf-8"))
+        self.assertEqual(row["actual_class"], 1)
+        self.assertTrue(row["verified"])
+        self.assertIsNone(row["predicted_class"])
+        self.assertIsNone(row["correct"])
+        self.assertEqual(row["confidence"], 0.0)
+        self.assertEqual(row["feature_schema"], features.SEMANTIC_CACHE_SCHEMA)
+        counts = learning.ActiveLearning().status()["models"]["semantic_cache_hit_predictor"]
+        self.assertEqual(counts["with_outcome"], 1)
+        self.assertEqual(counts["prediction_abstentions"], 1)
+        self.assertEqual(self.semantic_path.read_bytes(), source)
+
+    def test_semantic_candidate_requires_a_compatible_source_schema(self):
+        from skills.botte_nn import features
+        from skills.botte_nn.training import train as trainer
+
+        self.write_semantic_rows()
+        model = json.loads(self.semantic_path.read_text(encoding="utf-8"))
+        model.pop("feature_schema")
+        self.semantic_path.write_text(json.dumps(model), encoding="utf-8")
+        source, ledger = self.semantic_path.read_bytes(), self.ledger_path.read_bytes()
+        with patch.object(trainer.TinyNN, "from_json_data") as factory:
+            with self.assertRaises(features.FeatureSchemaMismatch):
+                learning.ActiveLearning().train("semantic_cache_hit_predictor", verbose=False)
+            factory.assert_not_called()
+        self.assertEqual(self.semantic_path.read_bytes(), source)
+        self.assertEqual(self.ledger_path.read_bytes(), ledger)
+        self.assertFalse((self.data_dir / "candidates").exists())
+
+    def test_semantic_calibration_refuses_incompatible_ledger_or_source_before_inference(self):
+        from skills.botte_nn import cli, calibration
+
+        for kind in ("ledger", "model"):
+            with self.subTest(kind=kind):
+                rows = self.write_semantic_rows()
+                if kind == "ledger":
+                    rows[0]["feature_schema"] = ""
+                    self.replace_rows(rows)
+                else:
+                    model = json.loads(self.semantic_path.read_text(encoding="utf-8"))
+                    model.pop("feature_schema")
+                    self.semantic_path.write_text(json.dumps(model), encoding="utf-8")
+                source, ledger = self.semantic_path.read_bytes(), self.ledger_path.read_bytes()
+                with patch.object(calibration, "_MODELS_DIR", self.models_dir), \
+                        patch.object(cli, "_predict_python") as predictor, \
+                        patch.object(calibration, "save_temperature") as writer:
+                    self.assertIsNone(calibration.calibrate_from_logs("semantic_cache_hit_predictor"))
+                    predictor.assert_not_called()
+                    writer.assert_not_called()
+                self.assertEqual(self.semantic_path.read_bytes(), source)
+                self.assertEqual(self.ledger_path.read_bytes(), ledger)
+
+    def test_schema_changes_identity_without_changing_legacy_compression_identity(self):
+        from skills.botte_nn.auto_labels import _sample_fingerprint
+        from skills.botte_nn.features import SEMANTIC_CACHE_SCHEMA
+
+        args = ("compressibility_predictor", [0.1] * 6, 0,
+                "compression_roundtrip", "fixture-content-hash")
+        self.assertEqual(_sample_fingerprint(*args),
+                         _sample_fingerprint(*args, feature_schema=""))
+        cache = ("semantic_cache_hit_predictor", [0.1] * 7, 0,
+                 "response_cache_semantic_miss", "fixture-query-hash")
+        self.assertNotEqual(_sample_fingerprint(*cache),
+                            _sample_fingerprint(*cache, feature_schema=SEMANTIC_CACHE_SCHEMA))
+
+    def test_legacy_semantic_callers_match_current_api_without_training_or_writes(self):
+        from skills.auto_router import nn_belt2
+
+        script = Path(__file__).resolve().parents[2] / "scripts" / "train_belt2_v2.py"
+        spec = importlib.util.spec_from_file_location("legacy_belt_review", script)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        with patch.object(module, "train_model", return_value=(None,) * 4) as trainer, \
+                patch.object(module, "save_model") as writer, \
+                patch("sys.stdout", new_callable=io.StringIO):
+            module.train_semantic_cache()
+        self.assertEqual(trainer.call_args.args[0].shape, (200, 7))
+        writer.assert_called_once()
+        with patch.object(nn_belt2, "semantic_cache_hint", autospec=True,
+                          return_value=None) as hint, \
+                patch("sys.stdout", new_callable=io.StringIO):
+            module.verify()
+        self.assertEqual(hint.call_count, 2)
+        self.assertTrue(all(isinstance(call.args[0], str) for call in hint.call_args_list))
+        with self.assertRaisesRegex(RuntimeError, "source-model replacement disabled"):
+            module.save_model("unused", None, None, None, None, [])
+
+    def test_legacy_trainer_cli_refuses_before_any_source_write(self):
+        repo = Path(__file__).resolve().parents[2]
+        models = repo / "skills" / "botte_nn" / "models"
+        before = {p.name: p.read_bytes() for p in models.glob("*.json")}
+        result = subprocess.run([sys.executable, str(repo / "scripts" / "train_belt2_v2.py")],
+                                cwd=repo, capture_output=True, text=True,
+                                encoding="utf-8", timeout=15)
+        self.assertEqual(result.returncode, 2, result.stderr)
+        self.assertIn("disabled before training or writes", result.stderr)
+        self.assertEqual({p.name: p.read_bytes() for p in models.glob("*.json")}, before)
 
 
 def main():

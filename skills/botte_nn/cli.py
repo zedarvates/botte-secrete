@@ -155,8 +155,18 @@ def _find_model(name_or_path: str) -> dict | None:
     return None
 
 
+def _load_model_data(model_json: str) -> dict:
+    from skills.botte_nn.features import require_model_feature_schema
+
+    with open(model_json, encoding="utf-8") as stream:
+        data = json.load(stream)
+    require_model_feature_schema(Path(model_json).stem, data)
+    return data
+
+
 def _predict_rust(binary: str, model_json: str, input_vec: list[float]) -> list[float]:
     """Predict using Rust binary (subprocess)."""
+    _load_model_data(model_json)
     result = subprocess.run(
         # main.rs expects: `predict <model.json> <floats...>` (positional),
         # not --model/--input — the old flags always errored → silent Python fallback.
@@ -176,8 +186,7 @@ def _predict_python(model_json: str, input_vec: list[float]) -> list[float]:
         raise RuntimeError("numpy required for Python fallback prediction. "
                            "Install with: pip install numpy")
 
-    with open(model_json) as f:
-        data = json.load(f)
+    data = _load_model_data(model_json)
 
     layers = data["layers"]
     weights = [np.array(w, dtype=float) for w in data["weights"]]  # flat row-major
@@ -235,7 +244,7 @@ def do_predict(args):
             output = _predict_rust(str(_RUST_BINARY), meta["path"], input_vec)
         else:
             output = _predict_python(meta["path"], input_vec)
-    except (RuntimeError, subprocess.TimeoutExpired, json.JSONDecodeError, OSError) as e:
+    except (RuntimeError, subprocess.TimeoutExpired, ValueError, OSError) as e:
         # OSError covers WinError 193 ("not a valid Win32 application") when an
         # ELF/wrong-arch binary is present — fall back to pure-Python inference.
         print(f"⚠️  Rust binary failed, using Python fallback: {e}", file=sys.stderr)
