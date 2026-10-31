@@ -166,6 +166,14 @@ SUITES = [
     ("harness_executor", [sys.executable, "-m", "skills.local_harness.test_executor"], "skills/local_harness/"),
     ("harness_bench", [sys.executable, "-m", "skills.local_harness.test_bench"], "skills/local_harness/"),
     ("worker_benchmark", [sys.executable, "-m", "skills.local_harness.test_worker_benchmark"], "skills/local_harness/"),
+    ("execution_contracts", [sys.executable, "-m", "skills.execution_harness.test_execution_harness"], (
+        "skills/execution_harness/", "skills/trajectory/", "skills/memory_hub/",
+    )),
+    ("needle2_advisory", [sys.executable, "-m", "skills.tool_router.test_runner"], (
+        "skills/tool_router/", "skills/memory_hub/shared_contract.py", "skills/cli.py",
+        "docs/validation/needle2-study-validation-v1.json",
+        "docs/validation/needle2-study-protocol-v1.json",
+    )),
     ("migration_audit", [sys.executable, "-m", "skills.migration_audit.test_migration_audit"], "skills/migration_audit/"),
     ("memory_quarantine", [sys.executable, "-m", "skills.memory_hub.test_quarantine"], "skills/memory_hub/"),
     ("action_memory", [sys.executable, "-m", "skills.memory_hub.test_action_memory"], "skills/memory_hub/"),

@@ -84,6 +84,26 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+  needle2-historical-evidence:
+    name: Needle 2 historical evidence (immutable sources)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: 02be6033c7a73788643ee5e7cf6ad6e071394e02
+          persist-credentials: false
+      - name: Require the historical source commit
+        run: test "$(git rev-parse HEAD)" = "02be6033c7a73788643ee5e7cf6ad6e071394e02"
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - run: python -m pip install 'pytest>=8,<10'
+      - name: Reproduce archived scoring and diagnostics without inference
+        env:
+          PYTEST_DISABLE_PLUGIN_AUTOLOAD: "1"
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: python -m pytest --rootdir=. -q skills/tool_router/test_needle2_evidence.py skills/tool_router/test_needle2_diagnostics.py
+
   bench:
     runs-on: ubuntu-latest
     needs: test

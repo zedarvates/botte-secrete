@@ -1,0 +1,155 @@
+{
+  "schema_version": "botte.needle2-pilot-validation/v1",
+  "recorded_at": "2026-09-09T18:58:20.932828+00:00",
+  "base_commit": "d7a1f4864b52e22e37fd58aa3db2c74caa5b3003",
+  "branch": "feat/needle2-readonly-pilot",
+  "scope": "Advisory proposals only; no live memory server, homelab deployment, or default routing changes.",
+  "decision": "keep_advisory_only; model quality insufficient for automatic activation",
+  "activation_allowed": false,
+  "source_files_sha256": {
+    "skills/cli.py": "51009aeec3dc1363c1f905620a05e82fd89138d4595f218a5b9fbdd5616fa421",
+    "skills/memory_hub/shared_contract.py": "72be81aa648ce24810bf09fcb529d2fc0cd26756978decf575101665b2875a81",
+    "skills/tool_router/base.py": "35447fb653a951edafc08c3b0022e0921175b1f54d04b1f87bbfe3ccfe9750fc",
+    "skills/tool_router/memory_pilot.py": "e5fed4ca9ca94b12af25745fb24a26412aa719e61d922a3b7921474a2d806a2d",
+    "skills/tool_router/needle2_adapter.py": "e84b68b003470a8aacc73c9df53efa4cb4afc053cf39f1b4fcdd8c23022b44aa",
+    "skills/tool_router/needle2_cli.py": "0c22e4aeb31b6d60c95b7b68e051eb23825c27ebcd9413ca6a44d77697a9c454",
+    "skills/tool_router/needle2_worker.py": "55008548f055baa3de7b7c534af7915dd7c5af6992a407216ad988f68734d53c"
+  },
+  "test_and_corpus_sha256": {
+    "skills/tool_router/test_needle2.py": "aca10127f8df3a4aeb27910125f85727abde57648f3a8b5fd7b2765690ee4afa",
+    "skills/tool_router/needle2_cases_fr.jsonl": "5c02bf867dae8a365b8ede54572d56125a30a3ce8e3872a54d573e7fe7bdadb3",
+    ".github/workflows/ci.yml": "f9ac6c9e6dc7852a7371bec227d1993c83753d9df17c9b67c49772e4472c912a"
+  },
+  "native_runtime": {
+    "repository": "Cactus-Compute/needle2",
+    "revision": "32e9e3a93b205f786929697446ae669cf0a84579",
+    "engine_version": "2.0.4",
+    "package_version": "2.0.13",
+    "artifact": "cactus_needle-2.0.4-py3-none-manylinux2014_x86_64.whl",
+    "artifact_sha256": "13a84e6c73095fd175b11d46a30a984b62123d94421b769c107074aff7f65c2b",
+    "library_sha256": "9fa5386d3e3a8ee17914fb23643bc5f5c906b683fa33561e79c5445dd78bc389",
+    "library_bytes": 14315600
+  },
+  "checks": [
+    {
+      "command": "python -m pytest --rootdir=. -q skills/tool_router/test_tool_router.py skills/tool_router/test_needle2.py skills/memory_hub/test_shared_service.py skills/memory_hub/test_shared_transport.py skills/memory_hub/test_memory_hub.py",
+      "exit_code": 0,
+      "passed": 164,
+      "seconds": 13.25,
+      "scope": "Response validation, child lifecycle, local memory/MCP boundaries and regression; stand-in model engines."
+    },
+    {
+      "command": "python -m skills.test_cli",
+      "exit_code": 0,
+      "passed": 9
+    },
+    {
+      "command": "python -m skills.checkup.cli .",
+      "exit_code": 0,
+      "directives_score": 95,
+      "infra_score": 24,
+      "high_taint_candidates": 0,
+      "malicious_patterns": "clean",
+      "remaining_host_limitation": "MCP not wired in this workspace; homelab not qualified."
+    },
+    {
+      "command": "python scripts/check_docs_links.py",
+      "exit_code": 0,
+      "markdown_files": 65,
+      "broken_local_links": 0
+    },
+    {
+      "command": "python scripts/test_readme_commands.py",
+      "exit_code": 0,
+      "passed": 11,
+      "failed": 0,
+      "skipped": 11
+    },
+    {
+      "command": "git diff --check",
+      "exit_code": 0
+    },
+    {
+      "command": "python scripts/pre-commit-check.py --fast",
+      "exit_code": 0,
+      "staged_python_files": 6
+    }
+  ],
+  "native_experiments": [
+    {
+      "path": "docs/validation/needle2-memory-fr-default.json",
+      "sha256": "404082f2abdcbd73cc1f496d5a360e3b0b5185350000a4a6cc3669ace67a1779",
+      "confidence_threshold": 0.9,
+      "candidate": {
+        "dataset_sha256": "5c02bf867dae8a365b8ede54572d56125a30a3ce8e3872a54d573e7fe7bdadb3",
+        "total": 48,
+        "positive_cases": 30,
+        "negative_cases": 18,
+        "tool_accuracy": 0.375,
+        "positive_exact_call_accuracy": 0.0,
+        "negative_abstention_accuracy": 1.0,
+        "false_proposals_on_negative_cases": 0,
+        "p95_latency_ms": 376.514,
+        "first_query_ms": 1052.963,
+        "runtime_error_count": 0
+      },
+      "baseline": {
+        "dataset_sha256": "5c02bf867dae8a365b8ede54572d56125a30a3ce8e3872a54d573e7fe7bdadb3",
+        "total": 48,
+        "positive_cases": 30,
+        "negative_cases": 18,
+        "tool_accuracy": 0.5833333333333334,
+        "positive_exact_call_accuracy": 0.1,
+        "negative_abstention_accuracy": 0.8333333333333334,
+        "false_proposals_on_negative_cases": 3,
+        "p95_latency_ms": 0.092,
+        "first_query_ms": 0.116,
+        "runtime_error_count": 0
+      }
+    },
+    {
+      "path": "docs/validation/needle2-memory-fr-diagnostic.json",
+      "sha256": "cefacbdfbf8f069c24a1eab698c29e9b2b784b4bd215562c0fe1fb6d169c7685",
+      "confidence_threshold": 0.0,
+      "candidate": {
+        "dataset_sha256": "5c02bf867dae8a365b8ede54572d56125a30a3ce8e3872a54d573e7fe7bdadb3",
+        "total": 48,
+        "positive_cases": 30,
+        "negative_cases": 18,
+        "tool_accuracy": 0.7291666666666666,
+        "positive_exact_call_accuracy": 0.5666666666666667,
+        "negative_abstention_accuracy": 0.8333333333333334,
+        "false_proposals_on_negative_cases": 3,
+        "p95_latency_ms": 369.011,
+        "first_query_ms": 1252.088,
+        "runtime_error_count": 0
+      },
+      "baseline": {
+        "dataset_sha256": "5c02bf867dae8a365b8ede54572d56125a30a3ce8e3872a54d573e7fe7bdadb3",
+        "total": 48,
+        "positive_cases": 30,
+        "negative_cases": 18,
+        "tool_accuracy": 0.5833333333333334,
+        "positive_exact_call_accuracy": 0.1,
+        "negative_abstention_accuracy": 0.8333333333333334,
+        "false_proposals_on_negative_cases": 3,
+        "p95_latency_ms": 0.082,
+        "first_query_ms": 0.175,
+        "runtime_error_count": 0
+      }
+    }
+  ],
+  "superseded_diagnostics": {
+    "path": "docs/validation/needle2-memory-superseded-diagnostics.json",
+    "sha256": "8cf0c8d8175ad8251e88558e0b888093d0d0bc078117d9a5b5250f8e20f21d61",
+    "reason": "Sorted JSON schema fields altered native model selections; corrected before final measurement."
+  },
+  "limitations": [
+    "Synthetic exploratory corpus, no held-out user-task evaluation.",
+    "No local generalist comparison.",
+    "No independent native peak-memory measurement.",
+    "Linux x86-64 / Python 3.12 only for native measurement; Windows/homelab untested.",
+    "The default threshold abstains on every case; zero threshold still makes unwanted proposals.",
+    "Neither mocked CI tests nor these diagnostics are successful-action learning evidence."
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "query": "Consulte l'historique de lot_MOTEUR-8.",
+  "proposal": {
+    "schema_version": "botte.memory-argument-spans/v1",
+    "query_sha256": "69e916118b0591a6c470f6fc032f879871e5bd0f374ee598f71294b7a16dd83b",
+    "tool_name": "memory_history",
+    "argument_spans": {
+      "key": {
+        "start": 25,
+        "end": 37
+      }
+    }
+  }
+}
