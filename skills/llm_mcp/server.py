@@ -1674,11 +1674,12 @@ def handle(request: dict):
         if name == "find_tool":
             from skills.llm_mcp.lazy import find_tool
             try:
-                if not isinstance(args, dict) or set(args) - {"query", "top_k", "schema_budget_bytes"}:
+                if not isinstance(args, dict) or set(args) - {"query", "top_k", "schema_budget_bytes", "detail"}:
                     raise ValueError("unsupported find_tool arguments")
                 text = json.dumps(find_tool(args.get("query", ""), TOOLS,
                                            top_k=args.get("top_k", 5),
-                                           schema_budget_bytes=args.get("schema_budget_bytes", 8192)),
+                                           schema_budget_bytes=args.get("schema_budget_bytes", 8192),
+                                           detail=args.get("detail", "schemas")),
                                   ensure_ascii=False, separators=(",", ":"))
                 return _result(req_id, {"content": [{"type": "text", "text": text}]})
             except (TypeError, ValueError) as error:
