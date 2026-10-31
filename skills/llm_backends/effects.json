@@ -1,20 +1,28 @@
 {
   "schema": "botte.capability-effects/v1",
   "capability_id": "zedarvates/botte-secrete:skills/llm_backends",
-  "contract_version": "0.4.0",
+  "contract_version": "0.5.0",
   "source_hashes": {
-    "SKILL.md": "6798fcdffb24c857e1a63aa0999c02c97ab7aa00ce7f83b7cbfb778c26b8e33f",
+    "SKILL.md": "8adabb4db7d9a885cbcceded94b08e8cdb9a4200d46294e9a169ba5b194c888f",
     "__init__.py": "eca04ab1a01da980fdfff0125043a40cb68a83bcfc484a05862f5bffdd58bd1f",
     "registry.py": "760617183d341c44798ebd6682b81e867afc04b26e71db738ce1478442866edd",
     "discovery.py": "312f045d7ff62d783f56e589ab88ddfa0778a702890d18a20a35100cb8fdd468",
     "audit.py": "ac9cd0b190a3f627c612679e6ef18eed79b8906a25c6dc8fa8bd63df81a2b5bb",
     "client.py": "eeb7e559ff78161e4125b78b0ee449e4737bc33ae81a8ef6c4c05ba4e73358a8",
-    "cli.py": "97b85651dea30abb836261230d08946b4f5961ff3ceed6f1361d8640d4fd5c00"
+    "cli.py": "97b85651dea30abb836261230d08946b4f5961ff3ceed6f1361d8640d4fd5c00",
+    "runtime.py": "1aa75d19385b07248c7ab3e4dae445c548d39451dfaf0c0eedc3b4b47cacadae",
+    "runtime_contract.py": "3b7006b23691bc45975729aa67c3a7a869188ed186dab4bd0990c0ee7cd7f3cb",
+    "runtime_io.py": "310e64bfeb233db27e61ed7e5a6cae5877e08c1ddda11bd1515b80e07688ccfd",
+    "runtime_cli.py": "d478947662a9b707d4b1a11af7cdb1d1dd51f973f3f1493756c83eb6027288b4",
+    "acceptance.py": "814d85a38d5d9b0d9eef59b0f5a28ff985ef8e48cdce02afcc3ed906a4735747",
+    "runtime-guide.md": "7a925bf2b9ec2af789753778bf43362578dfe5750115d3bdf7c1a50296fe87a2",
+    "acceptance-guide.md": "597c8352b6de842c31d666ae99831c3dd764401ec0fb8dec63e0ffcc12869d51"
   },
   "preconditions": [
     "Select list/profile, discovery/refresh, audit or inference explicitly; their writes and network use differ.",
     "Resolve the authorized hosts, subnet and output audience. Registry storage defaults to this toolkit checkout, not the audited project.",
-    "Inspect the selected backend base URL and model before disclosing prompt/system text; a local label is not an ownership or retention check."
+    "Inspect the selected backend base URL and model before disclosing prompt/system text; a local label is not an ownership or retention check.",
+    "For portable runtime commands, validate a ready configuration with pinned engine/target references, authorized endpoints and explicit memory destinations. External context must come from the authorized adapter; declarations do not establish endpoint ownership or hardware capability."
   ],
   "expected_effects": [
     {
@@ -56,6 +64,38 @@
       "basis": "Operation decorators and transport/write contexts use imported skills.capabilities observation helpers outside these hashes. discover/scan_host propagate worker contexts; probe_host links TCP and GET attempts; chat and chat_json retain distinct POST retries.",
       "impact": "Makes inherited consequences traceable and retains received status even if the body times out. Adds bounded reads, optional checkpoint writes and opaque target metadata; server behavior, usage and answer quality remain unverified.",
       "verification": "Run test_observations.py and test_network_observations.py in skills/conductor; inspect real loopback probes, parallel checkpoints, redirects, JSON retries, HTTP errors and body timeout without live models or private data."
+    },
+    {
+      "effect": "Prepare and inspect portable runtime configuration without contacting inference or memory endpoints.",
+      "scope": "Supplied configuration, local OS/GPU inventory, stdout and an optional new private template file.",
+      "likelihood": "conditional",
+      "basis": "template, validate and plan are offline; inspect reads host inventory and may run nvidia-smi. --output creates a new file exclusively.",
+      "impact": "Exposes configuration and local inventory to the caller; writing a template changes local files but does not install a model, start a service, reserve a GPU or attest a declared mode.",
+      "verification": "Run test_runtime.ContractTests and the offline MCP template/plan check; verify draft refusal and exclusive output creation."
+    },
+    {
+      "effect": "Execute explicitly selected inference profiles and persist private task/context/output snapshots and bounded observation reports.",
+      "scope": "Configured inference endpoints, authorized memory context, a newly created run directory and any endpoint-owned retention.",
+      "likelihood": "conditional",
+      "basis": "execute validates routes and memory destination allowlists; infer refuses redirects/proxies and generated tools. Runs may use one declared fallback; paired benchmarks rotate profile order and retain failed trials without fallback.",
+      "impact": "Discloses selected prompt/context and consumes endpoint compute. Private local artifacts contain plaintext task and answer data. Timeout does not cancel remote compute; fallback can overlap it. Verification predicates and declared profiles do not attest business correctness, decoding equivalence or a speedup.",
+      "verification": "Run test_runtime.ExecutionTests with temporary HTTP engines: inspect transmitted context, bad responses, redirect refusal, interrupted runs, fallback boundaries and paired reports."
+    },
+    {
+      "effect": "Recall current shared memory and prepare an observation outbox; explicitly requested capture stores a private quarantined runtime observation.",
+      "scope": "The configured shared-memory project and identity, frozen local context snapshots, outbox and optional receipt files; an external adapter ingests its own outbox separately.",
+      "likelihood": "conditional",
+      "basis": "prepare_context accepts reviewed bounded context; capture checks configuration/report/body digests and original credential binding, then reuses the same request ID. The outbox includes summary measurements and hashes rather than prompt or answer text.",
+      "impact": "Selected memories can be sent only to allowed profiles. Capture changes the shared store and may have committed when a response is lost. A capture retry performs no inference; it never promotes memory automatically.",
+      "verification": "Run SharedMemoryTests against an authenticated temporary service and inject a lost receipt; verify one quarantined record, replay behavior and credential-change refusal."
+    },
+    {
+      "effect": "Prepare a one-request acceptance challenge, collect private host observations, run one direct smoke attempt and export an allowlisted evidence summary.",
+      "scope": "New local challenge/attempt files, OS installation identity and GPU/storage observations, one configured inference endpoint and optional scoped memory calls.",
+      "likelihood": "conditional",
+      "basis": "acceptance binds the challenge to source/config digests, checks fresh distinct OS-installation observations and creates an exclusive attempt marker. Export checks the frozen task, response predicate and bounded fields offline.",
+      "impact": "Collection reads sensitive host metadata into private files. The public summary omits raw host identities, endpoints and memory content. Distinct OS installations and a listed GPU do not prove physical separation, endpoint-to-host binding, GPU execution, speculation or production readiness.",
+      "verification": "Run test_acceptance with synthetic host observations, fake HTTP responses and temporary authenticated memory; check stale/source/config mismatches, attempt replay and non-disclosing export."
     }
   ],
   "downstream_effects": [
@@ -74,6 +114,14 @@
       "basis": "CLI output and remote inference retention are controlled by their consumers.",
       "impact": "Disclosures cannot be recalled by restoring the local registry; a model result can propagate an unverified claim.",
       "verification": "Inspect actual output destinations and independent task evidence before sharing or reusing results."
+    },
+    {
+      "effect": "Saved runtime snapshots and quarantined observations can be retained or reused after the live memory changes.",
+      "scope": "Private run directories, shared-memory observations, external adapters and later human routing decisions.",
+      "likelihood": "conditional",
+      "basis": "Runtime snapshots/outboxes are separate files; reports remain advisory and no automatic profile or memory promotion occurs.",
+      "impact": "Live-store correction or forgetting does not erase previously saved context or endpoint retention. A benchmark predicate alone does not authorize a production route.",
+      "verification": "Inspect the separate artifacts and live-store state after correction/forget; review representative outputs and native engine telemetry before changing routes."
     }
   ],
   "reversibility": {
@@ -81,23 +129,27 @@
     "strategy": "Reconcile the registry and restore a previously retained authorized snapshot only after accounting for later writes. Endpoint-side inference and disclosures require separate handling.",
     "residual_effects": [
       "Network probes, consumed inference compute and remote logging are not undone by registry restoration.",
-      "The registry writer provides no transactional history or automatic recovery from a partial overwrite."
+      "The registry writer provides no transactional history or automatic recovery from a partial overwrite.",
+      "Runtime and acceptance files, disclosed memory snapshots, endpoint compute/logs and captured observations remain separate resources; interrupted run directories are not resumable."
     ]
   },
   "retry": {
     "semantics": "conditional",
-    "check_before_retry": "Reads can be repeated within scope. Refresh can change the snapshot and shared consumers; an inference retry can duplicate remote work. Check the concrete operation and actual state after timeout.",
+    "check_before_retry": "Reads can be repeated within scope. Refresh can change the snapshot and shared consumers; an inference retry can duplicate remote work. Check the concrete operation and actual state after timeout. For portable runtime inference, inspect the existing run after interruption and use a new explicit run only if authorized. After uncertain memory capture, retry capture only with the unchanged outbox and original identity.",
     "stop_condition": "Stop repeated discovery on an unresolved scope or persistence failure. Reconcile an uncertain inference before issuing another costly or sensitive request."
   },
   "required_scope": "Existing task authorization for the selected local files, output audience, network discovery range and inference endpoint/data. This declaration supplies none of that authority.",
   "analysis": {
-    "summary": "Consultation, discovery, hardware advice and inference have distinct consequences. Tests can establish fixture writes and requests; endpoint behavior and target quality remain context-dependent.",
+    "summary": "Consultation, discovery, hardware advice and inference have distinct consequences. Tests can establish fixture writes and requests; endpoint behavior and target quality remain context-dependent. Portable runtime setup, inference, memory capture and acceptance add separate file/network consequences; their reports remain advisory.",
     "uncertainties": [
       "Registry writes are not atomic or protected by a cross-process lock.",
       "Backend URLs and response usage fields are supplied by configuration or remote servers.",
       "Model recommendations do not verify current prices, compatibility, throughput or quality.",
       "The optional project profiler and interpreter/runtime behavior are outside these local source bindings.",
-      "Observation covers selected calls, writes and TCP/HTTP response facets, including enrolled discovery workers. Other background activity, intermediate redirects, remote effects and cost remain unverified."
+      "Observation covers selected calls, writes and TCP/HTTP response facets, including enrolled discovery workers. Other background activity, intermediate redirects, remote effects and cost remain unverified.",
+      "Portable runtime and acceptance functions are not enrolled in the existing discovery/chat observation decorators; their own reports are separate evidence, not complete operation tracing.",
+      "Shared-memory authorization, atomic JSON storage and OS/runtime behavior are imported dependencies outside this skill-local source binding.",
+      "The local fixtures do not establish real host connectivity, GPU use, native speculative execution, production retrieval quality or Windows ACLs."
     ],
     "evidence_refs": [
       "registry.py:refresh",
@@ -106,7 +158,15 @@
       "client.py:LocalLLMClient.chat_json",
       "cli.py:_cmd_profile",
       "discovery.py:probe_host",
-      "discovery.py:discover"
+      "discovery.py:discover",
+      "runtime_contract.py:validate_config",
+      "runtime.py:execute",
+      "runtime.py:capture",
+      "runtime_io.py:prepare_context",
+      "acceptance.py:run",
+      "acceptance.py:export",
+      "test_runtime.py",
+      "test_acceptance.py"
     ]
   },
   "reuse": [
