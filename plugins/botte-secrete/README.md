@@ -1,13 +1,41 @@
 # Botte Secrète Codex plugin
 
-This version 1.11.0 plugin supplies one workflow skill and an MCP stdio connection.
+This version 1.11.1 plugin supplies one workflow skill and an MCP stdio connection.
 Its executable runtime is installed separately; installing this plugin does not
 install Python, Botte Secrète, optional dependencies, models or credentials.
 
-This checkout is an unreleased candidate. To reproduce a reviewed candidate,
-pin the runtime and marketplace to the same full commit as described below.
-The generic `main` examples follow that branch and can resolve to a different
-version while a pull request is still open.
+This package is part of Botte Secrète 1.11.1. Use the runtime wheel and marketplace
+from the same official release or full reviewed commit. The delivery manifest
+binds the exact source files, archives and validation reports.
+
+## Install the official release
+
+Install the 1.11.1 runtime wheel from the GitHub release in a dedicated Python
+environment, and make its botte-mcp command available on Codex's PATH. Register
+the marketplace at the release tag, then install this plugin:
+
+```sh
+codex plugin marketplace add zedarvates/botte-secrete --ref v1.11.1
+codex plugin add botte-secrete@botte-secrete-marketplace
+```
+
+If a marketplace with this name already points to a local override or another
+ref, inspect it and replace only that Botte source before installing. Existing
+conversations may retain their current server connection; verify the installed
+version and native specialized methods in a fresh Codex conversation.
+
+## Direct native tools
+
+The bundled .mcp.json sets BOTTE_MCP_LAZY_TOOLS=0 for the botte-llm process.
+The complete tools/list catalog is advertised at initialization, so Codex can
+register specialized tools and their schemas as native methods. Call the actual
+compute_statistics, find_file_duplicates and check_local_links methods offered
+by the host. Optional tools retain their backend and authorization prerequisites.
+
+The runtime's compact mode remains available to other clients. find_tool returns
+text and schemas; it does not register methods in Codex. This official plugin uses
+the complete catalog and needs no separate stdio client for specialized calls.
+No model, permission or automatic execution is enabled merely by listing tools.
 
 ## Reproduce a reviewed candidate
 
@@ -39,12 +67,12 @@ For local cache iteration, use the timestamp procedure in the Update section.
 This recipe is an installation procedure, not evidence that a fresh install has
 already passed on every platform.
 
-For the consolidated three-workflow validation and its recorded limitations,
-see the [candidate guide](../../docs/parcimonia-candidate.md).
+For the distinction between delivery checks and the historical three-workflow
+qualification, see the bundled [validation scope](docs/validation-scope.md).
 The project checkup now separates a configuration declaration from launcher
 discovery and runtime reachability. Its static `configured` result does not
 qualify the plugin installed in Codex; use Codex's current server status and
-the read-only call above. See [MCP diagnostics](../../docs/mcp-integration.md#read-the-installation-diagnostic)
+the read-only call above. See the bundled [MCP diagnostics](docs/mcp-diagnostics.md#read-the-installation-diagnostic)
 for supported files and parser limitations.
 
 ## First-assessment behavior
@@ -127,10 +155,10 @@ Use the documented cachebuster flow below for local iteration.
 
 For local development, update the checkout and replace the plugin manifest's
 build suffix with a new UTC timestamp, such as
-`1.11.0+codex.local-20261013-184516`. Keep the version prefix before `+`; replace
+`1.11.1+codex.local-20261031-184516`. Keep the version prefix before `+`; replace
 an existing suffix instead of appending another one. This changes the local
 Codex cache key without incrementing the release version for each edit. The
-committed release manifest stays at `1.11.0`.
+release manifest stays at `1.11.1`.
 
 Confirm that the selected marketplace is the local checkout you edited, then
 run `codex plugin add botte-secrete@botte-secrete-marketplace` again. Marketplace

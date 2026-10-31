@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+## v1.11.1 (2026-10-31)
+
+- Advertise the complete MCP catalog in the Codex plugin by setting
+  `BOTTE_MCP_LAZY_TOOLS=0`. Specialized methods are registered directly in Codex;
+  discovery text is no longer mistaken for native method registration.
+- Verify the actual plugin launch environment and complete pre-call tool catalog
+  in distribution tests; align installed-runtime and Codex host probes with
+  direct specialized calls. Compact runtime mode remains available to other clients.
+
+- Bundle validation-scope and MCP-diagnostic guides inside the Codex plugin;
+  resolve both README links within the standalone marketplace package.
+- Distinguish local delivery preparation, historical candidate qualification,
+  remote publication and runtime installation in the package README.
+- Check that all plugin Markdown links stay inside the distributable plugin.
+- Align runtime and plugin metadata at 1.11.1. See the
+  [corrective delivery notes](docs/releases/1.11.1.md) and accompanying manifest.
+  This preparation performs no publication or active-installation replacement.
+
 ## v1.11.0 (2026-10-31, local stable build)
 
 - Serialize persistent cache access across cooperating processes and threads;

@@ -190,12 +190,11 @@ class HostedSession:
 
     def discover_and_assess(self, name, task, intent):
         tools = self.rpc("tools/list")["tools"]
-        names = {item["name"] for item in tools}
-        require("find_tool" in names and "assess_task" in names and name not in names,
-                "plugin MCP lazy tool boundary differs")
-        discovery = self.tool("find_tool", {"query": name})
-        tool = next(item for item in discovery["matches"] if item["name"] == name)
-        require("inputSchema" in tool, "hosted tool discovery lacks schema")
+        offered = {item["name"]: item for item in tools}
+        require("assess_task" in offered and name in offered,
+                "specialized tool is absent from Codex's native catalog")
+        tool = offered[name]
+        require("inputSchema" in tool, "hosted tool lacks an advertised schema")
         assessment = self.tool("assess_task", {"task": task, "available_tools": [
             {"name": name, "description": tool["description"]}]})
         require(assessment["status"] == "proposed" and assessment["intent"] == intent,
@@ -251,7 +250,8 @@ def wait_server(host, thread_id, plugin_id, *, expected_unavailable=False):
     deadline = time.monotonic() + 35
     last = None
     while time.monotonic() < deadline:
-        result = host.rpc("mcpServerStatus/list", {"threadId": thread_id, "limit": 100})
+        result = host.rpc("mcpServerStatus/list", {"threadId": thread_id,
+                          "serverName": "botte-llm", "limit": 1})
         require(not result.get("nextCursor"), "MCP status pagination is incomplete")
         matches = [item for item in result["data"] if item.get("pluginId") == plugin_id]
         require(len(matches) <= 1, "multiple MCP servers unexpectedly belong to plugin")
@@ -296,7 +296,7 @@ def main(argv=None):
         require(not (profile / "config.toml").exists() and not (profile / "auth.json").exists()
                 and not (profile / "plugins").exists(), "a disposable initially empty Codex profile is required")
         env = {k: v for k, v in os.environ.items() if k not in {"PYTHONPATH", "PYTHONHOME"}}
-        env.update(PYTHONUTF8="1", PYTHONIOENCODING="utf-8", BOTTE_MCP_LAZY_TOOLS="1")
+        env.update(PYTHONUTF8="1", PYTHONIOENCODING="utf-8")
         scripts = args.runtime_python.absolute().parent
         env["PATH"] = str(scripts) + os.pathsep + env.get("PATH", "")
         runtime_command = shutil.which("botte-mcp", path=env["PATH"])

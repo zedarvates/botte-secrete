@@ -5,21 +5,22 @@
 [Rapports RC1 et reproduction](docs/validation/2.0.0rc1/README.md)
 — installation propre et pilote limité sur un projet public.
 
-**Versions :** [1.9.0 — dernière version stable](https://github.com/zedarvates/botte-secrete/releases/tag/1.9.0)
+**Références de versions historiques :** [1.9.0](https://github.com/zedarvates/botte-secrete/releases/tag/1.9.0)
 · [2.0.0rc2 — préversion pour pilotes externes](https://github.com/zedarvates/botte-secrete/releases/tag/v2.0.0rc2).
 La RC ajoute Factory Assurance, un juge indépendant et des critères de preuve.
 Commencer en mode observe, consultative ou shadow ; la validation sur un jeu
 privé/externe indépendant reste à établir. Les notes de version précisent les
-limites et l'installation au commit validé. `main` prépare la version
-**1.11.0** ; le badge ci-dessous indique cette version non publiée en amont.
-Cette livraison fournit les [notes de la stable locale 1.11.0](docs/releases/1.11.0.md) ;
-son manifeste précise les archives et validations exactes. Le
+limites et l'installation au commit validé. La version **1.11.1** intègre les guides
+embarqués et l'accès natif direct aux outils MCP spécialisés dans Codex. Les
+[notes 1.11.1](docs/releases/1.11.1.md) et la
+[version officielle](https://github.com/zedarvates/botte-secrete/releases/tag/v1.11.1)
+précisent les archives, vérifications et étapes d'installation. Le
 [guide du plugin Codex](plugins/botte-secrete/README.md) explique l'installation
 séparée du runtime Python et le catalogue Git.
 
 [![CI](https://github.com/zedarvates/botte-secrete/actions/workflows/ci.yml/badge.svg)](https://github.com/zedarvates/botte-secrete/actions)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
-[![Version](https://img.shields.io/badge/version-1.11.0-55d6be)](pyproject.toml)
+[![Version](https://img.shields.io/badge/version-1.11.1-55d6be)](pyproject.toml)
 [![Licence MIT](https://img.shields.io/badge/licence-MIT-7b8cff)](LICENSE)
 
 [English](README.md) · [Documentation](docs/README.md) · [Architecture](docs/ARCHITECTURE.md) · [Développement](docs/DEVELOPMENT.md) · [Contribuer](CONTRIBUTING.md)

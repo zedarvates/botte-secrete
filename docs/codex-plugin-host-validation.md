@@ -16,6 +16,14 @@ register the local marketplace and install `botte-secrete`. These commands write
 only to the disposable runner profile. No active user profile is installed or
 enabled by this qualification.
 
+## Official 1.11.1 catalog
+
+The plugin explicitly sets `BOTTE_MCP_LAZY_TOOLS=0`. Codex receives the complete
+tools/list catalog and can register specialized methods before any call. The
+host probe asserts that each selected method and its schema are already offered.
+It does not treat a find_tool text response as native method registration.
+Historical reports that exercised compact discovery remain historical evidence.
+
 ## Acceptance criteria
 
 - The host reports the plugin as installed and enabled in the expected local

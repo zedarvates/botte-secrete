@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import math
+import os
 from pathlib import Path
 import re
 import subprocess
@@ -12,7 +13,7 @@ import tempfile
 import unittest
 import unicodedata
 import xml.etree.ElementTree as ET
-from urllib.parse import urlsplit
+from urllib.parse import unquote, urlsplit
 
 from skills import __version__
 
@@ -179,9 +180,30 @@ class DistributionTests(unittest.TestCase):
     def test_installed_subset_preserves_the_license(self):
         self.assertEqual((PLUGIN / "LICENSE").read_bytes(), (ROOT / "LICENSE").read_bytes())
 
+    def test_plugin_markdown_links_are_self_contained(self):
+        from skills.fallow_like.local_links import extract_markdown_links
+
+        for document in sorted(PLUGIN.rglob("*.md")):
+            extracted = extract_markdown_links(document.read_text(encoding="utf-8"))
+            self.assertFalse(extracted["truncated"], document)
+            self.assertFalse(extracted["issues"], document)
+            for link in extracted["links"]:
+                parsed = urlsplit(link["target"])
+                if parsed.scheme or not parsed.path or link["target"].startswith("//"):
+                    continue
+                target = (document.parent / unquote(parsed.path)).resolve()
+                with self.subTest(document=str(document.relative_to(PLUGIN)),
+                                  line=link["line"], target=link["target"]):
+                    self.assertTrue(target.is_relative_to(PLUGIN.resolve()),
+                                    "documentation must also work in the standalone plugin")
+                    self.assertTrue(target.is_file(), "local link target must be bundled")
+
     def test_mcp_configuration_uses_the_installed_console_entry_point(self):
         config = json.loads((PLUGIN / ".mcp.json").read_text(encoding="utf-8"))
-        self.assertEqual(config["mcpServers"]["botte-llm"], {"type": "stdio", "command": "botte-mcp"})
+        self.assertEqual(config["mcpServers"]["botte-llm"], {
+            "type": "stdio", "command": "botte-mcp",
+            "env": {"BOTTE_MCP_LAZY_TOOLS": "0"},
+        })
         self.assertIn('botte-mcp = "skills.llm_mcp.server:main"', (ROOT / "pyproject.toml").read_text(encoding="utf-8"))
 
     def test_runtime_initialize_reports_the_package_version(self):
@@ -196,6 +218,30 @@ class DistributionTests(unittest.TestCase):
         responses = {item["id"]: item for item in map(json.loads, result.stdout.splitlines())}
         self.assertEqual(responses[1]["result"]["serverInfo"]["version"], __version__)
         self.assertTrue(responses[2]["result"]["tools"])
+
+    def test_codex_plugin_advertises_all_runtime_tools_before_calls(self):
+        """Discovery text cannot register a method in Codex's native catalog."""
+        from skills.llm_mcp.server import TOOLS
+
+        launch = json.loads((PLUGIN / ".mcp.json").read_text(encoding="utf-8"))["mcpServers"]["botte-llm"]
+        environment = {**os.environ, "PYTHONUTF8": "1", "BOTTE_NN_AUTO_LABELS": "0"}
+        environment.pop("BOTTE_MCP_LAZY_TOOLS", None)
+        environment.update(launch.get("env", {}))
+        requests = [
+            {"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {"protocolVersion": "2024-11-05", "capabilities": {}, "clientInfo": {"name": "native-catalog-regression", "version": "1"}}},
+            {"jsonrpc": "2.0", "id": 2, "method": "tools/list", "params": {"cursor": None, "_meta": {}}},
+        ]
+        process = subprocess.run([sys.executable, "-m", "skills.llm_mcp.server"], cwd=ROOT,
+            env=environment, input="".join(json.dumps(item) + "\n" for item in requests),
+            capture_output=True, text=True, encoding="utf-8", timeout=20)
+        self.assertEqual(process.returncode, 0, process.stderr)
+        responses = {item["id"]: item for item in map(json.loads, process.stdout.splitlines())}
+        offered = responses[2]["result"]["tools"]
+        self.assertEqual({item["name"] for item in offered}, {item["name"] for item in TOOLS})
+        self.assertEqual(len(offered), len({item["name"] for item in offered}))
+        self.assertTrue({"compute_statistics", "find_file_duplicates", "check_local_links"} <= {item["name"] for item in offered})
+        self.assertTrue(all(isinstance(item.get("inputSchema"), dict) for item in offered))
+        self.assertEqual(responses[1]["result"]["serverInfo"]["version"], __version__)
 
 
 if __name__ == "__main__":

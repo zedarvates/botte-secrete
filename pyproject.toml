@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "botte-secrete"
-version = "1.11.0"
+version = "1.11.1"
 description = "Local-first context tools, routing advice, code audit and MCP workflows for AI agents."
 readme = "README.md"
 license = { file = "LICENSE" }

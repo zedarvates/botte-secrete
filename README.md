@@ -5,21 +5,22 @@
 [RC1 validation reports and reproduction](docs/validation/2.0.0rc1/README.md)
 — clean installation checks and a bounded public-source pilot.
 
-**Releases:** [1.9.0 — latest stable](https://github.com/zedarvates/botte-secrete/releases/tag/1.9.0)
+**Historical release references:** [1.9.0](https://github.com/zedarvates/botte-secrete/releases/tag/1.9.0)
 · [2.0.0rc2 — external-pilot pre-release](https://github.com/zedarvates/botte-secrete/releases/tag/v2.0.0rc2).
 The RC adds Factory Assurance, independent judging, and evidence gates. Start in
 observe, consultative, or shadow mode; the private/external holdout remains
 unproven. See the release notes for limits and installation at the validated
-commit. `main` prepares version **1.11.0**; the badge below identifies that
-unreleased upstream candidate. This delivery includes the
-[local stable 1.11.0 release notes](docs/releases/1.11.0.md); its exact artifacts
-and validation are recorded in the accompanying delivery manifest. The
+commit. Botte Secrète **1.11.1** integrates the standalone documentation fix
+and direct native access to specialized MCP tools in Codex.
+See the [1.11.1 release notes](docs/releases/1.11.1.md) and the
+[official release](https://github.com/zedarvates/botte-secrete/releases/tag/v1.11.1)
+for the exact artifacts, checks and installation procedure. The
 [Codex plugin guide](plugins/botte-secrete/README.md) documents its separately
 installed Python runtime and Git marketplace catalog.
 
 [![CI](https://github.com/zedarvates/botte-secrete/actions/workflows/ci.yml/badge.svg)](https://github.com/zedarvates/botte-secrete/actions)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
-[![Version](https://img.shields.io/badge/version-1.11.0-55d6be)](pyproject.toml)
+[![Version](https://img.shields.io/badge/version-1.11.1-55d6be)](pyproject.toml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-7b8cff)](LICENSE)
 
 [Français](README.fr.md) · [Documentation](docs/README.md) · [Architecture](docs/ARCHITECTURE.md) · [Development](docs/DEVELOPMENT.md) · [Contributing](CONTRIBUTING.md)
