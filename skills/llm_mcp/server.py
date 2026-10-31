@@ -54,6 +54,72 @@ SERVER_INFO = {"name": "botte-llm", "version": __version__}
 
 TOOLS = [
     {
+        "name": "review_knowledge_links",
+        "description": "Parcimonia: review supplied versioned documentary and receipt "
+                       "links for missing references, stale versions and declared dependency "
+                       "cycles. Lexical suggestions remain advisory; no retrieval, memory "
+                       "write, model, network or proof of documentary truth.",
+        "inputSchema": {
+            "type": "object", "additionalProperties": False,
+            "properties": {"inventory_json": {"type": "string", "maxLength": 262144}},
+            "required": ["inventory_json"],
+        },
+        "annotations": {"readOnlyHint": True, "destructiveHint": False,
+                        "idempotentHint": True, "openWorldHint": False},
+    },
+    {
+        "name": "summarize_github_evidence",
+        "description": "Parcimonia: select bounded review fields from supplied "
+                       "GitHub PR, file headers, checks and commit-status JSON. "
+                       "Retains revision mismatches, failure counts and source links. "
+                       "Caller data remains unverified. Reports UTF-8 bytes, not token savings; "
+                       "does not fetch GitHub or decide merge eligibility.",
+        "inputSchema": {
+            "type": "object", "additionalProperties": False,
+            "properties": {"report_json": {"type": "string", "maxLength": 131072}},
+            "required": ["report_json"],
+        },
+        "annotations": {"readOnlyHint": True, "destructiveHint": False,
+                        "idempotentHint": True, "openWorldHint": False},
+    },
+    {
+        "name": "assess_task",
+        "description": "Parcimonia: propose a bounded first assessment of a task, "
+                       "including GitHub/PR research, software tests and game playtests. "
+                       "Ranks only caller-supplied tool metadata. Lexical advice only; "
+                       "no execution, model, network, permission or measured savings.",
+        "inputSchema": {
+            "type": "object", "additionalProperties": False,
+            "properties": {
+                "task": {"type": "string", "minLength": 1, "maxLength": 16384},
+                "available_tools": {"type": "array", "maxItems": 64, "items": {
+                    "type": "object", "additionalProperties": False,
+                    "properties": {"name": {"type": "string", "maxLength": 160},
+                                   "description": {"type": "string", "maxLength": 2048}},
+                    "required": ["name"]}},
+                "context_budget": {"type": "integer", "minimum": 0, "maximum": 16000},
+            }, "required": ["task"],
+        },
+        "annotations": {"readOnlyHint": True, "destructiveHint": False,
+                        "idempotentHint": True, "openWorldHint": False},
+    },
+    {
+        "name": "plan_github_research",
+        "description": "Parcimonia: prepare scoped GitHub pull-request search and "
+                       "progressive reads of metadata, changed files and checks for "
+                       "the exact head. Returns a plan, never fetches or changes GitHub.",
+        "inputSchema": {
+            "type": "object", "additionalProperties": False,
+            "properties": {
+                "repository": {"type": "string", "maxLength": 140},
+                "query": {"type": "string", "maxLength": 1000},
+                "pr_number": {"type": "integer", "minimum": 1, "maximum": 2147483647},
+            }, "required": ["repository"],
+        },
+        "annotations": {"readOnlyHint": True, "destructiveHint": False,
+                        "idempotentHint": True, "openWorldHint": False},
+    },
+    {
         "name": "discover_backends",
         "description": "Scan for local LLM servers (LM Studio, Ollama, LocalAI, "
                        "vLLM, llama.cpp, ComfyUI, Qdrant) on localhost or the "
@@ -1455,7 +1521,56 @@ def _tool_forget_memory(args: dict) -> str:
     return json.dumps(_mh("forget_memory", args), ensure_ascii=False)
 
 
+def _assessment_arguments(args: dict, allowed: set[str]) -> None:
+    if not isinstance(args, dict) or set(args) - allowed:
+        raise ValueError("unsupported assessment arguments")
+
+
+def _tool_review_knowledge_links(args: dict) -> str:
+    from skills.app_test.knowledge_links import review_knowledge_links
+    _assessment_arguments(args, {"inventory_json"})
+    raw = args.get("inventory_json")
+    if not isinstance(raw, str) or len(raw.encode("utf-8")) > 262144:
+        raise ValueError("inventory_json must be bounded UTF-8 text")
+
+    def pairs(items):
+        result = {}
+        for key, value in items:
+            if key in result:
+                raise ValueError("duplicate inventory field")
+            result[key] = value
+        return result
+
+    def invalid_constant(_value):
+        raise ValueError("nonfinite inventory number")
+
+    inventory = json.loads(raw, object_pairs_hook=pairs, parse_constant=invalid_constant)
+    return json.dumps(review_knowledge_links(inventory), ensure_ascii=True, separators=(",", ":"))
+
+
+def _tool_assess_task(args: dict) -> str:
+    from skills.preflight.assessment import assess_task
+    _assessment_arguments(args, {"task", "available_tools", "context_budget"})
+    return json.dumps(assess_task(**args), ensure_ascii=False)
+
+
+def _tool_plan_github_research(args: dict) -> str:
+    from skills.preflight.github_plan import plan_github_research
+    _assessment_arguments(args, {"repository", "query", "pr_number"})
+    return json.dumps(plan_github_research(**args), ensure_ascii=False)
+
+
+def _tool_summarize_github_evidence(args: dict) -> str:
+    from skills.preflight.github_evidence import summarize_github_evidence
+    _assessment_arguments(args, {"report_json"})
+    return json.dumps(summarize_github_evidence(**args), ensure_ascii=False, separators=(",", ":"))
+
+
 DISPATCH = {
+    "review_knowledge_links": _tool_review_knowledge_links,
+    "summarize_github_evidence": _tool_summarize_github_evidence,
+    "assess_task": _tool_assess_task,
+    "plan_github_research": _tool_plan_github_research,
     "dashboard": _tool_dashboard,
     "estimate_cost": _tool_estimate_cost,
     "fix_plan": _tool_fix_plan,
@@ -1558,11 +1673,18 @@ def handle(request: dict):
         args = params.get("arguments", {}) or {}
         if name == "find_tool":
             from skills.llm_mcp.lazy import find_tool
-            import json as _json
-            text = _json.dumps(find_tool(args.get("query", ""), TOOLS,
-                                         top_k=int(args.get("top_k", 5))),
-                               ensure_ascii=False, indent=2)
-            return _result(req_id, {"content": [{"type": "text", "text": text}]})
+            try:
+                if not isinstance(args, dict) or set(args) - {"query", "top_k", "schema_budget_bytes", "detail"}:
+                    raise ValueError("unsupported find_tool arguments")
+                text = json.dumps(find_tool(args.get("query", ""), TOOLS,
+                                           top_k=args.get("top_k", 5),
+                                           schema_budget_bytes=args.get("schema_budget_bytes", 8192),
+                                           detail=args.get("detail", "schemas")),
+                                  ensure_ascii=False, separators=(",", ":"))
+                return _result(req_id, {"content": [{"type": "text", "text": text}]})
+            except (TypeError, ValueError) as error:
+                return _result(req_id, {"content": [{"type": "text", "text": f"ERROR: {error}"}],
+                                        "isError": True})
         fn = DISPATCH.get(name)
         if not fn:
             return _error(req_id, -32602, f"Unknown tool: {name}")

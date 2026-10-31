@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+## v1.11.0 (unreleased)
+
+- Connect selective local preflight assessment and project policy to Parcimonia,
+  broaden the plugin skill's task triggers, and document candidate installation
+  from one reviewed commit for both runtime and marketplace.
+- Compact supplied GitHub review data while preserving unknown states, revision
+  mismatches, failure counts and source links. Report exact compact-JSON UTF-8
+  sizes separately from unknown token usage and cost.
+- Add an offline, reproducible workflow demonstration and include all Parcimonia
+  behavioral tests in the canonical CI runner. Align the French version badge.
+- Add Parcimonia advisory first-task assessment to the small core MCP surface.
+  Rank only supplied tool metadata within a declared context budget; abstain on
+  unsupported or ambiguous intent. Software tests and game playtests include
+  explicit adapter and evidence prerequisites, without executing them.
+- Add bounded GitHub/PR research plans with progressive reads and revision checks.
+  These helpers make no network or model calls and claim no measured savings.
+- Document the cloud/local boundary and a public-safe English video draft.
+
 ## v1.10.0 (unreleased)
 
 ### Distribution

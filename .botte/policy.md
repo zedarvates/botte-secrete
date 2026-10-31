@@ -3,19 +3,26 @@
 Shared rules for all agents and developers on this project. Keep cheap, keep local.
 
 ## Routing (cost)
-- **Default to LOCAL** for cheap/transformational work: classification,
-  extraction, short summaries, translation, formatting, syntax checks, and
-  **choosing which skills/tools to use**. Use the `botte-llm` MCP tools
-  (`local_chat`, `auto_route`, `find_skills`) — these cost 0 cloud tokens.
-- Escalate to the cloud model **only** for genuine reasoning: architecture,
-  multi-file changes, security, debugging root-causes.
-- Prefer `rtk <command>` for terminal commands (compact output).
-- **Hybrid pipeline**: cloud model plans (2-3 lines), **Ornith-1.0-9B local**
-  executes the actual work (0 tokens, 0 cost).
+- Use Parcimonia for the first assessment of work that needs research, tool
+  selection, code changes or test planning, when `assess_task` is available.
+  Reuse a current preflight assessment; skip extra calls for trivial requests
+  and direct actions whose tool and scope are already clear.
+- Treat lexical proposals as hints. Check the actual offered tool schema and
+  prerequisites; an abstention returns interpretation to the host. Do not infer
+  permission, risk, locality or a working local backend from prompt wording.
+- For GitHub/PR research, prepare scoped reads with `plan_github_research`, use
+  the connected GitHub reader, then `summarize_github_evidence` for bulky supplied
+  results when useful. Retain source links, completeness and head/base revisions.
+- Prefer deterministic helpers and verified cache reuse for cheap transformations.
+  Use a local model only when its backend and task suitability are established.
+  Keep genuine architecture, security and debugging reasoning with the host.
+- No model call inside a helper does not imply zero host tokens or free compute.
+  Measure the accepted workflow, including tool overhead, retries and fallback.
+- Prefer `rtk <command>` when available for compact terminal output.
 
 ## Prompts
-- Before a big/ambiguous request, improve it locally (`improve_prompt`) so the
-  cloud model starts from a structured, unambiguous prompt.
+- For an ambiguous request, use the existing evidence and host judgment to
+  clarify or split it. Consider `improve_prompt` only when useful and available.
 - Prefer concise, clear output. `python -m skills.caveman.cli prompt --level light`
   prints an optional style prompt; it does not inject or activate it.
   Preserve language, negations, conditions, uncertainty and evidence.
@@ -34,9 +41,8 @@ Shared rules for all agents and developers on this project. Keep cheap, keep loc
 ## Reasoning Effort
 - Match effort to task complexity, not model capability.
 - **Tiers**: low (trivial) → medium (routine) → high (complex) → extra (hard) → max (critical).
-- Cost spread on Fable 5: $3.76/task (low) → $22/task (max) = **82% savings**.
-- Default to **high** (best quality/cost ratio). Downgrade to medium for
-  routine work. Upgrade to max only for architecture/security.
+- Keep the host's configured effort. These helpers do not change the model
+  or its effort setting; compare actual accepted results before claiming savings.
 - In Hermes: set via `/reasoning high` or `reasoning_effort: high` in config.
 
 ## Hygiene (drift)

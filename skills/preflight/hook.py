@@ -1,23 +1,18 @@
 #!/usr/bin/env python3
-"""Preflight hook — injects the prefer-local policy + suggested skills every turn.
+"""Selective local Parcimonia assessment for Claude Code's prompt hook.
 
-Closes the opt-in gap: instead of hoping the model remembers to go local / pick
-the right tools / improve the prompt, this runs on **every** prompt (before the
-expensive model sees it), deterministically, for ~0 cost.
+Read a bounded UserPromptSubmit event (or a plain prompt) from stdin. Assess it
+without a model, network call or tool execution, and emit short advisory context
+only for supported work or a detected mixed workflow. Unknown and trivial
+prompts emit nothing. Any failure leaves the user's prompt unblocked.
 
-Designed for Claude Code's `UserPromptSubmit` hook (reads JSON on stdin, prints
-context to stdout), but works standalone: pipe a prompt on stdin and it prints
-the same guidance. Fast (lexical skill search, no LLM call) and crash-proof — a
-hook must never block the user, so any error just yields no extra context.
-
-Wire it (the deployer does this automatically) in .claude/settings.json:
-    {"hooks": {"UserPromptSubmit": [{"hooks": [
-      {"type": "command", "command": "python -m skills.preflight.hook"}]}]}}
+This is the existing Claude Code hook, not a Codex/Work-cloud lifecycle hook.
 """
 
 from __future__ import annotations
 
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -25,18 +20,46 @@ BOTTE_ROOT = Path(__file__).resolve().parents[2]
 if str(BOTTE_ROOT) not in sys.path:
     sys.path.insert(0, str(BOTTE_ROOT))
 
+MAX_INPUT_BYTES = 65_536
+MAX_TASK_BYTES = 16_384  # Keep startup independent of the optional assessor.
+MAX_CONTEXT_BYTES = 1_024  # Includes main()'s final newline.
+_SKILL_NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]{0,63}\Z")
+_INTENT_NAME = re.compile(r"[a-z][a-z_]{0,63}\Z")
+_GUIDANCE = {
+    "github_research": "If available, use plan_github_research, a connected GitHub reader, then summarize_github_evidence for bulky supplied results; retain revisions and partial-read limits.",
+    "software_testing": "Use an available test adapter only after checking its prerequisites; retain the target version, command, exit code and observed failures.",
+    "game_playtest": "Check the game build, available capture/input/assertion adapters and stop condition; a proposal does not qualify real-time control.",
+    "code_work": "Use the scoped code workflow and smallest relevant checks; retain the tested revision and actual results.",
+    "content_transform": "Use a suitable available deterministic transformation; preserve facts, negations, conditions and uncertainty.",
+    "read_analysis": "Read the scoped sources through available readers; retain provenance and distinguish observations from inference.",
+}
+_BOUNDARY = "Check current tool schemas and prerequisites. This hint does not establish availability or authorization."
+
 
 def _read_input() -> tuple[str, Path]:
-    raw = sys.stdin.read() if not sys.stdin.isatty() else ""
-    prompt, cwd = "", Path.cwd()
+    cwd = Path.cwd()
+    raw = sys.stdin.read(MAX_INPUT_BYTES + 1) if not sys.stdin.isatty() else ""
+    if not isinstance(raw, str) or len(raw.encode("utf-8")) > MAX_INPUT_BYTES:
+        return "", cwd
     raw = raw.strip()
-    if raw:
-        try:
-            data = json.loads(raw)
-            prompt = data.get("prompt", "")
-            cwd = Path(data.get("cwd") or ".")
-        except (json.JSONDecodeError, ValueError):
-            prompt = raw  # plain prompt on stdin
+    if not raw:
+        return "", cwd
+    try:
+        data = json.loads(raw)
+    except (json.JSONDecodeError, ValueError):
+        # Malformed structured events must not be reinterpreted as instructions.
+        return ("", cwd) if raw.startswith(("{", "[")) else (raw, cwd)
+    if isinstance(data, str):
+        return data, cwd
+    if not isinstance(data, dict):
+        return "", cwd
+    prompt, directory = data.get("prompt", ""), data.get("cwd")
+    if not isinstance(prompt, str):
+        return "", cwd
+    if directory is not None:
+        if not isinstance(directory, str) or len(directory.encode("utf-8")) > 4_096:
+            return "", cwd
+        cwd = Path(directory or ".")
     return prompt, cwd
 
 
@@ -47,38 +70,58 @@ def _suggested_skills(prompt: str, project: Path) -> list[str]:
         for extra in (project / ".claude" / "skills", project / "skills"):
             if extra.exists():
                 roots.append(extra)
-        res = find(prompt, roots=roots, top_k=3)
-        return [m["name"] for m in res["matches"]]
+        result = find(prompt, roots=roots, top_k=3)
+        names = []
+        for match in result["matches"]:
+            name = match.get("name") if isinstance(match, dict) else None
+            if isinstance(name, str) and _SKILL_NAME.fullmatch(name) and name not in names:
+                names.append(name)
+            if len(names) == 3:
+                break
+        return names
     except Exception:
         return []
 
 
 def build_context(prompt: str, project: Path) -> str:
-    lines = [
-        "[botte preflight] Prefer LOCAL for cheap work (classification/extraction/"
-        "summaries/tool-choice) via local_chat·auto_route·find_skills = 0 cloud "
-        "tokens; escalate only hard reasoning. Use `rtk <cmd>` in the terminal.",
-    ]
-    skills = _suggested_skills(prompt, project)
-    if skills:
-        lines.append("Relevant skills (local match): " + ", ".join(skills))
-    # Nudge prompt-improvement only for big/ambiguous requests (keeps it cheap).
-    if len(prompt.split()) > 40 or any(w in prompt.lower() for w in
-                                       ("checkup", "audit", "refactor", "design", "improve")):
-        lines.append("Big/ambiguous request → consider `improve_prompt` first.")
-    return "\n".join(lines)
+    """Return bounded advisory context, or no context when it is not useful."""
+    try:
+        if (not isinstance(prompt, str) or not prompt.strip()
+                or len(prompt.encode("utf-8")) > MAX_TASK_BYTES):
+            return ""
+        from skills.preflight.assessment import assess_task
+        assessment = assess_task(prompt)
+        if assessment.get("status") != "proposed":
+            if assessment.get("detected_intents"):
+                return "[botte preflight] Parcimonia abstained on a mixed workflow. The host must interpret or split the request before selecting tools; no execution or authorization is inferred."
+            return ""
+        intent = assessment.get("intent")
+        if not isinstance(intent, str) or not _INTENT_NAME.fullmatch(intent):
+            return ""
+        lines = [f"[botte preflight] Parcimonia: {intent} (local lexical proposal; no tool execution).",
+                 _GUIDANCE.get(intent, "Use the supported workflow only after checking its tools and evidence requirements."),
+                 _BOUNDARY]
+        # The GitHub workflow already names its conditional helpers. Avoid a
+        # second catalog scan whose weak skill matches add no useful evidence.
+        skills = [] if intent == "github_research" else _suggested_skills(prompt, Path(project))
+        if skills:
+            suggestion = "Skill hints (local metadata, not verified capabilities): " + ", ".join(skills)
+            if len(("\n".join(lines + [suggestion]) + "\n").encode("utf-8")) <= MAX_CONTEXT_BYTES:
+                lines.append(suggestion)
+        context = "\n".join(lines)
+        return context if len((context + "\n").encode("utf-8")) <= MAX_CONTEXT_BYTES else ""
+    except Exception:
+        return ""
 
 
 def main() -> int:
     try:
         prompt, cwd = _read_input()
-        if not prompt:
-            return 0
-        ctx = build_context(prompt, cwd)
-        # Claude Code injects stdout into context on UserPromptSubmit (exit 0).
-        sys.stdout.write(ctx + "\n")
+        context = build_context(prompt, cwd) if prompt else ""
+        if context:
+            sys.stdout.write(context + "\n")
     except Exception:
-        # Never block the user's prompt because of the hook.
+        # A failed hook must never block the user's prompt.
         pass
     return 0
 
