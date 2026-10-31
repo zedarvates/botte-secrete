@@ -75,6 +75,10 @@ is a broken public contract.
 
 ## Tests
 
+Install the declared test dependencies before the complete runner or pytest
+suites: `python -m pip install -e '.[memory-test]'`. The dashboard verification
+and CI use this same extra; a core-only installation does not include pytest.
+
 | Scope | Command |
 |---|---|
 | Files changed since the last commit | `python scripts/run_tests.py --changed -q` |
