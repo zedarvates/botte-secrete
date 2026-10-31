@@ -88,3 +88,37 @@ of a long body: `function_body_complete` remains unknown, independently of the
 window-completeness flag. Raw-context bytes exclude JSON serialization overhead.
 No code is executed, no task is marked complete, no model/backend is connected
 and no edits/deployments/merges are authorized by a source digest or returned text.
+
+## Continuation: packaged worker workflow
+
+Previous head `ef69e000c9e6142bbf2f6066cb78d9a4767d9577` completed all three
+observed workflows successfully. Those checks do not qualify this continuation.
+
+`botte code` now forwards to FastContext's CLI. The explicit `bundle FILE NAME`
+workflow reuses locator and checked-context helpers, returning the versioned
+`botte.code-context-bundle/v1` envelope. A fresh discovery is labeled separately
+from a caller-expected reference. Caller references are never replaced with a
+newer digest, changes between stages are not retried, and ambiguous names still
+require explicit occurrence selection. No new index, storage or model route is
+created. Completed status describes source reading only.
+
+- Canonical changed runner: 416 passed, 0 failed across all ten selected suites.
+  This is a scoped run with a different selection from the earlier continuations.
+- New workflow suite: nine tests passed, including fresh/caller origin labels,
+  no rediscovery of caller references, changed-source refusal, a controlled write
+  between stages, ambiguity/occurrence selection, omissions and real subprocess
+  exit/status propagation. These tests overlap the canonical count.
+- Final wheel installed outside checkout: all nine workflow tests passed again.
+  Isolated imports and source hashes matched skills/cli.py, FastContext cli.py
+  and workflow.py. The installed `botte` console script returned exact authored
+  Zig CRLF source through `code bundle`; no returned code was executed.
+- Five Python files parse Python 3.10 grammar under Python 3.12.14. This is not
+  a Python 3.10/Windows runtime check. Documentation links and staged checks passed.
+- Checkup completed with the existing missing project-local MCP declaration.
+
+The fresh workflow makes two bounded source reads. Its reference records a
+current observation, not agreement with historical task intent. A file may change
+after the checked read; the result is a snapshot, not a lock. Additional reads
+and wrapper bytes are not claimed to reduce tokens, cost or latency. No actual
+LLM/wiki/Godot/Odin connection or task-quality gain is qualified. No merge,
+deployment, worker/model activation or execution authority is introduced.
