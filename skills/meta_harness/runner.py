@@ -31,7 +31,7 @@ class Sandbox:
     """Isolated execution environment for a pipeline step."""
 
     def __init__(self, workdir: str, sandbox_dir: str = ".botte-sandbox/default",
-                 timeout: int = 300):
+                 timeout: float = 300):
         self.workdir = str(Path(workdir).resolve())
         self.sandbox_dir = str(Path(self.workdir) / sandbox_dir)
         self.timeout = timeout

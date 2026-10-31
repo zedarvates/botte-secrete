@@ -1,12 +1,12 @@
 {
   "schema": "botte.capability-effects/v1",
   "capability_id": "zedarvates/botte-secrete:skills/trajectory",
-  "contract_version": "0.1.0",
+  "contract_version": "0.1.1",
   "source_hashes": {
     "SKILL.md": "9d746e37088f1dcf329fa1137ce1c9eb074dfb66c1f83c697ff7cfd6e248c7c3",
     "__init__.py": "aa182558f3e545ac427ce6001d0151ee622496769294afa296ef3529d9e8b6bc",
-    "quality.py": "c89aa542115c27718b26d99796bbc16ad28f2185948e02f7882f0abe94c59d1b",
-    "outcome.py": "3f2a0859e99e0cea5bdae862feb6129767428694e70c91d3ff672bb7df396a9c",
+    "quality.py": "f9f8de8def2c31ebd5130ff46a6024a341f4e8b17705a9cdca4173fbc6f3342d",
+    "outcome.py": "1e7d02e88825b8838111c993af1b5c799ac28e2dc9772233f6e9afa51be50215",
     "agent_run.py": "9e85e480c263fbe6d4b5749b883aec3b4cff450b6d2550c9c3f6913397c2e9e2",
     "task_status.py": "68be7281bc3968a5086a6a9b3e87e41b3f3e4b82dacbb5567ff6784a07626727",
     "ci.py": "331c4cdaeef2da2c4cbc6ae3e2eee48eb6b34cff35fd0a0df3650de9edf8090f",
@@ -24,7 +24,7 @@
       "effect": "Append a private outcome envelope and, when verifier/evidence requirements pass, a verified support row and compact QA event.",
       "scope": "Project .botte/quality-outcomes.jsonl, quality-trajectories.jsonl and events.jsonl.",
       "likelihood": "conditional",
-      "basis": "emit_outcome checks identity/content against retained envelopes, calls record_verified when eligible, then appends its own envelope.",
+      "basis": "emit_outcome checks identity/content against retained envelopes, calls record_verified when eligible, then appends its own envelope. QA events carry explicit producer/component_kind labels for the outcome and quality emitters; these are declared provenance fields, not authenticated external evidence.",
       "impact": "Preserves lifecycle facts and evidence-linked support; writes multiple files, may rotate old rows, and can leave a partial update if a later write fails.",
       "verification": "In an isolated project, emit partial and verified fixtures, replay an identical execution/outcome, and inspect both ledgers and promotion status."
     },
@@ -32,7 +32,7 @@
       "effect": "Return status, passive task status, or k-NN advice; advice also appends a shadow event.",
       "scope": "Caller output and project events.jsonl for advice calls.",
       "likelihood": "conditional",
-      "basis": "advise_route compares retained support and calls _emit_advice on its return paths; no selected model is executed.",
+      "basis": "advise_route compares retained support and calls _emit_advice on its return paths; no selected model is executed. Advice events declare skills.trajectory.quality as producer and router as component_kind; the labels do not promote their verdict or authorize execution.",
       "impact": "Makes suggestions explainable but incurs reads/computation and an event write; absence of model execution does not mean absence of filesystem effects.",
       "verification": "Request advice against an empty temporary ledger; check the collecting/abstaining status, event presence and absence of a new verified support label."
     },

@@ -1,59 +1,49 @@
 ---
 name: botte-proxy
-description: "Transparent LLM compression proxy for botte-secrete — sit between any AI agent and its LLM API to compress requests by 40-95%. Use when you want token savings without changing agent code."
+description: Inspect and configure the HTTP proxy that transforms chat requests before forwarding to a chosen LLM endpoint. Compression is not reversible through the proxy; remote targets receive forwarded data. Check request compatibility, content integrity and measured provider usage before claiming savings.
 ---
+
 # Botte Proxy
 
-Transparent HTTP proxy that compresses LLM API requests before forwarding them. Inspired by Headroom's proxy mode.
+The proxy forwards HTTP requests to a configured upstream endpoint. Chat requests
+are processed by the universal compressor, prefix alignment and, when enabled,
+output shaping. Compatibility depends on the client's paths and request format;
+the proxy is not a general guarantee for every agent or provider API.
 
-## Features
+## Compression and measurements
 
-- **Transparent** — sits between any OpenAI-compatible agent and its LLM API
-- **Universal compression** — uses Universal Compressor's smart routing (JSON, code, logs, tool output)
-- **Reversible** — originals are cached for retrieval on demand (CCR-like)
-- **Dashboard** — real-time savings dashboard at `http://localhost:PORT/dashboard`
-- **Stats API** — JSON stats at `http://localhost:PORT/stats`
-- **Local-first** — your data never leaves your machine
+- `compress_messages()` calls the universal compressor with `reversible=False`.
+  The proxy exposes no restore route or original-content retrieval guarantee.
+- Text and log summaries can change representation. System messages also use
+  the text transform. Retain original instructions and evidence, and compare
+  actual behavior before routing a workflow through the proxy.
+- Input counts use a rough `len(text) // 4` estimate. Dashboard savings and cost
+  projections are estimates, not proof of billed token reduction or preserved
+  answer quality. No fixed percentage gain is guaranteed.
 
-## Usage
+## Endpoint and listener
 
-```bash
-# Start proxy (default target: http://localhost:11434/v1 for Ollama/LocalAI)
-python -m skills.botte_proxy.cli proxy --port 8787
+Compression runs locally, then the request is sent to the configured target.
+A remote or cloud target receives that data. Check the target and its handling
+of content before forwarding it.
 
-# With specific target
-python -m skills.botte_proxy.cli proxy --target http://192.168.1.47:11434/v1 --port 8787
-
-# With OpenAI
-python -m skills.botte_proxy.cli proxy --target https://api.openai.com/v1 --api-key $OPENAI_API_KEY
-
-# View stats
-python -m skills.botte_proxy.cli stats
-
-# View dashboard
-open http://localhost:8787/dashboard
-```
-
-## Agent Integration
-
-Point any OpenAI-compatible agent at the proxy:
+The CLI binds `0.0.0.0` by default. For a listener on this machine only, specify
+`--host 127.0.0.1`. The target prefix is concatenated with the incoming request
+path; avoid duplicating `/v1` between the target and client path.
 
 ```bash
-# Claude Code
-CLAUDECODE_API_BASE=http://localhost:8787 claude
-
-# Any OpenAI client
-export OPENAI_BASE_URL=http://localhost:8787/v1
-
-# Generic
-export OPENAI_API_BASE=http://localhost:8787/v1
+# Client sends /v1/chat/completions; target is the upstream origin.
+python -m skills.botte_proxy.cli proxy --host 127.0.0.1 --port 8787 --target http://localhost:11434
 ```
 
-## Architecture
+Point a compatible OpenAI client at `http://127.0.0.1:8787/v1`. Credentials,
+when required by the selected upstream, can be supplied through an already
+configured `BOTTE_API_KEY`; do not print them in reports.
 
-```
-Agent → Proxy (port 8787) → Compress messages → Forward → LLM API
-         ↓
-      Dashboard (/dashboard)
-      Stats (/stats)
-```
+The running process serves `/stats` and `/dashboard`. The separate CLI `stats`
+command reads its own process's in-memory counters; it does not query another
+running proxy. Use the running server's `/stats` endpoint for that process.
+
+The compression routine itself does not call a model. The upstream LLM and the
+host agent may consume model tokens; inspect provider usage and task quality
+before claiming a saving.

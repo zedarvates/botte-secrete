@@ -17,6 +17,9 @@ the code in `skills/<name>/SKILL.md`.
 
 | Goal | Guide |
 |---|---|
+| Prepare multiple bounded source contexts | [FastContext batches](fast-context-batch.md) |
+| Locate a Zig/GDScript function without loading a full file | [FastContext symbols](fast-context-symbols.md) |
+| Inspect event adjacency and registered rules | [Read-only RSI graph](rsi-graph.md) |
 | Connect an MCP-compatible agent | [MCP integration](mcp-integration.md) |
 | Connect Cursor or Windsurf | [Cursor and Windsurf](integrations/cursor-windsurf-mcp.md) |
 | Evaluate a Hermes integration | [Hermes](integrations/hermes.md) |
@@ -35,6 +38,10 @@ the code in `skills/<name>/SKILL.md`.
 | Release history | [Changelog](../CHANGELOG.md) |
 
 ## Explanations and evidence
+
+- [Completion proof demonstration](demos/completion-proof/README.md) — staged claims, real audits and tests, explicit detector limits.
+- [2.0.0rc1 installation and public pilot reports](validation/2.0.0rc1/README.md)
+  — dated results, pinned reproduction scripts, and Windows/Linux workflow.
 
 - [Local model benchmark note](local-model-benchmarks.md) — historical evidence
 - [Local worker benchmark](local-worker-benchmark.md) — comparable Granite 4.2 evidence

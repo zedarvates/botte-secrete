@@ -34,7 +34,9 @@ def main(argv=None) -> int:
 
     r = run(args.spec, out_dir=args.out)
     print(json.dumps(r, ensure_ascii=False, indent=2))
-    return 0 if r.get("ran") and r.get("passed", True) else (0 if not r.get("ran") else 1)
+    if r.get("ran") and r.get("passed") is True:
+        return 0
+    return 1 if r.get("status") == "failed" else 2
 
 
 if __name__ == "__main__":

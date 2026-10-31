@@ -468,6 +468,7 @@ def _log_route(d: AutoDecision) -> None:
     try:
         from skills.events import log_event
         log_event("route", filter=(1 if d._belt_ctx else 2), out=d.mode,
+                  producer="skills.auto_router", component_kind="router",
                    tier=d.tier.name, model=d.model, reason=d.reason,
                    est_cost=round(d.est_cost, 6))
     except Exception:

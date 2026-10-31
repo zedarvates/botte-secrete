@@ -7,6 +7,7 @@ description: Run the standard project checkup for policy presence, directives, m
 
 One command assembles local diagnostics and prints their findings. It does not
 apply suggested fixes or establish that all project behavior is correct.
+The checks do not call a model; host usage and total task cost are separate.
 
 ```bash
 python -m skills.checkup.cli            # current dir
@@ -29,9 +30,19 @@ python -m skills.checkup.cli . --save both        # save Markdown/HTML reports
   estimated token cost (highest first), plus any remaining drift items, capped
   at 3.
 
-Both feed a **one-line verdict** and action estimates. Inspect the underlying
-`available`, error and drift fields: the verdict can look healthy when machine
-assessment is unavailable. Estimates are not measured savings or billed usage.
+Read the machine scan as an observation of available backends, possibly cached,
+not proof of current host routing. An unavailable scan leaves backend availability
+unknown. No backend detected does not prove that every task uses a cloud model.
+The one-line verdict preserves those limits alongside any drift items.
+Inspect the underlying availability, error and drift fields. Action estimates
+are not measured savings or billed usage.
+
+Inspect `mcp_wiring` separately: it reports project declarations and launcher
+lookup only. `configured` does not mean installed, connected or reachable.
+Runtime and reachability remain `not_checked`; check the host's server status
+and make a read-only tool call before relying on the connection. Unsupported
+parsers and malformed or disabled declarations remain explicit. User/global and
+installed-plugin configurations are outside this project-file inspection.
 
 ## Sequence (cheap → deeper)
 

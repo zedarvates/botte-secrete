@@ -1,0 +1,183 @@
+{
+  "checked_utc": "2026-09-14T02:29:19.196088+00:00",
+  "repositories": [
+    {
+      "id": "zedgamer/botte-nano-nn",
+      "revision": "7775a8aedc1f21c4e9a82929de9cd8a0aa348f35",
+      "private": false,
+      "gated": false,
+      "license_declared": "mit",
+      "files": [
+        ".gitattributes",
+        "Cargo.toml",
+        "README.md",
+        "botte_nn_cli_linux_x86_64",
+        "cli.py",
+        "models/anomaly_detector.json",
+        "models/binary_router.json",
+        "models/effort_classifier.json",
+        "models/error_classifier.json",
+        "models/priority_estimator.json",
+        "models/token_estimator.json",
+        "src/activation.rs",
+        "src/inference.rs",
+        "src/layer.rs",
+        "src/lib.rs",
+        "src/main.rs",
+        "src/matrix.rs",
+        "src/model.rs"
+      ],
+      "weights": [
+        {
+          "path": "models/anomaly_detector.json",
+          "bytes": 2391,
+          "sha256": "231ed71ff05b4a5caf555369a9bee69d87a3c9c5d7d875e6952c5779d71d4253",
+          "json_fields": [
+            "activations",
+            "biases",
+            "layers",
+            "weights"
+          ],
+          "present_on_github_base": true,
+          "same_bytes_as_github_base": false
+        },
+        {
+          "path": "models/binary_router.json",
+          "bytes": 1482,
+          "sha256": "aaac8e4f3041260c072d682f13b16d74e21b3dc5bcb4e09c3ee752882707d427",
+          "json_fields": [
+            "activations",
+            "biases",
+            "layers",
+            "weights"
+          ],
+          "present_on_github_base": true,
+          "same_bytes_as_github_base": false
+        },
+        {
+          "path": "models/effort_classifier.json",
+          "bytes": 2815,
+          "sha256": "1e5e803b2b97a9dde3846166a7bd3d2792bbceb4496d268ec84a6dba64f3c30b",
+          "json_fields": [
+            "activations",
+            "biases",
+            "layers",
+            "weights"
+          ],
+          "present_on_github_base": true,
+          "same_bytes_as_github_base": false
+        },
+        {
+          "path": "models/error_classifier.json",
+          "bytes": 8583,
+          "sha256": "fb7bac1fd3e3b92a4664a7e1547f2fea797fcfb1b0dc4f63f74f8e312e13d88b",
+          "json_fields": [
+            "activations",
+            "biases",
+            "layers",
+            "weights"
+          ],
+          "present_on_github_base": true,
+          "same_bytes_as_github_base": false
+        },
+        {
+          "path": "models/priority_estimator.json",
+          "bytes": 5455,
+          "sha256": "45b9620bd5d7719d5875703c5f7e79e99d538e6c505da994c4996596e25de4d5",
+          "json_fields": [
+            "activations",
+            "biases",
+            "layers",
+            "weights"
+          ],
+          "present_on_github_base": false,
+          "same_bytes_as_github_base": false
+        },
+        {
+          "path": "models/token_estimator.json",
+          "bytes": 6107,
+          "sha256": "0a503a2007101376abfaec6aaee85c0219b2d95236826e80e7e248e2a989a937",
+          "json_fields": [
+            "activations",
+            "biases",
+            "layers",
+            "weights"
+          ],
+          "present_on_github_base": false,
+          "same_bytes_as_github_base": false
+        }
+      ]
+    },
+    {
+      "id": "zedgamer/asset-quality-memory-knn",
+      "revision": "5cf9f13705ae1cb618ab7490c4772fafa9fddddf",
+      "private": false,
+      "gated": false,
+      "license_declared": "mit",
+      "files": [
+        ".gitattributes",
+        "README.md"
+      ],
+      "weights": []
+    }
+  ],
+  "github_models": [
+    {
+      "path": "skills/botte_nn/models/anomaly_detector.json",
+      "bytes": 2477,
+      "sha256": "c46cec267d1fb3310c0c6b7b260c8a6078febd90aa76a366806adc432b7a70b8"
+    },
+    {
+      "path": "skills/botte_nn/models/binary_router.json",
+      "bytes": 1628,
+      "sha256": "ea41e7c40032c19cfaebe93235facd56487d7d11bd7c747e2a8b064300241799"
+    },
+    {
+      "path": "skills/botte_nn/models/cloud_escalation_predictor.json",
+      "bytes": 10059,
+      "sha256": "939b56e20454e4187dc6abdfdbc234bd4ed09dcb78b6bd62d19152e99ad9f0b0"
+    },
+    {
+      "path": "skills/botte_nn/models/compressibility_predictor.json",
+      "bytes": 8095,
+      "sha256": "ca8eae72280eb520fd47d752deed349512c6815fdae87c8f2225fa0f950f1d71"
+    },
+    {
+      "path": "skills/botte_nn/models/context_pruning_predictor.json",
+      "bytes": 7258,
+      "sha256": "21dd269155afa15302de85c33403e9ad3547001230957fcdd754f08b01092a05"
+    },
+    {
+      "path": "skills/botte_nn/models/effort_classifier.json",
+      "bytes": 2964,
+      "sha256": "1087cf79a7503bcc35c051b14f678692a0454af15ca706242c813fda8c357bd3"
+    },
+    {
+      "path": "skills/botte_nn/models/error_classifier.json",
+      "bytes": 10263,
+      "sha256": "879e30f2fd35dc4d009546da97b36a660e931793d748e618c9dafd9b512a5c34"
+    },
+    {
+      "path": "skills/botte_nn/models/response_length_predictor.json",
+      "bytes": 8070,
+      "sha256": "94a837842bf7cd0e1dd6f25b186eb9c2d7187d1f0f46cf4c4b321e29df9c57cd"
+    },
+    {
+      "path": "skills/botte_nn/models/semantic_cache_hit_predictor.json",
+      "bytes": 9167,
+      "sha256": "a39f59f56122a01db378da02230aa59031ce356e59b29c4f36124c7af4948be2"
+    },
+    {
+      "path": "skills/botte_nn/models/skip_agent_predictor.json",
+      "bytes": 9207,
+      "sha256": "7abc190830db28eaf159016dc906fb055dfe95e679e292021d71b9a5600f1108"
+    },
+    {
+      "path": "skills/botte_nn/models/tool_call_predictor.json",
+      "bytes": 9207,
+      "sha256": "a5e11b05b266e0cb0fb91037997a5f5f886ce56286c120f157d517a3d34e9711"
+    }
+  ],
+  "github_revision": "cd9a97489573bb5021b629a32443dfc1a337fa6a",
+  "comparison_basis": "Raw Hub JSON bytes compared with Git blob bytes at github_revision; byte differences alone do not imply different predictions"
+}

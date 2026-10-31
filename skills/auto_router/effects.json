@@ -1,17 +1,17 @@
 {
   "schema": "botte.capability-effects/v1",
   "capability_id": "zedarvates/botte-secrete:skills/auto_router",
-  "contract_version": "0.1.1",
+  "contract_version": "0.1.3",
   "source_hashes": {
     "SKILL.md": "7264943a6ecc5406cf252d4ba3a33621d504e4929732a8e62feeda83345caa20",
     "__init__.py": "f17b490b7fc37455101fae4472d397345f8cdc48b7accaff0a07ec0f382abcec",
     "cli.py": "787b8ff4e18347bb6e54f229903e8321ec9e4d8e8432f3c3941acffd3f0d6ac4",
-    "router.py": "eac6ff04e0823ba8735859440a70e28cb4ef33b23890ad5bc85b5c87ee2d9d0e",
+    "router.py": "a1f8741d8f7d7b6475c9727651dd0cb3f2db614e1b0aedbff80aaee5897eee7e",
     "effort.py": "b879ad42b3e1eefc53cef5bb36133410e883f64eafe774efa3dd5d9c63ce8951",
     "providers.py": "27040da5e909f776541bba1d74622510bde44aa4c2cbc7d03354981553e7b8e0",
     "fusion.py": "30bf58eda2b1e38d77d29563378afdcc4ed7c0637cf2424d0d998efdc3c04e5a",
     "nn_belt.py": "6020b7aba21aca549d529c3e999f840226831557ab1f6f11ea353581b0c8bde9",
-    "nn_belt2.py": "c0f19a90ffeb234fff02f6c99364698ca11afad7256885bab41d6eaa9d91d035"
+    "nn_belt2.py": "c774704a59b8f8df132268109ec7b692ff4d616fd3abf3b18cec5bcb2c96cba5"
   },
   "preconditions": [
     "Select decision-only, execution or fusion mode; identify actual input data, recipients and project scope.",
@@ -23,9 +23,9 @@
       "effect": "route/decide, explain and providers read routing state and return a proposal without an inference call.",
       "scope": "Backend registry, environment-key availability, local thresholds/policy, learned weights/calibration and CLI output.",
       "likelihood": "conditional",
-      "basis": "decide reads the registry and consults heuristics and optional belts; providers resolves catalog entries by key presence. explain includes a prompt excerpt and recomputes the decision. The effort reader validates finite ordered thresholds in [0, 1]; malformed configuration falls back to defaults without rewriting it.",
+      "basis": "decide reads the registry and consults heuristics and optional belts; providers resolves catalog entries by key presence. explain includes a prompt excerpt and recomputes the decision. The effort reader validates finite ordered thresholds in [0, 1]; malformed configuration falls back to defaults without rewriting it. Optional Belt 2 semantic-cache hints use query-derived v2 features and eligibility statistics. The imported model loader rejects incompatible semantic-cache feature schemas; the belt then abstains without replacing model weights.",
       "impact": "Can expose prompt excerpts or host/model metadata; a selected tier can influence a later paid request. Explicit FREE is retained but can still select local inference.",
-      "verification": "Use controlled registry/provider fixtures; assert no inference calls and distinguish the selected route from actual execution."
+      "verification": "Use controlled registry/provider fixtures; assert no inference calls and distinguish the selected route from actual execution. Exercise semantic-cache hints with historical weights and assert abstention; keep the source weights unchanged."
     },
     {
       "effect": "run transmits prompt/system data to the selected kind of model on a cache miss.",
@@ -47,7 +47,7 @@
       "effect": "run attempts route, learning-observation, control-loop and quality-outcome writes and updates in-memory cloud spending counters.",
       "scope": "Project events, private active-learning state, control-loop history, project_root quality ledger and router-instance budget.",
       "likelihood": "conditional",
-      "basis": "Logging is best-effort. Outcomes mark returned/cache text PARTIAL, no route ABSTAINED and backend errors FAIL. execution_id deduplicates the outcome ledger only; cloud accounting uses reported total tokens and static tier rates.",
+      "basis": "Logging is best-effort. Outcomes mark returned/cache text PARTIAL, no route ABSTAINED and backend errors FAIL. execution_id deduplicates the outcome ledger only; cloud accounting uses reported total tokens and static tier rates. Route events retain explicit producer and component_kind labels; these identify the declared emitter, not authenticated provenance or a verified task outcome.",
       "impact": "Telemetry can contain task text or private model/host context outside the hashed outcome fields. Retries can still duplicate inference, telemetry and costs; failures can leave partial evidence.",
       "verification": "Compare temporary ledgers and call counts across success, cache hit, failure and replay; do not infer verified labels or actual billing from these records."
     },
@@ -100,7 +100,8 @@
       "Imported response_cache, llm_backends, tiered_router, events, trajectory, control_loop and botte_nn implementations/state are outside these skill-local source bindings.",
       "Router/fusion operations lack a complete observation adapter; dependency observations cannot attest remote effects or success.",
       "Other entry points such as composite, speculative, dry_cloud, session_budget and diagnostic scripts require their own operation review.",
-      "Valid threshold structure is not evidence of a useful policy. Falling back from malformed user configuration can change subsequent routing decisions; control_loop evidence must be assessed separately."
+      "Valid threshold structure is not evidence of a useful policy. Falling back from malformed user configuration can change subsequent routing decisions; control_loop evidence must be assessed separately.",
+      "Semantic-cache feature-schema compatibility is a layout check, not evidence of a real cache hit, current response eligibility or useful routing. Its loader and live weights are imported state outside these skill-local bindings."
     ],
     "evidence_refs": [
       "router.py:AutoRouter.decide",
@@ -109,7 +110,8 @@
       "cli.py:main",
       "fusion.py:draft_refine",
       "fusion.py:vote",
-      "test_routing_effects.py"
+      "test_routing_effects.py",
+      "nn_belt2.py:semantic_cache_hint"
     ]
   },
   "reuse": [

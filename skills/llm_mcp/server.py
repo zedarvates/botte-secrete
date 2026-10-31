@@ -42,16 +42,152 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from skills import __version__  # noqa: E402
 from skills.llm_backends import registry  # noqa: E402
 from skills.llm_backends.audit import audit  # noqa: E402
 from skills.llm_backends.client import LocalLLMClient, LocalLLMError  # noqa: E402
 
 PROTOCOL_VERSION = "2024-11-05"
-SERVER_INFO = {"name": "botte-llm", "version": "1.0.0"}
+SERVER_INFO = {"name": "botte-llm", "version": __version__}
 
 # ── Tool definitions (MCP inputSchema = JSON Schema) ─────────────────────────
 
 TOOLS = [
+    {
+        "name": "review_knowledge_links",
+        "description": "Parcimonia: review supplied versioned documentary and receipt "
+                       "links for missing references, stale versions and declared dependency "
+                       "cycles. Lexical suggestions remain advisory; no retrieval, memory "
+                       "write, model, network or proof of documentary truth.",
+        "inputSchema": {
+            "type": "object", "additionalProperties": False,
+            "properties": {"inventory_json": {"type": "string", "maxLength": 262144}},
+            "required": ["inventory_json"],
+        },
+        "annotations": {"readOnlyHint": True, "destructiveHint": False,
+                        "idempotentHint": True, "openWorldHint": False},
+    },
+    {
+        "name": "summarize_github_evidence",
+        "description": "Parcimonia: select bounded review fields from supplied "
+                       "GitHub PR, file headers, checks and commit-status JSON. "
+                       "Retains revision mismatches, failure counts and source links. "
+                       "Caller data remains unverified. Reports UTF-8 bytes, not token savings; "
+                       "does not fetch GitHub or decide merge eligibility.",
+        "inputSchema": {
+            "type": "object", "additionalProperties": False,
+            "properties": {"report_json": {"type": "string", "maxLength": 131072}},
+            "required": ["report_json"],
+        },
+        "annotations": {"readOnlyHint": True, "destructiveHint": False,
+                        "idempotentHint": True, "openWorldHint": False},
+    },
+    {
+        "name": "check_local_links",
+        "description": "Check relative Markdown file/image links against supplied repository paths. "
+                       "Returns source lines and missing or unresolved targets; incomplete inventories "
+                       "cannot prove a target missing. No filesystem access, network, model call or "
+                       "anchor validation. Supplied data only; not a live repository audit.",
+        "inputSchema": {
+            "type": "object", "additionalProperties": False,
+            "properties": {
+                "documents": {"type": "array", "minItems": 1, "maxItems": 200, "items": {
+                    "type": "object", "additionalProperties": False,
+                    "properties": {"path": {"type": "string", "minLength": 1, "maxLength": 4096},
+                                   "text": {"type": "string", "maxLength": 1048576}},
+                    "required": ["path", "text"]}},
+                "available_paths": {"type": "array", "maxItems": 50000,
+                                    "items": {"type": "string", "minLength": 1, "maxLength": 4096}},
+                "inventory_complete": {"type": "boolean", "default": False},
+                "max_links": {"type": "integer", "minimum": 1, "maximum": 50000, "default": 10000},
+            }, "required": ["documents", "available_paths"],
+        },
+        "annotations": {"readOnlyHint": True, "destructiveHint": False,
+                        "idempotentHint": True, "openWorldHint": False},
+    },
+    {
+        "name": "find_file_duplicates",
+        "description": "Read-only exact duplicate file inspection under one explicit local directory. "
+                       "Groups by size and full SHA-256, then confirms bytes; reports hard links "
+                       "separately. Bounded reads, exclusions and partial scans are explicit. "
+                       "No deletion, image similarity, functional-equivalence judgment or model call.",
+        "inputSchema": {
+            "type": "object", "additionalProperties": False,
+            "properties": {
+                "root": {"type": "string", "minLength": 1},
+                "max_files": {"type": "integer", "minimum": 1, "maximum": 50000},
+                "max_file_bytes": {"type": "integer", "minimum": 1, "maximum": 1073741824},
+                "max_total_bytes": {"type": "integer", "minimum": 1, "maximum": 1073741824},
+                "max_entries": {"type": "integer", "minimum": 1, "maximum": 100000},
+                "max_depth": {"type": "integer", "minimum": 0, "maximum": 128},
+                "exclude_dirs": {"type": "array", "maxItems": 100,
+                                 "items": {"type": "string", "minLength": 1}},
+            }, "required": ["root"],
+        },
+        "annotations": {"readOnlyHint": True, "destructiveHint": False,
+                        "idempotentHint": True, "openWorldHint": False},
+    },
+    {
+        "name": "compute_statistics",
+        "description": "Compute deterministic descriptive statistics from supplied numeric values: "
+                       "count, sum, min, max, mean, median, population/sample variance and "
+                       "standard deviation, plus linear type-7 percentiles. No model, network "
+                       "or file access. Rejects invalid inputs; omits nulls only on explicit request.",
+        "inputSchema": {
+            "type": "object", "additionalProperties": False,
+            "properties": {
+                "values": {"type": "array", "minItems": 1, "maxItems": 10000,
+                           "items": {"type": ["number", "null"]}},
+                "operations": {"type": "array", "minItems": 1, "maxItems": 10,
+                               "uniqueItems": True, "items": {"type": "string", "enum": [
+                                   "count", "sum", "min", "max", "mean", "median",
+                                   "variance_population", "variance_sample",
+                                   "stdev_population", "stdev_sample"]}},
+                "percentiles": {"type": "array", "maxItems": 16, "uniqueItems": True,
+                                "items": {"type": "number", "minimum": 0, "maximum": 100}},
+                "missing": {"type": "string", "enum": ["reject", "omit"], "default": "reject"},
+            }, "required": ["values"],
+        },
+        "annotations": {"readOnlyHint": True, "destructiveHint": False,
+                        "idempotentHint": True, "openWorldHint": False},
+    },
+    {
+        "name": "assess_task",
+        "description": "Parcimonia: propose a bounded first assessment of a task, "
+                       "including GitHub/PR research, software tests and game playtests. "
+                       "Ranks only caller-supplied tool metadata. Lexical advice only; "
+                       "no execution, model, network, permission or measured savings.",
+        "inputSchema": {
+            "type": "object", "additionalProperties": False,
+            "properties": {
+                "task": {"type": "string", "minLength": 1, "maxLength": 16384},
+                "available_tools": {"type": "array", "maxItems": 64, "items": {
+                    "type": "object", "additionalProperties": False,
+                    "properties": {"name": {"type": "string", "maxLength": 160},
+                                   "description": {"type": "string", "maxLength": 2048}},
+                    "required": ["name"]}},
+                "context_budget": {"type": "integer", "minimum": 0, "maximum": 16000},
+            }, "required": ["task"],
+        },
+        "annotations": {"readOnlyHint": True, "destructiveHint": False,
+                        "idempotentHint": True, "openWorldHint": False},
+    },
+    {
+        "name": "plan_github_research",
+        "description": "Parcimonia: prepare scoped GitHub pull-request search and "
+                       "progressive reads of metadata, changed files and checks for "
+                       "the exact head. Returns a plan, never fetches or changes GitHub.",
+        "inputSchema": {
+            "type": "object", "additionalProperties": False,
+            "properties": {
+                "repository": {"type": "string", "maxLength": 140},
+                "query": {"type": "string", "maxLength": 1000},
+                "pr_number": {"type": "integer", "minimum": 1, "maximum": 2147483647},
+            }, "required": ["repository"],
+        },
+        "annotations": {"readOnlyHint": True, "destructiveHint": False,
+                        "idempotentHint": True, "openWorldHint": False},
+    },
     {
         "name": "discover_backends",
         "description": "Scan for local LLM servers (LM Studio, Ollama, LocalAI, "
@@ -574,10 +710,11 @@ TOOLS = [
     },
     {
         "name": "nn_audit",
-        "description": "Audit the micro-NNs (skills/botte_nn): per model, is it grounded in "
-                       "REAL data or a synthetic copy of a hand rule? Reports data_source, "
-                       "provenance metadata, test guard, and a grounded/synthetic verdict — a "
-                       "net trained on np.random just mimics a rule. 0 cloud tokens.",
+        "description": "Inspect micro-model trainer keywords, metadata keys, test-text "
+                       "matches and source references. Reports heuristic data_source, "
+                       "test guard, wired and verdict flags; these do not verify datasets, "
+                       "provenance, executed tests or model accuracy. File inspection only; "
+                       "host-agent model usage is separate.",
         "inputSchema": {"type": "object", "properties": {
             "path": {"type": "string", "default": "skills/botte_nn"}},
         },
@@ -1490,6 +1627,8 @@ def _tool_loop_record(args: dict) -> str:
 def _tool_loop_stats(_args: dict) -> str:
     from skills.loop_optimizer.ledger import LoopLedger
     ledger = LoopLedger()
+    return json.dumps(ledger.summarize(ledger.read()), ensure_ascii=False, separators=(",", ":"))
+
 
 def _tool_search_hub(args: dict) -> str:
     from skills.memory_hub.mcp import dispatch as _mh
@@ -1521,10 +1660,83 @@ def _tool_forget_memory(args: dict) -> str:
     import json
     return json.dumps(_mh("forget_memory", args), ensure_ascii=False)
 
-    return json.dumps(ledger.summarize(ledger.read()), ensure_ascii=False, separators=(",", ":"))
+
+def _assessment_arguments(args: dict, allowed: set[str]) -> None:
+    if not isinstance(args, dict) or set(args) - allowed:
+        raise ValueError("unsupported assessment arguments")
+
+
+def _tool_review_knowledge_links(args: dict) -> str:
+    from skills.app_test.knowledge_links import review_knowledge_links
+    _assessment_arguments(args, {"inventory_json"})
+    raw = args.get("inventory_json")
+    if not isinstance(raw, str) or len(raw.encode("utf-8")) > 262144:
+        raise ValueError("inventory_json must be bounded UTF-8 text")
+
+    def pairs(items):
+        result = {}
+        for key, value in items:
+            if key in result:
+                raise ValueError("duplicate inventory field")
+            result[key] = value
+        return result
+
+    def invalid_constant(_value):
+        raise ValueError("nonfinite inventory number")
+
+    inventory = json.loads(raw, object_pairs_hook=pairs, parse_constant=invalid_constant)
+    return json.dumps(review_knowledge_links(inventory), ensure_ascii=True, separators=(",", ":"))
+
+
+def _tool_assess_task(args: dict) -> str:
+    from skills.preflight.assessment import assess_task
+    _assessment_arguments(args, {"task", "available_tools", "context_budget"})
+    return json.dumps(assess_task(**args), ensure_ascii=False)
+
+
+def _tool_compute_statistics(args: dict) -> str:
+    from skills.solvers import compute_statistics
+    if not isinstance(args, dict) or set(args) - {"values", "operations", "percentiles", "missing"}:
+        raise ValueError("unsupported statistics arguments")
+    return json.dumps(compute_statistics(**args), ensure_ascii=False, allow_nan=False)
+
+
+def _tool_find_file_duplicates(args: dict) -> str:
+    from skills.fallow_like.file_duplicates import find_file_duplicates
+    allowed = {"root", "max_files", "max_file_bytes", "max_total_bytes",
+               "max_entries", "max_depth", "exclude_dirs"}
+    if not isinstance(args, dict) or set(args) - allowed:
+        raise ValueError("unsupported file-duplicate arguments")
+    return json.dumps(find_file_duplicates(**args), ensure_ascii=True, allow_nan=False)
+
+
+def _tool_check_local_links(args: dict) -> str:
+    from skills.fallow_like.local_links import check_local_links
+    if not isinstance(args, dict) or set(args) - {"documents", "available_paths", "inventory_complete", "max_links"}:
+        raise ValueError("unsupported local-link arguments")
+    return json.dumps(check_local_links(**args), ensure_ascii=True, allow_nan=False)
+
+
+def _tool_plan_github_research(args: dict) -> str:
+    from skills.preflight.github_plan import plan_github_research
+    _assessment_arguments(args, {"repository", "query", "pr_number"})
+    return json.dumps(plan_github_research(**args), ensure_ascii=False)
+
+
+def _tool_summarize_github_evidence(args: dict) -> str:
+    from skills.preflight.github_evidence import summarize_github_evidence
+    _assessment_arguments(args, {"report_json"})
+    return json.dumps(summarize_github_evidence(**args), ensure_ascii=False, separators=(",", ":"))
 
 
 DISPATCH = {
+    "check_local_links": _tool_check_local_links,
+    "find_file_duplicates": _tool_find_file_duplicates,
+    "compute_statistics": _tool_compute_statistics,
+    "review_knowledge_links": _tool_review_knowledge_links,
+    "summarize_github_evidence": _tool_summarize_github_evidence,
+    "assess_task": _tool_assess_task,
+    "plan_github_research": _tool_plan_github_research,
     "dashboard": _tool_dashboard,
     "estimate_cost": _tool_estimate_cost,
     "fix_plan": _tool_fix_plan,
@@ -1629,11 +1841,18 @@ def handle(request: dict):
         args = params.get("arguments", {}) or {}
         if name == "find_tool":
             from skills.llm_mcp.lazy import find_tool
-            import json as _json
-            text = _json.dumps(find_tool(args.get("query", ""), TOOLS,
-                                         top_k=int(args.get("top_k", 5))),
-                               ensure_ascii=False, indent=2)
-            return _result(req_id, {"content": [{"type": "text", "text": text}]})
+            try:
+                if not isinstance(args, dict) or set(args) - {"query", "top_k", "schema_budget_bytes", "detail"}:
+                    raise ValueError("unsupported find_tool arguments")
+                text = json.dumps(find_tool(args.get("query", ""), TOOLS,
+                                           top_k=args.get("top_k", 5),
+                                           schema_budget_bytes=args.get("schema_budget_bytes", 8192),
+                                           detail=args.get("detail", "schemas")),
+                                  ensure_ascii=False, separators=(",", ":"))
+                return _result(req_id, {"content": [{"type": "text", "text": text}]})
+            except (TypeError, ValueError) as error:
+                return _result(req_id, {"content": [{"type": "text", "text": f"ERROR: {error}"}],
+                                        "isError": True})
         fn = DISPATCH.get(name)
         if not fn:
             return _error(req_id, -32602, f"Unknown tool: {name}")

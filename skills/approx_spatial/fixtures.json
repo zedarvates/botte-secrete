@@ -1,0 +1,14 @@
+{
+  "schema": "botte.approx-spatial-fixtures/v1",
+  "cases": [
+    {"id":"clear-yes","admissible_m":[[1.7,2.2]],"excluded_m":[],"guard_failures":[],"query":{"op":"lt","threshold_m":3.0},"expected":"YES"},
+    {"id":"clear-no","admissible_m":[[2.0,2.4]],"excluded_m":[],"guard_failures":[],"query":{"op":"lt","threshold_m":2.0},"expected":"NO"},
+    {"id":"threshold-overlap","admissible_m":[[1.7,2.2]],"excluded_m":[],"guard_failures":[],"query":{"op":"lt","threshold_m":2.0},"expected":"UNKNOWN"},
+    {"id":"disjoint-hypotheses","admissible_m":[[1.0,1.4],[3.2,3.8]],"excluded_m":[[1.4,3.2]],"guard_failures":[],"query":{"op":"lt","threshold_m":2.0},"expected":"UNKNOWN"},
+    {"id":"exclusion-supported-yes","admissible_m":[[1.1,1.9]],"excluded_m":[[0.2,1.1],[1.9,10.0]],"guard_failures":[],"query":{"op":"lt","threshold_m":2.5},"expected":"YES"},
+    {"id":"tiny-baseline-guard","admissible_m":[[1.0,1.2]],"excluded_m":[],"guard_failures":["baseline_too_small"],"query":{"op":"lt","threshold_m":2.0},"expected":"UNKNOWN"},
+    {"id":"ambiguous-correspondence-guard","admissible_m":[[0.8,1.1]],"excluded_m":[],"guard_failures":["ambiguous_correspondence"],"query":{"op":"lt","threshold_m":2.0},"expected":"UNKNOWN"},
+    {"id":"conflict-empty-admissible","admissible_m":[],"excluded_m":[[0.0,10.0]],"guard_failures":[],"query":{"op":"lt","threshold_m":2.0},"expected":"CONFLICT"},
+    {"id":"missing-measurement","admissible_m":null,"excluded_m":[],"guard_failures":["missing_measurement"],"query":{"op":"lt","threshold_m":2.0},"expected":"UNKNOWN"}
+  ]
+}
