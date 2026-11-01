@@ -1,0 +1,193 @@
+{
+  "schema": "parcimonia.plan-uncertainty-validation/v1",
+  "observed_at": "2026-11-01T14:01:16.970452+01:00",
+  "parent_commit": "d0e3c6fe217f0ba7076d9ea7c8531107614ca93a",
+  "source_sha256": {
+    "scripts/plan_validation_pilot.py": "84003091a6f0d5ddb9f31b52761ef018e1d2739775d4093959267806dc299c5f",
+    "scripts/run_tests.py": "0f77f236fc7b334b5e17840df0a503be35575dd394f0696ebcbb20853f14bdba",
+    "scripts/test_plan_validation_pilot.py": "0882925812a4d662e8c86d44bebe539c1c6a497e8a173a13c4b0fc657b787272",
+    "skills/conductor/cli.py": "528119cf88906a940e1dbd7d2f8f04245281a10c19044b97edceeda8c7493fe3",
+    "skills/conductor/handoff.py": "fe395126159e4b8a14f16dfe30c3f5da56ecc258c672c58a337f898fb391a747",
+    "skills/conductor/measurement.py": "9b8fc2c8d312ee4494438b46df622b48aeb4bcffe8ef6b11763d6a4097829960",
+    "skills/conductor/preferences.py": "790ad7c4b674405d956f4f13810f9e894997c447ae242187b59049c4c486b8a8",
+    "skills/conductor/recipes.py": "104277fb87cc506650a1952883f93a96054b43cf184ed68beda13158f30871ea",
+    "skills/conductor/selection.py": "9eebd7126cb663948defb1b2c34ede7842a6f78bea026fd675ebfafc28aad1e1",
+    "skills/conductor/test_handoff.py": "5ce8f9806d31788ccba4acc7f6e2404f7807ebf513d4f3739f457148df83b1ff",
+    "skills/conductor/test_measurement.py": "88f2233c81e0e1c9927c2739afc7ade22baa37c34426e37eb5881d8524959006",
+    "skills/conductor/test_preferences.py": "af4bf3373d8c6f7e474a267bce8f4967b786d12dd0a21284250e76de46790780",
+    "skills/conductor/test_recipes.py": "362b36ce80095d4458ccd85894933fba0038b6ef9a5138e9f7c13d6fa9e0ce95",
+    "skills/conductor/test_selection.py": "6eab486a55998e5ae8b2f12dd09d658bdf7e18dcd1c664dd05801bc5abb65e93",
+    "skills/conductor/test_uncertainty.py": "9a408d1b83eb033a6283d689530cf9a181e42c48277df120a64a6c45fc66de84",
+    "skills/conductor/uncertainty.py": "4f2727a29f7f8d5fa861b188c439b05c58d040e5fe032d839990c2157a28d8fc",
+    "skills/llm_mcp/server.py": "73f4c72204aafa8d3613f675b50eea9f1079778aa4f3d9c58db42fcedf9bd6e5",
+    "skills/llm_mcp/test_plan_preferences.py": "03a8e3336708070dc1064fee8d171f58fc99d47d892422ab16a2b9a03d6dbb42",
+    "skills/llm_mcp/test_plan_recipes.py": "c6b9a15903ac8a1b58758ef5e83a4e90016681e9e09a888c73452c38c9e40cdc",
+    "skills/llm_mcp/test_plan_selection.py": "ed5e347ca9740383b050277dd51ecebfcfdc1bfc7e2c823f4213c0dd9e221311",
+    "skills/llm_mcp/test_plan_uncertainty.py": "87d388bfc83f349007ac09429f6d51912da8d8f17158e846d59bf30b581dfab2",
+    "skills/preflight/test_parcimonia.py": "f17e20932c82135e762f4bdb6811e45aa05977968f9a75d784fa78cc2b532762",
+    "examples/parcimonia_plan_preferences.json": "b277c428361d7a9126e70e92caf232e899f5b78baa81f72e1b2aa2297206b04d",
+    "examples/parcimonia_recipe_planning.json": "37d8f6cd560cdf387fb926954a405e8a79b0fc495231ac740ed4908adee05e61",
+    "examples/parcimonia_plan_uncertainty.json": "8ff4ed21ff3471a265a081de0c0e3ea2a602a7bceaf2987b74616f6469a3c9a0"
+  },
+  "environment": {
+    "platform": "Linux",
+    "python": "3.12.14"
+  },
+  "checks": {
+    "targeted": {
+      "uncertainty": 25,
+      "measurements": 19,
+      "cli_mcp": 7,
+      "passed": 51,
+      "failed": 0
+    },
+    "canonical_changed": {
+      "status": "passed",
+      "command": "python scripts/run_tests.py --changed -q",
+      "suites": 27,
+      "passed": 876,
+      "failed": 0,
+      "scope": "changed-file selection; not full repository suite"
+    },
+    "pre_commit_fast": {
+      "passed": true,
+      "python_files": 22
+    },
+    "python_3_10_grammar": {
+      "passed": true,
+      "files": 22,
+      "runtime_3_10_tested": false
+    },
+    "local_document_links": {
+      "exit_code": 0,
+      "broken_found": 0,
+      "coverage": "incomplete; existing unsupported Markdown constructs"
+    },
+    "checkup": {
+      "exit_code": 0,
+      "directives_score": 100,
+      "local_mcp_config": "missing in this checkout; installed/global runtime not checked"
+    }
+  },
+  "synthetic_decision_trial": {
+    "input_digest": "4d3a9d0d18de4433ad694c81a0221984742572c6f9b63cd7fed3f3d5f40836d8",
+    "nominal_recommended_candidate_id": "rapid",
+    "robust_recommended_candidate_id": null,
+    "selected_candidate_id": null,
+    "measurement_hints": [
+      {
+        "kind": "choice_change",
+        "action_id": "fast-demo",
+        "metric": "elapsed_minutes",
+        "recommended_candidate_ids": {
+          "nominal": "rapid",
+          "lower": "rapid",
+          "upper": "economical"
+        }
+      },
+      {
+        "kind": "choice_change",
+        "action_id": "fast-demo",
+        "metric": "money",
+        "recommended_candidate_ids": {
+          "nominal": "rapid",
+          "lower": "rapid",
+          "upper": "economical"
+        }
+      },
+      {
+        "kind": "choice_change",
+        "action_id": "fast-plugin",
+        "metric": "money",
+        "recommended_candidate_ids": {
+          "nominal": "rapid",
+          "lower": "rapid",
+          "upper": "economical"
+        }
+      }
+    ],
+    "analysis": {
+      "method": "one_factor_endpoint_sensitivity",
+      "max_checks": 32,
+      "max_questions": 8,
+      "active_ranged_variables": 4,
+      "variables_checked": 4,
+      "endpoint_rank_calls": 8,
+      "variables_omitted": 0,
+      "omitted_variables": [],
+      "complete": true,
+      "joint_uncertainty_evaluated": false,
+      "decision_stability_certified": false
+    },
+    "source": "illustrative caller estimates, not measured project costs"
+  },
+  "retained_pilot_range_trial": {
+    "evidence_ref": "docs/validation/plan-validation-pilot-2026-11-01.json",
+    "sha256": "f9688d5926192c1e2698f7b67a757f9880dc1996b97b67d088ef0252e1598181",
+    "source_hashes_still_match": true,
+    "input_digest": "588f8546265da78fc141132ab18fb56753594113f7ee66060979bea069f55674",
+    "observed_ranges": [
+      {
+        "action_id": "validate-batched",
+        "metric": "elapsed_minutes",
+        "lower": 0.00490826949996214,
+        "upper": 0.011064648300089176,
+        "provenance": {
+          "kind": "measurement",
+          "ref": "observed-pilot-minmax:f9688d5926192c1e2698f7b67a757f9880dc1996b97b67d088ef0252e1598181:batched"
+        }
+      },
+      {
+        "action_id": "validate-split",
+        "metric": "elapsed_minutes",
+        "lower": 0.013486064516594827,
+        "upper": 0.015947328999997505,
+        "provenance": {
+          "kind": "measurement",
+          "ref": "observed-pilot-minmax:f9688d5926192c1e2698f7b67a757f9880dc1996b97b67d088ef0252e1598181:split"
+        }
+      }
+    ],
+    "nominal_recommended_candidate_id": "batched",
+    "robust_recommended_candidate_id": "batched",
+    "selected_candidate_id": null,
+    "questions": 0,
+    "scope": "min/max observed on three calibration replicates per method; not future bounds, confidence intervals or a prediction test"
+  },
+  "independent_review": {
+    "blockers_remaining": 0,
+    "corrected": "repeated detailed unknown contexts before/after question truncation",
+    "same_fixture_countercheck": {
+      "input_bytes": 127206,
+      "candidates": 4,
+      "projects": 32,
+      "unknown_variables": 1536,
+      "before_report_bytes": 2745324,
+      "after_report_bytes": 190229,
+      "context_materializations": 65,
+      "retained_unknown_contexts": 64,
+      "unknown_contexts_omitted": 1472,
+      "questions_omitted": 1535,
+      "observation_source": "independent local reviewer"
+    },
+    "checks": [
+      "conservative certificates checked against bounded endpoint assignments",
+      "nominal null costs preserved",
+      "projected endpoint provenance marked estimate",
+      "one-factor and joint-uncertainty distinction",
+      "explicit limits and choice never automatic"
+    ]
+  },
+  "boundaries": {
+    "probabilities_or_expected_value_assumed": false,
+    "ranges_verified": false,
+    "questions_dispatched": false,
+    "new_measurements_performed": false,
+    "selection": false,
+    "execution": false,
+    "network_collection": false,
+    "production_activation": false,
+    "global_gain_claimed": false
+  },
+  "scope": "Conditional interval and bounded one-factor analysis over supplied candidates. Missing and interacting uncertainty remain explicit; the previous retained pilot is reused without rerunning it."
+}

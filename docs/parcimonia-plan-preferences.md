@@ -11,6 +11,8 @@ choose from. A recommendation does not select a plan for the user.
 The [recipe planner and measured pilot](parcimonia-recipe-planning.md) describe
 the separate goal-to-candidate construction operation and real isolated
 verification work. The comparison request below retains its existing contract.
+The separate [cost-range analysis](parcimonia-plan-uncertainty.md) keeps declared
+intervals and measurement suggestions outside that unchanged request schema.
 
 The user defines success for one or several projects and chooses which costs
 matter first. This extends the existing Conductor with a separate comparison
@@ -145,7 +147,7 @@ task's actual permissions, with its existing preview, source/result checks and
 checkpoint rules. Neither selection nor preparation calls that executor, even
 in dry-run mode. A later explicit preview is a distinct operation.
 
-The old comparison/proposal operations retain their contracts. All five CLI
+The old comparison/proposal operations retain their contracts. All planning CLI
 document modes are mutually exclusive and reject execution/checkpoint flags;
 selection-specific flags are rejected outside their corresponding mode.
 

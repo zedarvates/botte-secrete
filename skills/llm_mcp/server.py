@@ -54,6 +54,38 @@ SERVER_INFO = {"name": "botte-llm", "version": __version__}
 
 TOOLS = [
     {
+        "name": "analyse_plan_uncertainty",
+        "description": "Parcimonia: compare declared lower/upper action costs and hard budgets "
+                       "without replacing unknown costs with point estimates. Reports a conservative "
+                       "conditional robust recommendation or unresolved uncertainty. Ranges are "
+                       "caller declarations, not probabilities or guarantees. No selection or execution.",
+        "inputSchema": {
+            "type": "object", "additionalProperties": False,
+            "properties": {"request_json": {"type": "string", "maxLength": 1048576}},
+            "required": ["request_json"],
+        },
+        "annotations": {"readOnlyHint": True, "destructiveHint": False,
+                        "idempotentHint": True, "openWorldHint": False},
+    },
+    {
+        "name": "suggest_plan_measurements",
+        "description": "Parcimonia: suggest bounded measurements using one-factor lower/upper "
+                       "endpoint sensitivity and required unknown costs. Highlights potential "
+                       "choice or eligibility changes; joint uncertainty may remain. No expected-value "
+                       "or probability claim, user question dispatch, selection, model, network or execution.",
+        "inputSchema": {
+            "type": "object", "additionalProperties": False,
+            "properties": {
+                "request_json": {"type": "string", "maxLength": 1048576},
+                "max_checks": {"type": "integer", "minimum": 1, "maximum": 128, "default": 32},
+                "max_questions": {"type": "integer", "minimum": 1, "maximum": 16, "default": 8},
+            },
+            "required": ["request_json"],
+        },
+        "annotations": {"readOnlyHint": True, "destructiveHint": False,
+                        "idempotentHint": True, "openWorldHint": False},
+    },
+    {
         "name": "build_plan_candidates",
         "description": "Parcimonia: build bounded serial candidate plans from explicit recipes "
                        "for each requested project goal. Adds declared dependency closure, "
@@ -1912,6 +1944,24 @@ def _tool_build_plan_candidates(args: dict) -> str:
     return json.dumps(result, ensure_ascii=True, allow_nan=False, separators=(",", ":"))
 
 
+def _tool_analyse_plan_uncertainty(args: dict) -> str:
+    from skills.conductor.preferences import parse_request_json
+    from skills.conductor.uncertainty import analyse_plan_uncertainty
+    _assessment_arguments(args, {"request_json"})
+    result = analyse_plan_uncertainty(parse_request_json(args.get("request_json")))
+    return json.dumps(result, ensure_ascii=True, allow_nan=False, separators=(",", ":"))
+
+
+def _tool_suggest_plan_measurements(args: dict) -> str:
+    from skills.conductor.preferences import parse_request_json
+    from skills.conductor.measurement import suggest_plan_measurements
+    _assessment_arguments(args, {"request_json", "max_checks", "max_questions"})
+    result = suggest_plan_measurements(parse_request_json(args.get("request_json")),
+                                      max_checks=args.get("max_checks", 32),
+                                      max_questions=args.get("max_questions", 8))
+    return json.dumps(result, ensure_ascii=True, allow_nan=False, separators=(",", ":"))
+
+
 def _tool_prepare_plan_handoff(args: dict) -> str:
     from skills.conductor.preferences import parse_request_json
     from skills.conductor.handoff import prepare_plan_handoff
@@ -1964,6 +2014,8 @@ def _tool_summarize_github_evidence(args: dict) -> str:
 
 
 DISPATCH = {
+    "analyse_plan_uncertainty": _tool_analyse_plan_uncertainty,
+    "suggest_plan_measurements": _tool_suggest_plan_measurements,
     "build_plan_candidates": _tool_build_plan_candidates,
     "select_plan": _tool_select_plan,
     "prepare_plan_handoff": _tool_prepare_plan_handoff,

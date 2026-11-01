@@ -115,7 +115,8 @@ or a qualification of physical workstations. The report keeps failures and
 repeated runs so the next planning improvement can be selected from observed
 results rather than a claimed gain.
 
-Further work includes cost ranges, choosing the most useful missing measurement,
-replanning remaining work, detecting cross-project synergies, explicit scope
+The separate [cost-range and measurement guide](parcimonia-plan-uncertainty.md)
+describes conditional interval comparisons and bounded sensitivity hints.
+Further work includes replanning remaining work, detecting cross-project synergies, explicit scope
 reductions, human availability/attention and user-local calibration. Those capabilities are not silently
 added to the comparison schema by this recipe operation.

@@ -88,6 +88,10 @@ def main(argv=None) -> int:
     comparisons.add_argument("--select-plan", metavar="JSON", help="bind a declared candidate choice to this request; no execution")
     comparisons.add_argument("--prepare-plan-handoff", metavar="JSON", help="bind a selection to a supplied Conductor plan; no execution")
     comparisons.add_argument("--build-plan-candidates", metavar="JSON", help="build bounded alternatives from explicit goal recipes; no execution")
+    comparisons.add_argument("--analyse-plan-uncertainty", metavar="JSON", help="analyse declared cost ranges without selecting or executing a plan")
+    comparisons.add_argument("--suggest-plan-measurements", metavar="JSON", help="suggest bounded decision-relevant measurements; no execution")
+    p.add_argument("--max-checks", type=int, help="variable probe limit for --suggest-plan-measurements (default 32)")
+    p.add_argument("--max-questions", type=int, help="question limit for --suggest-plan-measurements (default 8)")
     p.add_argument("--candidate", help="candidate ID for --select-plan")
     p.add_argument("--input-digest", help="displayed input digest for --select-plan")
     p.add_argument("--selection", metavar="JSON", help="selection receipt for --prepare-plan-handoff")
@@ -116,16 +120,21 @@ def main(argv=None) -> int:
                    help="per-step timeout in seconds (default 120)")
     args = p.parse_args(argv)
     modes = (args.compare_plans, args.propose_plans, args.select_plan,
-             args.prepare_plan_handoff, args.build_plan_candidates)
+             args.prepare_plan_handoff, args.build_plan_candidates,
+             args.analyse_plan_uncertainty, args.suggest_plan_measurements)
     if any(value is not None for value in modes):
         if (args.goal is not None or args.plan is not None or args.execute or args.confirm or args.dry_run
                 or args.checkpoint is not None or args.resume or args.effects or args.review_effects
                 or args.observe_effects or args.save or args.stop_on_failure
                 or args.project != "." or args.timeout != 120):
-            p.error("plan construction, comparison, proposal, selection or handoff is a separate read-only operation; execution flags are unavailable")
+            p.error("plan analysis, construction, comparison, proposal, selection or handoff is a separate read-only operation; execution flags are unavailable")
         selecting = args.select_plan is not None
         preparing = args.prepare_plan_handoff is not None
         building = args.build_plan_candidates is not None
+        analysing = args.analyse_plan_uncertainty is not None
+        measuring = args.suggest_plan_measurements is not None
+        if not measuring and (args.max_checks is not None or args.max_questions is not None):
+            p.error("measurement limits require --suggest-plan-measurements")
         if selecting:
             if args.candidate is None or args.input_digest is None or args.selection is not None or args.execution_plan is not None:
                 p.error("--select-plan requires --candidate and --input-digest only")
@@ -157,6 +166,14 @@ def main(argv=None) -> int:
             elif building:
                 from skills.conductor.recipes import build_plan_candidates
                 result = build_plan_candidates(request)
+            elif analysing:
+                from skills.conductor.uncertainty import analyse_plan_uncertainty
+                result = analyse_plan_uncertainty(request)
+            elif measuring:
+                from skills.conductor.measurement import suggest_plan_measurements
+                result = suggest_plan_measurements(
+                    request, max_checks=32 if args.max_checks is None else args.max_checks,
+                    max_questions=8 if args.max_questions is None else args.max_questions)
             else:
                 operation = propose_plans if proposing else rank_plans
                 result = operation(request)
@@ -164,9 +181,10 @@ def main(argv=None) -> int:
             print(json.dumps({"error": str(exc)}, ensure_ascii=True))
             return 1
         print(json.dumps(result, ensure_ascii=True, indent=2))
-        return 0 if selecting or preparing or result["status"] in ("ranked", "proposed", "candidates_built") else 2
-    if any(value is not None for value in (args.candidate, args.input_digest, args.selection, args.execution_plan)):
-        p.error("selection arguments require --select-plan or --prepare-plan-handoff")
+        return 0 if selecting or preparing or analysing or measuring or result["status"] in ("ranked", "proposed", "candidates_built") else 2
+    if any(value is not None for value in (args.candidate, args.input_digest, args.selection, args.execution_plan,
+                                         args.max_checks, args.max_questions)):
+        p.error("selection or measurement arguments require their corresponding planning mode")
     if args.stop_on_failure and not args.execute:
         p.error("--stop-on-failure requires --execute")
     if args.observe_effects:

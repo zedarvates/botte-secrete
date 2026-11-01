@@ -18,6 +18,7 @@ the code in `skills/<name>/SKILL.md`.
 | Goal | Guide |
 |---|---|
 | Compare plans under user and multi-project budgets | [Parcimonia plan preferences](parcimonia-plan-preferences.md) |
+| Inspect cost ranges and decision-relevant measurements | [Plan uncertainty](parcimonia-plan-uncertainty.md) |
 | Prepare multiple bounded source contexts | [FastContext batches](fast-context-batch.md) |
 | Locate a Zig/GDScript function without loading a full file | [FastContext symbols](fast-context-symbols.md) |
 | Inspect event adjacency and registered rules | [Read-only RSI graph](rsi-graph.md) |
