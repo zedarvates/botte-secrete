@@ -32,6 +32,7 @@ CORRIGER. Tu reçois l'AuditReport et tu corriges. Point.
 Clés: f=fichier:ligne, action=COMMENT|DELETE|SKIP, test=vérification, s=ok/skip/fail, reason=pourquoi skip
 
 ## 🔍 Clarification
-1. 🔴 Appliquer TOUS les fixes auto ou seulement critiques ? (défaut: fixes simples auto, refactoring demande confirmation)
+Réutiliser les décisions et autorisations acquises ; poser seulement les questions utiles encore sans réponse.
+1. 🔴 Quel périmètre de correction reste à établir ? Réutiliser le périmètre déjà autorisé ; si une autorisation manque réellement, aucun défaut ne la remplace.
 2. 🟠 Un commit groupé ou par fix ? (défaut: groupé)
 3. 🟡 Exécuter les tests après chaque fix ? (défaut: OUI)
