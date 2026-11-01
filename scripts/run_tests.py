@@ -95,6 +95,9 @@ SUITES = [
         "skills/preflight/", "skills/llm_mcp/server.py", "skills/llm_mcp/test_assessment_tools.py",
         "skills/conductor/preferences.py", "skills/conductor/test_preferences.py",
         "skills/conductor/cli.py", "skills/llm_mcp/test_plan_preferences.py",
+        "skills/conductor/selection.py", "skills/conductor/test_selection.py",
+        "skills/conductor/handoff.py", "skills/conductor/test_handoff.py",
+        "skills/llm_mcp/test_plan_selection.py",
         "skills/skill_finder/", "skills/context_budget/", "scripts/run_tests.py",
     )),
     ("checkup", [sys.executable, "-m", "skills.checkup.test_checkup"], (

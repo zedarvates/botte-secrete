@@ -1,7 +1,8 @@
 # Parcimonia: plans guided by the user's conditions
 
-Status: opt-in prototype. Compare supplied candidate plans; no plan generation,
-execution, learning, model call, automatic recording or network collection.
+Status: opt-in prototype. Compare supplied candidate plans, represent an explicit
+caller choice and prepare a supplied execution document. No plan generation,
+execution, learning, model call, automatic persistence or network collection.
 
 The user may request a ranking recommendation or a set of plan proposals to
 choose from. A recommendation does not select a plan for the user.
@@ -14,7 +15,9 @@ unchanged. The new request is not a `botte.skill-plan/v1` execution document.
 The [dated validation record](validation/parcimonia-plan-preferences-2026-11-01.json)
 binds the original comparator to its tested source files and limits. The
 [proposal follow-up record](validation/parcimonia-plan-proposals-2026-11-01.json)
-covers the later multiple-choice operation.
+covers the later multiple-choice operation. The
+[selection and handoff record](validation/parcimonia-plan-selection-handoff-2026-11-01.json)
+records the subsequent document roundtrip and its tested limits.
 
 ## Try the comparison
 
@@ -70,6 +73,76 @@ steps change, refresh the proposals before reusing the choice. No selection
 ledger or additional execution pipeline is introduced here. An existing mandate
 to choose or execute remains a separate host responsibility; offering choices
 does not impose a new approval gate on other workflows.
+
+## Retain a specific choice
+
+After the user chooses an eligible candidate, the host can call
+`select_plan(request, candidate_id, expected_input_digest)` from
+`skills.conductor.selection`. The MCP tool `select_plan` takes `request_json`,
+`candidate_id` and `expected_input_digest`. Use the digest from the proposals
+shown to the user; the function re-evaluates the current request before returning
+a `parcimonia.plan-selection/v1` receipt.
+
+For CLI use, replace `DISPLAYED_INPUT_DIGEST` with that displayed digest:
+
+```bash
+python -m skills.conductor.cli --select-plan examples/parcimonia_plan_preferences.json --candidate rapid --input-digest DISPLAYED_INPUT_DIGEST --json
+```
+
+The receipt retains the chosen steps, declared goals and costs, aggregation
+conventions, current recommendation and a deterministic `selection_id`. Choosing
+an eligible lower-ranked or dominated alternative is allowed. Absent, rejected
+or undetermined candidates fail without falling back to the recommendation.
+Changing costs, priorities, goals or step order invalidates the old digest.
+Reordering set-like catalogues does not change the choice identity.
+
+`validate_selection(request, receipt)` reconstructs the receipt against the
+current request and rejects altered, missing or additional fields. It returns
+an independent copy; snapshots do not share mutable input data. Receipts are
+bounded to 1 MiB. Calling a tool is only a caller-declared choice, not evidence
+of who requested it: `choice_authority_verified` and `execution_authorized`
+remain false. A hash checks consistency and does not authenticate its author.
+No receipt is saved or uploaded automatically; the CLI prints it to stdout.
+
+## Prepare the existing Conductor handoff
+
+`prepare_plan_handoff(request, selection_receipt, execution_plan)` from
+`skills.conductor.handoff` accepts a separately supplied, trusted
+`botte.skill-plan/v1` execution document. Its MCP equivalent takes `request_json`,
+`selection_json` and `execution_plan_json`. The CLI reads three explicit files;
+replace the two uppercase file placeholders with real supplied documents:
+
+```bash
+python -m skills.conductor.cli --prepare-plan-handoff examples/parcimonia_plan_preferences.json --selection USER_SELECTION_JSON --execution-plan USER_SUPPLIED_CONDUCTOR_PLAN_JSON --json
+```
+
+The adapter revalidates the selection, uses the existing `validate_plan`, and
+requires exact step IDs and order plus equal dependency sets. It preserves
+commands, source hashes, preconditions, result checks, observations, goal and
+context without synthesizing or rewriting them. The separate
+`parcimonia.plan-handoff/v1` envelope contains the unchanged execution plan,
+selection receipt, full plan digest and a deterministic `handoff_id`.
+No new fields are inserted into the closed Conductor plan schema.
+
+V1 supports one execution step per selected action. Conductor permits at most
+100 steps and forbids `:` in step IDs; a Parcimonia candidate outside those
+limits is rejected rather than renamed or split. The plan is bounded to 1 MiB
+and the complete envelope to 2 MiB. The status is `prepared_unverified`:
+matching IDs do not prove that commands implement the chosen actions, meet the
+declared costs or achieve the goals. No current project files or live resources
+are inspected during preparation, and the packet grants no execution authority.
+
+Before consuming a received packet, use
+`validate_plan_handoff(request, packet)` to reconstruct it against the current
+request. Any changed content requires a new matching packet. Then the trusted
+controller can pass its `execution_plan` to the existing Conductor under the
+task's actual permissions, with its existing preview, source/result checks and
+checkpoint rules. Neither selection nor preparation calls that executor, even
+in dry-run mode. A later explicit preview is a distinct operation.
+
+The old comparison/proposal operations retain their contracts. All four CLI
+document modes are mutually exclusive and reject execution/checkpoint flags;
+selection-specific flags are rejected outside their corresponding mode.
 
 ## Versioned request
 

@@ -12,7 +12,10 @@ if __name__ == "__main__":
         "skills.preflight.test_portable_guidance",
         "skills.llm_mcp.test_assessment_tools",
         "skills.conductor.test_preferences",
+        "skills.conductor.test_selection",
+        "skills.conductor.test_handoff",
         "skills.llm_mcp.test_plan_preferences",
+        "skills.llm_mcp.test_plan_selection",
     ])
     result = unittest.TextTestRunner().run(suite)
     failed = len(result.failures) + len(result.errors)

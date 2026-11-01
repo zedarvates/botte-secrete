@@ -54,6 +54,42 @@ SERVER_INFO = {"name": "botte-llm", "version": __version__}
 
 TOOLS = [
     {
+        "name": "select_plan",
+        "description": "Parcimonia: bind a caller-declared candidate choice to the current "
+                       "proposal input digest. Rechecks eligibility and rejects stale inputs. "
+                       "The deterministic receipt does not authenticate the user's instruction "
+                       "or authorize execution. No implicit choice, storage, model or network.",
+        "inputSchema": {
+            "type": "object", "additionalProperties": False,
+            "properties": {
+                "request_json": {"type": "string", "maxLength": 1048576},
+                "candidate_id": {"type": "string", "minLength": 1, "maxLength": 64},
+                "expected_input_digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+            },
+            "required": ["request_json", "candidate_id", "expected_input_digest"],
+        },
+        "annotations": {"readOnlyHint": True, "destructiveHint": False,
+                        "idempotentHint": True, "openWorldHint": False},
+    },
+    {
+        "name": "prepare_plan_handoff",
+        "description": "Parcimonia: revalidate a supplied selection and bind it to a supplied "
+                       "botte.skill-plan/v1 Conductor document with matching step IDs, order "
+                       "and dependencies. Keeps commands and checks intact. Structural preparation "
+                       "only; no command generation, authorization, runtime verification or execution.",
+        "inputSchema": {
+            "type": "object", "additionalProperties": False,
+            "properties": {
+                "request_json": {"type": "string", "maxLength": 1048576},
+                "selection_json": {"type": "string", "maxLength": 1048576},
+                "execution_plan_json": {"type": "string", "maxLength": 1048576},
+            },
+            "required": ["request_json", "selection_json", "execution_plan_json"],
+        },
+        "annotations": {"readOnlyHint": True, "destructiveHint": False,
+                        "idempotentHint": True, "openWorldHint": False},
+    },
+    {
         "name": "propose_plans",
         "description": "Parcimonia: offer supplied eligible plans as multiple choices with "
                        "steps, costs, unknowns and an advisory recommendation. The selected "
@@ -1844,6 +1880,25 @@ def _tool_propose_plans(args: dict) -> str:
                       ensure_ascii=True, allow_nan=False, separators=(",", ":"))
 
 
+def _tool_select_plan(args: dict) -> str:
+    from skills.conductor.preferences import parse_request_json
+    from skills.conductor.selection import select_plan
+    _assessment_arguments(args, {"request_json", "candidate_id", "expected_input_digest"})
+    result = select_plan(parse_request_json(args.get("request_json")),
+                         args.get("candidate_id"), args.get("expected_input_digest"))
+    return json.dumps(result, ensure_ascii=True, allow_nan=False, separators=(",", ":"))
+
+
+def _tool_prepare_plan_handoff(args: dict) -> str:
+    from skills.conductor.preferences import parse_request_json
+    from skills.conductor.handoff import prepare_plan_handoff
+    _assessment_arguments(args, {"request_json", "selection_json", "execution_plan_json"})
+    result = prepare_plan_handoff(parse_request_json(args.get("request_json")),
+                                  parse_request_json(args.get("selection_json")),
+                                  parse_request_json(args.get("execution_plan_json")))
+    return json.dumps(result, ensure_ascii=True, allow_nan=False, separators=(",", ":"))
+
+
 def _tool_assess_task(args: dict) -> str:
     from skills.preflight.assessment import assess_task
     _assessment_arguments(args, {"task", "available_tools", "context_budget"})
@@ -1886,6 +1941,8 @@ def _tool_summarize_github_evidence(args: dict) -> str:
 
 
 DISPATCH = {
+    "select_plan": _tool_select_plan,
+    "prepare_plan_handoff": _tool_prepare_plan_handoff,
     "propose_plans": _tool_propose_plans,
     "compare_plans": _tool_compare_plans,
     "check_local_links": _tool_check_local_links,
