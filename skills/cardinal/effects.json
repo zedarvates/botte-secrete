@@ -1,16 +1,16 @@
 {
   "schema": "botte.capability-effects/v1",
   "capability_id": "zedarvates/botte-secrete:skills/cardinal",
-  "contract_version": "0.1.0",
+  "contract_version": "0.1.1",
   "source_hashes": {
     "SKILL.md": "282c07d9a61606340a84ce2d5e88d58b9f28c2c140e80969004fe4a0a04b4d39",
     "__init__.py": "7c0caf311872c2c969cae1e6c2c6f5a4359b6fa6cb65afedb352158ff176bb38",
     "README.md": "fc826165d4400213b23414a2a2e9058e7edc28c6389763287e340bae21dd3d85",
     "scripts/cardinal_confront.py": "7225c07185ce88c02596049dca5b2d50cb04492a61bc65f66192b945a0fcef9f",
-    "prompts/cardinal.md": "190d6bc1d9d7454a71a8bf1fe37a9ec63a75ccf888f396146697e056456365c9",
-    "prompts/rochefort.md": "b302c2300272d94758ec58f5a11e81739bbfce3c855e313ef4f26356c3009f7c",
-    "prompts/milady.md": "bc3fb10513f7fb33fa83d270ce225536f07f4fbb41581b2ed606bcbdb51785f1",
-    "prompts/comte_de_wardes.md": "793b160b7d47876743cdddda83f66b3799aacec8c0d0e33907d452a0838dcaec"
+    "prompts/cardinal.md": "229905dd41869b900582792011dcb13af6768906ede90034850f6c197a7aa78f",
+    "prompts/rochefort.md": "7078e464bb6c9c2a0d34ff6bf4730f07b65b9dae0991d9df2ddff51e62aa7241",
+    "prompts/milady.md": "82895cec726346d5eaed2561b42aad5d8a31200fae613a653cb0add432496a56",
+    "prompts/comte_de_wardes.md": "05f31288531659b89e7c9ec8a678314324aa08782f1a80905e6ce85ed55c11be"
   },
   "preconditions": [
     "Select host-orchestrated review or consolidation of existing reports; their effects differ.",
@@ -23,7 +23,7 @@
       "effect": "An orchestrated counter-review may delegate role prompts, inspect source and run scoped tests.",
       "scope": "Host-selected agents, models, source checkout, test resources and their report destinations.",
       "likelihood": "conditional",
-      "basis": "The role prompts request counter-audit, regression review and optimization review; actual dispatch is performed by the host, outside the consolidation script.",
+      "basis": "The role prompts request counter-audit, regression review and optimization review. They reuse established decisions and authorizations and ask only useful questions still unanswered; actual dispatch is performed by the host, outside the consolidation script.",
       "impact": "Can uncover defects, consume model/test resources and disclose source or reports to configured agents. Role names do not prove independent review.",
       "verification": "Inspect actual dispatch, model/data scope, test results and reviewed revision; assess proposed commands before the host runs them."
     },
