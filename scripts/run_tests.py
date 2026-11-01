@@ -93,6 +93,8 @@ SUITES = [
     ("portfolio_sync", [sys.executable, "-m", "skills.portfolio_sync.test_cli_contract"], "skills/portfolio_sync/"),
     ("parcimonia", [sys.executable, "-m", "skills.preflight.test_parcimonia"], (
         "skills/preflight/", "skills/llm_mcp/server.py", "skills/llm_mcp/test_assessment_tools.py",
+        "skills/conductor/preferences.py", "skills/conductor/test_preferences.py",
+        "skills/conductor/cli.py", "skills/llm_mcp/test_plan_preferences.py",
         "skills/skill_finder/", "skills/context_budget/", "scripts/run_tests.py",
     )),
     ("checkup", [sys.executable, "-m", "skills.checkup.test_checkup"], (

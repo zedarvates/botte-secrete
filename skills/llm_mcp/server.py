@@ -54,6 +54,21 @@ SERVER_INFO = {"name": "botte-llm", "version": __version__}
 
 TOOLS = [
     {
+        "name": "compare_plans",
+        "description": "Parcimonia: compare supplied multi-project plans using explicit user "
+                       "priorities and hard budgets. Reports serial declared costs, shared actions, "
+                       "unknowns and Pareto alternatives. Best among known eligible candidates only; "
+                       "does not generate or execute plans, verify goals, collect telemetry, "
+                       "call models or contact a network.",
+        "inputSchema": {
+            "type": "object", "additionalProperties": False,
+            "properties": {"request_json": {"type": "string", "maxLength": 1048576}},
+            "required": ["request_json"],
+        },
+        "annotations": {"readOnlyHint": True, "destructiveHint": False,
+                        "idempotentHint": True, "openWorldHint": False},
+    },
+    {
         "name": "review_knowledge_links",
         "description": "Parcimonia: review supplied versioned documentary and receipt "
                        "links for missing references, stale versions and declared dependency "
@@ -1800,6 +1815,13 @@ def _tool_review_knowledge_links(args: dict) -> str:
     return json.dumps(review_knowledge_links(inventory), ensure_ascii=True, separators=(",", ":"))
 
 
+def _tool_compare_plans(args: dict) -> str:
+    from skills.conductor.preferences import parse_request_json, rank_plans
+    _assessment_arguments(args, {"request_json"})
+    return json.dumps(rank_plans(parse_request_json(args.get("request_json"))),
+                      ensure_ascii=True, allow_nan=False, separators=(",", ":"))
+
+
 def _tool_assess_task(args: dict) -> str:
     from skills.preflight.assessment import assess_task
     _assessment_arguments(args, {"task", "available_tools", "context_budget"})
@@ -1842,6 +1864,7 @@ def _tool_summarize_github_evidence(args: dict) -> str:
 
 
 DISPATCH = {
+    "compare_plans": _tool_compare_plans,
     "check_local_links": _tool_check_local_links,
     "find_file_duplicates": _tool_find_file_duplicates,
     "compute_statistics": _tool_compute_statistics,
