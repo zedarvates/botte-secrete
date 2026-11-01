@@ -54,6 +54,25 @@ SERVER_INFO = {"name": "botte-llm", "version": __version__}
 
 TOOLS = [
     {
+        "name": "review_plan_replanning",
+        "description": "Parcimonia: read an existing project-relative Conductor checkpoint "
+                       "and recheck declared local source, precondition and result evidence. "
+                       "Review remaining-work costs and distinguish reusable, unstarted and "
+                       "unresolved started actions. Remaining budgets must be supplied explicitly. "
+                       "No checkpoint changes, implicit retries, command execution or memory-release claim.",
+        "inputSchema": {
+            "type": "object", "additionalProperties": False,
+            "properties": {
+                "request_json": {"type": "string", "maxLength": 1048576},
+                "checkpoint_path": {"type": "string", "minLength": 1, "maxLength": 4096},
+                "cwd": {"type": "string", "default": "."},
+            },
+            "required": ["request_json", "checkpoint_path"],
+        },
+        "annotations": {"readOnlyHint": True, "destructiveHint": False,
+                        "idempotentHint": True, "openWorldHint": False},
+    },
+    {
         "name": "analyse_plan_uncertainty",
         "description": "Parcimonia: compare declared lower/upper action costs and hard budgets "
                        "without replacing unknown costs with point estimates. Reports a conservative "
@@ -1962,6 +1981,15 @@ def _tool_suggest_plan_measurements(args: dict) -> str:
     return json.dumps(result, ensure_ascii=True, allow_nan=False, separators=(",", ":"))
 
 
+def _tool_review_plan_replanning(args: dict) -> str:
+    from skills.conductor.preferences import parse_request_json
+    from skills.conductor.replanning import review_plan_replanning
+    _assessment_arguments(args, {"request_json", "checkpoint_path", "cwd"})
+    result = review_plan_replanning(parse_request_json(args.get("request_json")),
+                                   args.get("checkpoint_path"), cwd=args.get("cwd", "."))
+    return json.dumps(result, ensure_ascii=True, allow_nan=False, separators=(",", ":"))
+
+
 def _tool_prepare_plan_handoff(args: dict) -> str:
     from skills.conductor.preferences import parse_request_json
     from skills.conductor.handoff import prepare_plan_handoff
@@ -2014,6 +2042,7 @@ def _tool_summarize_github_evidence(args: dict) -> str:
 
 
 DISPATCH = {
+    "review_plan_replanning": _tool_review_plan_replanning,
     "analyse_plan_uncertainty": _tool_analyse_plan_uncertainty,
     "suggest_plan_measurements": _tool_suggest_plan_measurements,
     "build_plan_candidates": _tool_build_plan_candidates,

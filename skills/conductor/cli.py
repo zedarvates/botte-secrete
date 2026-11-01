@@ -90,6 +90,7 @@ def main(argv=None) -> int:
     comparisons.add_argument("--build-plan-candidates", metavar="JSON", help="build bounded alternatives from explicit goal recipes; no execution")
     comparisons.add_argument("--analyse-plan-uncertainty", metavar="JSON", help="analyse declared cost ranges without selecting or executing a plan")
     comparisons.add_argument("--suggest-plan-measurements", metavar="JSON", help="suggest bounded decision-relevant measurements; no execution")
+    comparisons.add_argument("--review-plan-replanning", metavar="JSON", help="review remaining work against an existing checkpoint and local evidence; read-only")
     p.add_argument("--max-checks", type=int, help="variable probe limit for --suggest-plan-measurements (default 32)")
     p.add_argument("--max-questions", type=int, help="question limit for --suggest-plan-measurements (default 8)")
     p.add_argument("--candidate", help="candidate ID for --select-plan")
@@ -121,13 +122,17 @@ def main(argv=None) -> int:
     args = p.parse_args(argv)
     modes = (args.compare_plans, args.propose_plans, args.select_plan,
              args.prepare_plan_handoff, args.build_plan_candidates,
-             args.analyse_plan_uncertainty, args.suggest_plan_measurements)
+             args.analyse_plan_uncertainty, args.suggest_plan_measurements,
+             args.review_plan_replanning)
     if any(value is not None for value in modes):
+        reviewing = args.review_plan_replanning is not None
         if (args.goal is not None or args.plan is not None or args.execute or args.confirm or args.dry_run
-                or args.checkpoint is not None or args.resume or args.effects or args.review_effects
+                or (args.checkpoint is not None and not reviewing) or args.resume or args.effects or args.review_effects
                 or args.observe_effects or args.save or args.stop_on_failure
-                or args.project != "." or args.timeout != 120):
+                or (args.project != "." and not reviewing) or args.timeout != 120):
             p.error("plan analysis, construction, comparison, proposal, selection or handoff is a separate read-only operation; execution flags are unavailable")
+        if reviewing and args.checkpoint is None:
+            p.error("--review-plan-replanning requires an existing project-relative --checkpoint")
         selecting = args.select_plan is not None
         preparing = args.prepare_plan_handoff is not None
         building = args.build_plan_candidates is not None
@@ -174,6 +179,9 @@ def main(argv=None) -> int:
                 result = suggest_plan_measurements(
                     request, max_checks=32 if args.max_checks is None else args.max_checks,
                     max_questions=8 if args.max_questions is None else args.max_questions)
+            elif reviewing:
+                from skills.conductor.replanning import review_plan_replanning
+                result = review_plan_replanning(request, args.checkpoint, cwd=args.project)
             else:
                 operation = propose_plans if proposing else rank_plans
                 result = operation(request)
@@ -181,7 +189,7 @@ def main(argv=None) -> int:
             print(json.dumps({"error": str(exc)}, ensure_ascii=True))
             return 1
         print(json.dumps(result, ensure_ascii=True, indent=2))
-        return 0 if selecting or preparing or analysing or measuring or result["status"] in ("ranked", "proposed", "candidates_built") else 2
+        return 0 if selecting or preparing or analysing or measuring or reviewing or result["status"] in ("ranked", "proposed", "candidates_built") else 2
     if any(value is not None for value in (args.candidate, args.input_digest, args.selection, args.execution_plan,
                                          args.max_checks, args.max_questions)):
         p.error("selection or measurement arguments require their corresponding planning mode")

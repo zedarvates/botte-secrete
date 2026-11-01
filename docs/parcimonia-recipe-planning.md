@@ -117,6 +117,8 @@ results rather than a claimed gain.
 
 The separate [cost-range and measurement guide](parcimonia-plan-uncertainty.md)
 describes conditional interval comparisons and bounded sensitivity hints.
-Further work includes replanning remaining work, detecting cross-project synergies, explicit scope
-reductions, human availability/attention and user-local calibration. Those capabilities are not silently
-added to the comparison schema by this recipe operation.
+The separate [remaining-work review](parcimonia-plan-replanning.md) checks an
+existing checkpoint and current local evidence before advising on reuse.
+Further work includes detecting cross-project synergies, explicit scope
+reductions, human availability/attention and user-local calibration. Those
+capabilities are not silently added to the comparison schema by this recipe operation.

@@ -1,0 +1,1048 @@
+{
+  "schema": "parcimonia.plan-replanning-pilot/v1",
+  "created_at": "2026-11-01T15:18:26.070984+00:00",
+  "mode": "execution",
+  "complete": true,
+  "authorization_scope": "Explicit --run authorizes this fixed temporary-file pilot only; confirm=true remains required by Conductor.",
+  "scenario": [
+    "execute A; B is blocked unstarted by absent ready.flag",
+    "create ready.flag within pilot authority; review without writes",
+    "resume identical plan/checkpoint; A reused, B executes once",
+    "corrupt A; review and existing resume detect stale evidence without replay"
+  ],
+  "source_hashes": {
+    "skills/__init__.py": "8f4e5d5c1b652790431210afc669dc1549e79916bd1c65d77aaa33e8296ebe9f",
+    "skills/atomic_json.py": "bf9950cde67ef3e5ba8a2d128eb51eee5d161fb9cebc3f27404abf873eb76ebe",
+    "skills/capabilities/__init__.py": "7d4d3e1854faec18d12335c4a1632b9fd59e5b22f774a8a9fc69467d1ddb75c5",
+    "skills/capabilities/registry.py": "5b35c77358bf7899d8bc3d2bbaacb5f933a2e18921378bebc7dfab42fa8d5b36",
+    "skills/conductor/__init__.py": "e9b15c49cb32b65ebb539c65786e92906b6d892449c74e82d0203bf0f972fa4a",
+    "skills/conductor/conductor.py": "10b2dcfda55de8d59eb674a946f34fa763974191050cb3bbe061e54ef5659a73",
+    "skills/conductor/executor.py": "34e46ba41fbcd9d54beb8324bbbf1e69b3634fa875e15c97de5ba5807cad10ce",
+    "skills/conductor/verified.py": "78a17e9c015bee8626d4804377bb389ed1092665cdb9d5c40e48ee3c1a8c9cce",
+    "skills/conductor/preferences.py": "790ad7c4b674405d956f4f13810f9e894997c447ae242187b59049c4c486b8a8",
+    "skills/conductor/selection.py": "9eebd7126cb663948defb1b2c34ede7842a6f78bea026fd675ebfafc28aad1e1",
+    "skills/conductor/handoff.py": "fe395126159e4b8a14f16dfe30c3f5da56ecc258c672c58a337f898fb391a747",
+    "skills/conductor/replanning.py": "485ca9b8c3271a75492460ae349ba8532c413c65588498e07d1d548d1cc26e8b",
+    "scripts/plan_replanning_pilot.py": "ff5a323a5d4bf24271c71b9af56d069c562e2f1e0f72e37487e4c76661b52b18"
+  },
+  "worker_sha256": "bc306a1ddc20cc831ef206544480e73c5049727fd035e36ea0b1d283093637f7",
+  "checks": {
+    "supervising_sources_before_match": true,
+    "initial_A_verified_B_blocked_unstarted": true,
+    "review_preserves_checkpoint_and_project": true,
+    "review_recommends_without_selection_or_authority": true,
+    "review_identifies_A_reusable_B_remaining": true,
+    "remaining_work_estimates_exclude_A_and_preserve_unknowns": true,
+    "resume_completes_without_duplicate_A": true,
+    "same_original_plan_and_checkpoint_run": true,
+    "corruption_review_requires_reconciliation_without_writes": true,
+    "stale_resume_never_reexecutes_started_steps": true,
+    "snapshot_sources_after_match": true,
+    "supervising_sources_after_match": true,
+    "temporary_project_deleted": true,
+    "all_five_phases_recorded": true
+  },
+  "failures": [],
+  "phases": [
+    {
+      "name": "initial_real_execution",
+      "wall_s": 0.05737642900203355,
+      "execution": {
+        "schema": "botte.skill-run/v1",
+        "run_id": "28d4ab6faec64eb4968d7e8f6421cb4c",
+        "plan_sha256": "1b2823b2f5506d7b63b373d7245388303a1f508917050e973160382bec21ccb4",
+        "context_sha256": "6b4d905cd012a6971348b159bc3942f02aaf13dadae10ba989bec1110de129f0",
+        "mode": "execution",
+        "complete": false,
+        "summary": {
+          "blocked": 1,
+          "failed": 0,
+          "pending": 0,
+          "running": 0,
+          "skipped": 0,
+          "stale": 0,
+          "uncertain": 0,
+          "unverified": 0,
+          "verified": 1
+        },
+        "coverage": "declared local file checks only; other effects are unobserved",
+        "child_cost": null,
+        "full_report_sha256": "46d9bdf64afd1683f495fd223e7021e8565aa5be414def16dc9723943be85cc4",
+        "results": [
+          {
+            "id": "stage-a",
+            "status": "verified",
+            "started": true,
+            "reused": false,
+            "exit_code": 0,
+            "duration_s": 0.043855,
+            "note": "declared checks passed",
+            "changed_paths": [
+              "stage-a-counter.json",
+              "stage-a.txt"
+            ],
+            "source_checks": {
+              "count": 14,
+              "all_passed": true,
+              "failed": []
+            },
+            "source_checks_after": {
+              "count": 14,
+              "all_passed": true,
+              "failed": []
+            },
+            "precondition_checks": {
+              "count": 0,
+              "all_passed": true,
+              "failed": []
+            },
+            "postcondition_checks": {
+              "count": 2,
+              "all_passed": true,
+              "failed": []
+            }
+          },
+          {
+            "id": "stage-b",
+            "status": "blocked",
+            "started": false,
+            "reused": false,
+            "exit_code": null,
+            "duration_s": 0.0,
+            "note": "source binding or precondition not satisfied",
+            "source_checks": {
+              "count": 14,
+              "all_passed": true,
+              "failed": []
+            },
+            "precondition_checks": {
+              "count": 1,
+              "all_passed": false,
+              "failed": [
+                {
+                  "kind": "file_exists",
+                  "path": "ready.flag",
+                  "passed": false,
+                  "observed": {
+                    "state": "absent"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "counters": {
+        "stage-a": 1,
+        "stage-b": 0
+      }
+    },
+    {
+      "name": "readonly_replanning_after_flag",
+      "review": {
+        "schema": "parcimonia.plan-replanning-report/v1",
+        "status": "reviewed",
+        "review_input_digest": "4568cdb55c64ea5a5a27b803997ca3ca5dc7e54bb6d4b8f8f382cb19b1df92cd",
+        "current_input_digest": "8ece4403240449707e7431ec3510a38f8e34968b630365c7beeaa839d20619fa",
+        "previous_input_digest": "0a75fd05d9ab64268d5fdc8468ac30ef96adc09c512eaa1b01653fa5939c00ec",
+        "previous_handoff_id": "b191f99b04b2fd3b0eb82bec1e66a2614b1e528c6c124cdcb01a6a8156bcf420",
+        "previous_execution_plan_sha256": "1b2823b2f5506d7b63b373d7245388303a1f508917050e973160382bec21ccb4",
+        "checkpoint_sha256": "eadb67526b129a9bb0fee2155ad285feb7b0042cc1e14fc1bbbb5ae127732b9a",
+        "checkpoint_document_sha256": "46d9bdf64afd1683f495fd223e7021e8565aa5be414def16dc9723943be85cc4",
+        "context_sha256": "6b4d905cd012a6971348b159bc3942f02aaf13dadae10ba989bec1110de129f0",
+        "budget_scope": "remaining_work",
+        "cost_scope": {
+          "additive_metrics": [
+            "elapsed_minutes",
+            "human_minutes",
+            "money",
+            "tokens",
+            "energy_wh"
+          ],
+          "reusable_additive_future_cost": 0,
+          "peak_ram": "declared_peak_retained_for_all_actions",
+          "project_elapsed_minutes": "remaining_serial_prefix_to_last_remaining_beneficiary_or_zero",
+          "candidate_order": "original_validated_before_internal_cost_projection_only",
+          "limits": "current_declared_remaining_allowances",
+          "sunk_costs_subtracted": false,
+          "validation_overhead_included": false,
+          "provenance": "estimate_bound_to_review_input_checkpoint_and_step_checks"
+        },
+        "step_states": [
+          {
+            "id": "stage-a",
+            "checkpoint_status": "verified",
+            "started": true,
+            "current_action_contract": "unchanged",
+            "state": "reusable",
+            "reuse_eligible": true,
+            "local_checks": {
+              "preconditions": {
+                "checked": 0,
+                "passed": 0,
+                "failed": 0,
+                "unknown": 0
+              },
+              "postconditions": {
+                "checked": 2,
+                "passed": 2,
+                "failed": 0,
+                "unknown": 0
+              },
+              "sources": {
+                "checked": 14,
+                "passed": 14,
+                "failed": 0,
+                "unknown": 0
+              }
+            },
+            "reasons": []
+          },
+          {
+            "id": "stage-b",
+            "checkpoint_status": "blocked",
+            "started": false,
+            "current_action_contract": "unchanged",
+            "state": "unstarted",
+            "reuse_eligible": false,
+            "local_checks": {},
+            "reasons": []
+          }
+        ],
+        "reconciliation_required": false,
+        "reconciliation_action_ids": [],
+        "candidates": [
+          {
+            "id": "two-stages",
+            "status": "eligible",
+            "rank": 1,
+            "recommended": true,
+            "reused_action_ids": [
+              "stage-a"
+            ],
+            "remaining_action_ids": [
+              "stage-b"
+            ],
+            "resume_compatible": true,
+            "execution_status": "resume_compatible",
+            "reason_counts": {},
+            "reasons_omitted": 0,
+            "reasons": [],
+            "incremental_totals": {
+              "elapsed_minutes": 1,
+              "human_minutes": null,
+              "money": 0,
+              "tokens": null,
+              "energy_wh": null,
+              "peak_ram_gib": null
+            },
+            "incremental_project_totals": {
+              "local-pilot": {
+                "elapsed_minutes": 1,
+                "human_minutes": null,
+                "money": 0,
+                "tokens": null,
+                "energy_wh": null,
+                "peak_ram_gib": null
+              }
+            }
+          }
+        ],
+        "ranking": [
+          "two-stages"
+        ],
+        "recommended_candidate_id": "two-stages",
+        "selected_candidate_id": null,
+        "selection_status": "not_selected",
+        "execution_authorized": false,
+        "diagnostics": [],
+        "diagnostic_counts": {},
+        "diagnostics_omitted": 0,
+        "detail_caps": {
+          "diagnostics": 64,
+          "reasons_per_candidate": 64,
+          "goals_per_reason": 8
+        },
+        "claim": {
+          "local_checks_recomputed": true,
+          "checkpoint_authenticated": false,
+          "source_verified": false,
+          "goal_coverage_verified": false,
+          "choice_authority_verified": false,
+          "resources_observed": false,
+          "measured_gain": null
+        },
+        "boundaries": {
+          "execution": false,
+          "checkpoint_write": false,
+          "checkpoint_migration": false,
+          "models": false,
+          "network": false
+        },
+        "limitations": [
+          "Checkpoint content bindings do not authenticate its author or history.",
+          "Checks cover declared local files only, without an atomic filesystem snapshot.",
+          "Sources, goals, command semantics and user or execution authority are unverified.",
+          "Current processes, resource use and external effects are unobserved.",
+          "Costs are declared estimates; validation overhead and sunk costs are excluded.",
+          "A new candidate is execution-unqualified and cannot use the old checkpoint.",
+          "Actual resume must use the unchanged old execution plan and recheck all evidence."
+        ]
+      },
+      "wall_s": 0.01028017999487929,
+      "checkpoint_bytes_sha256_before": "eadb67526b129a9bb0fee2155ad285feb7b0042cc1e14fc1bbbb5ae127732b9a",
+      "checkpoint_bytes_sha256_after": "eadb67526b129a9bb0fee2155ad285feb7b0042cc1e14fc1bbbb5ae127732b9a",
+      "checkpoint_bytes_unchanged": true,
+      "all_project_files_unchanged": true,
+      "envelope_unchanged": true
+    },
+    {
+      "name": "same_plan_real_resume",
+      "wall_s": 0.06155953100096667,
+      "execution": {
+        "schema": "botte.skill-run/v1",
+        "run_id": "28d4ab6faec64eb4968d7e8f6421cb4c",
+        "plan_sha256": "1b2823b2f5506d7b63b373d7245388303a1f508917050e973160382bec21ccb4",
+        "context_sha256": "6b4d905cd012a6971348b159bc3942f02aaf13dadae10ba989bec1110de129f0",
+        "mode": "execution",
+        "complete": true,
+        "summary": {
+          "blocked": 0,
+          "failed": 0,
+          "pending": 0,
+          "running": 0,
+          "skipped": 0,
+          "stale": 0,
+          "uncertain": 0,
+          "unverified": 0,
+          "verified": 2
+        },
+        "coverage": "declared local file checks only; other effects are unobserved",
+        "child_cost": null,
+        "full_report_sha256": "34030a491af4935d8f524fa9473b07f1c935d841188303d3428c3c18bdc12454",
+        "results": [
+          {
+            "id": "stage-a",
+            "status": "verified",
+            "started": true,
+            "reused": true,
+            "exit_code": 0,
+            "duration_s": 0.043855,
+            "note": "verified outputs rechecked; command not repeated",
+            "changed_paths": [
+              "stage-a-counter.json",
+              "stage-a.txt"
+            ],
+            "source_checks": {
+              "count": 14,
+              "all_passed": true,
+              "failed": []
+            },
+            "source_checks_after": {
+              "count": 14,
+              "all_passed": true,
+              "failed": []
+            },
+            "precondition_checks": {
+              "count": 0,
+              "all_passed": true,
+              "failed": []
+            },
+            "postcondition_checks": {
+              "count": 2,
+              "all_passed": true,
+              "failed": []
+            },
+            "resume_checks": {
+              "count": 2,
+              "all_passed": true,
+              "failed": []
+            },
+            "resume_sources": {
+              "count": 14,
+              "all_passed": true,
+              "failed": []
+            },
+            "resume_precondition_checks": {
+              "count": 0,
+              "all_passed": true,
+              "failed": []
+            }
+          },
+          {
+            "id": "stage-b",
+            "status": "verified",
+            "started": true,
+            "reused": false,
+            "exit_code": 0,
+            "duration_s": 0.044572,
+            "note": "declared checks passed",
+            "changed_paths": [
+              "stage-b-counter.json",
+              "stage-b.txt"
+            ],
+            "source_checks": {
+              "count": 14,
+              "all_passed": true,
+              "failed": []
+            },
+            "source_checks_after": {
+              "count": 14,
+              "all_passed": true,
+              "failed": []
+            },
+            "precondition_checks": {
+              "count": 1,
+              "all_passed": true,
+              "failed": []
+            },
+            "postcondition_checks": {
+              "count": 2,
+              "all_passed": true,
+              "failed": []
+            }
+          }
+        ]
+      },
+      "counters": {
+        "stage-a": 1,
+        "stage-b": 1
+      }
+    },
+    {
+      "name": "readonly_review_after_A_corruption",
+      "review": {
+        "schema": "parcimonia.plan-replanning-report/v1",
+        "status": "reconciliation_required",
+        "review_input_digest": "4568cdb55c64ea5a5a27b803997ca3ca5dc7e54bb6d4b8f8f382cb19b1df92cd",
+        "current_input_digest": "8ece4403240449707e7431ec3510a38f8e34968b630365c7beeaa839d20619fa",
+        "previous_input_digest": "0a75fd05d9ab64268d5fdc8468ac30ef96adc09c512eaa1b01653fa5939c00ec",
+        "previous_handoff_id": "b191f99b04b2fd3b0eb82bec1e66a2614b1e528c6c124cdcb01a6a8156bcf420",
+        "previous_execution_plan_sha256": "1b2823b2f5506d7b63b373d7245388303a1f508917050e973160382bec21ccb4",
+        "checkpoint_sha256": "4bbaa1c240612351867d4529b6864fedfc609f5f6532d30be8be48f417c26670",
+        "checkpoint_document_sha256": "34030a491af4935d8f524fa9473b07f1c935d841188303d3428c3c18bdc12454",
+        "context_sha256": "6b4d905cd012a6971348b159bc3942f02aaf13dadae10ba989bec1110de129f0",
+        "budget_scope": "remaining_work",
+        "cost_scope": {
+          "additive_metrics": [
+            "elapsed_minutes",
+            "human_minutes",
+            "money",
+            "tokens",
+            "energy_wh"
+          ],
+          "reusable_additive_future_cost": 0,
+          "peak_ram": "declared_peak_retained_for_all_actions",
+          "project_elapsed_minutes": "remaining_serial_prefix_to_last_remaining_beneficiary_or_zero",
+          "candidate_order": "original_validated_before_internal_cost_projection_only",
+          "limits": "current_declared_remaining_allowances",
+          "sunk_costs_subtracted": false,
+          "validation_overhead_included": false,
+          "provenance": "estimate_bound_to_review_input_checkpoint_and_step_checks"
+        },
+        "step_states": [
+          {
+            "id": "stage-a",
+            "checkpoint_status": "verified",
+            "started": true,
+            "current_action_contract": "unchanged",
+            "state": "reconciliation_required",
+            "reuse_eligible": false,
+            "local_checks": {
+              "preconditions": {
+                "checked": 0,
+                "passed": 0,
+                "failed": 0,
+                "unknown": 0
+              },
+              "postconditions": {
+                "checked": 2,
+                "passed": 1,
+                "failed": 1,
+                "unknown": 0
+              },
+              "sources": {
+                "checked": 14,
+                "passed": 14,
+                "failed": 0,
+                "unknown": 0
+              }
+            },
+            "reasons": [
+              "postconditions_failed"
+            ]
+          },
+          {
+            "id": "stage-b",
+            "checkpoint_status": "verified",
+            "started": true,
+            "current_action_contract": "unchanged",
+            "state": "reconciliation_required",
+            "reuse_eligible": false,
+            "local_checks": {
+              "preconditions": {
+                "checked": 1,
+                "passed": 1,
+                "failed": 0,
+                "unknown": 0
+              },
+              "postconditions": {
+                "checked": 2,
+                "passed": 2,
+                "failed": 0,
+                "unknown": 0
+              },
+              "sources": {
+                "checked": 14,
+                "passed": 14,
+                "failed": 0,
+                "unknown": 0
+              }
+            },
+            "reasons": [
+              "dependency_not_reusable"
+            ]
+          }
+        ],
+        "reconciliation_required": true,
+        "reconciliation_action_ids": [
+          "stage-a",
+          "stage-b"
+        ],
+        "candidates": [
+          {
+            "id": "two-stages",
+            "status": "withheld",
+            "rank": null,
+            "recommended": false,
+            "reused_action_ids": [],
+            "remaining_action_ids": [
+              "stage-a",
+              "stage-b"
+            ],
+            "resume_compatible": true,
+            "execution_status": "reconciliation_required",
+            "reasons": [
+              {
+                "code": "reconciliation_required",
+                "action_id": "stage-a"
+              },
+              {
+                "code": "reconciliation_required",
+                "action_id": "stage-b"
+              }
+            ],
+            "reason_counts": {
+              "reconciliation_required": 2
+            },
+            "reasons_omitted": 0,
+            "incremental_totals": {
+              "elapsed_minutes": null,
+              "human_minutes": null,
+              "money": null,
+              "tokens": null,
+              "energy_wh": null,
+              "peak_ram_gib": null
+            },
+            "incremental_project_totals": {
+              "local-pilot": {
+                "elapsed_minutes": null,
+                "human_minutes": null,
+                "money": null,
+                "tokens": null,
+                "energy_wh": null,
+                "peak_ram_gib": null
+              }
+            }
+          }
+        ],
+        "ranking": [],
+        "recommended_candidate_id": null,
+        "selected_candidate_id": null,
+        "selection_status": "not_selected",
+        "execution_authorized": false,
+        "diagnostics": [
+          {
+            "code": "local_check_failed",
+            "action_id": "stage-a",
+            "group": "postconditions",
+            "check_index": 0,
+            "unknown": false
+          },
+          {
+            "code": "reconciliation_required",
+            "action_id": "stage-a",
+            "reasons": [
+              "postconditions_failed"
+            ]
+          },
+          {
+            "code": "reconciliation_required",
+            "action_id": "stage-b",
+            "reasons": [
+              "dependency_not_reusable"
+            ]
+          }
+        ],
+        "diagnostic_counts": {
+          "local_check_failed": 1,
+          "reconciliation_required": 2
+        },
+        "diagnostics_omitted": 0,
+        "detail_caps": {
+          "diagnostics": 64,
+          "reasons_per_candidate": 64,
+          "goals_per_reason": 8
+        },
+        "claim": {
+          "local_checks_recomputed": true,
+          "checkpoint_authenticated": false,
+          "source_verified": false,
+          "goal_coverage_verified": false,
+          "choice_authority_verified": false,
+          "resources_observed": false,
+          "measured_gain": null
+        },
+        "boundaries": {
+          "execution": false,
+          "checkpoint_write": false,
+          "checkpoint_migration": false,
+          "models": false,
+          "network": false
+        },
+        "limitations": [
+          "Checkpoint content bindings do not authenticate its author or history.",
+          "Checks cover declared local files only, without an atomic filesystem snapshot.",
+          "Sources, goals, command semantics and user or execution authority are unverified.",
+          "Current processes, resource use and external effects are unobserved.",
+          "Costs are declared estimates; validation overhead and sunk costs are excluded.",
+          "A new candidate is execution-unqualified and cannot use the old checkpoint.",
+          "Actual resume must use the unchanged old execution plan and recheck all evidence."
+        ]
+      },
+      "wall_s": 0.021270211997034494,
+      "checkpoint_bytes_sha256_before": "4bbaa1c240612351867d4529b6864fedfc609f5f6532d30be8be48f417c26670",
+      "checkpoint_bytes_sha256_after": "4bbaa1c240612351867d4529b6864fedfc609f5f6532d30be8be48f417c26670",
+      "checkpoint_bytes_unchanged": true,
+      "all_project_files_unchanged": true,
+      "envelope_unchanged": true
+    },
+    {
+      "name": "stale_same_plan_resume_no_replay",
+      "wall_s": 0.01852284999768017,
+      "execution": {
+        "schema": "botte.skill-run/v1",
+        "run_id": "28d4ab6faec64eb4968d7e8f6421cb4c",
+        "plan_sha256": "1b2823b2f5506d7b63b373d7245388303a1f508917050e973160382bec21ccb4",
+        "context_sha256": "6b4d905cd012a6971348b159bc3942f02aaf13dadae10ba989bec1110de129f0",
+        "mode": "execution",
+        "complete": false,
+        "summary": {
+          "blocked": 0,
+          "failed": 0,
+          "pending": 0,
+          "running": 0,
+          "skipped": 0,
+          "stale": 2,
+          "uncertain": 0,
+          "unverified": 0,
+          "verified": 0
+        },
+        "coverage": "declared local file checks only; other effects are unobserved",
+        "child_cost": null,
+        "full_report_sha256": "aa2824c8df2d87dd2d8b36f1b9e078715883fa8a21c7ebb21cbe9b8a80cbf5e5",
+        "results": [
+          {
+            "id": "stage-a",
+            "status": "stale",
+            "started": true,
+            "reused": false,
+            "exit_code": 0,
+            "duration_s": 0.043855,
+            "note": "previous evidence changed; reconcile before retry",
+            "changed_paths": [
+              "stage-a-counter.json",
+              "stage-a.txt"
+            ],
+            "source_checks": {
+              "count": 14,
+              "all_passed": true,
+              "failed": []
+            },
+            "source_checks_after": {
+              "count": 14,
+              "all_passed": true,
+              "failed": []
+            },
+            "precondition_checks": {
+              "count": 0,
+              "all_passed": true,
+              "failed": []
+            },
+            "postcondition_checks": {
+              "count": 2,
+              "all_passed": true,
+              "failed": []
+            },
+            "resume_checks": {
+              "count": 2,
+              "all_passed": false,
+              "failed": [
+                {
+                  "kind": "file_sha256",
+                  "path": "stage-a.txt",
+                  "passed": false,
+                  "observed": {
+                    "state": "file",
+                    "bytes": 36,
+                    "sha256": "b4f4889fe5a4a587496f133532ba0bea43c43f5dfc8ff7b724e6c7722cd0bf32"
+                  }
+                }
+              ]
+            },
+            "resume_sources": {
+              "count": 14,
+              "all_passed": true,
+              "failed": []
+            },
+            "resume_precondition_checks": {
+              "count": 0,
+              "all_passed": true,
+              "failed": []
+            }
+          },
+          {
+            "id": "stage-b",
+            "status": "stale",
+            "started": true,
+            "reused": false,
+            "exit_code": 0,
+            "duration_s": 0.044572,
+            "note": "previous evidence changed; reconcile before retry",
+            "changed_paths": [
+              "stage-b-counter.json",
+              "stage-b.txt"
+            ],
+            "source_checks": {
+              "count": 14,
+              "all_passed": true,
+              "failed": []
+            },
+            "source_checks_after": {
+              "count": 14,
+              "all_passed": true,
+              "failed": []
+            },
+            "precondition_checks": {
+              "count": 1,
+              "all_passed": true,
+              "failed": []
+            },
+            "postcondition_checks": {
+              "count": 2,
+              "all_passed": true,
+              "failed": []
+            },
+            "resume_checks": {
+              "count": 2,
+              "all_passed": true,
+              "failed": []
+            },
+            "resume_sources": {
+              "count": 14,
+              "all_passed": true,
+              "failed": []
+            },
+            "resume_precondition_checks": {
+              "count": 1,
+              "all_passed": true,
+              "failed": []
+            }
+          }
+        ]
+      },
+      "counters": {
+        "stage-a": 1,
+        "stage-b": 1
+      }
+    }
+  ],
+  "active_operations": [],
+  "usage": {
+    "elapsed_wall_s": 0.20809814999665832,
+    "tokens": null,
+    "money": null,
+    "energy_wh": null,
+    "peak_ram_gib": null,
+    "human_minutes": null
+  },
+  "gain_claim": null,
+  "limitations": [
+    "One fixed local two-step demonstration, not general task-quality or production qualification.",
+    "The first stop is an unstarted precondition block, not a real process interruption.",
+    "The reviewer recommends only; explicit pilot authority and existing Conductor confirmation permit writes.",
+    "Only the original immutable execution plan resumes; the reviewer grants no execution authority.",
+    "Current local checks cover listed files only; hashes establish consistency, not authentication.",
+    "Declared planning estimates are synthetic; observed wall time is not a speed or resource saving.",
+    "No energy, tokens, money, peak RAM or human-time measurement; these costs remain unknown.",
+    "No services, network, models, robots or production resources are invoked by this fixed worker.",
+    "Temporary projects and checkpoints are deleted; this report cannot resume those runs."
+  ],
+  "original_plan": {
+    "schema": "botte.skill-plan/v1",
+    "goal": "Verify two fixed local artifacts once",
+    "context": "isolated-replanning-resume-v1",
+    "steps": [
+      {
+        "id": "stage-a",
+        "capability": "plan-replanning-pilot",
+        "command": "python -B worker.py stage-a",
+        "local": true,
+        "needs": [],
+        "requires": [],
+        "ensures": [
+          {
+            "kind": "file_sha256",
+            "path": "stage-a.txt",
+            "value": "a8ff44442bb7bfe3fcbabaf1fe9fc17428c8d8e99a1e8dcf23bd9de4da3f0122"
+          },
+          {
+            "kind": "json_equals",
+            "path": "stage-a-counter.json",
+            "pointer": "/count",
+            "value": 1
+          }
+        ],
+        "observes": [
+          "stage-a.txt",
+          "stage-a-counter.json"
+        ],
+        "source_hashes": {
+          "skills/__init__.py": "8f4e5d5c1b652790431210afc669dc1549e79916bd1c65d77aaa33e8296ebe9f",
+          "skills/atomic_json.py": "bf9950cde67ef3e5ba8a2d128eb51eee5d161fb9cebc3f27404abf873eb76ebe",
+          "skills/capabilities/__init__.py": "7d4d3e1854faec18d12335c4a1632b9fd59e5b22f774a8a9fc69467d1ddb75c5",
+          "skills/capabilities/registry.py": "5b35c77358bf7899d8bc3d2bbaacb5f933a2e18921378bebc7dfab42fa8d5b36",
+          "skills/conductor/__init__.py": "e9b15c49cb32b65ebb539c65786e92906b6d892449c74e82d0203bf0f972fa4a",
+          "skills/conductor/conductor.py": "10b2dcfda55de8d59eb674a946f34fa763974191050cb3bbe061e54ef5659a73",
+          "skills/conductor/executor.py": "34e46ba41fbcd9d54beb8324bbbf1e69b3634fa875e15c97de5ba5807cad10ce",
+          "skills/conductor/verified.py": "78a17e9c015bee8626d4804377bb389ed1092665cdb9d5c40e48ee3c1a8c9cce",
+          "skills/conductor/preferences.py": "790ad7c4b674405d956f4f13810f9e894997c447ae242187b59049c4c486b8a8",
+          "skills/conductor/selection.py": "9eebd7126cb663948defb1b2c34ede7842a6f78bea026fd675ebfafc28aad1e1",
+          "skills/conductor/handoff.py": "fe395126159e4b8a14f16dfe30c3f5da56ecc258c672c58a337f898fb391a747",
+          "skills/conductor/replanning.py": "485ca9b8c3271a75492460ae349ba8532c413c65588498e07d1d548d1cc26e8b",
+          "scripts/plan_replanning_pilot.py": "ff5a323a5d4bf24271c71b9af56d069c562e2f1e0f72e37487e4c76661b52b18",
+          "worker.py": "bc306a1ddc20cc831ef206544480e73c5049727fd035e36ea0b1d283093637f7"
+        }
+      },
+      {
+        "id": "stage-b",
+        "capability": "plan-replanning-pilot",
+        "command": "python -B worker.py stage-b",
+        "local": true,
+        "needs": [
+          "stage-a"
+        ],
+        "requires": [
+          {
+            "kind": "file_exists",
+            "path": "ready.flag"
+          }
+        ],
+        "ensures": [
+          {
+            "kind": "file_sha256",
+            "path": "stage-b.txt",
+            "value": "1a94d1cdf01f33d9120a0bb833f0f967b667a2010d14e3b8bf132e87705e2dab"
+          },
+          {
+            "kind": "json_equals",
+            "path": "stage-b-counter.json",
+            "pointer": "/count",
+            "value": 1
+          }
+        ],
+        "observes": [
+          "stage-b.txt",
+          "stage-b-counter.json"
+        ],
+        "source_hashes": {
+          "skills/__init__.py": "8f4e5d5c1b652790431210afc669dc1549e79916bd1c65d77aaa33e8296ebe9f",
+          "skills/atomic_json.py": "bf9950cde67ef3e5ba8a2d128eb51eee5d161fb9cebc3f27404abf873eb76ebe",
+          "skills/capabilities/__init__.py": "7d4d3e1854faec18d12335c4a1632b9fd59e5b22f774a8a9fc69467d1ddb75c5",
+          "skills/capabilities/registry.py": "5b35c77358bf7899d8bc3d2bbaacb5f933a2e18921378bebc7dfab42fa8d5b36",
+          "skills/conductor/__init__.py": "e9b15c49cb32b65ebb539c65786e92906b6d892449c74e82d0203bf0f972fa4a",
+          "skills/conductor/conductor.py": "10b2dcfda55de8d59eb674a946f34fa763974191050cb3bbe061e54ef5659a73",
+          "skills/conductor/executor.py": "34e46ba41fbcd9d54beb8324bbbf1e69b3634fa875e15c97de5ba5807cad10ce",
+          "skills/conductor/verified.py": "78a17e9c015bee8626d4804377bb389ed1092665cdb9d5c40e48ee3c1a8c9cce",
+          "skills/conductor/preferences.py": "790ad7c4b674405d956f4f13810f9e894997c447ae242187b59049c4c486b8a8",
+          "skills/conductor/selection.py": "9eebd7126cb663948defb1b2c34ede7842a6f78bea026fd675ebfafc28aad1e1",
+          "skills/conductor/handoff.py": "fe395126159e4b8a14f16dfe30c3f5da56ecc258c672c58a337f898fb391a747",
+          "skills/conductor/replanning.py": "485ca9b8c3271a75492460ae349ba8532c413c65588498e07d1d548d1cc26e8b",
+          "scripts/plan_replanning_pilot.py": "ff5a323a5d4bf24271c71b9af56d069c562e2f1e0f72e37487e4c76661b52b18",
+          "worker.py": "bc306a1ddc20cc831ef206544480e73c5049727fd035e36ea0b1d283093637f7"
+        }
+      }
+    ]
+  },
+  "planning_inputs": {
+    "previous_request": {
+      "schema": "parcimonia.plan-preferences/v1",
+      "currency": "EUR",
+      "projects": [
+        {
+          "id": "local-pilot",
+          "goals": [
+            "both-artifacts"
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "id": "stage-a",
+          "needs": [],
+          "projects": [
+            "local-pilot"
+          ],
+          "metrics": {
+            "elapsed_minutes": 1,
+            "human_minutes": null,
+            "money": 0,
+            "tokens": null,
+            "energy_wh": null,
+            "peak_ram_gib": null
+          },
+          "provenance": {
+            "kind": "estimate",
+            "ref": "synthetic-pilot-estimate-not-measurement"
+          }
+        },
+        {
+          "id": "stage-b",
+          "needs": [
+            "stage-a"
+          ],
+          "projects": [
+            "local-pilot"
+          ],
+          "metrics": {
+            "elapsed_minutes": 1,
+            "human_minutes": null,
+            "money": 0,
+            "tokens": null,
+            "energy_wh": null,
+            "peak_ram_gib": null
+          },
+          "provenance": {
+            "kind": "estimate",
+            "ref": "synthetic-pilot-estimate-not-measurement"
+          }
+        }
+      ],
+      "candidates": [
+        {
+          "id": "two-stages",
+          "steps": [
+            "stage-a",
+            "stage-b"
+          ],
+          "goals": {
+            "local-pilot": [
+              "both-artifacts"
+            ]
+          }
+        }
+      ],
+      "preferences": {
+        "priorities": [
+          {
+            "metric": "elapsed_minutes"
+          }
+        ]
+      }
+    },
+    "current_request": {
+      "schema": "parcimonia.plan-preferences/v1",
+      "currency": "EUR",
+      "projects": [
+        {
+          "id": "local-pilot",
+          "goals": [
+            "both-artifacts"
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "id": "stage-a",
+          "needs": [],
+          "projects": [
+            "local-pilot"
+          ],
+          "metrics": {
+            "elapsed_minutes": 1,
+            "human_minutes": null,
+            "money": 0,
+            "tokens": null,
+            "energy_wh": null,
+            "peak_ram_gib": null
+          },
+          "provenance": {
+            "kind": "estimate",
+            "ref": "synthetic-pilot-estimate-not-measurement"
+          }
+        },
+        {
+          "id": "stage-b",
+          "needs": [
+            "stage-a"
+          ],
+          "projects": [
+            "local-pilot"
+          ],
+          "metrics": {
+            "elapsed_minutes": 1,
+            "human_minutes": null,
+            "money": 0,
+            "tokens": null,
+            "energy_wh": null,
+            "peak_ram_gib": null
+          },
+          "provenance": {
+            "kind": "estimate",
+            "ref": "synthetic-pilot-estimate-not-measurement"
+          }
+        }
+      ],
+      "candidates": [
+        {
+          "id": "two-stages",
+          "steps": [
+            "stage-a",
+            "stage-b"
+          ],
+          "goals": {
+            "local-pilot": [
+              "both-artifacts"
+            ]
+          }
+        }
+      ],
+      "preferences": {
+        "priorities": [
+          {
+            "metric": "money"
+          },
+          {
+            "metric": "elapsed_minutes"
+          }
+        ]
+      }
+    },
+    "previous_handoff_id": "b191f99b04b2fd3b0eb82bec1e66a2614b1e528c6c124cdcb01a6a8156bcf420",
+    "budget_scope": "remaining_work"
+  },
+  "temporary_project_deleted": true,
+  "decision": "fixed_resume_scenario_verified",
+  "total_pilot_wall_s": 0.20809814999665832,
+  "timing_scope": "setup, real commands, read-only reviews, checks and cleanup; excludes serialization and host assessment"
+}
