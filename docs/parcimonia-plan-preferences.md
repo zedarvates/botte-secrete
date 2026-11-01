@@ -3,13 +3,18 @@
 Status: opt-in prototype. Compare supplied candidate plans; no plan generation,
 execution, learning, model call, automatic recording or network collection.
 
+The user may request a ranking recommendation or a set of plan proposals to
+choose from. A recommendation does not select a plan for the user.
+
 The user defines success for one or several projects and chooses which costs
 matter first. This extends the existing Conductor with a separate comparison
 operation. Existing execution plans, permissions, checkpoints and routing are
 unchanged. The new request is not a `botte.skill-plan/v1` execution document.
 
 The [dated validation record](validation/parcimonia-plan-preferences-2026-11-01.json)
-binds the tested source files and synthetic preference trials to their limits.
+binds the original comparator to its tested source files and limits. The
+[proposal follow-up record](validation/parcimonia-plan-proposals-2026-11-01.json)
+covers the later multiple-choice operation.
 
 ## Try the comparison
 
@@ -17,23 +22,54 @@ From a checkout containing this candidate:
 
 ```bash
 python -m skills.conductor.cli --compare-plans examples/parcimonia_plan_preferences.json --json
+python -m skills.conductor.cli --propose-plans examples/parcimonia_plan_preferences.json --json
 ```
 
-The local MCP runtime exposes `compare_plans`, discoverable through
-`find_tool(query="compare_plans")`. Its only argument is `request_json`, the
+The local MCP runtime exposes `compare_plans` and `propose_plans`, discoverable
+through `find_tool` with the corresponding name. Their only argument is `request_json`, the
 UTF-8 JSON document as a string. The separately installed Codex plugin runtime
 must contain this code before that tool is available. This change is not an
 OpenAI marketplace acceptance, runtime update or production deployment.
 
 Python callers use
 `skills.conductor.preferences.rank_plans(request)` or
-`parse_request_json(text)` followed by `rank_plans`.
+`propose_plans(request)` after `parse_request_json(text)` when parsing text.
 
 The CLI reads one explicit file and prints JSON. It rejects execution, save and
 checkpoint flags in this mode. Exit 0 means at least one known eligible candidate
-was ranked, 2 means no candidate can currently be ranked, and 1 means invalid or
+was ranked or offered, 2 means no candidate can currently be offered, and 1 means invalid or
 unreadable input. CLI argument errors use argparse's exit 2 with an error on
-stderr. A ranking does not execute the selected steps.
+stderr. A ranking or proposal does not execute any steps. The two CLI operations
+are mutually exclusive; proposal mode has the same file and execution guards.
+
+## Multiple choices for the user
+
+`propose_plans` returns `parcimonia.plan-proposals/v1` using the same strict
+`plan-preferences/v1` request as the comparator. It presents every eligible
+candidate in ranking order, with its steps, costs, project completion times,
+unknowns and Pareto membership. The recommendation is advisory:
+
+| Field | Meaning |
+|---|---|
+| `recommended_candidate_id` | Best known eligible candidate under the supplied priorities |
+| `options` | All currently eligible choices; a lower-ranked or dominated option remains visible |
+| `selected_candidate_id` | Always `null`; no user decision is inferred |
+| `selection_status` | Always `not_selected`, including ties or a single available option |
+| `unavailable_candidates` | Rejected and undetermined alternatives with their retained reasons |
+
+An illustrative user-facing presentation can show a faster plan, a cheaper
+plan and their tradeoffs, then let the user choose one or revise their priorities.
+The costs are estimates or observations as declared by the caller; the host
+must not present them as guaranteed outcomes. If only one candidate qualifies,
+present that fact without fabricating a second choice. If none qualifies,
+show the missing information or exceeded limits instead of a selectable plan.
+
+The host can collect the user's choice in conversation. That choice should be
+associated with the candidate ID and input digest; if goals, costs, limits or
+steps change, refresh the proposals before reusing the choice. No selection
+ledger or additional execution pipeline is introduced here. An existing mandate
+to choose or execute remains a separate host responsibility; offering choices
+does not impose a new approval gate on other workflows.
 
 ## Versioned request
 

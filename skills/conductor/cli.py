@@ -82,7 +82,9 @@ def main(argv=None) -> int:
     p = argparse.ArgumentParser(prog="conductor", description=__doc__)
     p.add_argument("goal", nargs="?")
     p.add_argument("--plan", help="explicit botte.skill-plan/v1 JSON; preview unless --execute")
-    p.add_argument("--compare-plans", metavar="JSON", help="compare supplied plans using user preferences; no execution")
+    comparisons = p.add_mutually_exclusive_group()
+    comparisons.add_argument("--compare-plans", metavar="JSON", help="compare supplied plans using user preferences; no execution")
+    comparisons.add_argument("--propose-plans", metavar="JSON", help="offer supplied plans for user choice; no selection or execution")
     p.add_argument("--project", default=".", help="project root for an explicit plan")
     p.add_argument("--checkpoint", help="project-relative private skill-run JSON checkpoint")
     p.add_argument("--resume", action="store_true", help="resume unstarted work from --checkpoint")
@@ -106,25 +108,28 @@ def main(argv=None) -> int:
     p.add_argument("--timeout", type=int, default=120,
                    help="per-step timeout in seconds (default 120)")
     args = p.parse_args(argv)
-    if args.compare_plans is not None:
+    if args.compare_plans is not None or args.propose_plans is not None:
         if (args.goal or args.plan or args.execute or args.confirm or args.dry_run
                 or args.checkpoint or args.resume or args.effects or args.review_effects
                 or args.observe_effects or args.save or args.stop_on_failure
                 or args.project != "." or args.timeout != 120):
-            p.error("--compare-plans is a separate read-only operation; only --json may accompany it")
+            p.error("plan comparison or proposal is a separate read-only operation; only --json may accompany it")
         from pathlib import Path
-        from skills.conductor.preferences import MAX_INPUT_BYTES, parse_request_json, rank_plans
+        from skills.conductor.preferences import MAX_INPUT_BYTES, parse_request_json, propose_plans, rank_plans
+        proposing = args.propose_plans is not None
+        source = args.propose_plans if proposing else args.compare_plans
         try:
-            with Path(args.compare_plans).open("rb") as stream:
+            with Path(source).open("rb") as stream:
                 raw = stream.read(MAX_INPUT_BYTES + 1)
             if len(raw) > MAX_INPUT_BYTES:
                 raise ValueError("preference request exceeds size limit")
-            result = rank_plans(parse_request_json(raw.decode("utf-8")))
+            operation = propose_plans if proposing else rank_plans
+            result = operation(parse_request_json(raw.decode("utf-8")))
         except (OSError, ValueError, RecursionError) as exc:
             print(json.dumps({"error": str(exc)}, ensure_ascii=True))
             return 1
         print(json.dumps(result, ensure_ascii=True, indent=2))
-        return 0 if result["status"] == "ranked" else 2
+        return 0 if result["status"] in ("ranked", "proposed") else 2
     if args.stop_on_failure and not args.execute:
         p.error("--stop-on-failure requires --execute")
     if args.observe_effects:

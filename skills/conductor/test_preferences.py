@@ -10,7 +10,7 @@ from pathlib import Path
 
 from skills.conductor.preferences import (
     MAX_INPUT_BYTES, MAX_REASONS_PER_CANDIDATE, METRICS, REQUEST_SCHEMA,
-    parse_request_json, rank_plans,
+    PROPOSAL_RESULT_SCHEMA, parse_request_json, propose_plans, rank_plans,
 )
 
 
@@ -369,6 +369,129 @@ class PlanPreferencesTests(unittest.TestCase):
         self.assertEqual(rank_plans(request)["winner"], "economical")
         request["preferences"]["priorities"] = [{"metric": "elapsed_minutes"}, {"metric": "money"}]
         self.assertEqual(rank_plans(request)["winner"], "rapid")
+
+
+class PlanProposalTests(unittest.TestCase):
+    def test_two_options_expose_steps_costs_and_advisory_recommendation(self):
+        request = _request()
+        ranking = rank_plans(request)
+        result = propose_plans(request)
+        self.assertEqual(result["schema"], PROPOSAL_RESULT_SCHEMA)
+        self.assertEqual(result["status"], "proposed")
+        self.assertEqual(result["recommended_candidate_id"], "rapid")
+        self.assertIsNone(result["selected_candidate_id"])
+        self.assertEqual(result["selection_status"], "not_selected")
+        self.assertEqual([option["candidate_id"] for option in result["options"]],
+                         ["rapid", "economical"])
+        self.assertEqual([option["rank"] for option in result["options"]], [1, 2])
+        self.assertEqual([option["recommended"] for option in result["options"]],
+                         [True, False])
+        for option in result["options"]:
+            candidate = next(candidate for candidate in request["candidates"]
+                             if candidate["id"] == option["candidate_id"])
+            self.assertEqual(option["steps"], candidate["steps"])
+            report = _candidate(ranking, option["candidate_id"])
+            for key in ("totals", "project_totals", "unknown_metrics", "shared_actions",
+                        "goal_coverage"):
+                self.assertEqual(option[key], report[key])
+        self.assertEqual(result["unavailable_candidates"], [])
+        for key in ("input_digest", "currency", "priorities", "method", "planning_model",
+                    "optimality_scope", "claim", "boundaries"):
+            self.assertEqual(result[key], ranking[key])
+        self.assertTrue(all(value is False for value in result["boundaries"].values()))
+        json.dumps(result, allow_nan=False)
+
+    def test_sole_option_remains_unselected(self):
+        request = _request()
+        request["candidates"] = request["candidates"][:1]
+        result = propose_plans(request)
+        self.assertEqual(len(result["options"]), 1)
+        self.assertEqual(result["recommended_candidate_id"], "rapid")
+        self.assertIsNone(result["selected_candidate_id"])
+        self.assertEqual(result["selection_status"], "not_selected")
+
+    def test_equal_options_have_stable_order_without_user_selection(self):
+        request = _request()
+        request["candidates"] = [request["candidates"][0], deepcopy(request["candidates"][0])]
+        request["candidates"][1]["id"] = "aaa"
+        result = propose_plans(request)
+        self.assertEqual([option["candidate_id"] for option in result["options"]],
+                         ["aaa", "rapid"])
+        self.assertTrue(all(option["pareto"] for option in result["options"]))
+        self.assertEqual(result["recommended_candidate_id"], "aaa")
+        self.assertIsNone(result["selected_candidate_id"])
+
+    def test_dominated_nonrecommended_candidate_remains_an_option(self):
+        request = _request()
+        request["preferences"]["priorities"] = [{"metric": "elapsed_minutes"}]
+        result = propose_plans(request)
+        self.assertEqual(len(result["options"]), 2)
+        alternative = result["options"][1]
+        self.assertEqual(alternative["candidate_id"], "economical")
+        self.assertEqual(alternative["rank"], 2)
+        self.assertFalse(alternative["recommended"])
+        self.assertFalse(alternative["pareto"])
+        self.assertTrue(result["options"][0]["pareto"])
+
+    def test_unknown_and_rejected_candidates_keep_reasons_outside_options(self):
+        request = _request()
+        request["actions"][1]["metrics"]["elapsed_minutes"] = None
+        rejected = deepcopy(request["candidates"][1])
+        rejected["id"] = "incomplete"
+        rejected["goals"].pop("plugin")
+        request["candidates"].append(rejected)
+        ranking = rank_plans(request)
+        result = propose_plans(request)
+        self.assertEqual([option["candidate_id"] for option in result["options"]],
+                         ["economical"])
+        self.assertEqual(result["unavailable_candidates"],
+                         [_candidate(ranking, "incomplete"), _candidate(ranking, "rapid")])
+        self.assertEqual([report["status"] for report in result["unavailable_candidates"]],
+                         ["rejected", "undetermined"])
+        self.assertTrue(all(report["reasons"] for report in result["unavailable_candidates"]))
+
+    def test_no_eligible_option_preserves_unknown_or_rejected_status(self):
+        for expected_status in ("undetermined", "no_eligible_plan"):
+            with self.subTest(status=expected_status):
+                request = _request()
+                if expected_status == "undetermined":
+                    request["actions"][0]["metrics"]["elapsed_minutes"] = None
+                else:
+                    request["preferences"]["limits"] = {"money": 0}
+                result = propose_plans(request)
+                self.assertEqual(result["status"], expected_status)
+                self.assertEqual(result["options"], [])
+                self.assertEqual(len(result["unavailable_candidates"]), 2)
+                self.assertIsNone(result["recommended_candidate_id"])
+                self.assertIsNone(result["selected_candidate_id"])
+                self.assertEqual(result["selection_status"], "not_selected")
+
+    def test_proposal_preserves_input_and_ignores_catalogue_order(self):
+        request = _request()
+        before = deepcopy(request)
+        expected = propose_plans(request)
+        self.assertEqual(request, before)
+        request["actions"].reverse()
+        request["projects"].reverse()
+        request["candidates"].reverse()
+        request["actions"][-1]["projects"].reverse()
+        self.assertEqual(propose_plans(request), expected)
+        expected["options"][0]["steps"].append("output-only-change")
+        self.assertEqual(request["candidates"][1]["steps"],
+                         before["candidates"][0]["steps"])
+
+    def test_preference_change_recommends_another_option_without_selecting(self):
+        request = _request()
+        first = propose_plans(request)
+        request["preferences"]["priorities"].reverse()
+        second = propose_plans(request)
+        self.assertEqual(first["recommended_candidate_id"], "rapid")
+        self.assertEqual(second["recommended_candidate_id"], "economical")
+        self.assertEqual({option["candidate_id"] for option in first["options"]},
+                         {option["candidate_id"] for option in second["options"]})
+        self.assertNotEqual(first["input_digest"], second["input_digest"])
+        self.assertIsNone(first["selected_candidate_id"])
+        self.assertIsNone(second["selected_candidate_id"])
 
 
 if __name__ == "__main__":

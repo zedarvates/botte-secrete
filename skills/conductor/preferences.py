@@ -15,6 +15,7 @@ from typing import Any
 
 REQUEST_SCHEMA = "parcimonia.plan-preferences/v1"
 RESULT_SCHEMA = "parcimonia.plan-ranking/v1"
+PROPOSAL_RESULT_SCHEMA = "parcimonia.plan-proposals/v1"
 MAX_INPUT_BYTES = 1024 * 1024
 MAX_METRIC_VALUE = 10 ** 15
 MAX_REASONS_PER_CANDIDATE = 64
@@ -432,4 +433,46 @@ def rank_plans(request: dict) -> dict:
                   "universal_optimality": False, "measured_gain": None},
         "boundaries": {"models": False, "network": False, "execution": False,
                        "collection": False, "storage": False},
+    }
+
+
+def propose_plans(request: dict) -> dict:
+    """Present supplied eligible alternatives without selecting one for the user.
+
+    The recommendation is advisory. Every eligible candidate remains an option,
+    including dominated alternatives, and even a sole option stays unselected.
+    No candidates are generated, recorded or dispatched by this projection.
+    """
+    ranking = rank_plans(request)
+    candidates = {candidate["id"]: candidate for candidate in request["candidates"]}
+    reports = {report["id"]: report for report in ranking["candidates"]}
+    frontier = set(ranking["pareto_frontier"])
+    options = []
+    for rank, candidate_id in enumerate(ranking["ranking"], 1):
+        report = reports[candidate_id]
+        options.append({
+            "candidate_id": candidate_id,
+            "steps": list(candidates[candidate_id]["steps"]),
+            "rank": rank,
+            "recommended": candidate_id == ranking["winner"],
+            "pareto": candidate_id in frontier,
+            **{key: report[key] for key in (
+                "totals", "project_totals", "unknown_metrics", "shared_actions",
+                "goal_coverage",
+            )},
+        })
+    return {
+        "schema": PROPOSAL_RESULT_SCHEMA,
+        "status": "proposed" if options else ranking["status"],
+        "recommended_candidate_id": ranking["winner"],
+        "selected_candidate_id": None,
+        "selection_status": "not_selected",
+        "options": options,
+        "unavailable_candidates": [report for report in ranking["candidates"]
+                                   if report["status"] != "eligible"],
+        **{key: ranking[key] for key in (
+            "input_digest", "currency", "priorities", "method", "planning_model",
+            "project_cost_allocation", "project_elapsed_minutes",
+            "remaining_unknown_candidates", "optimality_scope", "claim", "boundaries",
+        )},
     }

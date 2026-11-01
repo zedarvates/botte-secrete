@@ -1,0 +1,81 @@
+{
+  "schema": "parcimonia.plan-proposals-validation/v1",
+  "observed_at": "2026-11-01T12:27:00.380206+01:00",
+  "parent_commit": "5d52079253d688ab81e93fcc9b10941f84c37991",
+  "source_sha256": {
+    "skills/conductor/preferences.py": "790ad7c4b674405d956f4f13810f9e894997c447ae242187b59049c4c486b8a8",
+    "skills/conductor/test_preferences.py": "af4bf3373d8c6f7e474a267bce8f4967b786d12dd0a21284250e76de46790780",
+    "skills/conductor/cli.py": "cec0b97154013e5c5c7f9b35fe8371661ae85143fc3504eadecbe96ceb67f487",
+    "skills/llm_mcp/server.py": "b362cefd5cf04d50d60f986f61e79ed8240bad13bdaec762a38db549e7914dab",
+    "skills/llm_mcp/test_plan_preferences.py": "03a8e3336708070dc1064fee8d171f58fc99d47d892422ab16a2b9a03d6dbb42"
+  },
+  "environment": {
+    "platform": "Linux",
+    "python": "3.12.14"
+  },
+  "checks": {
+    "targeted": {
+      "core": 41,
+      "cli_mcp": 10,
+      "passed": 51,
+      "failed": 0
+    },
+    "canonical_changed": {
+      "status": "passed",
+      "command": "python scripts/run_tests.py --changed -q",
+      "suites": 27,
+      "passed": 744,
+      "failed": 0,
+      "scope": "changed-file selection; not full repository suite"
+    },
+    "pre_commit_fast": {
+      "passed": true,
+      "python_files": 7
+    },
+    "python_3_10_grammar": {
+      "passed": true,
+      "runtime_3_10_tested": false
+    },
+    "checkup": {
+      "exit_code": 0,
+      "directives_score": 100,
+      "local_mcp_config": "missing; installed/global configuration not inspected"
+    },
+    "local_document_links": {
+      "exit_code": 0,
+      "broken_found": 0,
+      "coverage": "incomplete; existing unsupported Markdown constructs"
+    }
+  },
+  "synthetic_trial": {
+    "input_digest": "eec7b4f90675bb22e830a7da7a59628765503ee5f793e53d172d0237ea7fa8db",
+    "status": "proposed",
+    "recommended_candidate_id": "economical",
+    "selected_candidate_id": null,
+    "selection_status": "not_selected",
+    "offered_candidates": [
+      "economical",
+      "rapid"
+    ]
+  },
+  "independent_review": {
+    "blockers_confirmed": 0,
+    "checks": [
+      "recommendation/selection separation",
+      "sole option and tied options stay unselected",
+      "eligible dominated alternatives retained",
+      "unavailable candidates not selectable",
+      "MCP invalid input and CLI empty-path/execution guards",
+      "input remains unchanged"
+    ]
+  },
+  "boundaries": {
+    "generated_candidates": false,
+    "selection_recorded": false,
+    "plan_execution": false,
+    "network_collection": false,
+    "ros_adapter": false,
+    "measured_project_gain": null
+  },
+  "scope": "Pure projection of supplied candidate plans for conversational user choice. Existing rank_plans and request schema unchanged; no additional approval gate for other workflows."
+}

@@ -54,6 +54,21 @@ SERVER_INFO = {"name": "botte-llm", "version": __version__}
 
 TOOLS = [
     {
+        "name": "propose_plans",
+        "description": "Parcimonia: offer supplied eligible plans as multiple choices with "
+                       "steps, costs, unknowns and an advisory recommendation. The selected "
+                       "candidate stays null for the user to choose, even with one option. "
+                       "Respects user priorities and hard budgets. No plan generation, "
+                       "selection, execution, model, network, collection or storage.",
+        "inputSchema": {
+            "type": "object", "additionalProperties": False,
+            "properties": {"request_json": {"type": "string", "maxLength": 1048576}},
+            "required": ["request_json"],
+        },
+        "annotations": {"readOnlyHint": True, "destructiveHint": False,
+                        "idempotentHint": True, "openWorldHint": False},
+    },
+    {
         "name": "compare_plans",
         "description": "Parcimonia: compare supplied multi-project plans using explicit user "
                        "priorities and hard budgets. Reports serial declared costs, shared actions, "
@@ -1822,6 +1837,13 @@ def _tool_compare_plans(args: dict) -> str:
                       ensure_ascii=True, allow_nan=False, separators=(",", ":"))
 
 
+def _tool_propose_plans(args: dict) -> str:
+    from skills.conductor.preferences import parse_request_json, propose_plans
+    _assessment_arguments(args, {"request_json"})
+    return json.dumps(propose_plans(parse_request_json(args.get("request_json"))),
+                      ensure_ascii=True, allow_nan=False, separators=(",", ":"))
+
+
 def _tool_assess_task(args: dict) -> str:
     from skills.preflight.assessment import assess_task
     _assessment_arguments(args, {"task", "available_tools", "context_budget"})
@@ -1864,6 +1886,7 @@ def _tool_summarize_github_evidence(args: dict) -> str:
 
 
 DISPATCH = {
+    "propose_plans": _tool_propose_plans,
     "compare_plans": _tool_compare_plans,
     "check_local_links": _tool_check_local_links,
     "find_file_duplicates": _tool_find_file_duplicates,
