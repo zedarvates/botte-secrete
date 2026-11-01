@@ -54,6 +54,21 @@ SERVER_INFO = {"name": "botte-llm", "version": __version__}
 
 TOOLS = [
     {
+        "name": "build_plan_candidates",
+        "description": "Parcimonia: build bounded serial candidate plans from explicit recipes "
+                       "for each requested project goal. Adds declared dependency closure, "
+                       "deduplicates shared actions and reports missing recipes, cycles and "
+                       "search truncation. Returns comparison input; recipes and goals remain "
+                       "unverified declarations. No command generation, execution, model, network or storage.",
+        "inputSchema": {
+            "type": "object", "additionalProperties": False,
+            "properties": {"request_json": {"type": "string", "maxLength": 1048576}},
+            "required": ["request_json"],
+        },
+        "annotations": {"readOnlyHint": True, "destructiveHint": False,
+                        "idempotentHint": True, "openWorldHint": False},
+    },
+    {
         "name": "select_plan",
         "description": "Parcimonia: bind a caller-declared candidate choice to the current "
                        "proposal input digest. Rechecks eligibility and rejects stale inputs. "
@@ -1889,6 +1904,14 @@ def _tool_select_plan(args: dict) -> str:
     return json.dumps(result, ensure_ascii=True, allow_nan=False, separators=(",", ":"))
 
 
+def _tool_build_plan_candidates(args: dict) -> str:
+    from skills.conductor.preferences import parse_request_json
+    from skills.conductor.recipes import build_plan_candidates
+    _assessment_arguments(args, {"request_json"})
+    result = build_plan_candidates(parse_request_json(args.get("request_json")))
+    return json.dumps(result, ensure_ascii=True, allow_nan=False, separators=(",", ":"))
+
+
 def _tool_prepare_plan_handoff(args: dict) -> str:
     from skills.conductor.preferences import parse_request_json
     from skills.conductor.handoff import prepare_plan_handoff
@@ -1941,6 +1964,7 @@ def _tool_summarize_github_evidence(args: dict) -> str:
 
 
 DISPATCH = {
+    "build_plan_candidates": _tool_build_plan_candidates,
     "select_plan": _tool_select_plan,
     "prepare_plan_handoff": _tool_prepare_plan_handoff,
     "propose_plans": _tool_propose_plans,

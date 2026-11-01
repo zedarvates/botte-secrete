@@ -1,11 +1,16 @@
 # Parcimonia: plans guided by the user's conditions
 
-Status: opt-in prototype. Compare supplied candidate plans, represent an explicit
-caller choice and prepare a supplied execution document. No plan generation,
-execution, learning, model call, automatic persistence or network collection.
+Status: opt-in prototype. Build bounded alternatives from explicit goal recipes,
+compare candidate plans, represent a caller choice and prepare a supplied
+execution document. No unrestricted plan generation, execution, learning, model
+call, automatic persistence or network collection.
 
 The user may request a ranking recommendation or a set of plan proposals to
 choose from. A recommendation does not select a plan for the user.
+
+The [recipe planner and measured pilot](parcimonia-recipe-planning.md) describe
+the separate goal-to-candidate construction operation and real isolated
+verification work. The comparison request below retains its existing contract.
 
 The user defines success for one or several projects and chooses which costs
 matter first. This extends the existing Conductor with a separate comparison
@@ -140,7 +145,7 @@ task's actual permissions, with its existing preview, source/result checks and
 checkpoint rules. Neither selection nor preparation calls that executor, even
 in dry-run mode. A later explicit preview is a distinct operation.
 
-The old comparison/proposal operations retain their contracts. All four CLI
+The old comparison/proposal operations retain their contracts. All five CLI
 document modes are mutually exclusive and reject execution/checkpoint flags;
 selection-specific flags are rejected outside their corresponding mode.
 
@@ -232,7 +237,7 @@ The responsibility of each layer must remain explicit:
 
 | Layer | Responsibility | Current status |
 |---|---|---|
-| Plan comparison | Compare declared alternatives against user goals and budgets | This opt-in prototype |
+| Plan construction and comparison | Build alternatives from explicit recipes and compare declared costs | This opt-in prototype |
 | Orchestration | Dispatch admitted tasks, follow actual results and replan after changes | Existing Conductor; no automatic dispatch from this comparison |
 | ROS navigation | Compute and follow a concrete route using the robot's observed state | Future adapter, not implemented or qualified here |
 | Arm and servo control | Fine trajectories, calibration and motor commands | Deferred until the user has the required parts |
@@ -288,7 +293,7 @@ Provider-side settings and telemetry are separate from this local operation.
 
 The [ETH announcement of 26 October 2026](https://openai.com/index/building-scientific-understanding-with-academic-communities/)
 motivates research into combinatorial search. This prototype
-uses a bounded deterministic comparison of supplied candidates and makes no
+uses bounded deterministic construction/comparison of explicit recipes and makes no
 claim to implement the new ETH algorithm or obtain its asymptotic bounds.
 Additional dimensions such as reliability, quality thresholds, availability,
 storage and permitted data locations remain design work, not silent additions

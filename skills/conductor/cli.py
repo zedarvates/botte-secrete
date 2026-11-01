@@ -87,6 +87,7 @@ def main(argv=None) -> int:
     comparisons.add_argument("--propose-plans", metavar="JSON", help="offer supplied plans for user choice; no selection or execution")
     comparisons.add_argument("--select-plan", metavar="JSON", help="bind a declared candidate choice to this request; no execution")
     comparisons.add_argument("--prepare-plan-handoff", metavar="JSON", help="bind a selection to a supplied Conductor plan; no execution")
+    comparisons.add_argument("--build-plan-candidates", metavar="JSON", help="build bounded alternatives from explicit goal recipes; no execution")
     p.add_argument("--candidate", help="candidate ID for --select-plan")
     p.add_argument("--input-digest", help="displayed input digest for --select-plan")
     p.add_argument("--selection", metavar="JSON", help="selection receipt for --prepare-plan-handoff")
@@ -114,15 +115,17 @@ def main(argv=None) -> int:
     p.add_argument("--timeout", type=int, default=120,
                    help="per-step timeout in seconds (default 120)")
     args = p.parse_args(argv)
-    modes = (args.compare_plans, args.propose_plans, args.select_plan, args.prepare_plan_handoff)
+    modes = (args.compare_plans, args.propose_plans, args.select_plan,
+             args.prepare_plan_handoff, args.build_plan_candidates)
     if any(value is not None for value in modes):
         if (args.goal is not None or args.plan is not None or args.execute or args.confirm or args.dry_run
                 or args.checkpoint is not None or args.resume or args.effects or args.review_effects
                 or args.observe_effects or args.save or args.stop_on_failure
                 or args.project != "." or args.timeout != 120):
-            p.error("plan comparison, proposal, selection or handoff is a separate read-only operation; execution flags are unavailable")
+            p.error("plan construction, comparison, proposal, selection or handoff is a separate read-only operation; execution flags are unavailable")
         selecting = args.select_plan is not None
         preparing = args.prepare_plan_handoff is not None
+        building = args.build_plan_candidates is not None
         if selecting:
             if args.candidate is None or args.input_digest is None or args.selection is not None or args.execution_plan is not None:
                 p.error("--select-plan requires --candidate and --input-digest only")
@@ -151,6 +154,9 @@ def main(argv=None) -> int:
             elif preparing:
                 from skills.conductor.handoff import prepare_plan_handoff
                 result = prepare_plan_handoff(request, read_object(args.selection), read_object(args.execution_plan))
+            elif building:
+                from skills.conductor.recipes import build_plan_candidates
+                result = build_plan_candidates(request)
             else:
                 operation = propose_plans if proposing else rank_plans
                 result = operation(request)
@@ -158,7 +164,7 @@ def main(argv=None) -> int:
             print(json.dumps({"error": str(exc)}, ensure_ascii=True))
             return 1
         print(json.dumps(result, ensure_ascii=True, indent=2))
-        return 0 if selecting or preparing or result["status"] in ("ranked", "proposed") else 2
+        return 0 if selecting or preparing or result["status"] in ("ranked", "proposed", "candidates_built") else 2
     if any(value is not None for value in (args.candidate, args.input_digest, args.selection, args.execution_plan)):
         p.error("selection arguments require --select-plan or --prepare-plan-handoff")
     if args.stop_on_failure and not args.execute:
