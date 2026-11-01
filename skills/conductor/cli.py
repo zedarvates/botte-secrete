@@ -91,6 +91,7 @@ def main(argv=None) -> int:
     comparisons.add_argument("--analyse-plan-uncertainty", metavar="JSON", help="analyse declared cost ranges without selecting or executing a plan")
     comparisons.add_argument("--suggest-plan-measurements", metavar="JSON", help="suggest bounded decision-relevant measurements; no execution")
     comparisons.add_argument("--review-plan-replanning", metavar="JSON", help="review remaining work against an existing checkpoint and local evidence; read-only")
+    comparisons.add_argument("--analyse-plan-synergies", metavar="JSON", help="compare declared separate/shared multi-project candidates; read-only")
     p.add_argument("--max-checks", type=int, help="variable probe limit for --suggest-plan-measurements (default 32)")
     p.add_argument("--max-questions", type=int, help="question limit for --suggest-plan-measurements (default 8)")
     p.add_argument("--candidate", help="candidate ID for --select-plan")
@@ -123,7 +124,7 @@ def main(argv=None) -> int:
     modes = (args.compare_plans, args.propose_plans, args.select_plan,
              args.prepare_plan_handoff, args.build_plan_candidates,
              args.analyse_plan_uncertainty, args.suggest_plan_measurements,
-             args.review_plan_replanning)
+             args.review_plan_replanning, args.analyse_plan_synergies)
     if any(value is not None for value in modes):
         reviewing = args.review_plan_replanning is not None
         if (args.goal is not None or args.plan is not None or args.execute or args.confirm or args.dry_run
@@ -138,6 +139,7 @@ def main(argv=None) -> int:
         building = args.build_plan_candidates is not None
         analysing = args.analyse_plan_uncertainty is not None
         measuring = args.suggest_plan_measurements is not None
+        synergising = args.analyse_plan_synergies is not None
         if not measuring and (args.max_checks is not None or args.max_questions is not None):
             p.error("measurement limits require --suggest-plan-measurements")
         if selecting:
@@ -182,6 +184,9 @@ def main(argv=None) -> int:
             elif reviewing:
                 from skills.conductor.replanning import review_plan_replanning
                 result = review_plan_replanning(request, args.checkpoint, cwd=args.project)
+            elif synergising:
+                from skills.conductor.synergies import analyse_plan_synergies
+                result = analyse_plan_synergies(request)
             else:
                 operation = propose_plans if proposing else rank_plans
                 result = operation(request)
@@ -189,7 +194,7 @@ def main(argv=None) -> int:
             print(json.dumps({"error": str(exc)}, ensure_ascii=True))
             return 1
         print(json.dumps(result, ensure_ascii=True, indent=2))
-        return 0 if selecting or preparing or analysing or measuring or reviewing or result["status"] in ("ranked", "proposed", "candidates_built") else 2
+        return 0 if selecting or preparing or analysing or measuring or reviewing or synergising or result["status"] in ("ranked", "proposed", "candidates_built") else 2
     if any(value is not None for value in (args.candidate, args.input_digest, args.selection, args.execution_plan,
                                          args.max_checks, args.max_questions)):
         p.error("selection or measurement arguments require their corresponding planning mode")

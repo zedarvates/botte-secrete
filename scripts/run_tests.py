@@ -107,6 +107,9 @@ SUITES = [
         "skills/conductor/replanning.py", "skills/conductor/test_replanning.py",
         "skills/llm_mcp/test_plan_replanning.py",
         "scripts/plan_replanning_pilot.py", "scripts/test_plan_replanning_pilot.py",
+        "skills/conductor/synergies.py", "skills/conductor/test_synergies.py",
+        "skills/llm_mcp/test_plan_synergies.py",
+        "scripts/plan_synergy_pilot.py", "scripts/test_plan_synergy_pilot.py",
         "skills/skill_finder/", "skills/context_budget/", "scripts/run_tests.py",
     )),
     ("checkup", [sys.executable, "-m", "skills.checkup.test_checkup"], (

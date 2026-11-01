@@ -145,6 +145,8 @@ block, not a real process interruption; interrupted and uncertain states also
 have separate regression fixtures. No robot, network service, model or production
 resource is invoked by this worker.
 
-Cross-project synergies, human availability, explicit scope reductions and local
-calibration remain further work. ROS navigation and fine robot movements are not
-implemented or qualified by this review.
+The separate [sharing analysis](parcimonia-plan-synergies.md) compares explicitly
+supplied cross-project alternatives. Automatic semantic sharing discovery, human
+availability, explicit scope reductions and local calibration remain further
+work. ROS navigation and fine robot movements are not implemented or qualified
+by this review.

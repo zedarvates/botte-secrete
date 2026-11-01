@@ -1,0 +1,237 @@
+{
+  "schema": "parcimonia.plan-synergies-validation/v1",
+  "observed_at": "2026-11-01T16:27:37.612258+00:00",
+  "parent_commit": "e4c5c5c27449f1c54e667afc6a8bab3cfd2faf62",
+  "source_sha256": {
+    "examples/parcimonia_plan_preferences.json": "b277c428361d7a9126e70e92caf232e899f5b78baa81f72e1b2aa2297206b04d",
+    "examples/parcimonia_plan_replanning.json": "715bdd321b256601af56d4257e4c120a13f3d6e48d1cb982ad8fd5bee9433e52",
+    "examples/parcimonia_plan_synergies.json": "6c6d27f0229543df5e0f522f1979765031933a1af101b0bca7414d0987f9a0ae",
+    "examples/parcimonia_plan_uncertainty.json": "8ff4ed21ff3471a265a081de0c0e3ea2a602a7bceaf2987b74616f6469a3c9a0",
+    "examples/parcimonia_recipe_planning.json": "37d8f6cd560cdf387fb926954a405e8a79b0fc495231ac740ed4908adee05e61",
+    "scripts/plan_replanning_pilot.py": "ff5a323a5d4bf24271c71b9af56d069c562e2f1e0f72e37487e4c76661b52b18",
+    "scripts/plan_synergy_pilot.py": "0ad0116c06472fa53dcc626ddad1e229d5c521aeb791f37297f0163c1686e16e",
+    "scripts/plan_validation_pilot.py": "84003091a6f0d5ddb9f31b52761ef018e1d2739775d4093959267806dc299c5f",
+    "scripts/run_tests.py": "349b0ce0f89003b99771ae1dec096714429a123458bad035ea53303591c6bb3e",
+    "scripts/test_plan_replanning_pilot.py": "3abfd7b911b8ef99b87e08b3c58481beda9ef250a66dbe7e31c580b0673d71f6",
+    "scripts/test_plan_synergy_pilot.py": "2b32c60bc2839296fce08b0231bafb3e3d7a79cfa9ecbbe61273181a3ce53765",
+    "scripts/test_plan_validation_pilot.py": "0882925812a4d662e8c86d44bebe539c1c6a497e8a173a13c4b0fc657b787272",
+    "skills/conductor/cli.py": "0e274196cb77ca353b1e09cfe8c24e40a6cecc95bb11d65da1c5eef9c8f0a13e",
+    "skills/conductor/handoff.py": "fe395126159e4b8a14f16dfe30c3f5da56ecc258c672c58a337f898fb391a747",
+    "skills/conductor/measurement.py": "9b8fc2c8d312ee4494438b46df622b48aeb4bcffe8ef6b11763d6a4097829960",
+    "skills/conductor/preferences.py": "790ad7c4b674405d956f4f13810f9e894997c447ae242187b59049c4c486b8a8",
+    "skills/conductor/recipes.py": "104277fb87cc506650a1952883f93a96054b43cf184ed68beda13158f30871ea",
+    "skills/conductor/replanning.py": "485ca9b8c3271a75492460ae349ba8532c413c65588498e07d1d548d1cc26e8b",
+    "skills/conductor/selection.py": "9eebd7126cb663948defb1b2c34ede7842a6f78bea026fd675ebfafc28aad1e1",
+    "skills/conductor/synergies.py": "f3c16f9dd78a3dfa3ddf395f03962040942e423b282b36ff000dea0573c7bfa9",
+    "skills/conductor/test_handoff.py": "5ce8f9806d31788ccba4acc7f6e2404f7807ebf513d4f3739f457148df83b1ff",
+    "skills/conductor/test_measurement.py": "88f2233c81e0e1c9927c2739afc7ade22baa37c34426e37eb5881d8524959006",
+    "skills/conductor/test_preferences.py": "af4bf3373d8c6f7e474a267bce8f4967b786d12dd0a21284250e76de46790780",
+    "skills/conductor/test_recipes.py": "362b36ce80095d4458ccd85894933fba0038b6ef9a5138e9f7c13d6fa9e0ce95",
+    "skills/conductor/test_replanning.py": "6858fc7bb492325cd508611241bbfb064fce7965b85281d276983f7c705ef56e",
+    "skills/conductor/test_selection.py": "6eab486a55998e5ae8b2f12dd09d658bdf7e18dcd1c664dd05801bc5abb65e93",
+    "skills/conductor/test_synergies.py": "f210b58653d07c40cc6bb726b08bd035fdfad30241587b33ce612a45fae2a781",
+    "skills/conductor/test_uncertainty.py": "9a408d1b83eb033a6283d689530cf9a181e42c48277df120a64a6c45fc66de84",
+    "skills/conductor/uncertainty.py": "4f2727a29f7f8d5fa861b188c439b05c58d040e5fe032d839990c2157a28d8fc",
+    "skills/llm_mcp/server.py": "2973966f025f1715d42ce13792d60c6032743d9ddcd45f0d573139a00853be54",
+    "skills/llm_mcp/test_plan_preferences.py": "03a8e3336708070dc1064fee8d171f58fc99d47d892422ab16a2b9a03d6dbb42",
+    "skills/llm_mcp/test_plan_recipes.py": "c6b9a15903ac8a1b58758ef5e83a4e90016681e9e09a888c73452c38c9e40cdc",
+    "skills/llm_mcp/test_plan_replanning.py": "e5e6040675f60a70e81e35fb92704fe170c9581da913bf562524f39fc18f9d9c",
+    "skills/llm_mcp/test_plan_selection.py": "ed5e347ca9740383b050277dd51ecebfcfdc1bfc7e2c823f4213c0dd9e221311",
+    "skills/llm_mcp/test_plan_synergies.py": "8c2002b52534caca64ce8d39683f25115969410e6096df96d32aa02e1bfa7ec8",
+    "skills/llm_mcp/test_plan_uncertainty.py": "87d388bfc83f349007ac09429f6d51912da8d8f17158e846d59bf30b581dfab2",
+    "skills/preflight/test_parcimonia.py": "2c08b5a7dd0a745081f3b2f3b827ac12c8d9268f9cd47147223204cf7e43e83a"
+  },
+  "environment": {
+    "platform": "Linux",
+    "python": "3.12.14"
+  },
+  "checks": {
+    "targeted": {
+      "command": "python -m unittest skills.conductor.test_synergies skills.llm_mcp.test_plan_synergies scripts.test_plan_synergy_pilot -q",
+      "core": 29,
+      "cli_mcp": 7,
+      "pilot": 8,
+      "passed": 44,
+      "failed": 0
+    },
+    "canonical_changed": {
+      "status": "passed",
+      "command": "python scripts/run_tests.py --changed -q",
+      "scope": "changed-file selection; not full repository suite",
+      "suites": 27,
+      "passed": 959,
+      "failed": 0,
+      "changed_files_at_test_selection": 53
+    },
+    "pre_commit_fast": {
+      "passed": true,
+      "python_files": 32
+    },
+    "python_3_10_grammar": {
+      "passed": true,
+      "files": 32,
+      "runtime_3_10_tested": false
+    },
+    "local_document_links": {
+      "exit_code": 0,
+      "broken_found": 0,
+      "markdown_files": 135,
+      "partial_notices": 13,
+      "coverage": "incomplete for existing unsupported Markdown constructs"
+    },
+    "checkup": {
+      "exit_code": 0,
+      "directives_score": 100,
+      "infra_score": 24,
+      "duplicate_function_groups": 4,
+      "project_local_mcp": "missing",
+      "installed_global_runtime": "not_checked"
+    }
+  },
+  "synthetic_priority_and_budget_trial": {
+    "source": "illustrative caller estimates; not measured project consumption",
+    "input_digest": "56e132755d0f7667838df919081f3634664b093b93cafea3a4f30eea8873c6b6",
+    "comparison_input_digest": "e85893279f990c5079108d45356b7215108a832c503bf94939cfd54f2f2e9013",
+    "global_elapsed_recommendation": "combined",
+    "urgent_project_p_recommendation": "separate",
+    "p_money_limit_6_candidate_statuses": {
+      "combined": "rejected",
+      "separate": "eligible"
+    },
+    "global_delta": {
+      "elapsed_minutes": -1,
+      "human_minutes": -1,
+      "money": -2,
+      "tokens": -1,
+      "energy_wh": -1,
+      "peak_ram_gib": 1
+    },
+    "project_deltas": {
+      "p": {
+        "elapsed_minutes": 2,
+        "human_minutes": 0,
+        "money": 2,
+        "tokens": 0,
+        "energy_wh": 0,
+        "peak_ram_gib": 2
+      },
+      "q": {
+        "elapsed_minutes": -2,
+        "human_minutes": 0,
+        "money": 2,
+        "tokens": 0,
+        "energy_wh": 0,
+        "peak_ram_gib": 1
+      }
+    },
+    "original_input_unchanged": true,
+    "selected_candidate_id": null
+  },
+  "real_pilot": {
+    "evidence_ref": "docs/validation/plan-synergy-pilot-2026-11-01.json",
+    "sha256": "2af12b7e8db065feec4a032f1db4d8e6f5fb9164cd30c0a4cd1b193e19404517",
+    "complete": true,
+    "failures": [],
+    "checks_passed": 19,
+    "source_files": 14,
+    "source_hashes_match": true,
+    "preparation_counts": {
+      "separate": 2,
+      "shared": 1
+    },
+    "terminal_outputs": "both exact expected summary and index, equal between variants",
+    "timing_scope": "setup, source snapshots, planning/choice/handoff, real commands, checks and cleanup; excludes serialization and host assessment",
+    "gain_claim": null
+  },
+  "retained_pilots": [
+    {
+      "evidence_ref": "docs/validation/plan-validation-pilot-2026-11-01.json",
+      "sha256": "f9688d5926192c1e2698f7b67a757f9880dc1996b97b67d088ef0252e1598181",
+      "source_files": 16,
+      "source_hashes_still_match": true
+    },
+    {
+      "evidence_ref": "docs/validation/plan-replanning-pilot-2026-11-01.json",
+      "sha256": "db03613aa0796966eaa6f40bc8c93d5857d42c5624951916a05e90e5f52fd7e6",
+      "source_files": 13,
+      "source_hashes_still_match": true
+    }
+  ],
+  "independent_review": {
+    "status": "no_remaining_concrete_blocker_confirmed",
+    "corrected_findings": [
+      {
+        "finding": "nonzero subnormal delta published as negative zero",
+        "input_money": {
+          "separate_a": 4e-323,
+          "separate_b": 5e-324,
+          "shared": 4.4e-323
+        },
+        "correction": "signed exact Decimal companion referenced through interned table",
+        "public_numeric_delta": -0.0,
+        "exact_delta": "-1E-324",
+        "ranking_stays_correct": true
+      },
+      {
+        "finding": "repeated exact strings amplified bounded small input past report cap",
+        "input_utf8_bytes": 22079,
+        "before_report_utf8_bytes": 2222476,
+        "after_report_utf8_bytes": 356990,
+        "correction": "intern identical exact values once; retain all scoped references",
+        "distinct_exact_values": 1,
+        "claim_scope": "serialized report bytes, not token or end-to-end savings"
+      },
+      {
+        "finding": "dangling output symlink could allow pilot execution before save failure",
+        "correction": "new-path guard rejects both existing paths and symlinks before --run",
+        "regression": "existing-output test includes dangling-symlink guard"
+      }
+    ]
+  },
+  "acceptance_axes": {
+    "selection": {
+      "implemented": "explicit sharing assumptions compared under unchanged user preferences",
+      "gap": "semantic equivalence remains unverified"
+    },
+    "consequences": {
+      "implemented": "whole-plan/project deltas, action changes, unknowns and exact rounded-delta companions",
+      "gap": "causal attribution and live resource effects unverified"
+    },
+    "pipeline": {
+      "evidence": "two exact terminal business outputs checked in separate and shared actual plans",
+      "gap": "one fixed worker/input does not qualify arbitrary sharing"
+    },
+    "resumption": {
+      "implemented": "existing execution/handoff/checkpoint contracts unchanged",
+      "gap": "new analysis does not migrate or reconcile checkpoints"
+    },
+    "experience": {
+      "implemented": "source-bound pilot and retained source identities",
+      "gap": "hashes are consistency evidence, not authenticity or cross-context qualification"
+    },
+    "measurement": {
+      "evidence": "preparation counter 2 versus 1 for the fixed input; timings scope retained",
+      "gap": "no general time, token, energy, cost or quality improvement established"
+    }
+  },
+  "boundaries": {
+    "scope": "analysis helper; fixed pilot has separate explicit execution authority",
+    "advisory_only": true,
+    "selection": false,
+    "execution": false,
+    "catalogue_rewrite": false,
+    "checkpoint_migration": false,
+    "production_activation": false,
+    "central_telemetry": false,
+    "ros_or_motors": false
+  },
+  "limitations": [
+    "The same declared goals and exact project unions do not prove equivalent results.",
+    "Whole-plan differences include all changed actions and ordering; no causal attribution to sharing.",
+    "Exact-delta strings qualify publication rounding; nominal cost inputs remain unverified declarations.",
+    "Oversized output fails explicitly rather than returning an incomplete report.",
+    "Serial elapsed prefixes, full beneficiary attribution and maximum RAM remain the model; live resources are unmeasured.",
+    "Pilot is fixed temporary-file correctness evidence; unmeasured costs stay unknown.",
+    "Linux Python 3.12.14 runtime tested; Python 3.10 grammar only; Windows not tested."
+  ]
+}

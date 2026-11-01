@@ -18,13 +18,16 @@ if __name__ == "__main__":
         "skills.conductor.test_uncertainty",
         "skills.conductor.test_measurement",
         "skills.conductor.test_replanning",
+        "skills.conductor.test_synergies",
         "skills.llm_mcp.test_plan_preferences",
         "skills.llm_mcp.test_plan_selection",
         "skills.llm_mcp.test_plan_recipes",
         "skills.llm_mcp.test_plan_uncertainty",
         "skills.llm_mcp.test_plan_replanning",
+        "skills.llm_mcp.test_plan_synergies",
         "scripts.test_plan_validation_pilot",
         "scripts.test_plan_replanning_pilot",
+        "scripts.test_plan_synergy_pilot",
     ])
     result = unittest.TextTestRunner().run(suite)
     failed = len(result.failures) + len(result.errors)

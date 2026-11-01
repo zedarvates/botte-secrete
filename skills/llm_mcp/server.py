@@ -54,6 +54,21 @@ SERVER_INFO = {"name": "botte-llm", "version": __version__}
 
 TOOLS = [
     {
+        "name": "analyse_plan_synergies",
+        "description": "Parcimonia: compare supplied separate/shared multi-project candidates "
+                       "with explicit sharing assumptions. Report whole-plan and project cost "
+                       "differences, unknowns and budget status under the user's priorities. "
+                       "Equivalence and causal savings remain unverified. No action rewriting, "
+                       "selection, measurement or execution.",
+        "inputSchema": {
+            "type": "object", "additionalProperties": False,
+            "properties": {"request_json": {"type": "string", "maxLength": 1048576}},
+            "required": ["request_json"],
+        },
+        "annotations": {"readOnlyHint": True, "destructiveHint": False,
+                        "idempotentHint": True, "openWorldHint": False},
+    },
+    {
         "name": "review_plan_replanning",
         "description": "Parcimonia: read an existing project-relative Conductor checkpoint "
                        "and recheck declared local source, precondition and result evidence. "
@@ -1981,6 +1996,14 @@ def _tool_suggest_plan_measurements(args: dict) -> str:
     return json.dumps(result, ensure_ascii=True, allow_nan=False, separators=(",", ":"))
 
 
+def _tool_analyse_plan_synergies(args: dict) -> str:
+    from skills.conductor.preferences import parse_request_json
+    from skills.conductor.synergies import analyse_plan_synergies
+    _assessment_arguments(args, {"request_json"})
+    result = analyse_plan_synergies(parse_request_json(args.get("request_json")))
+    return json.dumps(result, ensure_ascii=True, allow_nan=False, separators=(",", ":"))
+
+
 def _tool_review_plan_replanning(args: dict) -> str:
     from skills.conductor.preferences import parse_request_json
     from skills.conductor.replanning import review_plan_replanning
@@ -2042,6 +2065,7 @@ def _tool_summarize_github_evidence(args: dict) -> str:
 
 
 DISPATCH = {
+    "analyse_plan_synergies": _tool_analyse_plan_synergies,
     "review_plan_replanning": _tool_review_plan_replanning,
     "analyse_plan_uncertainty": _tool_analyse_plan_uncertainty,
     "suggest_plan_measurements": _tool_suggest_plan_measurements,
