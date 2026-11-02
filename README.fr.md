@@ -37,6 +37,20 @@ Le projet est en **bêta**. Ses principaux flux fonctionnent localement, mais le
 serveurs de modèles, fournisseurs cloud, accélérateurs matériels et agents tiers
 restent des systèmes externes avec leurs propres limites de sécurité.
 
+## Adaptez Botte Secrète à vos usages
+
+Je vous conseille de demander à votre assistant IA (votre « super intelligence »)
+d'étudier ce dépôt et de l'adapter à vos objectifs, méthodes de travail, outils,
+matériel et contraintes, plutôt que de le reprendre tel quel. Demandez-lui de
+sélectionner les composants utiles et de vérifier les adaptations dans votre
+environnement.
+
+Par exemple, demandez à Codex de coordonner une mise en œuvre sur votre cloud,
+dans un Space ChatGPT et sur vos machines locales, avec les connecteurs et accès
+disponibles. Faites-lui configurer une stratégie de mise à jour et de
+synchronisation du code, de la configuration et de la documentation, en précisant
+ce qui est partagé et ce qui reste local.
+
 ## Voir Botte à l'œuvre : « terminé » mérite une preuve
 
 Un rapport préparé annonce un travail terminé. Botte signale la preuve manquante ;

@@ -36,6 +36,18 @@ The project is in **beta**. Its core workflows run locally, but optional local
 LLM backends, cloud providers, hardware accelerators, and third-party agents
 remain external systems with their own setup and security boundaries.
 
+## Adapt Botte Secrète to your own use
+
+I recommend asking your AI assistant (your “superintelligence”) to study this
+repository and adapt it to your own goals, workflows, tools, hardware and
+constraints, rather than adopting it unchanged. Ask it to select the useful
+components and verify the adaptations in your environment.
+
+For example, ask Codex to coordinate a setup across your cloud, a ChatGPT Space
+and your local machines, using the available connectors and access. Have it
+configure an update and synchronization strategy for the code, configuration and
+documentation, specifying what is shared and what stays local.
+
 ## See it in action: "done" needs evidence
 
 A prepared agent report claims completion. Botte flags the missing evidence;
