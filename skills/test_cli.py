@@ -42,6 +42,9 @@ def main() -> int:
         check("migration-audit routes to deterministic gate",
               cli.main(["migration-audit", "spec.json", "--json"]) == 0
               and captured[-1] == ["spec.json", "--json"])
+        check("completion proof preserves strict verification arguments",
+              cli.main(["completion-proof", "report.json", "--verify", "--strict", "--json"]) == 0
+              and captured[-1] == ["report.json", "--verify", "--strict", "--json"])
 
     print(f"\nRESULT: {state[0]} passed, {state[1]} failed")
     return 0 if state[1] == 0 else 1

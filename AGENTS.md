@@ -47,6 +47,10 @@ built to lean on local hardware and cheap models wherever possible.
 Run the relevant tests, keep diffs minimal, and don't commit machine-specific
 generated files (e.g. `configs/llm-endpoints.json`, `.mcp.json` — both ignored).
 
+For missions with several acceptance criteria, use the existing pinned receipt
+verifier and the [verified workflow](docs/verified-workflow.md). Keep a completed
+agent turn, completed review and accepted user result as separate states.
+
 ## Tool evolution: six acceptance axes
 
 Apply the [six-axis acceptance guide](docs/tool-improvement-axes.md) when
