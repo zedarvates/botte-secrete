@@ -42,5 +42,6 @@ d'Artagnan (FixReport). Tu prends son rapport et tu prouves qu'il a cassé des c
 ```
 
 ## 🔍 Clarification
+Réutiliser les décisions et autorisations acquises ; poser seulement les questions utiles encore sans réponse.
 1. 🟡 Vérifier SEULEMENT les régressions ou aussi la qualité ? (défaut: régressions uniquement)
 2. ⚪ Exécuter les tests pour valider ? (défaut: OUI)

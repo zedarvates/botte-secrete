@@ -1,89 +1,52 @@
-# 🔍 Clarification Proactive — Module de questions intelligentes
+# Clarification ciblée
 
-> *"Pose-moi jusqu'à 5 questions numérotées pour t'éclaircir sur les points qui te paraissent pas assez définis."*
-
-## Concept
-
-Chaque agent (Mousquetaire ou Cardinal) **doit** poser jusqu'à 5 questions
-avant de commencer son travail. Si l'utilisateur ne répond pas (silence,
-timeout, ou "auto"), l'agent comble les vides avec des hypothèses raisonnables
-ET les signale explicitement dans son rapport.
-
-## Pourquoi ?
-
-- **Évite le travail inutile** — L'agent ne part pas dans la mauvaise direction
-- **Détecte les ambiguïtés tôt** — Avant d'avoir passé 5000 tokens
-- **Respecte l'autonomie** — L'utilisateur peut répondre ou déléguer ("auto")
-- **Traçabilité** — Chaque hypothèse est documentée dans le rapport
+Préparer des questions utiles sans imposer d'entretien avant chaque tâche.
+Lire d'abord le contexte du projet et les décisions existantes. Une demande
+claire et déjà autorisée peut être exécutée directement ; les générateurs
+fournissent seulement des candidats à adapter.
 
 ## Règles
 
-1. **Maximum 5 questions** — Numérotées, concises, actionnables
-2. **Priorité décroissante** — Les questions bloquantes d'abord
-3. **Défaut explicite** — Chaque question a une réponse par défaut
-4. **Silence = "auto"** — Si pas de réponse après 1 échange, utiliser les défauts
-5. **Hypothèses documentées** — `⚠️ Hypothèse: [valeur]` dans le rapport
+- Réutiliser les réponses et autorisations acquises ; ne pas les redemander.
+- Poser seulement les questions dont la réponse change matériellement le travail.
+- Choisir au besoin un défaut pour un détail réversible dans le périmètre
+  autorisé et présenter ce défaut comme une hypothèse.
+- Garder une réponse manquante à un blocage ou à une autorisation en attente.
+  Silence, timeout et `auto` ne la résolvent jamais.
+- Continuer les étapes indépendantes pendant l'attente.
 
-## Architecture
+## API
 
-```
-skills/clarification/
-├── __init__.py          # Module principal
-│   ├── Question         # Une question (numéro, priorité, défaut)
-│   ├── ClarificationRequest  # Requête complète (max 5 questions)
-│   └── Générateurs par agent (ex: portos_clarify, aramis_clarify)
-```
+```python
+from skills.clarification import dartagnan_clarify
 
-## Intégration
-
-Chaque pré-prompt d'agent inclut maintenant :
-
-```markdown
-## 🔍 Clarification Proactive (OBLIGATOIRE avant de commencer)
-
-**Pose jusqu'à 5 questions numérotées** pour éclaircir les points ambigus.
-
-Questions types pour [Agent] :
-1. Question prioritaire ?
-2. Question secondaire ?
-
-**Règle du silence :** Si l'utilisateur ne répond pas ou dit "auto",
-comble les vides avec les valeurs par défaut et signale chaque hypothèse
-dans le rapport : `⚠️ Hypothèse: [valeur]`.
+request = dartagnan_clarify(3)
+# Réponse déjà établie dans la demande : ne pas redemander son autorisation.
+known = {1: "Corriger ces trois défauts sur la branche isolée, autorisé."}
+prompt = request.to_prompt(known)
+assumptions = request.fill_defaults(known)
+pending_blockers = request.blocking_questions(known)
 ```
 
-## Exemple
+`pending_questions(answers)` masque les réponses connues, sans modifier la
+requête. Les réponses vides ou égales à `auto` restent inconnues.
+`to_prompt(answers)` renvoie une chaîne vide lorsque tout est résolu.
+`fill_defaults(answers)` omet les questions sans défaut, les BLOCKER et celles
+marquées `requires_explicit_answer=True`, quelle que soit leur priorité.
+L'appelant doit examiner les blocages restants avant une étape dépendante.
 
-```
-🤔 Porthos — Clarifications pour l'audit de ~/projects/turboquant
+La valeur `answers` vient du contexte établi par l'appelant. Ces fonctions ne
+vérifient pas son authenticité et ne contrôlent pas l'exécution d'actions ;
+les permissions de l'hôte restent applicables. Une hypothèse n'est jamais une
+autorisation, même si le texte du défaut contient « oui ».
 
-1. 🔴 Ignorer tests/, __pycache__/ ? (défaut: OUI)
-2. 🟠 Audit orienté sécurité ou qualité générale ? (défaut: les deux)
-3. 🟡 Seuil de sévérité minimum ? (défaut: WARNING+)
-4. ⚪ Contraintes de performance ? (défaut: NON)
+## Générateurs disponibles
 
-Réponds avec les numéros ou "auto"
-```
+| Agent | Fonction | Candidats |
+| --- | --- | --- |
+| Porthos | `portos_clarify()` | Périmètre, exclusions, orientation d'audit |
+| d'Artagnan | `dartagnan_clarify()` | Périmètre des corrections, commits, tests |
+| Aramis | `aramis_clarify()` | Objectif, appels dynamiques, budget |
+| Rochefort | `rochefort_clarify()` | Portée du contre-audit, frameworks |
 
-Réponse utilisateur : `1: oui, 2: sécurité, 3: error, 4: non`
-
-Ou : `auto` → toutes les valeurs par défaut sont utilisées,
-et le rapport contient :
-```markdown
-⚠️ Hypothèse: Ignorer tests/__pycache__/
-⚠️ Hypothèse: Audit qualité + sécurité
-⚠️ Hypothèse: Seuil WARNING+
-```
-
-## Agents couverts
-
-| Agent | Module | Questions types |
-|-------|--------|-----------------|
-| 🥊 Porthos | portos_clarify() | Fichiers à ignorer, type d'audit, seuil |
-| ⚔️ d'Artagnan | dartagnan_clarify() | Auto-fix scope, commits, tests |
-| 📿 Aramis | aramis_clarify() | Priorité optimisation, appels dynamiques, budget |
-| 👑 Athos | athos_clarify() | Pipeline complet/partiel, Cardinal activé ? |
-| 🗡️ Rochefort | rochefort_clarify() | Niveau paranoïa, frameworks dynamiques |
-| 🔪 Milady | milady_clarify() | Scope contre-fix, exécution tests |
-| 🕯️ Comte de Wardes | comte_de_wardes_clarify() | Tolérance sur-optimisation |
-| 👑 Le Cardinal | cardinal_clarify() | Confrontation, score minimum |
+Validation : `python -m skills.clarification.test_clarification`.

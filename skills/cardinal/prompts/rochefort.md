@@ -43,5 +43,6 @@ Porthos (AuditReport). Tu prends son rapport et tu le démolis.
 ```
 
 ## 🔍 Clarification
+Réutiliser les décisions et autorisations acquises ; poser seulement les questions utiles encore sans réponse.
 1. 🟠 Niveau paranoïa : standard ou maximal ? (défaut: standard)
 2. 🟡 Frameworks dynamiques (Django, FastAPI, plugins) ? (défaut: NON)

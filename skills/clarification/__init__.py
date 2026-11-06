@@ -1,8 +1,7 @@
 # Clarification Proactive — Module pour agents Hermes
 #
-# Pattern: "Pose-moi jusqu'à 5 questions numérotées pour t'éclaircir"
-# Si l'utilisateur ne répond pas (champ vide / timeout / silence),
-# le LLM comble les vides avec des hypothèses raisonnables ET les signale.
+# Poser seulement les questions utiles que le contexte n'a pas déjà résolues.
+# Un défaut reste une hypothèse ; il ne résout ni blocage ni autorisation.
 #
 # Inspiré de :
 #   - Chain of Clarification (CoC, 2024)
@@ -11,9 +10,9 @@
 #   - Progressive Disclosure (poser seulement ce qui bloque l'étape en cours)
 
 from __future__ import annotations
-import json
 from dataclasses import dataclass, field
 from typing import Optional
+from collections.abc import Mapping
 from enum import Enum
 
 
@@ -32,6 +31,7 @@ class Question:
     priority: QuestionPriority = QuestionPriority.MEDIUM
     default_answer: Optional[str] = None   # Réponse par défaut si user ne répond pas
     context: str = ""                       # Pourquoi cette question est posée
+    requires_explicit_answer: bool = False  # Aucun défaut pour une autorisation
 
 
 @dataclass
@@ -42,15 +42,35 @@ class ClarificationRequest:
     questions: list[Question] = field(default_factory=list)
     max_questions: int = 5
 
-    def to_prompt(self) -> str:
+    def pending_questions(self, answers: Optional[Mapping[int, str]] = None) -> list[Question]:
+        """Écarte les réponses déjà établies par l'appelant dans le contexte.
+
+        L'appelant reste responsable de leur provenance et des autorisations.
+        Une réponse vide ou « auto » n'est pas une réponse à une question.
+        """
+        answers = answers or {}
+        return [q for q in self.questions
+                if not isinstance(answers.get(q.number), str)
+                or not answers[q.number].strip()
+                or answers[q.number].strip().casefold() == "auto"]
+
+    def blocking_questions(self, answers: Optional[Mapping[int, str]] = None) -> list[Question]:
+        """Questions dépendantes qui exigent encore une réponse explicite."""
+        return [q for q in self.pending_questions(answers)
+                if q.priority == QuestionPriority.BLOCKER or q.requires_explicit_answer]
+
+    def to_prompt(self, answers: Optional[Mapping[int, str]] = None) -> str:
         """Génère le prompt à montrer à l'utilisateur."""
+        questions = self.pending_questions(answers)
+        if not questions:
+            return ""
         lines = [
             f"🤔 **{self.agent_name}** — Clarifications pour l'étape *{self.step}*",
             f"",
-            f"J'ai besoin d'éclaircir {len(self.questions)} point(s) avant de continuer.",
+            f"Point(s) encore à éclaircir : {len(questions)}. Le travail indépendant peut continuer.",
             f"",
         ]
-        for q in self.questions:
+        for q in questions:
             priority_emoji = {
                 QuestionPriority.BLOCKER: "🔴",
                 QuestionPriority.HIGH: "🟠",
@@ -60,26 +80,36 @@ class ClarificationRequest:
             lines.append(f"{q.number}. {priority_emoji.get(q.priority, '')} {q.text}")
             if q.context:
                 lines.append(f"   _({q.context})_")
-            if q.default_answer:
-                lines.append(f"   Défaut si pas de réponse : _{q.default_answer}_")
+            if q.priority == QuestionPriority.BLOCKER or q.requires_explicit_answer:
+                lines.append("   Réponse explicite requise pour cette étape ; aucun défaut.")
+            elif q.default_answer:
+                lines.append(f"   Hypothèse pour un choix réversible : _{q.default_answer}_")
             lines.append("")
 
         lines.extend([
             "---",
             "Réponds avec les numéros (ex: `1: oui, 2: non, 3: /home/user/projet`)",
-            "Ou réponds `auto` pour que je comble les vides avec les valeurs par défaut.",
+            "`auto` permet seulement les hypothèses facultatives dans le périmètre déjà autorisé.",
+            "Le silence, un délai écoulé ou `auto` ne répondent pas à une question bloquante et ne donnent aucune autorisation.",
         ])
         return "\n".join(lines)
 
-    def fill_defaults(self) -> dict[int, str]:
-        """Remplit toutes les questions avec les valeurs par défaut."""
-        return {q.number: q.default_answer or "non spécifié" for q in self.questions}
+    def fill_defaults(self, answers: Optional[Mapping[int, str]] = None) -> dict[int, str]:
+        """Hypothèses facultatives uniquement ; conserver les blocages à part.
+
+        Ce dictionnaire n'est jamais un ensemble d'autorisations. Utiliser
+        blocking_questions() avant le travail dépendant d'une réponse.
+        """
+        return {q.number: q.default_answer for q in self.pending_questions(answers)
+                if q.priority != QuestionPriority.BLOCKER
+                and not q.requires_explicit_answer
+                and isinstance(q.default_answer, str) and q.default_answer.strip()}
 
 
 # ── Générateurs de questions spécifiques aux Mousquetaires ──
 
 def portos_clarify(project_path: str, files_count: int) -> ClarificationRequest:
-    """Questions que Porthos doit poser avant un audit."""
+    """Questions candidates de Porthos pour un audit."""
     cr = ClarificationRequest(agent_name="🥊 Porthos", step="audit")
 
     if files_count > 100:
@@ -127,14 +157,13 @@ def portos_clarify(project_path: str, files_count: int) -> ClarificationRequest:
 
 
 def dartagnan_clarify(fix_count: int) -> ClarificationRequest:
-    """Questions que d'Artagnan doit poser avant de corriger."""
+    """Questions candidates de d'Artagnan pour une correction."""
     cr = ClarificationRequest(agent_name="⚔️ d'Artagnan", step="fix")
 
     cr.questions.append(Question(
         number=1,
         text=f"J'ai {fix_count} findings à corriger. Appliquer TOUS les fixes automatiquement ou seulement les critiques/erreurs ?",
         priority=QuestionPriority.BLOCKER,
-        default_answer="Appliquer automatiquement les fixes simples (dead code, duplication). Demander confirmation pour les refactorings lourds.",
         context="Les fixes automatiques peuvent casser des choses"
     ))
 
@@ -158,7 +187,7 @@ def dartagnan_clarify(fix_count: int) -> ClarificationRequest:
 
 
 def aramis_clarify(project_type: str) -> ClarificationRequest:
-    """Questions qu'Aramis doit poser avant d'optimiser."""
+    """Questions candidates d'Aramis pour une optimisation."""
     cr = ClarificationRequest(agent_name="📿 Aramis", step="optimize")
 
     cr.questions.append(Question(
@@ -197,7 +226,7 @@ def aramis_clarify(project_type: str) -> ClarificationRequest:
 
 
 def rochefort_clarify(audit_report_path: str) -> ClarificationRequest:
-    """Questions que Rochefort doit poser avant son contre-audit."""
+    """Questions candidates de Rochefort pour un contre-audit."""
     cr = ClarificationRequest(agent_name="🗡️ Rochefort", step="contre-audit")
 
     cr.questions.append(Question(

@@ -43,6 +43,7 @@ plan = cache.get_optimization_plan()  # Cache son propre résultat
 ```
 
 ## 🔍 Clarification
+Réutiliser les décisions et autorisations acquises ; poser seulement les questions utiles encore sans réponse.
 1. 🟠 Priorité : tokens, vitesse, ou lisibilité ? (défaut: tokens)
 2. 🟠 Appels dynamiques connus ? (défaut: NON)
 3. 🟡 Budget token max/session ? (défaut: 100K)
