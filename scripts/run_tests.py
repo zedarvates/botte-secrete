@@ -41,6 +41,10 @@ SUITES = [
     ("e2e", [sys.executable, "skills/test_e2e.py"], ""),
     ("completion_proof", [sys.executable, "-m", "skills.completion_proof.test_completion_proof"], "skills/completion_proof/"),
     ("completion_verify", [sys.executable, "-m", "skills.completion_proof.test_verify"], "skills/completion_proof/"),
+    ("worktree_lifecycle", [sys.executable, "scripts/test_worktree_lifecycle.py"], (
+        "scripts/worktree_lifecycle.py", "scripts/test_worktree_lifecycle.py",
+        "skills/completion_proof/verify.py",
+    )),
     ("factory_assurance", [sys.executable, "-m", "skills.factory_assurance.test_factory_assurance"], "skills/factory_assurance/"),
     ("factory_integrations", [sys.executable, "-m", "skills.factory_assurance.test_integrations"], (
         "skills/factory_assurance/", "skills/capabilities/",
