@@ -1,0 +1,184 @@
+{
+  "schema": "parcimonia.recipe-planning/v1",
+  "currency": "EUR",
+  "projects": [
+    {
+      "id": "demo",
+      "goals": [
+        "playable"
+      ]
+    },
+    {
+      "id": "plugin",
+      "goals": [
+        "validated"
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "id": "shared",
+      "needs": [],
+      "projects": [
+        "demo",
+        "plugin"
+      ],
+      "metrics": {
+        "elapsed_minutes": 2,
+        "human_minutes": 1,
+        "money": 1,
+        "tokens": 10,
+        "energy_wh": 1,
+        "peak_ram_gib": 1
+      },
+      "provenance": {
+        "kind": "estimate",
+        "ref": "illustrative-estimate-not-a-benchmark"
+      }
+    },
+    {
+      "id": "fast-demo",
+      "needs": [
+        "shared"
+      ],
+      "projects": [
+        "demo"
+      ],
+      "metrics": {
+        "elapsed_minutes": 3,
+        "human_minutes": 1,
+        "money": 5,
+        "tokens": 100,
+        "energy_wh": 1,
+        "peak_ram_gib": 1
+      },
+      "provenance": {
+        "kind": "estimate",
+        "ref": "illustrative-estimate-not-a-benchmark"
+      }
+    },
+    {
+      "id": "fast-plugin",
+      "needs": [
+        "shared"
+      ],
+      "projects": [
+        "plugin"
+      ],
+      "metrics": {
+        "elapsed_minutes": 4,
+        "human_minutes": 1,
+        "money": 5,
+        "tokens": 100,
+        "energy_wh": 1,
+        "peak_ram_gib": 1
+      },
+      "provenance": {
+        "kind": "estimate",
+        "ref": "illustrative-estimate-not-a-benchmark"
+      }
+    },
+    {
+      "id": "cheap-demo",
+      "needs": [
+        "shared"
+      ],
+      "projects": [
+        "demo"
+      ],
+      "metrics": {
+        "elapsed_minutes": 10,
+        "human_minutes": 1,
+        "money": 0,
+        "tokens": 0,
+        "energy_wh": 1,
+        "peak_ram_gib": 1
+      },
+      "provenance": {
+        "kind": "estimate",
+        "ref": "illustrative-estimate-not-a-benchmark"
+      }
+    },
+    {
+      "id": "cheap-plugin",
+      "needs": [
+        "shared"
+      ],
+      "projects": [
+        "plugin"
+      ],
+      "metrics": {
+        "elapsed_minutes": 20,
+        "human_minutes": 1,
+        "money": 0,
+        "tokens": 0,
+        "energy_wh": 1,
+        "peak_ram_gib": 1
+      },
+      "provenance": {
+        "kind": "estimate",
+        "ref": "illustrative-estimate-not-a-benchmark"
+      }
+    }
+  ],
+  "preferences": {
+    "priorities": [
+      {
+        "metric": "money"
+      },
+      {
+        "metric": "elapsed_minutes"
+      },
+      {
+        "metric": "human_minutes"
+      }
+    ],
+    "limits": {
+      "peak_ram_gib": 8,
+      "tokens": 50000,
+      "money": 20,
+      "elapsed_minutes": 120
+    },
+    "project_limits": {
+      "demo": {
+        "elapsed_minutes": 60
+      }
+    }
+  },
+  "recipes": [
+    {
+      "id": "demo-fast",
+      "project": "demo",
+      "goal": "playable",
+      "actions": [
+        "fast-demo"
+      ]
+    },
+    {
+      "id": "demo-cheap",
+      "project": "demo",
+      "goal": "playable",
+      "actions": [
+        "cheap-demo"
+      ]
+    },
+    {
+      "id": "plugin-fast",
+      "project": "plugin",
+      "goal": "validated",
+      "actions": [
+        "fast-plugin"
+      ]
+    },
+    {
+      "id": "plugin-cheap",
+      "project": "plugin",
+      "goal": "validated",
+      "actions": [
+        "cheap-plugin"
+      ]
+    }
+  ],
+  "max_candidates": 16,
+  "max_expansions": 256
+}

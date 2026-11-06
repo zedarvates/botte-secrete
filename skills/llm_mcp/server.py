@@ -54,6 +54,153 @@ SERVER_INFO = {"name": "botte-llm", "version": __version__}
 
 TOOLS = [
     {
+        "name": "analyse_plan_synergies",
+        "description": "Parcimonia: compare supplied separate/shared multi-project candidates "
+                       "with explicit sharing assumptions. Report whole-plan and project cost "
+                       "differences, unknowns and budget status under the user's priorities. "
+                       "Equivalence and causal savings remain unverified. No action rewriting, "
+                       "selection, measurement or execution.",
+        "inputSchema": {
+            "type": "object", "additionalProperties": False,
+            "properties": {"request_json": {"type": "string", "maxLength": 1048576}},
+            "required": ["request_json"],
+        },
+        "annotations": {"readOnlyHint": True, "destructiveHint": False,
+                        "idempotentHint": True, "openWorldHint": False},
+    },
+    {
+        "name": "review_plan_replanning",
+        "description": "Parcimonia: read an existing project-relative Conductor checkpoint "
+                       "and recheck declared local source, precondition and result evidence. "
+                       "Review remaining-work costs and distinguish reusable, unstarted and "
+                       "unresolved started actions. Remaining budgets must be supplied explicitly. "
+                       "No checkpoint changes, implicit retries, command execution or memory-release claim.",
+        "inputSchema": {
+            "type": "object", "additionalProperties": False,
+            "properties": {
+                "request_json": {"type": "string", "maxLength": 1048576},
+                "checkpoint_path": {"type": "string", "minLength": 1, "maxLength": 4096},
+                "cwd": {"type": "string", "default": "."},
+            },
+            "required": ["request_json", "checkpoint_path"],
+        },
+        "annotations": {"readOnlyHint": True, "destructiveHint": False,
+                        "idempotentHint": True, "openWorldHint": False},
+    },
+    {
+        "name": "analyse_plan_uncertainty",
+        "description": "Parcimonia: compare declared lower/upper action costs and hard budgets "
+                       "without replacing unknown costs with point estimates. Reports a conservative "
+                       "conditional robust recommendation or unresolved uncertainty. Ranges are "
+                       "caller declarations, not probabilities or guarantees. No selection or execution.",
+        "inputSchema": {
+            "type": "object", "additionalProperties": False,
+            "properties": {"request_json": {"type": "string", "maxLength": 1048576}},
+            "required": ["request_json"],
+        },
+        "annotations": {"readOnlyHint": True, "destructiveHint": False,
+                        "idempotentHint": True, "openWorldHint": False},
+    },
+    {
+        "name": "suggest_plan_measurements",
+        "description": "Parcimonia: suggest bounded measurements using one-factor lower/upper "
+                       "endpoint sensitivity and required unknown costs. Highlights potential "
+                       "choice or eligibility changes; joint uncertainty may remain. No expected-value "
+                       "or probability claim, user question dispatch, selection, model, network or execution.",
+        "inputSchema": {
+            "type": "object", "additionalProperties": False,
+            "properties": {
+                "request_json": {"type": "string", "maxLength": 1048576},
+                "max_checks": {"type": "integer", "minimum": 1, "maximum": 128, "default": 32},
+                "max_questions": {"type": "integer", "minimum": 1, "maximum": 16, "default": 8},
+            },
+            "required": ["request_json"],
+        },
+        "annotations": {"readOnlyHint": True, "destructiveHint": False,
+                        "idempotentHint": True, "openWorldHint": False},
+    },
+    {
+        "name": "build_plan_candidates",
+        "description": "Parcimonia: build bounded serial candidate plans from explicit recipes "
+                       "for each requested project goal. Adds declared dependency closure, "
+                       "deduplicates shared actions and reports missing recipes, cycles and "
+                       "search truncation. Returns comparison input; recipes and goals remain "
+                       "unverified declarations. No command generation, execution, model, network or storage.",
+        "inputSchema": {
+            "type": "object", "additionalProperties": False,
+            "properties": {"request_json": {"type": "string", "maxLength": 1048576}},
+            "required": ["request_json"],
+        },
+        "annotations": {"readOnlyHint": True, "destructiveHint": False,
+                        "idempotentHint": True, "openWorldHint": False},
+    },
+    {
+        "name": "select_plan",
+        "description": "Parcimonia: bind a caller-declared candidate choice to the current "
+                       "proposal input digest. Rechecks eligibility and rejects stale inputs. "
+                       "The deterministic receipt does not authenticate the user's instruction "
+                       "or authorize execution. No implicit choice, storage, model or network.",
+        "inputSchema": {
+            "type": "object", "additionalProperties": False,
+            "properties": {
+                "request_json": {"type": "string", "maxLength": 1048576},
+                "candidate_id": {"type": "string", "minLength": 1, "maxLength": 64},
+                "expected_input_digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+            },
+            "required": ["request_json", "candidate_id", "expected_input_digest"],
+        },
+        "annotations": {"readOnlyHint": True, "destructiveHint": False,
+                        "idempotentHint": True, "openWorldHint": False},
+    },
+    {
+        "name": "prepare_plan_handoff",
+        "description": "Parcimonia: revalidate a supplied selection and bind it to a supplied "
+                       "botte.skill-plan/v1 Conductor document with matching step IDs, order "
+                       "and dependencies. Keeps commands and checks intact. Structural preparation "
+                       "only; no command generation, authorization, runtime verification or execution.",
+        "inputSchema": {
+            "type": "object", "additionalProperties": False,
+            "properties": {
+                "request_json": {"type": "string", "maxLength": 1048576},
+                "selection_json": {"type": "string", "maxLength": 1048576},
+                "execution_plan_json": {"type": "string", "maxLength": 1048576},
+            },
+            "required": ["request_json", "selection_json", "execution_plan_json"],
+        },
+        "annotations": {"readOnlyHint": True, "destructiveHint": False,
+                        "idempotentHint": True, "openWorldHint": False},
+    },
+    {
+        "name": "propose_plans",
+        "description": "Parcimonia: offer supplied eligible plans as multiple choices with "
+                       "steps, costs, unknowns and an advisory recommendation. The selected "
+                       "candidate stays null for the user to choose, even with one option. "
+                       "Respects user priorities and hard budgets. No plan generation, "
+                       "selection, execution, model, network, collection or storage.",
+        "inputSchema": {
+            "type": "object", "additionalProperties": False,
+            "properties": {"request_json": {"type": "string", "maxLength": 1048576}},
+            "required": ["request_json"],
+        },
+        "annotations": {"readOnlyHint": True, "destructiveHint": False,
+                        "idempotentHint": True, "openWorldHint": False},
+    },
+    {
+        "name": "compare_plans",
+        "description": "Parcimonia: compare supplied multi-project plans using explicit user "
+                       "priorities and hard budgets. Reports serial declared costs, shared actions, "
+                       "unknowns and Pareto alternatives. Best among known eligible candidates only; "
+                       "does not generate or execute plans, verify goals, collect telemetry, "
+                       "call models or contact a network.",
+        "inputSchema": {
+            "type": "object", "additionalProperties": False,
+            "properties": {"request_json": {"type": "string", "maxLength": 1048576}},
+            "required": ["request_json"],
+        },
+        "annotations": {"readOnlyHint": True, "destructiveHint": False,
+                        "idempotentHint": True, "openWorldHint": False},
+    },
+    {
         "name": "review_knowledge_links",
         "description": "Parcimonia: review supplied versioned documentary and receipt "
                        "links for missing references, stale versions and declared dependency "
@@ -1800,6 +1947,82 @@ def _tool_review_knowledge_links(args: dict) -> str:
     return json.dumps(review_knowledge_links(inventory), ensure_ascii=True, separators=(",", ":"))
 
 
+def _tool_compare_plans(args: dict) -> str:
+    from skills.conductor.preferences import parse_request_json, rank_plans
+    _assessment_arguments(args, {"request_json"})
+    return json.dumps(rank_plans(parse_request_json(args.get("request_json"))),
+                      ensure_ascii=True, allow_nan=False, separators=(",", ":"))
+
+
+def _tool_propose_plans(args: dict) -> str:
+    from skills.conductor.preferences import parse_request_json, propose_plans
+    _assessment_arguments(args, {"request_json"})
+    return json.dumps(propose_plans(parse_request_json(args.get("request_json"))),
+                      ensure_ascii=True, allow_nan=False, separators=(",", ":"))
+
+
+def _tool_select_plan(args: dict) -> str:
+    from skills.conductor.preferences import parse_request_json
+    from skills.conductor.selection import select_plan
+    _assessment_arguments(args, {"request_json", "candidate_id", "expected_input_digest"})
+    result = select_plan(parse_request_json(args.get("request_json")),
+                         args.get("candidate_id"), args.get("expected_input_digest"))
+    return json.dumps(result, ensure_ascii=True, allow_nan=False, separators=(",", ":"))
+
+
+def _tool_build_plan_candidates(args: dict) -> str:
+    from skills.conductor.preferences import parse_request_json
+    from skills.conductor.recipes import build_plan_candidates
+    _assessment_arguments(args, {"request_json"})
+    result = build_plan_candidates(parse_request_json(args.get("request_json")))
+    return json.dumps(result, ensure_ascii=True, allow_nan=False, separators=(",", ":"))
+
+
+def _tool_analyse_plan_uncertainty(args: dict) -> str:
+    from skills.conductor.preferences import parse_request_json
+    from skills.conductor.uncertainty import analyse_plan_uncertainty
+    _assessment_arguments(args, {"request_json"})
+    result = analyse_plan_uncertainty(parse_request_json(args.get("request_json")))
+    return json.dumps(result, ensure_ascii=True, allow_nan=False, separators=(",", ":"))
+
+
+def _tool_suggest_plan_measurements(args: dict) -> str:
+    from skills.conductor.preferences import parse_request_json
+    from skills.conductor.measurement import suggest_plan_measurements
+    _assessment_arguments(args, {"request_json", "max_checks", "max_questions"})
+    result = suggest_plan_measurements(parse_request_json(args.get("request_json")),
+                                      max_checks=args.get("max_checks", 32),
+                                      max_questions=args.get("max_questions", 8))
+    return json.dumps(result, ensure_ascii=True, allow_nan=False, separators=(",", ":"))
+
+
+def _tool_analyse_plan_synergies(args: dict) -> str:
+    from skills.conductor.preferences import parse_request_json
+    from skills.conductor.synergies import analyse_plan_synergies
+    _assessment_arguments(args, {"request_json"})
+    result = analyse_plan_synergies(parse_request_json(args.get("request_json")))
+    return json.dumps(result, ensure_ascii=True, allow_nan=False, separators=(",", ":"))
+
+
+def _tool_review_plan_replanning(args: dict) -> str:
+    from skills.conductor.preferences import parse_request_json
+    from skills.conductor.replanning import review_plan_replanning
+    _assessment_arguments(args, {"request_json", "checkpoint_path", "cwd"})
+    result = review_plan_replanning(parse_request_json(args.get("request_json")),
+                                   args.get("checkpoint_path"), cwd=args.get("cwd", "."))
+    return json.dumps(result, ensure_ascii=True, allow_nan=False, separators=(",", ":"))
+
+
+def _tool_prepare_plan_handoff(args: dict) -> str:
+    from skills.conductor.preferences import parse_request_json
+    from skills.conductor.handoff import prepare_plan_handoff
+    _assessment_arguments(args, {"request_json", "selection_json", "execution_plan_json"})
+    result = prepare_plan_handoff(parse_request_json(args.get("request_json")),
+                                  parse_request_json(args.get("selection_json")),
+                                  parse_request_json(args.get("execution_plan_json")))
+    return json.dumps(result, ensure_ascii=True, allow_nan=False, separators=(",", ":"))
+
+
 def _tool_assess_task(args: dict) -> str:
     from skills.preflight.assessment import assess_task
     _assessment_arguments(args, {"task", "available_tools", "context_budget"})
@@ -1842,6 +2065,15 @@ def _tool_summarize_github_evidence(args: dict) -> str:
 
 
 DISPATCH = {
+    "analyse_plan_synergies": _tool_analyse_plan_synergies,
+    "review_plan_replanning": _tool_review_plan_replanning,
+    "analyse_plan_uncertainty": _tool_analyse_plan_uncertainty,
+    "suggest_plan_measurements": _tool_suggest_plan_measurements,
+    "build_plan_candidates": _tool_build_plan_candidates,
+    "select_plan": _tool_select_plan,
+    "prepare_plan_handoff": _tool_prepare_plan_handoff,
+    "propose_plans": _tool_propose_plans,
+    "compare_plans": _tool_compare_plans,
     "check_local_links": _tool_check_local_links,
     "find_file_duplicates": _tool_find_file_duplicates,
     "compute_statistics": _tool_compute_statistics,

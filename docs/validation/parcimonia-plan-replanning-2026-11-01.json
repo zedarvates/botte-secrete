@@ -1,0 +1,198 @@
+{
+  "schema": "parcimonia.plan-replanning-validation/v1",
+  "observed_at": "2026-11-01T15:20:24.298159+00:00",
+  "parent_commit": "496fd05ba4496203a2ecc73dfece8b687b81a167",
+  "source_sha256": {
+    "examples/parcimonia_plan_preferences.json": "b277c428361d7a9126e70e92caf232e899f5b78baa81f72e1b2aa2297206b04d",
+    "examples/parcimonia_plan_replanning.json": "715bdd321b256601af56d4257e4c120a13f3d6e48d1cb982ad8fd5bee9433e52",
+    "examples/parcimonia_plan_uncertainty.json": "8ff4ed21ff3471a265a081de0c0e3ea2a602a7bceaf2987b74616f6469a3c9a0",
+    "examples/parcimonia_recipe_planning.json": "37d8f6cd560cdf387fb926954a405e8a79b0fc495231ac740ed4908adee05e61",
+    "scripts/plan_replanning_pilot.py": "ff5a323a5d4bf24271c71b9af56d069c562e2f1e0f72e37487e4c76661b52b18",
+    "scripts/plan_validation_pilot.py": "84003091a6f0d5ddb9f31b52761ef018e1d2739775d4093959267806dc299c5f",
+    "scripts/run_tests.py": "8707c8a4b523ab07a5eb5320832a9cc0198af0b6f5555c334db05abfe0649d17",
+    "scripts/test_plan_replanning_pilot.py": "3abfd7b911b8ef99b87e08b3c58481beda9ef250a66dbe7e31c580b0673d71f6",
+    "scripts/test_plan_validation_pilot.py": "0882925812a4d662e8c86d44bebe539c1c6a497e8a173a13c4b0fc657b787272",
+    "skills/conductor/cli.py": "3dc667fe7601be306ee6f35f9534cc27a4827fe4d96303f832e7c0c059d7052a",
+    "skills/conductor/handoff.py": "fe395126159e4b8a14f16dfe30c3f5da56ecc258c672c58a337f898fb391a747",
+    "skills/conductor/measurement.py": "9b8fc2c8d312ee4494438b46df622b48aeb4bcffe8ef6b11763d6a4097829960",
+    "skills/conductor/preferences.py": "790ad7c4b674405d956f4f13810f9e894997c447ae242187b59049c4c486b8a8",
+    "skills/conductor/recipes.py": "104277fb87cc506650a1952883f93a96054b43cf184ed68beda13158f30871ea",
+    "skills/conductor/replanning.py": "485ca9b8c3271a75492460ae349ba8532c413c65588498e07d1d548d1cc26e8b",
+    "skills/conductor/selection.py": "9eebd7126cb663948defb1b2c34ede7842a6f78bea026fd675ebfafc28aad1e1",
+    "skills/conductor/test_handoff.py": "5ce8f9806d31788ccba4acc7f6e2404f7807ebf513d4f3739f457148df83b1ff",
+    "skills/conductor/test_measurement.py": "88f2233c81e0e1c9927c2739afc7ade22baa37c34426e37eb5881d8524959006",
+    "skills/conductor/test_preferences.py": "af4bf3373d8c6f7e474a267bce8f4967b786d12dd0a21284250e76de46790780",
+    "skills/conductor/test_recipes.py": "362b36ce80095d4458ccd85894933fba0038b6ef9a5138e9f7c13d6fa9e0ce95",
+    "skills/conductor/test_replanning.py": "6858fc7bb492325cd508611241bbfb064fce7965b85281d276983f7c705ef56e",
+    "skills/conductor/test_selection.py": "6eab486a55998e5ae8b2f12dd09d658bdf7e18dcd1c664dd05801bc5abb65e93",
+    "skills/conductor/test_uncertainty.py": "9a408d1b83eb033a6283d689530cf9a181e42c48277df120a64a6c45fc66de84",
+    "skills/conductor/uncertainty.py": "4f2727a29f7f8d5fa861b188c439b05c58d040e5fe032d839990c2157a28d8fc",
+    "skills/llm_mcp/server.py": "4dc81c7d9c9137e059d2e5234b33df6389d0eaee9adac1fae5b015a307ed2a82",
+    "skills/llm_mcp/test_plan_preferences.py": "03a8e3336708070dc1064fee8d171f58fc99d47d892422ab16a2b9a03d6dbb42",
+    "skills/llm_mcp/test_plan_recipes.py": "c6b9a15903ac8a1b58758ef5e83a4e90016681e9e09a888c73452c38c9e40cdc",
+    "skills/llm_mcp/test_plan_replanning.py": "e5e6040675f60a70e81e35fb92704fe170c9581da913bf562524f39fc18f9d9c",
+    "skills/llm_mcp/test_plan_selection.py": "ed5e347ca9740383b050277dd51ecebfcfdc1bfc7e2c823f4213c0dd9e221311",
+    "skills/llm_mcp/test_plan_uncertainty.py": "87d388bfc83f349007ac09429f6d51912da8d8f17158e846d59bf30b581dfab2",
+    "skills/preflight/test_parcimonia.py": "bd94fc63c55cd429164bf36c5c48aec45ddb6d26cac241dee55b91180fbad2a4"
+  },
+  "environment": {
+    "platform": "Linux",
+    "python": "3.12.14"
+  },
+  "checks": {
+    "targeted": {
+      "command": "python -m unittest skills.conductor.test_replanning skills.llm_mcp.test_plan_replanning scripts.test_plan_replanning_pilot -q",
+      "core": 26,
+      "cli_mcp": 7,
+      "pilot": 6,
+      "passed": 39,
+      "failed": 0
+    },
+    "canonical_changed": {
+      "status": "passed",
+      "command": "python scripts/run_tests.py --changed -q",
+      "scope": "changed-file selection; not full repository suite",
+      "suites": 27,
+      "passed": 915,
+      "failed": 0,
+      "changed_files_at_test_selection": 43
+    },
+    "pre_commit_fast": {
+      "passed": true,
+      "python_files": 27
+    },
+    "python_3_10_grammar": {
+      "passed": true,
+      "files": 27,
+      "runtime_3_10_tested": false
+    },
+    "local_document_links": {
+      "exit_code": 0,
+      "broken_found": 0,
+      "markdown_files": 134,
+      "partial_notices": 13,
+      "coverage": "incomplete for existing unsupported Markdown constructs"
+    },
+    "checkup": {
+      "exit_code": 0,
+      "directives_score": 100,
+      "infra_score": 24,
+      "duplicate_function_groups": 4,
+      "project_local_mcp": "missing",
+      "installed_global_runtime": "not_checked"
+    },
+    "illustrative_envelope": {
+      "previous_handoff_revalidated": true,
+      "current_request_valid": true,
+      "checkpoint_supplied": false,
+      "reuse_certified": false
+    }
+  },
+  "real_pilot": {
+    "evidence_ref": "docs/validation/plan-replanning-pilot-2026-11-01.json",
+    "sha256": "db03613aa0796966eaa6f40bc8c93d5857d42c5624951916a05e90e5f52fd7e6",
+    "complete": true,
+    "failures": [],
+    "checks_passed": 14,
+    "source_hashes_match": true,
+    "source_files": 13,
+    "counters_A_B": [
+      [
+        1,
+        0
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        1,
+        1
+      ]
+    ],
+    "review_checkpoint_and_project_files_unchanged": true,
+    "timing_scope": "setup, real commands, read-only reviews, checks and cleanup; excludes serialization and host assessment",
+    "gain_claim": null
+  },
+  "retained_validation_pilot": {
+    "evidence_ref": "docs/validation/plan-validation-pilot-2026-11-01.json",
+    "sha256": "f9688d5926192c1e2698f7b67a757f9880dc1996b97b67d088ef0252e1598181",
+    "source_files": 16,
+    "source_hashes_still_match": true
+  },
+  "independent_review": {
+    "status": "no_remaining_concrete_blocker_confirmed",
+    "corrected_findings": [
+      {
+        "finding": "finished project inherited elapsed time from unrelated unstarted work",
+        "correction": "last remaining beneficiary controls remaining project completion time; zero when finished",
+        "regressions": [
+          "finished-late project limit",
+          "remaining project elapsed priority and limit",
+          "original invalid dependency order still rejected"
+        ]
+      },
+      {
+        "finding": "missing-goals details multiplied across rejected candidates",
+        "correction": "at most eight sampled goal IDs per reason with exact counts and omissions",
+        "same_fixture": {
+          "input_utf8_bytes": 146499,
+          "before_report_utf8_bytes": 590928,
+          "after_report_utf8_bytes": 108584,
+          "candidates": 4,
+          "projects": 32,
+          "goals_per_project": 64,
+          "goal_id_characters": 64
+        },
+        "claim_scope": "report size only; not model tokens or end-to-end efficiency"
+      }
+    ]
+  },
+  "acceptance_axes": {
+    "selection": {
+      "implemented": "strict separate opt-in local evidence review",
+      "gap": "candidate goals and commands remain caller declarations"
+    },
+    "consequences": {
+      "implemented": "reusable, unstarted and reconciliation states plus evidence digests",
+      "gap": "live processes and external effects unobserved"
+    },
+    "pipeline": {
+      "implemented": "recheck requires, nonempty ensures, sources and dependencies",
+      "gap": "checks cover only declared local predicates"
+    },
+    "resumption": {
+      "evidence": "real original-plan resume A/B 1/0 -> 1/1; stale evidence never replayed",
+      "gap": "initial stop is an unstarted precondition block; uncertain states use regression fixtures"
+    },
+    "experience": {
+      "implemented": "source/context/checkpoint bindings and preserved historical pilot",
+      "gap": "hash consistency is not authentication or cross-context qualification"
+    },
+    "measurement": {
+      "evidence": "fixed correctness pilot, unknown costs retained, diagnostic-byte comparison",
+      "gap": "no general task-quality, efficiency, energy or optimality gain established"
+    }
+  },
+  "boundaries": {
+    "advisory_only": true,
+    "selection": false,
+    "execution": false,
+    "checkpoint_write": false,
+    "checkpoint_migration": false,
+    "production_activation": false,
+    "central_telemetry": false,
+    "ros_or_motors": false,
+    "scope": "review helper; fixed pilot execution has separate explicit authority"
+  },
+  "limitations": [
+    "Filesystem observations are not atomic; actual resume must recheck.",
+    "Checkpoint history, source authenticity, goal semantics and authority remain unverified.",
+    "Limits are explicit remaining allowances; no sunk-cost deduction.",
+    "RAM peaks retained; no process termination or resource release inferred.",
+    "Internal cost projection is not returned for standalone choice or handoff.",
+    "Only the immutable original execution plan may use the original checkpoint.",
+    "Pilot timing excludes serialization and host assessment; unmeasured costs remain unknown.",
+    "Linux Python 3.12.14 runtime tested; Python 3.10 grammar only; Windows not tested."
+  ]
+}
