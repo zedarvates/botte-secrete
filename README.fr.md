@@ -2,366 +2,159 @@
 
 # Botte Secrète
 
-[Rapports RC1 et reproduction](docs/validation/2.0.0rc1/README.md)
-— installation propre et pilote limité sur un projet public.
-
-**Versions :** [1.9.0 — dernière version stable](https://github.com/zedarvates/botte-secrete/releases/tag/1.9.0)
-· [2.0.0rc2 — préversion pour pilotes externes](https://github.com/zedarvates/botte-secrete/releases/tag/v2.0.0rc2).
-La RC ajoute Factory Assurance, un juge indépendant et des critères de preuve.
-Commencer en mode observe, consultative ou shadow ; la validation sur un jeu
-privé/externe indépendant reste à établir. Les notes de version précisent les
-limites et l'installation au commit validé. `main` prépare la version
-**1.11.0** ; le badge ci-dessous indique cette candidate non publiée. Le
-[guide du plugin Codex](plugins/botte-secrete/README.md) explique l'installation
-séparée du runtime Python et le catalogue Git.
+**Des outils pour aider les agents de développement à réduire le contexte répété,
+choisir un traitement adapté et vérifier les preuves d'un travail terminé.**
+Disponibles en Python, en CLI et par MCP ; les modèles locaux et les fournisseurs
+cloud sont des intégrations facultatives.
 
 [![CI](https://github.com/zedarvates/botte-secrete/actions/workflows/ci.yml/badge.svg)](https://github.com/zedarvates/botte-secrete/actions)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
-[![Version](https://img.shields.io/badge/version-1.11.0-55d6be)](pyproject.toml)
+[![Version source](https://img.shields.io/badge/source_version-1.11.0-55d6be)](pyproject.toml)
 [![Licence MIT](https://img.shields.io/badge/licence-MIT-7b8cff)](LICENSE)
 
-[English](README.md) · [Documentation](docs/README.md) · [Architecture](docs/ARCHITECTURE.md) · [Développement](docs/DEVELOPMENT.md) · [Contribuer](CONTRIBUTING.md)
+[English](README.md) · [Essayer](#essayer-la-démonstration-hors-ligne) · [Plugin Codex](#connecter-votre-agent) · [Fonctions](docs/capabilities.fr.md) · [Documentation](docs/README.md)
 
-**Un plan de contrôle local-first pour les agents de développement.** Botte
-Secrète confie les tâches simples aux outils déterministes, aux petits
-classifieurs ou aux modèles locaux ; réserve le cloud aux raisonnements qui le
-nécessitent ; réduit le contexte et les sorties d’outils ; puis expose ce flux
-par une CLI Python et MCP.
+## À quoi peut-il servir ?
 
-![Salle de contrôle publique de Botte Secrète](docs/assets/dashboard-overview.png)
+- Compacter les journaux, le JSON et les sorties d'outils en conservant les
+  garanties documentées sur leur contenu.
+- Obtenir un conseil de routage ou configurer un serveur de modèle local existant.
+- Inspecter la configuration d'un projet et demander des preuves de réalisation.
 
-_Exemple d’instantané public sans données privées ; les valeurs générées sont
-illustratives et ne constituent pas une télémétrie en direct._
+Le projet est en **bêta**. Commencez par un exemple limité et vérifiez le résultat
+dans votre environnement. Un conseil de modèle, un serveur configuré et un test
+réussi sur données préparées ne prouvent pas la même chose.
 
-Le projet est en **bêta**. Ses principaux flux fonctionnent localement, mais les
-serveurs de modèles, fournisseurs cloud, accélérateurs matériels et agents tiers
-restent des systèmes externes avec leurs propres limites de sécurité.
+## Essayer la démonstration hors ligne
+
+Prérequis : **Python 3.10+ et Git**. La version publiée recommandée est
+[**v1.11.1**](https://github.com/zedarvates/botte-secrete/releases/tag/v1.11.1).
+Exécutez ces commandes depuis un nouveau dossier de travail, hors d'un dépôt
+Botte existant. Elles fixent son commit publié dans un nouvel environnement virtuel.
+
+Linux / macOS :
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install "git+https://github.com/zedarvates/botte-secrete.git@2704094f5917b0f5d384b571f195db5968c4811b"
+python -m skills.demo.cli scripted --speed 0 --no-clear
+```
+
+Windows PowerShell :
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install "git+https://github.com/zedarvates/botte-secrete.git@2704094f5917b0f5d384b571f195db5968c4811b"
+.\.venv\Scripts\python.exe -m skills.demo.cli scripted --speed 0 --no-clear
+```
+
+**Résultat attendu :** un tableau de bord en terminal montre des choix local/cloud,
+un accès au cache et une escalade à partir d'un scénario fixe. La démonstration
+n'appelle **aucun modèle ni réseau** ; ses compteurs d'économies et d'appels cloud
+proviennent de données préparées.
+
+![Démonstration déterministe du routage](docs/assets/routing-demo.svg)
+
+Pour voir de vrais tests s'exécuter, suivez la
+[démonstration des preuves de réalisation](docs/demos/completion-proof/README.md) :
+une annonce préparée est signalée, un test échoue, puis une correction préparée
+fait réussir trois tests. Le détecteur seul contrôle les marqueurs déclarés ;
+le [vérificateur de reçus](skills/completion_proof/VERIFICATION.md), distinct,
+contrôle les fichiers avec une référence fournie par un exécuteur de confiance.
+
+## Connecter votre agent
+
+| Composant | Rôle | Par où commencer |
+|---|---|---|
+| Runtime Botte Secrète | Outils, CLI, contrôles et serveur MCP | L'installation ci-dessus |
+| Plugin Codex | Consignes de travail et connexion au runtime installé séparément | [Guide de la version publiée](https://github.com/zedarvates/botte-secrete/blob/v1.11.1/plugins/botte-secrete/README.md) |
+| [Parcimonia](https://github.com/zedarvates/parcimonia) | Projet distinct pour le choix entre traitements candidats, les contrats de preuve et des API d'exécution bornée | [README Parcimonia](https://github.com/zedarvates/parcimonia#readme) |
+
+Botte inclut des outils consultatifs du workflow Parcimonia. Installer l'un des
+dépôts n'installe pas l'autre dépôt et ne configure pas automatiquement un modèle
+local. Pour travailler sur les sources, consultez le
+[guide du plugin correspondant](plugins/botte-secrete/README.md).
+Gardez le plugin et le runtime sur la même version ou le même commit relu et
+rendez `botte-mcp` accessible dans le PATH de l'agent.
+
+Pour les autres clients MCP, lisez le [guide MCP](docs/mcp-integration.md).
+La commande facultative `botte bootstrap /path/to/your-project` écrit la
+configuration et les rapports du projet sous `.botte/`, en conservant les
+serveurs MCP sans rapport. Ne versionnez pas la configuration propre à la machine.
 
 ## Adaptez Botte Secrète à vos usages
 
 Je vous conseille de demander à votre assistant IA (votre « super intelligence »)
 d'étudier ce dépôt et de l'adapter à vos objectifs, méthodes de travail, outils,
-matériel et contraintes, plutôt que de le reprendre tel quel. Demandez-lui de
-sélectionner les composants utiles et de vérifier les adaptations dans votre
+matériel et contraintes, plutôt que de le reprendre tel quel. Sélectionnez les
+composants utiles et vérifiez les adaptations dans votre environnement.
+
+Copiez cette consigne et remplissez les crochets :
+
+```text
+Étudie ce dépôt pour mon usage : [objectifs et méthodes de travail]. Mes machines
+et outils sont [OS, CPU/GPU, RAM, modèles, agent et services]. Mon budget en temps
+et en coût est [budget] et mes contraintes de confidentialité sont [données à
+garder en local]. Identifie les composants utiles, leurs prérequis et leurs
+limites actuelles. Propose une petite installation et vérifie une tâche
+représentative. Si c'est utile, coordonne mon cloud, un Space ChatGPT et mes
+machines locales avec les connecteurs et accès disponibles. Précise où chaque
+composant s'exécute et configure la stratégie de mise à jour et de synchronisation
+du code, de la configuration et de la documentation, en indiquant ce qui est
+partagé et ce qui reste local.
+```
+
+Le [guide de configuration portable](docs/adaptive-local-runtime.md) couvre
+l'inventaire local, les profils par tâche et les adaptateurs de mémoire existante.
+La synchronisation cloud/Space/local est une intégration à configurer pour votre
 environnement.
 
-Par exemple, demandez à Codex de coordonner une mise en œuvre sur votre cloud,
-dans un Space ChatGPT et sur vos machines locales, avec les connecteurs et accès
-disponibles. Faites-lui configurer une stratégie de mise à jour et de
-synchronisation du code, de la configuration et de la documentation, en précisant
-ce qui est partagé et ce qui reste local.
+## Fonctions et limites
 
-## Voir Botte à l'œuvre : « terminé » mérite une preuve
-
-Un rapport préparé annonce un travail terminé. Botte signale la preuve manquante ;
-un vrai test révèle un défaut, puis une correction préparée fait réussir les trois
-tests. [Découvrir la démonstration rejouable](docs/demos/completion-proof/README.md),
-ses résultats et sa limite : A11 détecte des marqueurs de preuve sans en vérifier
-l'authenticité.
-
-Le [vérificateur de reçus](skills/completion_proof/VERIFICATION.md), activable
-séparément, contrôle les fichiers et leurs empreintes à partir d'une référence
-fournie par l'exécuteur de confiance, hors du rapport de l'agent.
-
-## Comprendre et inspecter les petits modèles
-
-**Le code et les poids des micro-NN sont ouverts et consultables.** Ces petits
-prédicteurs aident à choisir un traitement ou à comparer un asset avec des
-exemples antérieurs. Leur réponse est un conseil : elle ne prouve pas qu'une
-tâche est correcte ou terminée.
-
-| Mécanisme | Explication simple | Ce que l'on peut consulter |
+| Fonction | Limite actuelle | Détails |
 |---|---|---|
-| **Micro-NN** — petit réseau de neurones | Un petit calculateur transforme des caractéristiques numériques, comme la complexité d'une tâche, en catégorie ou en score. Ses **poids et biais** sont les nombres appris qui servent à ce calcul. Il ne génère pas de texte. | [Poids JSON](skills/botte_nn/models/), [extraction des caractéristiques](skills/botte_nn/features.py), [code de calcul](skills/botte_nn/cli.py) et [entraînement](skills/botte_nn/training/) |
-| **k-NN** — k plus proches voisins | Recherche les exemples vérifiés les plus ressemblants, puis utilise leurs résultats pour proposer un avis. La mémoire qualité des assets montre ses voisins et s'abstient si les exemples sont insuffisants. | [Code de comparaison et de mémoire](skills/asset_quality/memory.py), [fonctionnement](skills/asset_quality/SKILL.md) et [exemple public](examples/asset-quality/mesh-report.json) |
+| Réduction du contexte | Valeurs JSON et lignes distinctes des journaux conservées ; tailles en octets UTF-8, pas en tokens facturés. Les originaux de la CLI restent dans le processus. | [Protocole d'intégrité](docs/plans/2026-09-13-compression-integrity.md) |
+| Routage et modèles locaux | Les conseils et les serveurs configurés demandent une vérification par tâche ; le matériel seul ne prouve pas la qualité du modèle. | [Configuration locale](docs/adaptive-local-runtime.md) |
+| Micro-NN et mémoire des assets | Les petits prédicteurs conseillent ; le k-NN des assets reste en observation. | [Transparence et fonctions détaillées](docs/capabilities.fr.md) |
+| Preuves de réalisation | La détection de marqueurs et la vérification des fichiers ont des limites de confiance distinctes. | [Contrat de vérification](skills/completion_proof/VERIFICATION.md) |
+| Économies | Le benchmark fourni utilise des échantillons synthétiques. Les gains réels de coût et de qualité doivent être mesurés sur votre travail. | [Périmètre du benchmark](docs/capabilities.fr.md#benchmark-mesuré) |
 
-Par exemple, un micro-NN peut conseiller un traitement local pour une tâche
-simple. Le k-NN peut comparer un rapport de maillage à des maillages déjà vérifiés
-de la même famille. Les contrôles déterministes et la politique de vérification
-applicable restent nécessaires.
+Les traitements déterministes locaux n'exigent aucun identifiant cloud.
+Aucun suivi produit, démon, démarrage automatique ou tâche planifiée n'est
+installé par défaut. Consultez le
+[tableau d'impact système](docs/capabilities.fr.md#sécurité-et-impact-système).
 
-### Les fichiers publics sur Hugging Face
+## Choisir une version
 
-| Dépôt public | Ce qui est réellement accessible |
+| Source | Usage |
 |---|---|
-| [Botte Nano-NN](https://huggingface.co/zedgamer/botte-nano-nn) | [Six fichiers de poids JSON](https://huggingface.co/zedgamer/botte-nano-nn/tree/main/models), lisibles dans le navigateur et téléchargeables ; par exemple [binary_router.json](https://huggingface.co/zedgamer/botte-nano-nn/blob/main/models/binary_router.json). La fiche déclare la licence MIT. |
-| [Asset Quality Memory k-NN](https://huggingface.co/zedgamer/asset-quality-memory-knn) | [Une fiche publique et les liens vers le code](https://huggingface.co/zedgamer/asset-quality-memory-knn/tree/main). Ce k-NN n'a pas de fichier de poids neuronaux : sa mémoire d'exemples reste locale au projet et n'est pas publiée. |
+| [Version stable v1.11.1](https://github.com/zedarvates/botte-secrete/releases/tag/v1.11.1) | Installation publiée recommandée ; les notes relient les fichiers et les limites de validation. |
+| Ces sources (`1.11.0` dans [pyproject.toml](pyproject.toml)) | Développement ; le numéro seul n'identifie pas la version publiée. Conservez le SHA des sources. |
+| [Branche pilote 2.0.0rc2](https://github.com/zedarvates/botte-secrete/releases/tag/v2.0.0rc2) | Préversion historique distincte pour des pilotes Factory Assurance limités ; lire son périmètre et ses preuves. |
 
-L'accès public a été vérifié sans identifiants le **14 septembre 2026**.
-Les six modèles du Hub constituent un instantané **différent des onze fichiers
-JSON présents dans ce dépôt GitHub**. Utiliser les poids et les caractéristiques
-de la même version ; consulter l'[inventaire daté](docs/model-transparency-check.json)
-et les [règles de publication et de provenance](docs/huggingface-publication.md).
+La version stable consigne une validation Windows et Ubuntu sous WSL. Elle ne
+prouve pas la compatibilité macOS native, ARM/Pi, les performances GPU ni des
+gains généraux de qualité. Chaque version conserve ses preuves ; le badge
+ci-dessus décrit ces sources.
 
-L'ouverture permet d'inspecter le fonctionnement ; elle ne garantit ni la
-précision ni la maturité en production. La [roadmap de validation](docs/plans/2026-08-06_micro-nn-grounding-roadmap.md)
-précise les exigences. Le code est sous [licence MIT](LICENSE), également
-déclarée par les fiches publiques du Hub. Comprendre l'algorithme ne nécessite
-pas de partager sa mémoire privée d'exemples.
+## Documentation et contribution
 
-## Pourquoi Botte Secrète ?
-
-Les agents consomment souvent des tokens coûteux pour des opérations qui ne
-nécessitent pas un grand modèle : classer une demande, choisir un outil,
-dédupliquer un journal, vérifier un schéma ou retrouver un résultat exact.
-Botte ajoute une couche de décision peu coûteuse avant l’appel au modèle.
-
-```mermaid
-flowchart LR
-    A["Tâche de l’agent"] --> B["Politique et découverte des capacités"]
-    B --> C{"Chemin suffisant le moins coûteux"}
-    C --> D["Règles et outils déterministes"]
-    C --> E["Classifieurs micro-NN"]
-    C --> F["LLM local"]
-    C --> G["LLM cloud"]
-    D --> H["Vérification"]
-    E --> H
-    F --> H
-    G --> H
-    H -->|réussite| I["Résultat compact"]
-    H -->|abstention ou échec| C
-```
-
-Le principe par défaut est : **utiliser le chemin vérifiable le moins cher**.
-Local ne signifie pas fiable par nature ; les résultats passent encore par des
-contrôles structurés, des preuves ou une escalade explicite.
-
-## Ce que contient le projet
-
-| Domaine | Fonction | Point d’entrée |
-|---|---|---|
-| Routage | Choisit une exécution déterministe, locale ou cloud | `botte route` |
-| Mémoire qualité | Apprend des résultats vérifiés et explique les conseils k-NN en observation | `botte qa` |
-| Qualité des assets | Contrôle et compare images, textures, maillages, animations et paquets Godot | `botte asset-qa` |
-| Diagnostic | Vérifie politique, directives, métriques, sécurité et dérive | `botte doctor` |
-| Réduction du contexte | Compresse journaux, JSON, sorties d’outils et contexte sélectionné | `universal_compressor`, `context_budget` |
-| Ceinture micro-NN | Fournit des indices de routage avec de petits classifieurs, pas des LLM | `botte belt` |
-| Modèles locaux | Détecte les serveurs compatibles OpenAI, dont LM Studio et Ollama | `llm_backends` |
-| Inférence locale adaptable | Configure des profils par tâche et réutilise une mémoire commune ou externe | `botte runtime` |
-| MCP | Expose routage, découverte, audit et optimisation sur stdio | `botte-mcp` |
-| Dashboard | Affiche les instantanés publics et les mesures locales | `botte dashboard` |
-| Regard stratégique | Remet en question les hypothèses partagées par les équipes bleue et rouge avant une décision coûteuse | `monte_cristo` |
-
-Les contrats détaillés vivent dans `skills/<nom>/SKILL.md`. Les flux entre
-modules et les frontières de confiance sont décrits dans le
-[guide d’architecture](docs/ARCHITECTURE.md).
-
-## Configurer Botte avec votre propre LLM
-
-Pour faire adapter Botte par **votre propre LLM**, consultez le
-[guide de configuration portable](docs/adaptive-local-runtime.md). Il fournit
-une consigne en français à copier, un inventaire local, des profils validables
-hors ligne et des adaptateurs pour votre mémoire existante. Les comparatifs
-mesurent des moteurs déjà configurés ; aucun gain ni support spéculatif n'est
-présumé à partir du seul matériel déclaré.
-
-```bash
-botte runtime inspect
-botte runtime template --topology single --memory none
-```
-
-## Agent stratégique : Monte Cristo
-
-**Monte Cristo est le regard stratégique indépendant et en lecture seule de
-Botte Secrète.** Les agents de l’équipe bleue améliorent le système et ceux de
-l’équipe rouge le contestent ; Monte Cristo prend du recul lorsque les deux
-équipes risquent de partager les mêmes hypothèses héritées.
-
-![Flux de gouvernance stratégique de Monte Cristo](docs/assets/monte-cristo-governance.svg)
-
-_Schéma de gouvernance maintenu ; il décrit les limites d’autorité et
-d’approbation, pas une trace d’exécution._
-
-Utilisez-le avant une refonte d’architecture coûteuse, un programme de recherche,
-une migration ou une décision dominée par les coûts déjà engagés. Ne l’utilisez
-pas pour une revue de code ordinaire ou une correction étroite déjà vérifiée. Il
-retourne des propositions bornées `KEEP`, `REPAIR`, `REPLACE`, `RETIRE` ou
-`INVESTIGATE`, accompagnées de preuves et d’un prochain test. Il ne peut ni
-modifier, déployer, acheter, publier, ni exécuter ses recommandations : toute
-décision conséquente exige une approbation humaine et un agent d’implémentation
-séparé.
-
-![Décision de routage Monte Cristo produite par la CLI fournie](docs/assets/monte-cristo-cli.svg)
-
-_Capture CLI reproductible issue de l’évaluateur de routage déterministe hors
-ligne ; elle prouve le câblage d’activation, pas la qualité de verdicts ouverts._
-
-```bash
-python -m skills.monte_cristo.cli route "Faut-il remplacer cette architecture héritée ?" --material --pretty
-python -m skills.monte_cristo.cli template "Réévaluer la direction de la plateforme" --pretty
-python -m skills.monte_cristo.cli eval --pretty
-```
-
-Consultez la [définition de l’agent](agents/monte-cristo.md), le
-[guide d’utilisation](skills/monte_cristo/README.md) et le
-[contrat de rapport validé](skills/monte_cristo/report.schema.json).
-
-## Démarrage rapide
-
-Prérequis : Python 3.10 ou plus récent et Git. Sous Windows, utilisez `python`.
-
-### Installation depuis GitHub
-
-```bash
-python -m pip install git+https://github.com/zedarvates/botte-secrete.git
-python -m skills.cli --help
-python -m skills.auto_router.checkup_belt2
-```
-
-Déployez la configuration MCP et la politique locale dans un projet :
-
-```bash
-botte bootstrap /path/to/your-project
-```
-
-Le bootstrap conserve les serveurs MCP existants. Il écrit sa configuration et
-ses rapports sous `.botte/`. Ces fichiers peuvent contenir des chemins absolus
-propres à la machine et ne doivent pas être versionnés.
-
-### Travail depuis un clone
-
-```bash
-git clone https://github.com/zedarvates/botte-secrete.git
-cd botte-secrete
-python -m pip install -e .
-python scripts/run_tests.py -q
-python -m skills.checkup.cli .
-```
-
-Le lanceur complet reste la source de vérité pour le nombre actuel de tests. Le
-README n’immobilise donc plus ce chiffre changeant dans un badge.
-
-## Démonstration hors ligne
-
-La démonstration utilise des événements fixes. Elle n’appelle ni LLM ni réseau.
-
-```bash
-python -m skills.demo.cli scripted --speed 0 --no-clear
-```
-
-![Démonstration déterministe du routage](docs/assets/routing-demo.svg)
-
-_Fixture hors ligne fixe ; il s’agit d’une sortie de démonstration reproductible,
-pas d’une télémétrie de projet en direct._
-
-Pour un vrai projet, utilisez `python -m skills.demo.cli live /path/to/project`
-ou `botte dashboard /path/to/project --tui`. Ces vues lisent les événements
-locaux ; elles ne prouvent une économie que si les mesures correspondantes sont
-présentes.
-
-## Benchmark mesuré
-
-Le benchmark fourni teste compression, élagage, sélection de contexte et
-micro-NN sur un corpus synthétique fixe. Il sert à repérer les régressions et ne
-promet pas le même résultat pour chaque dépôt.
-
-L'activation suit la
-[roadmap de grounding](docs/plans/2026-08-06_micro-nn-grounding-roadmap.md) :
-aucun nouveau micro-NN n'est activé tant qu'un modèle existant n'a pas une
-source de labels auditable, des verdicts de production, une calibration et un
-rollback. Utilisez `checkup` ou
-`python -m skills.nn_audit.cli skills/botte_nn --json` pour l'état courant.
-
-Les Asset Factories peuvent utiliser la [mémoire qualité des assets](skills/asset_quality/SKILL.md) :
-les contrôles déterministes d'intégrité et de licence passent d'abord, puis un
-k-NN explicable et isolé par famille conseille en mode observation. Un
-[rapport de maillage complet](examples/asset-quality/mesh-report.json) est
-fourni. Aucun octet d'asset ni chemin local n'entre dans la mémoire vérifiée.
-
-Le dépôt MIT existant
-[Botte Nano-NN sur Hugging Face](https://huggingface.co/zedgamer/botte-nano-nn)
-héberge un instantané portable du format micro-NN. Le code source, les contrats
-de caractéristiques, les tests et l'état de maturité restent autoritaires ici.
-La [fiche k-NN des assets sur Hugging Face](https://huggingface.co/zedgamer/asset-quality-memory-knn)
-est publique ; voir la
-[check-list de publication](docs/huggingface-publication.md).
-
-![Réduction mesurée sur les échantillons fournis](docs/assets/benchmark-compression.svg)
-
-_Mesure effectuée sur les échantillons synthétiques fournis ; les résultats
-varient selon le contenu. Consultez les [notes de provenance et de
-régénération](docs/screenshots-plan.md)._
-
-Régénérez le graphique et la capture de routage :
-
-```bash
-python scripts/generate_docs_visuals.py
-python scripts/benchmark_full.py --json
-```
-
-Le code reste intact. Le JSON conserve toutes ses valeurs et les logs gardent
-leurs lignes distinctes dans l'ordre. Les tailles sont des octets UTF-8, pas des
-tokens facturés. Les originaux restent en mémoire du processus jusqu'à son arrêt
-ou au vidage du stockage ; la CLI ne fournit pas de restauration persistante.
-Voir le [protocole de comparaison](docs/plans/2026-09-13-compression-integrity.md).
-
-## Architecture résumée
-
-```mermaid
-flowchart TB
-    Agent["Agent ou automatisation"] --> MCP["CLI Botte / plan d’outils MCP"]
-    MCP --> Policy["Politique, budget et garde-fous"]
-    Policy --> Discover["Découverte des capacités et compétences"]
-    Discover --> Route["Routeur et indices micro-NN"]
-    Route --> Execute["Outils déterministes, modèles locaux ou cloud"]
-    Execute --> Verify["Harness et vérification structurée"]
-    Verify --> Observe["Événements, métriques, cache et dashboard"]
-    Observe -. retour .-> Route
-
-    Target["Projet cible"] <--> MCP
-    Local["Serveur de modèle local"] <--> Execute
-    Cloud["Fournisseur cloud facultatif"] <--> Execute
-```
-
-Botte ne possède ni l’agent, ni le dépôt cible, ni le serveur de modèle, ni le
-fournisseur cloud. Le [guide d’architecture](docs/ARCHITECTURE.md) détaille les
-flux, frontières de confiance et modules de référence.
-
-## Sécurité et impact système
-
-| Surface | Comportement par défaut |
+| Objectif | Guide |
 |---|---|
-| Réseau | Aucun accès pour les flux déterministes ; les modèles et opérations `--fresh` sont explicites |
-| Télémétrie | Aucun suivi produit ni appel automatique à un service distant |
-| Services | Aucun démon, démarrage automatique, `sudo` ou tâche planifiée par défaut |
-| Projets cibles | Le bootstrap fusionne la configuration MCP sans remplacer les serveurs sans rapport |
-| Événements locaux | Stockés sous `.botte/` dans le projet cible lorsque la fonction est utilisée |
-| Vue multi-projets | Registre volontaire ; aucune découverte globale du système de fichiers |
-| Identifiants cloud | Lus dans l’environnement par les adaptateurs ; inutiles pour les flux locaux |
-
-Signalez toute vulnérabilité en privé selon [SECURITY.md](SECURITY.md).
-
-## Carte de la documentation
-
-| Objectif | Document |
-|---|---|
-| Trouver le bon document | [Index de la documentation](docs/README.md) |
-| Comprendre le système | [Architecture](docs/ARCHITECTURE.md) |
-| Développer ou tester Botte | [Guide de développement](docs/DEVELOPMENT.md) |
-| Intégrer MCP | [Intégration MCP](docs/mcp-integration.md) |
+| Parcourir la documentation | [Index](docs/README.md) |
+| Consulter modules, modèles, Monte Cristo et benchmarks | [Fonctions détaillées](docs/capabilities.fr.md) |
+| Comprendre les flux et les limites de confiance | [Architecture](docs/ARCHITECTURE.md) |
+| Connecter une mémoire commune | [API mémoire et pont MCP](docs/shared-memory.md) |
 | Connecter Hermes | [Intégration Hermes](docs/integrations/hermes.md) |
-| Comprendre l’optimiseur de boucle | [Loop Optimizer](docs/loop-optimizer.md) |
-| Consulter les versions | [Changelog](CHANGELOG.md) |
-| Proposer une modification | [Guide de contribution](CONTRIBUTING.md) |
+| Développer, lancer les contrôles ou signaler un problème reproductible | [Développement](docs/DEVELOPMENT.md) · [Contribuer](CONTRIBUTING.md) |
+| Consulter les changements | [Changelog](CHANGELOG.md) · [Versions](https://github.com/zedarvates/botte-secrete/releases) |
 
-Les fichiers sous `docs/plans/`, `docs/research/` et les dossiers équivalents
-décrivent des propositions ou expériences, pas automatiquement l’état actuel.
-
-## Développement
-
-```bash
-python scripts/run_tests.py --changed -q
-python scripts/pre-commit-check.py --fast
-python scripts/test_readme_commands.py
-python scripts/check_docs_links.py
-```
-
-Le cœur privilégie la bibliothèque standard. Les analyseurs et interfaces
-installables utilisent les dépendances déclarées dans `pyproject.toml`. Toute
-nouvelle affirmation publique devrait pointer vers un test, benchmark, schéma ou
-fichier source vérifiable.
-
-## Licence et auteur
+Pour une question ou un bug, [ouvrez une issue](https://github.com/zedarvates/botte-secrete/issues)
+avec la version des sources, l'environnement et une reproduction sans données
+privées. Signalez les vulnérabilités en privé selon [SECURITY.md](SECURITY.md).
+Les plans et recherches restent des propositions tant qu'une preuve
+d'implémentation ne les accompagne pas.
 
 Distribué sous [licence MIT](LICENSE). Créé par
 [Sylvain Galliez](https://github.com/zedarvates).
