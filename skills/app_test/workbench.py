@@ -118,6 +118,13 @@ def main(argv=None) -> int:
     s.add_argument("--max-input-bytes", type=int, default=524288)
     s.add_argument("--max-excerpt-chars", type=int, default=2000)
     s.add_argument("--max-output-bytes", type=int, default=32768)
+    s = sub.add_parser("answer-request", help="prepare cited model input from document context; no inference")
+    s.add_argument("--input", required=True, help="document-context or recalled-document-context JSON")
+    s.add_argument("--question", required=True)
+    s.add_argument("--model", help="optional caller-declared model name; no discovery or qualification")
+    s.add_argument("--max-sources", type=int, default=8)
+    s.add_argument("--max-request-bytes", type=int, default=32768)
+    s.add_argument("--max-output-bytes", type=int, default=65536)
     args = p.parse_args(argv)
     try:
         op = args.operation
@@ -212,6 +219,12 @@ def main(argv=None) -> int:
             from skills.app_test.knowledge_links import review_knowledge_links
             report = review_knowledge_links(read_json(args.input))
             code = {"completed": 0, "findings": 1}.get(report.get("status"), 2)
+        elif op == "answer-request":
+            from skills.app_test.grounded_request import prepare_grounded_request
+            report = prepare_grounded_request(read_json(args.input, maximum=262144), args.question,
+                model=args.model, max_sources=args.max_sources,
+                max_request_bytes=args.max_request_bytes, max_output_bytes=args.max_output_bytes)
+            code = 0 if report.get("status") == "ready" else 2
         elif op == "document-context":
             from skills.app_test.document_context import prepare_document_context, prepare_recalled_document_context
             prepare = prepare_recalled_document_context if args.recall else prepare_document_context

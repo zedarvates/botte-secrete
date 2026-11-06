@@ -68,3 +68,8 @@ Zero does not mean recalled tests passed. Hash agreement proves agreement with
 caller pins, not truth, authenticity or freshness. No provider tokens, cost or
 acceleration is measured. Local-file tests do not qualify the user's real
 SavoirWiki mirror, workstation or LLM backend.
+
+The next deterministic step is
+[`answer-request`](parcimonia-grounded-request.md): it prepares a bounded cited
+mapping for the existing chat interface, or abstains if the evidence contract
+does not hold. It does not send the mapping to a model.
