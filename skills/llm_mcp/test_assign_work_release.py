@@ -34,6 +34,10 @@ def test_weighted_and_decimal_costs_are_preserved():
     {'tasks': ['a:1e308', 'b:1e308'], 'workers': ['w']},
     {'tasks': ['x'], 'workers': ['w'], 'budget_ms': 0},
     {'tasks': ['x'], 'workers': ['w'], 'strategy': 'bounded', 'budget_ms': 11},
+    {'tasks': ['x'] * 1025, 'workers': ['w']},
+    {'tasks': ['x'], 'workers': [f'w{i}' for i in range(65)]},
+    {'tasks': ['x' * 257], 'workers': ['w']},
+    {'tasks': [['x', '0' * 257]], 'workers': ['w']},
 ])
 def test_invalid_requests_fail(args):
     with pytest.raises(ValueError):
@@ -66,7 +70,13 @@ def test_stdio_lists_and_executes_contract():
     messages = {x['id']: x for x in map(json.loads, result.stdout.splitlines()) if 'id' in x}
     tools = {x['name']: x for x in messages[1]['result']['tools']}
     assert 'bounded' in tools['assign_work']['inputSchema']['properties']['strategy']['enum']
+    assert tools['assign_work']['inputSchema']['properties']['tasks']['maxItems'] == 1024
+    assert tools['assign_work']['inputSchema']['properties']['workers']['maxItems'] == 64
     assert json.loads(messages[2]['result']['content'][0]['text'])['total'] == 10
+
+
+def test_string_pair_cost_is_supported():
+    assert call([['a', '2.5']])['total'] == 2.5
 
 
 def test_oversized_item_is_reported_separately_from_bins():

@@ -36,7 +36,7 @@ def assign_balanced(tasks: list, workers: list) -> dict:
     assignment = {w: [] for w in workers}
     for name, cost in order:
         # least-loaded worker; ties broken by worker order for determinism
-        w = min(workers, key=lambda x: (load[x], workers.index(x)))
+        w = min(workers, key=load.__getitem__)
         assignment[w].append({"task": name, "cost": cost})
         load[w] += cost
 
