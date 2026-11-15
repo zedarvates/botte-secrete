@@ -321,7 +321,10 @@ class VerificationTests(unittest.TestCase):
 
 
 def main():
-    suite = unittest.defaultTestLoader.loadTestsFromTestCase(VerificationTests)
+    suite = unittest.TestSuite([
+        unittest.defaultTestLoader.loadTestsFromTestCase(VerificationTests),
+        unittest.defaultTestLoader.loadTestsFromName("skills.completion_proof.test_mission"),
+    ])
     result = unittest.TextTestRunner(verbosity=2).run(suite)
     failed = len(result.failures) + len(result.errors)
     print(f"RESULT: {result.testsRun - failed - len(result.skipped)} passed, {failed} failed")

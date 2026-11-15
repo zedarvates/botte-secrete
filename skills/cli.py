@@ -43,6 +43,7 @@ _COMMANDS = {
     "migration-audit": ("skills.migration_audit.cli", "verify migration completeness"),
     "code": ("skills.fast_context.cli", "bounded Zig/GDScript source lookup and context"),
     "verify": ("skills.app_test.workbench", "bounded reproduction, mutation, triage and conformance checks"),
+    "completion-proof": ("skills.completion_proof.cli", "verify pinned receipts and mission criteria"),
     "gain": ("skills.metrics.cli", "show measured cost/savings metrics"),
     "discover": ("skills.infra_advisor.cli", "find optimization opportunities"),
     "rules": ("skills.directives_audit.rules_cli", "audit committed rule contracts"),

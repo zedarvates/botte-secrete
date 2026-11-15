@@ -1,0 +1,75 @@
+{
+  "schema": "botte.workflow-implementation-validation/v1",
+  "task_id": "WF-001",
+  "repository": "zedarvates/botte-secrete",
+  "base_revision": "7b8d73ae7526c6fc369e7f5f1734144671774f81",
+  "environment": {
+    "platform": "linux",
+    "python": "3.12.14"
+  },
+  "commands": [
+    {
+      "argv": [
+        "python",
+        "scripts/run_tests.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "passed": 2504,
+      "failed": 0,
+      "suites": 129,
+      "partial": false,
+      "log_sha256": "3e76f44d3166dc3180dcd8fdd51bb668b76894d6eb20af5b3fe3baa15009bab4"
+    },
+    {
+      "argv": [
+        "python",
+        "-m",
+        "skills.checkup.cli",
+        ".",
+        "--json"
+      ],
+      "exit_code": 0,
+      "limitation": "No project-local MCP declaration; installed/global runtime discovery not qualified."
+    }
+  ],
+  "review": {
+    "mission_gate": "independent source review and 20 mission tests, no blocker demonstrated",
+    "worktree_lifecycle": "ignored local files and malformed PR URL corrected with regressions"
+  },
+  "scope": [
+    "versioned optional mission contract over existing v1 receipts",
+    "explicit incomplete review states and evidence-bound final review",
+    "read-only worktree reconciliation and cleanup proposals",
+    "packaged completion-proof CLI alias"
+  ],
+  "sources": {
+    "AGENTS.md": "042fe23cbff56ecb74211b45a66f4df82bb81b5c8b4632e77917bcb5d7191184",
+    "docs/integrations/verified-mission.md": "c62ee206db8257d8d4900c5cd550ffec85149ed4de43f9948113efdff284a989",
+    "docs/schemas/verified-mission.schema.json": "14c21de09505c5214a45a0b22563176d22c9c9a86b36a8af096d89ea5dfee419",
+    "docs/verified-workflow.md": "ba9d9e1de203cd38a5cdcf3f481325f89bce5722cf15be88397bffb3bbc330b1",
+    "docs/worktree-lifecycle.md": "ee1c8d13fcc617f0a51bf1a06527c77e2385b3cd41700087e9ec03b0cf60d0f6",
+    "scripts/run_tests.py": "9c5cccf094184dd179e9266a94109d552cc716956e81278ab4a74c6d221823ef",
+    "scripts/test_worktree_lifecycle.py": "a3ddd58d12ae284cb581c9063a404ffefa470fae1ccc54db442bd75f0911b4b9",
+    "scripts/worktree_lifecycle.py": "bacd229b0c718c896103458905aef5434f027aedffb35e84b7d74b9d9700417c",
+    "skills/cli.py": "076166f1897781ada9e138f3add00bf9fb7970581944cfab17e21872755f901f",
+    "skills/completion_proof/cli.py": "19f3c3ba92f0c5db72f00fbf66025394b9baf46296aa0ecfd4b633f4f8767bdf",
+    "skills/completion_proof/mission.py": "7bdfa865fde0267e703b4ce05832bf6811755b9e8423b05636db2015cd69c4e9",
+    "skills/completion_proof/presentation.py": "5ac55791e2cd318ea612665ea101c11b60880d98247dbd4ae7224c2da753d321",
+    "skills/completion_proof/test_mission.py": "aee7540074441b8497dc625ff70ffd00f5415f76b11e0d83c2472ab36abef849",
+    "skills/completion_proof/test_verify.py": "7cfad548c2c8011fb8e23d446c1266719ee2da6195f127dcd67a32252c4c35c1",
+    "skills/test_cli.py": "4ee93a52ad2a2c70f4f325a5de388ddbdf2649531a3d3b18859a23a5fdc55869"
+  },
+  "limits": [
+    "Hashes bind the inspected files, not the truth of executor observations.",
+    "No workstation deployment or active routing change.",
+    "No worktree, branch or user data removed.",
+    "No real Ultimate Odycer multiplayer run; canonical server unavailable.",
+    "No measured saving in cost or quality."
+  ],
+  "prior_incomplete_run": {
+    "passed": 2467,
+    "failed": 1,
+    "reason": "New unittest entry point initially omitted canonical RESULT summary; test adapter corrected before final full run."
+  }
+}

@@ -65,3 +65,19 @@ def format_result(result: dict, language: str = "fr") -> str:
         lines.insert(-2, copy["skipped"].format(executed=result.get("tests_executed", 0),
                                                skipped=result["tests_skipped"]))
     return "\n".join(lines)
+
+
+def format_mission_result(result: dict, language: str = "fr") -> str:
+    """Mission output stays distinct from ordinary test-receipt verification."""
+    verified = (result.get("schema") == "botte.mission-verification/v1"
+                and result.get("status") == "verified_on_mission_criteria"
+                and result.get("verified") is True and result.get("errors") == [])
+    if language == "fr":
+        title = "Critères de mission vérifiés" if verified else "Mission non vérifiée"
+        scope = ("Portée : témoins épinglés, tests enregistrés et fichiers listés ; "
+                 "la vérité des observations et l'indépendance du relecteur restent à qualifier.")
+        return f"{title}\n{len(result.get('criteria', []))} critère(s) contrôlé(s).\n{scope}"
+    title = "Mission criteria verified" if verified else "Mission not verified"
+    return (f"{title}\n{len(result.get('criteria', []))} criterion checks recorded.\n"
+            "Scope: pinned witnesses, recorded tests and listed files; observation truth "
+            "and reviewer independence still require qualification.")
