@@ -831,12 +831,20 @@ TOOLS = [
     },
     {
         "name": "assign_work",
-        "description": "Balance (name:cost) tasks across workers/backends to minimize the "
-                       "makespan (LPT greedy) — an exact-ish deterministic scheduler for "
-                       "spreading cluster work. 0 cloud tokens.",
+        "description": "Balance tasks across workers using deterministic LPT greedy scheduling. "
+                       "Use 'name:cost' strings or [name, cost] pairs; a plain name has cost 1. "
+                       "Costs must be finite and non-negative. Estimates do not guarantee "
+                       "an optimal makespan. No model or network calls.",
         "inputSchema": {"type": "object", "properties": {
-            "tasks": {"type": "array", "description": "[[name, cost], …]"},
-            "workers": {"type": "array", "items": {"type": "string"}}},
+            "tasks": {"type": "array", "description": "Task names, 'name:cost' strings, or [name, cost] pairs.",
+                      "items": {"anyOf": [{"type": "string"}, {"type": "array", "minItems": 2,
+                                          "maxItems": 2, "prefixItems": [{"type": "string"},
+                                                                       {"type": "number", "minimum": 0}]}]}},
+            "workers": {"type": "array", "minItems": 1, "uniqueItems": True, "items": {"type": "string", "minLength": 1}},
+            "strategy": {"type": "string", "enum": ["lpt", "bounded"],
+                         "description": "lpt (default) or bounded search with up to four decimal places and visible LPT fallback."},
+            "budget_ms": {"type": "number", "minimum": 0, "maximum": 10,
+                          "description": "Only with bounded strategy: soft search budget in milliseconds; 0 forces LPT; default 10."}},
             "required": ["tasks", "workers"]},
     },
     {
@@ -1618,9 +1626,46 @@ def _tool_schedule_plan(args: dict) -> str:
 
 
 def _tool_assign_work(args: dict) -> str:
+    import math
+    from skills.llm_mcp.assign_work import normalize_tasks, has_unsupported_precision
+    from skills.llm_mcp.assign_decimal import assign_decimal as assign_with_search
     from skills.solvers import assign_balanced
-    return json.dumps(assign_balanced(args["tasks"], args["workers"]),
-                      ensure_ascii=False, indent=2)
+    strategy = args.get("strategy", "lpt")
+    if strategy not in ("lpt", "bounded"):
+        raise ValueError("strategy must be lpt or bounded")
+    if strategy == "lpt" and "budget_ms" in args:
+        raise ValueError("budget_ms requires bounded strategy")
+    raw_tasks, workers = args["tasks"], args["workers"]
+    if not isinstance(raw_tasks, list):
+        raise ValueError("tasks must be a list")
+    if (not isinstance(workers, list) or not workers
+            or any(not isinstance(w, str) or not w.strip() for w in workers)
+            or len(set(workers)) != len(workers)):
+        raise ValueError("workers must be a non-empty list of distinct non-empty names")
+    tasks = normalize_tasks(raw_tasks)
+    try:
+        total = math.fsum(cost for _, cost in tasks)
+    except OverflowError:
+        raise ValueError("total cost must be finite") from None
+    if not math.isfinite(total):
+        raise ValueError("total cost must be finite")
+    if strategy == "lpt":
+        result = assign_balanced(tasks, workers)
+    else:
+        budget = args.get("budget_ms", 10)
+        if isinstance(budget, bool) or not isinstance(budget, (int, float)) or not math.isfinite(budget) or not 0 <= budget <= 10:
+            raise ValueError("budget_ms must be a finite number from 0 to 10")
+        if budget > 0 and has_unsupported_precision(raw_tasks):
+            result = assign_balanced(tasks, workers)
+            metadata = {"mode": "lpt", "reason": "unsupported_precision", "optimal": False}
+        else:
+            result, metadata = assign_with_search(tasks, workers, assign_balanced, budget_ms=budget)
+        result = dict(result, search=dict(metadata, budget_ms=budget))
+    # Recompute summaries without the solver's four-decimal display rounding.
+    result["loads"] = {w: math.fsum(item["cost"] for item in result["assignment"][w]) for w in workers}
+    result["makespan"] = max(result["loads"].values())
+    result["total"] = total
+    return json.dumps(result, ensure_ascii=False, indent=2, allow_nan=False)
 
 
 def _tool_cwe_explain(args: dict) -> str:
