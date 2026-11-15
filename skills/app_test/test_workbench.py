@@ -12,6 +12,7 @@ MODULES = (
     "skills.app_test.test_memory_retrieval", "skills.app_test.test_recall_cli",
     "skills.app_test.test_recalled_links",
     "skills.app_test.test_document_context",
+    "skills.app_test.test_grounded_request", "skills.app_test.test_grounded_cli",
 )
 
 

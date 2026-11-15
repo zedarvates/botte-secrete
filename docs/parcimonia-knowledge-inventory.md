@@ -92,4 +92,7 @@ The [local content adapter](parcimonia-document-context.md) now reads selected
 Markdown/text references through an explicit URI/version/path/SHA-256 catalog.
 It returns pinned excerpts with line citations while preserving recall limits;
 the real private mirror and local model still require runtime qualification.
+The [request preparer](parcimonia-grounded-request.md) binds those excerpts to
+stable citation IDs and prepares existing chat arguments without inference.
+Incomplete/contradictory context or request budgets produce an abstention.
 This inventory alone adds neither a store nor an automatic memory write.
