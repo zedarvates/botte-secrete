@@ -38,7 +38,7 @@ class VerifiedRunTests(unittest.TestCase):
         return execute_verified(p, cwd=str(self.root), **kwargs)
 
     def write(self, path, value="done"):
-        (self.root / path).write_text(value, encoding="utf-8")
+        (self.root / path).write_text(value, encoding="utf-8", newline="\n")
 
     def test_zero_exit_without_required_artifact_blocks_only_descendants(self):
         p = plan(step("build"), step("consume", needs=["build"]), step("independent"))

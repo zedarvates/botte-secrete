@@ -102,7 +102,7 @@ class SymbolTests(unittest.TestCase):
     def test_leaf_symlink_refused(self):
         with tempfile.TemporaryDirectory() as tmp:
             source, link = Path(tmp) / 'real.gd', Path(tmp) / 'link.gd'
-            source.write_text('func spawn():\n', encoding='utf-8')
+            source.write_text('func spawn():\n', encoding='utf-8', newline="\n")
             try:
                 link.symlink_to(source)
             except (OSError, NotImplementedError):
@@ -121,7 +121,7 @@ class SymbolTests(unittest.TestCase):
     def test_real_cli_success_empty_and_error(self):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / 'server.zig'
-            path.write_text('pub fn spawn() void {}\n', encoding='utf-8')
+            path.write_text('pub fn spawn() void {}\n', encoding='utf-8', newline="\n")
             for name, expected in (('spawn', 1), ('missing', 0)):
                 out = io.StringIO()
                 with contextlib.redirect_stdout(out):
@@ -159,7 +159,7 @@ class ContextTests(unittest.TestCase):
         self.assertIsNone(report['function_body_complete'])
 
     def test_stale_file_returns_no_source_text(self):
-        self.path.write_text('func spawn():\n    secret_current_value = 42\n', encoding='utf-8')
+        self.path.write_text('func spawn():\n    secret_current_value = 42\n', encoding='utf-8', newline="\n")
         report = self.read()
         self.assertEqual(report['status'], 'stale_source')
         self.assertEqual(report['text'], '')
@@ -172,7 +172,7 @@ class ContextTests(unittest.TestCase):
 
     def test_ambiguity_requires_explicit_occurrence(self):
         source = 'func spawn():\n    pass\nclass Nested:\n    func spawn():\n        pass\n'
-        self.path.write_text(source, encoding='utf-8')
+        self.path.write_text(source, encoding='utf-8', newline="\n")
         self.digest = hashlib.sha256(source.encode()).hexdigest()
         report = self.read()
         self.assertEqual(report['status'], 'ambiguous')
@@ -188,7 +188,7 @@ class ContextTests(unittest.TestCase):
 
     def test_budget_retains_anchor_and_whole_lines(self):
         source = '# before' + 'x' * 300 + '\nfunc spawn():\n' + '    print("é")\n' * 50
-        self.path.write_text(source, encoding='utf-8')
+        self.path.write_text(source, encoding='utf-8', newline="\n")
         self.digest = hashlib.sha256(source.encode()).hexdigest()
         report = self.read(before=1, after=50, max_context_bytes=256)
         self.assertEqual(report['start_line'], 2)
@@ -201,7 +201,7 @@ class ContextTests(unittest.TestCase):
 
     def test_anchor_exceeding_budget_returns_no_partial_declaration(self):
         source = 'func spawn(): #' + 'x' * 300
-        self.path.write_text(source, encoding='utf-8')
+        self.path.write_text(source, encoding='utf-8', newline="\n")
         self.digest = hashlib.sha256(source.encode()).hexdigest()
         report = self.read(max_context_bytes=256)
         self.assertEqual(report['status'], 'context_over_budget')
@@ -209,14 +209,14 @@ class ContextTests(unittest.TestCase):
 
     def test_no_final_newline_and_bom(self):
         source = '\ufefffunc spawn():\n    pass'
-        self.path.write_text(source, encoding='utf-8')
+        self.path.write_text(source, encoding='utf-8', newline="\n")
         self.digest = hashlib.sha256(source.encode()).hexdigest()
         self.assertEqual(self.read(before=20, after=100)['text'], source)
 
     def test_zig_context(self):
         path = self.path.with_suffix('.zig')
         source = 'pub fn spawn() void {\n    return;\n}\n'
-        path.write_text(source, encoding='utf-8')
+        path.write_text(source, encoding='utf-8', newline="\n")
         result = read_symbol_context_file(str(path), 'spawn', hashlib.sha256(source.encode()).hexdigest())
         self.assertEqual(result['text'], source)
         self.assertEqual(result['language'], 'zig')
@@ -227,7 +227,7 @@ class ContextTests(unittest.TestCase):
         original = symbols._read_source_file
         def read_then_change(path):
             snapshot = original(path)
-            self.path.write_text('func changed():\n    pass\n', encoding='utf-8')
+            self.path.write_text('func changed():\n    pass\n', encoding='utf-8', newline="\n")
             return snapshot
         with patch.object(symbols, '_read_source_file', side_effect=read_then_change) as reader:
             report = self.read()
@@ -249,7 +249,7 @@ class ContextTests(unittest.TestCase):
         for source, args, expected in (
                 ('func spawn():\nfunc spawn():\n', [], 4),
                 ('func spawn(): #' + 'x' * 300, ['--max-context-bytes', '256'], 5)):
-            self.path.write_text(source, encoding='utf-8')
+            self.path.write_text(source, encoding='utf-8', newline="\n")
             digest = hashlib.sha256(source.encode()).hexdigest()
             out = io.StringIO()
             with contextlib.redirect_stdout(out):

@@ -34,8 +34,8 @@ class SubjectTests(unittest.TestCase):
 class MutationTests(unittest.TestCase):
     def fixture(self, directory, test=STRONG_TEST, source=SOURCE):
         root = Path(directory)
-        (root / "subject.py").write_text(source, encoding="utf-8")
-        (root / "test_subject.py").write_text(test, encoding="utf-8")
+        (root / "subject.py").write_text(source, encoding="utf-8", newline="\n")
+        (root / "test_subject.py").write_text(test, encoding="utf-8", newline="\n")
         return root
 
     def run_project(self, root, **kwargs):
@@ -152,7 +152,7 @@ class MutationTests(unittest.TestCase):
             paths = []
             def runner(workspace, timeout):
                 self.assertFalse((workspace / "leftover").exists())
-                (workspace / "leftover").write_text("x", encoding="utf-8")
+                (workspace / "leftover").write_text("x", encoding="utf-8", newline="\n")
                 paths.append(str(workspace))
                 return {"status": "passed" if len(paths) == 1 else "failed", "reason": "fixture"}
             result = run_mutation_checks(root, "subject.py", test_paths=["test_subject.py"], runner=runner, max_mutants=1)

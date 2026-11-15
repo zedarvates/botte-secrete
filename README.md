@@ -8,7 +8,7 @@ a CLI and MCP; local models and cloud providers are optional integrations.
 
 [![CI](https://github.com/zedarvates/botte-secrete/actions/workflows/ci.yml/badge.svg)](https://github.com/zedarvates/botte-secrete/actions)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
-[![Source version](https://img.shields.io/badge/source_version-1.11.0-55d6be)](pyproject.toml)
+[![Source version](https://img.shields.io/badge/source_version-1.11.2-55d6be)](pyproject.toml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-7b8cff)](LICENSE)
 
 [Français](README.fr.md) · [Try it](#try-the-offline-demo) · [Codex plugin](#connect-your-agent) · [Capabilities](docs/capabilities.md) · [Documentation](docs/README.md)
@@ -124,7 +124,7 @@ daemon, startup entry or scheduled task is installed by default. See the
 | Source | Use |
 |---|---|
 | [v1.11.1 stable release](https://github.com/zedarvates/botte-secrete/releases/tag/v1.11.1) | Recommended published installation; release notes link artifacts and validation limits. |
-| This checkout (`1.11.0` in [pyproject.toml](pyproject.toml)) | Source development; its version label alone does not identify the published release. Retain the source SHA. |
+| This checkout (`1.11.2` in [pyproject.toml](pyproject.toml)) | Source development; its version label alone does not identify the published release. Retain the source SHA. |
 | [2.0.0rc2 pilot track](https://github.com/zedarvates/botte-secrete/releases/tag/v2.0.0rc2) | Separate historical pre-release for bounded Factory Assurance pilots; read its own scope and evidence. |
 
 The stable release records Windows and Ubuntu-under-WSL validation. It does not

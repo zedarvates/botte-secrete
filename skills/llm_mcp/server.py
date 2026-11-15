@@ -836,11 +836,11 @@ TOOLS = [
                        "Costs must be finite and non-negative. Estimates do not guarantee "
                        "an optimal makespan. No model or network calls.",
         "inputSchema": {"type": "object", "properties": {
-            "tasks": {"type": "array", "description": "Task names, 'name:cost' strings, or [name, cost] pairs.",
-                      "items": {"anyOf": [{"type": "string"}, {"type": "array", "minItems": 2,
-                                          "maxItems": 2, "prefixItems": [{"type": "string"},
-                                                                       {"type": "number", "minimum": 0}]}]}},
-            "workers": {"type": "array", "minItems": 1, "uniqueItems": True, "items": {"type": "string", "minLength": 1}},
+            "tasks": {"type": "array", "maxItems": 1024, "description": "Task names, 'name:cost' strings, or [name, cost] pairs.",
+                      "items": {"anyOf": [{"type": "string", "minLength": 1, "maxLength": 512, "pattern": "\\S"}, {"type": "array", "minItems": 2,
+                                          "maxItems": 2, "prefixItems": [{"type": "string", "minLength": 1, "maxLength": 256, "pattern": "\\S"},
+                                                                       {"anyOf": [{"type": "number", "minimum": 0}, {"type": "string", "maxLength": 256}]}]}]}},
+            "workers": {"type": "array", "minItems": 1, "maxItems": 64, "uniqueItems": True, "items": {"type": "string", "minLength": 1, "maxLength": 256}},
             "strategy": {"type": "string", "enum": ["lpt", "bounded"],
                          "description": "lpt (default) or bounded search with up to four decimal places and visible LPT fallback."},
             "budget_ms": {"type": "number", "minimum": 0, "maximum": 10,
@@ -1636,10 +1636,10 @@ def _tool_assign_work(args: dict) -> str:
     if strategy == "lpt" and "budget_ms" in args:
         raise ValueError("budget_ms requires bounded strategy")
     raw_tasks, workers = args["tasks"], args["workers"]
-    if not isinstance(raw_tasks, list):
-        raise ValueError("tasks must be a list")
-    if (not isinstance(workers, list) or not workers
-            or any(not isinstance(w, str) or not w.strip() for w in workers)
+    if not isinstance(raw_tasks, list) or len(raw_tasks) > 1024:
+        raise ValueError("tasks must be a list with at most 1024 entries")
+    if (not isinstance(workers, list) or not workers or len(workers) > 64
+            or any(not isinstance(w, str) or not w.strip() or len(w) > 256 for w in workers)
             or len(set(workers)) != len(workers)):
         raise ValueError("workers must be a non-empty list of distinct non-empty names")
     tasks = normalize_tasks(raw_tasks)

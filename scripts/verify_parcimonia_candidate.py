@@ -57,8 +57,9 @@ def read_json(path):
 class Session:
     """Small bounded NDJSON client; no in-process server handler shortcuts."""
 
-    def __init__(self, command, cwd):
+    def __init__(self, command, cwd, *, launch_env=None):
         self.command, self.cwd = command, cwd
+        self.launch_env = dict(launch_env or {})
         self.sent = self.received = self.sequence = 0
         self.lines = queue.Queue(maxsize=64)
         self.stderr = bytearray()
@@ -66,7 +67,8 @@ class Session:
     def __enter__(self):
         env = {key: value for key, value in os.environ.items()
                if key not in {"PYTHONPATH", "PYTHONHOME"}}
-        env.update(BOTTE_MCP_LAZY_TOOLS="1", PYTHONUTF8="1", PYTHONIOENCODING="utf-8")
+        env.update(PYTHONUTF8="1", PYTHONIOENCODING="utf-8")
+        env.update(self.launch_env)
         env["PATH"] = str(Path(self.command[0]).parent) + os.pathsep + env.get("PATH", "")
         resolved = shutil.which("botte-mcp", path=env["PATH"])
         require(resolved is not None and Path(resolved).resolve() == Path(self.command[0]).resolve(),
@@ -139,11 +141,10 @@ class Session:
 
     def discover_and_assess(self, name, task, intent):
         tools = self.rpc("tools/list")["tools"]
-        names = {item["name"] for item in tools}
-        require("find_tool" in names and "assess_task" in names and name not in names, "lazy discovery boundary changed")
-        discovered = self.tool("find_tool", {"query": name})
-        tool = next(item for item in discovered["matches"] if item["name"] == name)
-        require("inputSchema" in tool, "discovered tool has no executable schema")
+        offered = {item["name"]: item for item in tools}
+        require("assess_task" in offered and name in offered, "specialized tool is absent from the native catalog")
+        tool = offered[name]
+        require("inputSchema" in tool, "advertised tool has no executable schema")
         assessment = self.tool("assess_task", {"task": task, "available_tools": [
             {"name": tool["name"], "description": tool["description"]}]})
         require(assessment["status"] == "proposed" and assessment["intent"] == intent, "task assessment did not propose expected workflow")
@@ -268,7 +269,8 @@ def plugin_contract(repo, version):
     config_path = (root / descriptor["mcpServers"]).resolve()
     require(inside(config_path, root), "MCP descriptor escapes plugin")
     servers = read_json(config_path)["mcpServers"]
-    require(servers == {"botte-llm": {"type": "stdio", "command": "botte-mcp"}}, "plugin stdio command changed; update verification explicitly")
+    require(servers == {"botte-llm": {"type": "stdio", "command": "botte-mcp",
+             "env": {"BOTTE_MCP_LAZY_TOOLS": "0"}}}, "plugin command or full-catalog setting differs")
     skill_path = (root / descriptor["skills"] / "botte-secrete/SKILL.md").resolve()
     require(inside(skill_path, root) and skill_path.is_file(), "plugin skill is absent")
     return {"status": "structural_checks_passed", "codex_host_installation": "not_tested",
@@ -309,7 +311,7 @@ def main(argv=None):
               "source_commit": args.source_commit, "source_scope": args.source_scope,
               "install_mode": args.install_mode,
               "python": sys.version.split()[0], "platform": sys.platform,
-              "measurement_scope": "installed stdio startup, handshake, lazy discovery, assessment, execution and fixture assertions; build/install/host reasoning excluded",
+              "measurement_scope": "installed stdio startup, handshake, advertised native catalog, assessment, execution and fixture assertions; build/install/host reasoning excluded",
               "provider_tokens": None, "cost": None, "savings": None, "scenarios": []}
     try:
         require(re.fullmatch(r"[0-9a-f]{40}", args.source_commit), "source commit must be a full Git SHA")
@@ -326,7 +328,8 @@ def main(argv=None):
             for name, verify in (("statistics", statistics), ("file_duplicates", duplicates), ("local_links", links)):
                 report["active_scenario"] = name
                 scenario_start = time.perf_counter_ns()
-                with Session(command, work) as session:
+                launch_env = read_json(repo / "plugins/botte-secrete/.mcp.json")["mcpServers"]["botte-llm"].get("env", {})
+                with Session(command, work, launch_env=launch_env) as session:
                     result = verify(session)
                 report["scenarios"].append({"name": name, "status": "passed", "observations": result,
                     "elapsed_ns": time.perf_counter_ns() - scenario_start,

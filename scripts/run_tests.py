@@ -56,6 +56,7 @@ SUITES = [
         "scripts/odin_queue/", "scripts/odin_codex_queue.py", "scripts/test_odin_codex_queue.py",
     )),
     ("response_cache_exact", [sys.executable, "-m", "skills.response_cache.test_exact"], "skills/response_cache/"),
+    ("response_cache_lifecycle", [sys.executable, "-m", "skills.response_cache.test_lifecycle"], "skills/response_cache/"),
     ("universal_compressor", [sys.executable, "-m", "skills.universal_compressor.test_universal_compressor"], "skills/universal_compressor/"),
     ("compression_benchmark", [sys.executable, "-m", "skills.universal_compressor.test_benchmark"], "skills/universal_compressor/"),
     ("caveman", [sys.executable, "-m", "skills.caveman.test_caveman"], "skills/caveman/"),
