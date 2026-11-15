@@ -1,0 +1,220 @@
+{
+  "schema": "parcimonia.plan-synergies/v1",
+  "comparison_request": {
+    "schema": "parcimonia.plan-preferences/v1",
+    "currency": "EUR",
+    "projects": [
+      {
+        "id": "p",
+        "goals": [
+          "done"
+        ]
+      },
+      {
+        "id": "q",
+        "goals": [
+          "done"
+        ]
+      }
+    ],
+    "actions": [
+      {
+        "id": "prepare-p",
+        "needs": [],
+        "projects": [
+          "p"
+        ],
+        "metrics": {
+          "elapsed_minutes": 2,
+          "human_minutes": 1,
+          "money": 4,
+          "tokens": 1,
+          "energy_wh": 1,
+          "peak_ram_gib": 2
+        },
+        "provenance": {
+          "kind": "estimate",
+          "ref": "synthetic-sharing-case-not-a-benchmark"
+        }
+      },
+      {
+        "id": "prepare-q",
+        "needs": [],
+        "projects": [
+          "q"
+        ],
+        "metrics": {
+          "elapsed_minutes": 2,
+          "human_minutes": 1,
+          "money": 4,
+          "tokens": 1,
+          "energy_wh": 1,
+          "peak_ram_gib": 3
+        },
+        "provenance": {
+          "kind": "estimate",
+          "ref": "synthetic-sharing-case-not-a-benchmark"
+        }
+      },
+      {
+        "id": "prepare-shared",
+        "needs": [],
+        "projects": [
+          "p",
+          "q"
+        ],
+        "metrics": {
+          "elapsed_minutes": 3,
+          "human_minutes": 1,
+          "money": 6,
+          "tokens": 1,
+          "energy_wh": 1,
+          "peak_ram_gib": 4
+        },
+        "provenance": {
+          "kind": "estimate",
+          "ref": "synthetic-sharing-case-not-a-benchmark"
+        }
+      },
+      {
+        "id": "finish-p",
+        "needs": [
+          "prepare-p"
+        ],
+        "projects": [
+          "p"
+        ],
+        "metrics": {
+          "elapsed_minutes": 1,
+          "human_minutes": 1,
+          "money": 1,
+          "tokens": 1,
+          "energy_wh": 1,
+          "peak_ram_gib": 1
+        },
+        "provenance": {
+          "kind": "estimate",
+          "ref": "synthetic-sharing-case-not-a-benchmark"
+        }
+      },
+      {
+        "id": "finish-q",
+        "needs": [
+          "prepare-q"
+        ],
+        "projects": [
+          "q"
+        ],
+        "metrics": {
+          "elapsed_minutes": 1,
+          "human_minutes": 1,
+          "money": 1,
+          "tokens": 1,
+          "energy_wh": 1,
+          "peak_ram_gib": 1
+        },
+        "provenance": {
+          "kind": "estimate",
+          "ref": "synthetic-sharing-case-not-a-benchmark"
+        }
+      },
+      {
+        "id": "finish-p-shared",
+        "needs": [
+          "prepare-shared"
+        ],
+        "projects": [
+          "p"
+        ],
+        "metrics": {
+          "elapsed_minutes": 1,
+          "human_minutes": 1,
+          "money": 1,
+          "tokens": 1,
+          "energy_wh": 1,
+          "peak_ram_gib": 1
+        },
+        "provenance": {
+          "kind": "estimate",
+          "ref": "synthetic-sharing-case-not-a-benchmark"
+        }
+      },
+      {
+        "id": "finish-q-shared",
+        "needs": [
+          "prepare-shared"
+        ],
+        "projects": [
+          "q"
+        ],
+        "metrics": {
+          "elapsed_minutes": 1,
+          "human_minutes": 1,
+          "money": 1,
+          "tokens": 1,
+          "energy_wh": 1,
+          "peak_ram_gib": 1
+        },
+        "provenance": {
+          "kind": "estimate",
+          "ref": "synthetic-sharing-case-not-a-benchmark"
+        }
+      }
+    ],
+    "candidates": [
+      {
+        "id": "separate",
+        "steps": [
+          "prepare-p",
+          "finish-p",
+          "prepare-q",
+          "finish-q"
+        ],
+        "goals": {
+          "p": [
+            "done"
+          ],
+          "q": [
+            "done"
+          ]
+        }
+      },
+      {
+        "id": "combined",
+        "steps": [
+          "prepare-shared",
+          "finish-q-shared",
+          "finish-p-shared"
+        ],
+        "goals": {
+          "p": [
+            "done"
+          ],
+          "q": [
+            "done"
+          ]
+        }
+      }
+    ],
+    "preferences": {
+      "priorities": [
+        {
+          "metric": "elapsed_minutes"
+        }
+      ]
+    }
+  },
+  "opportunities": [
+    {
+      "id": "shared-preparation",
+      "baseline_candidate_id": "separate",
+      "shared_candidate_id": "combined",
+      "separate_action_ids": [
+        "prepare-p",
+        "prepare-q"
+      ],
+      "shared_action_id": "prepare-shared",
+      "assumption_ref": "caller-declared-equivalence"
+    }
+  ]
+}

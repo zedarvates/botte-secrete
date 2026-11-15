@@ -1,0 +1,1134 @@
+{
+  "schema": "parcimonia.plan-synergy-pilot/v1",
+  "created_at": "2026-11-01T16:25:08.637123+00:00",
+  "mode": "execution",
+  "complete": true,
+  "environment": {
+    "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+    "platform": "linux"
+  },
+  "authorization_scope": "--run permits only this fixed temporary-file pilot; Conductor confirm=true is still required.",
+  "source_hashes": {
+    "skills/__init__.py": "8f4e5d5c1b652790431210afc669dc1549e79916bd1c65d77aaa33e8296ebe9f",
+    "skills/atomic_json.py": "bf9950cde67ef3e5ba8a2d128eb51eee5d161fb9cebc3f27404abf873eb76ebe",
+    "skills/capabilities/__init__.py": "7d4d3e1854faec18d12335c4a1632b9fd59e5b22f774a8a9fc69467d1ddb75c5",
+    "skills/capabilities/registry.py": "5b35c77358bf7899d8bc3d2bbaacb5f933a2e18921378bebc7dfab42fa8d5b36",
+    "skills/conductor/__init__.py": "e9b15c49cb32b65ebb539c65786e92906b6d892449c74e82d0203bf0f972fa4a",
+    "skills/conductor/conductor.py": "10b2dcfda55de8d59eb674a946f34fa763974191050cb3bbe061e54ef5659a73",
+    "skills/conductor/executor.py": "34e46ba41fbcd9d54beb8324bbbf1e69b3634fa875e15c97de5ba5807cad10ce",
+    "skills/conductor/verified.py": "78a17e9c015bee8626d4804377bb389ed1092665cdb9d5c40e48ee3c1a8c9cce",
+    "skills/conductor/preferences.py": "790ad7c4b674405d956f4f13810f9e894997c447ae242187b59049c4c486b8a8",
+    "skills/conductor/selection.py": "9eebd7126cb663948defb1b2c34ede7842a6f78bea026fd675ebfafc28aad1e1",
+    "skills/conductor/handoff.py": "fe395126159e4b8a14f16dfe30c3f5da56ecc258c672c58a337f898fb391a747",
+    "skills/conductor/uncertainty.py": "4f2727a29f7f8d5fa861b188c439b05c58d040e5fe032d839990c2157a28d8fc",
+    "skills/conductor/synergies.py": "f3c16f9dd78a3dfa3ddf395f03962040942e423b282b36ff000dea0573c7bfa9",
+    "scripts/plan_synergy_pilot.py": "0ad0116c06472fa53dcc626ddad1e229d5c521aeb791f37297f0163c1686e16e"
+  },
+  "worker_sha256": "18d9740a69a68d6ab6511759356d3c8148fa1cbf666c6e887be61cc910590750",
+  "input_sha256": "9ce5c7c242ccbad8294d266319b0a69bc76b5fb75ca348303a5de8cf66bce213",
+  "expected_outputs": {
+    "summary.json": {
+      "value": {
+        "count": 3,
+        "total": 12
+      },
+      "sha256": "65e9faa353f1666af5aabdf070c0b2fe59227ebea33f6dd54504ed86140f283c"
+    },
+    "index.json": {
+      "value": {
+        "ids": [
+          "alpha",
+          "bravo",
+          "charlie"
+        ]
+      },
+      "sha256": "0d6ff2fa97f854143425a6dd847dacb0c2b5939c8259bd62eadec229cde383e7"
+    }
+  },
+  "cases": [
+    {
+      "candidate_id": "separate",
+      "status": "executed",
+      "plan": {
+        "schema": "botte.skill-plan/v1",
+        "goal": "Verify the same fixed summary and index",
+        "context": "isolated-shared-prerequisite-v1",
+        "full_plan_sha256": "6e890524281589cec3066daef60e1d707b6729f88650f0d4b9b34528f9eca9a5",
+        "steps": [
+          {
+            "id": "prep-a",
+            "capability": "plan-synergy-pilot",
+            "local": true,
+            "command": "python -B worker.py prep-a",
+            "needs": [],
+            "requires": [
+              {
+                "kind": "file_sha256",
+                "path": "input.json",
+                "value": "9ce5c7c242ccbad8294d266319b0a69bc76b5fb75ca348303a5de8cf66bce213"
+              }
+            ],
+            "ensures": [
+              {
+                "kind": "file_sha256",
+                "path": "prepared-a.json",
+                "value": "d82d41440ab317fdc4553b079be908d7a888b44327b7e8e62507081d6fc0a873"
+              },
+              {
+                "kind": "file_sha256",
+                "path": "prep-a-counter.json",
+                "value": "bc237aec467eef4ad72ab44c19ed2edbed79f7b5824a2e7ebfb3faf583433e66"
+              }
+            ],
+            "observes": [
+              "prepared-a.json",
+              "prep-a-counter.json"
+            ],
+            "source_hashes_sha256": "23d52b7aea7b163a7d57f2c89e4bb742abc3aa8b8490ea8f759d995486fde560",
+            "source_binding_count": 16
+          },
+          {
+            "id": "summary-separate",
+            "capability": "plan-synergy-pilot",
+            "local": true,
+            "command": "python -B worker.py summary-separate",
+            "needs": [
+              "prep-a"
+            ],
+            "requires": [
+              {
+                "kind": "file_sha256",
+                "path": "prepared-a.json",
+                "value": "d82d41440ab317fdc4553b079be908d7a888b44327b7e8e62507081d6fc0a873"
+              }
+            ],
+            "ensures": [
+              {
+                "kind": "file_sha256",
+                "path": "summary.json",
+                "value": "65e9faa353f1666af5aabdf070c0b2fe59227ebea33f6dd54504ed86140f283c"
+              },
+              {
+                "kind": "file_sha256",
+                "path": "summary-separate-counter.json",
+                "value": "bc237aec467eef4ad72ab44c19ed2edbed79f7b5824a2e7ebfb3faf583433e66"
+              }
+            ],
+            "observes": [
+              "summary.json",
+              "summary-separate-counter.json"
+            ],
+            "source_hashes_sha256": "23d52b7aea7b163a7d57f2c89e4bb742abc3aa8b8490ea8f759d995486fde560",
+            "source_binding_count": 16
+          },
+          {
+            "id": "prep-b",
+            "capability": "plan-synergy-pilot",
+            "local": true,
+            "command": "python -B worker.py prep-b",
+            "needs": [],
+            "requires": [
+              {
+                "kind": "file_sha256",
+                "path": "input.json",
+                "value": "9ce5c7c242ccbad8294d266319b0a69bc76b5fb75ca348303a5de8cf66bce213"
+              }
+            ],
+            "ensures": [
+              {
+                "kind": "file_sha256",
+                "path": "prepared-b.json",
+                "value": "d82d41440ab317fdc4553b079be908d7a888b44327b7e8e62507081d6fc0a873"
+              },
+              {
+                "kind": "file_sha256",
+                "path": "prep-b-counter.json",
+                "value": "bc237aec467eef4ad72ab44c19ed2edbed79f7b5824a2e7ebfb3faf583433e66"
+              }
+            ],
+            "observes": [
+              "prepared-b.json",
+              "prep-b-counter.json"
+            ],
+            "source_hashes_sha256": "23d52b7aea7b163a7d57f2c89e4bb742abc3aa8b8490ea8f759d995486fde560",
+            "source_binding_count": 16
+          },
+          {
+            "id": "index-separate",
+            "capability": "plan-synergy-pilot",
+            "local": true,
+            "command": "python -B worker.py index-separate",
+            "needs": [
+              "prep-b"
+            ],
+            "requires": [
+              {
+                "kind": "file_sha256",
+                "path": "prepared-b.json",
+                "value": "d82d41440ab317fdc4553b079be908d7a888b44327b7e8e62507081d6fc0a873"
+              }
+            ],
+            "ensures": [
+              {
+                "kind": "file_sha256",
+                "path": "index.json",
+                "value": "0d6ff2fa97f854143425a6dd847dacb0c2b5939c8259bd62eadec229cde383e7"
+              },
+              {
+                "kind": "file_sha256",
+                "path": "index-separate-counter.json",
+                "value": "bc237aec467eef4ad72ab44c19ed2edbed79f7b5824a2e7ebfb3faf583433e66"
+              }
+            ],
+            "observes": [
+              "index.json",
+              "index-separate-counter.json"
+            ],
+            "source_hashes_sha256": "23d52b7aea7b163a7d57f2c89e4bb742abc3aa8b8490ea8f759d995486fde560",
+            "source_binding_count": 16
+          }
+        ]
+      },
+      "handoff_id": "131a4025fd7c60d58de73d0b9216f0a10bed5eefe236e20ed9054c4ef247aa9c",
+      "handoff_input_digest": "18594e494b3b639107368d95a76880c8345bbc3e93436422be8fa82bcc954517",
+      "handoff_execution_authorized": false,
+      "wall_s": 0.23496615899784956,
+      "execution": {
+        "schema": "botte.skill-run/v1",
+        "run_id": "8d74f38ac3b240f2886d38269aa6b016",
+        "plan_sha256": "6e890524281589cec3066daef60e1d707b6729f88650f0d4b9b34528f9eca9a5",
+        "context_sha256": "06a0acdfa1eec458599cfdf4bfa953d1f09e2943d3b70d966c20e426b2ad0898",
+        "mode": "execution",
+        "complete": true,
+        "summary": {
+          "blocked": 0,
+          "failed": 0,
+          "pending": 0,
+          "running": 0,
+          "skipped": 0,
+          "stale": 0,
+          "uncertain": 0,
+          "unverified": 0,
+          "verified": 4
+        },
+        "coverage": "declared local file checks only; other effects are unobserved",
+        "child_cost": null,
+        "full_report_sha256": "1877660f90d4606b85aba0b37ca9346fa8a43338e6464b623069687b60980a82",
+        "results": [
+          {
+            "id": "prep-a",
+            "status": "verified",
+            "started": true,
+            "reused": false,
+            "exit_code": 0,
+            "duration_s": 0.054182,
+            "note": "declared checks passed",
+            "changed_paths": [
+              "prep-a-counter.json",
+              "prepared-a.json"
+            ],
+            "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "output_bytes": 0,
+            "source_checks": {
+              "count": 16,
+              "all_passed": true,
+              "failed": []
+            },
+            "source_checks_after": {
+              "count": 16,
+              "all_passed": true,
+              "failed": []
+            },
+            "precondition_checks": {
+              "count": 1,
+              "all_passed": true,
+              "failed": []
+            },
+            "postcondition_checks": {
+              "count": 2,
+              "all_passed": true,
+              "failed": []
+            }
+          },
+          {
+            "id": "summary-separate",
+            "status": "verified",
+            "started": true,
+            "reused": false,
+            "exit_code": 0,
+            "duration_s": 0.041326,
+            "note": "declared checks passed",
+            "changed_paths": [
+              "summary-separate-counter.json",
+              "summary.json"
+            ],
+            "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "output_bytes": 0,
+            "source_checks": {
+              "count": 16,
+              "all_passed": true,
+              "failed": []
+            },
+            "source_checks_after": {
+              "count": 16,
+              "all_passed": true,
+              "failed": []
+            },
+            "precondition_checks": {
+              "count": 1,
+              "all_passed": true,
+              "failed": []
+            },
+            "postcondition_checks": {
+              "count": 2,
+              "all_passed": true,
+              "failed": []
+            }
+          },
+          {
+            "id": "prep-b",
+            "status": "verified",
+            "started": true,
+            "reused": false,
+            "exit_code": 0,
+            "duration_s": 0.055753,
+            "note": "declared checks passed",
+            "changed_paths": [
+              "prep-b-counter.json",
+              "prepared-b.json"
+            ],
+            "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "output_bytes": 0,
+            "source_checks": {
+              "count": 16,
+              "all_passed": true,
+              "failed": []
+            },
+            "source_checks_after": {
+              "count": 16,
+              "all_passed": true,
+              "failed": []
+            },
+            "precondition_checks": {
+              "count": 1,
+              "all_passed": true,
+              "failed": []
+            },
+            "postcondition_checks": {
+              "count": 2,
+              "all_passed": true,
+              "failed": []
+            }
+          },
+          {
+            "id": "index-separate",
+            "status": "verified",
+            "started": true,
+            "reused": false,
+            "exit_code": 0,
+            "duration_s": 0.041569,
+            "note": "declared checks passed",
+            "changed_paths": [
+              "index-separate-counter.json",
+              "index.json"
+            ],
+            "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "output_bytes": 0,
+            "source_checks": {
+              "count": 16,
+              "all_passed": true,
+              "failed": []
+            },
+            "source_checks_after": {
+              "count": 16,
+              "all_passed": true,
+              "failed": []
+            },
+            "precondition_checks": {
+              "count": 1,
+              "all_passed": true,
+              "failed": []
+            },
+            "postcondition_checks": {
+              "count": 2,
+              "all_passed": true,
+              "failed": []
+            }
+          }
+        ]
+      },
+      "counters": {
+        "prep-a": 1,
+        "prep-b": 1,
+        "prep-shared": 0,
+        "summary-separate": 1,
+        "index-separate": 1,
+        "summary-shared": 0,
+        "index-shared": 0
+      },
+      "checkpoint_sha256": "6c77a180ce9ef44bbc91a368357c16d1090aba4648c5c5ad40279f3586519a5f",
+      "output_sha256": {
+        "summary.json": "65e9faa353f1666af5aabdf070c0b2fe59227ebea33f6dd54504ed86140f283c",
+        "index.json": "0d6ff2fa97f854143425a6dd847dacb0c2b5939c8259bd62eadec229cde383e7"
+      },
+      "preparation_count": 2
+    },
+    {
+      "candidate_id": "shared",
+      "status": "executed",
+      "plan": {
+        "schema": "botte.skill-plan/v1",
+        "goal": "Verify the same fixed summary and index",
+        "context": "isolated-shared-prerequisite-v1",
+        "full_plan_sha256": "39e63a65a93771a68881c91731b5c5552ba1248b364d03cc68ce8a401f3ab8cd",
+        "steps": [
+          {
+            "id": "prep-shared",
+            "capability": "plan-synergy-pilot",
+            "local": true,
+            "command": "python -B worker.py prep-shared",
+            "needs": [],
+            "requires": [
+              {
+                "kind": "file_sha256",
+                "path": "input.json",
+                "value": "9ce5c7c242ccbad8294d266319b0a69bc76b5fb75ca348303a5de8cf66bce213"
+              }
+            ],
+            "ensures": [
+              {
+                "kind": "file_sha256",
+                "path": "prepared-shared.json",
+                "value": "d82d41440ab317fdc4553b079be908d7a888b44327b7e8e62507081d6fc0a873"
+              },
+              {
+                "kind": "file_sha256",
+                "path": "prep-shared-counter.json",
+                "value": "bc237aec467eef4ad72ab44c19ed2edbed79f7b5824a2e7ebfb3faf583433e66"
+              }
+            ],
+            "observes": [
+              "prepared-shared.json",
+              "prep-shared-counter.json"
+            ],
+            "source_hashes_sha256": "23d52b7aea7b163a7d57f2c89e4bb742abc3aa8b8490ea8f759d995486fde560",
+            "source_binding_count": 16
+          },
+          {
+            "id": "summary-shared",
+            "capability": "plan-synergy-pilot",
+            "local": true,
+            "command": "python -B worker.py summary-shared",
+            "needs": [
+              "prep-shared"
+            ],
+            "requires": [
+              {
+                "kind": "file_sha256",
+                "path": "prepared-shared.json",
+                "value": "d82d41440ab317fdc4553b079be908d7a888b44327b7e8e62507081d6fc0a873"
+              }
+            ],
+            "ensures": [
+              {
+                "kind": "file_sha256",
+                "path": "summary.json",
+                "value": "65e9faa353f1666af5aabdf070c0b2fe59227ebea33f6dd54504ed86140f283c"
+              },
+              {
+                "kind": "file_sha256",
+                "path": "summary-shared-counter.json",
+                "value": "bc237aec467eef4ad72ab44c19ed2edbed79f7b5824a2e7ebfb3faf583433e66"
+              }
+            ],
+            "observes": [
+              "summary.json",
+              "summary-shared-counter.json"
+            ],
+            "source_hashes_sha256": "23d52b7aea7b163a7d57f2c89e4bb742abc3aa8b8490ea8f759d995486fde560",
+            "source_binding_count": 16
+          },
+          {
+            "id": "index-shared",
+            "capability": "plan-synergy-pilot",
+            "local": true,
+            "command": "python -B worker.py index-shared",
+            "needs": [
+              "prep-shared"
+            ],
+            "requires": [
+              {
+                "kind": "file_sha256",
+                "path": "prepared-shared.json",
+                "value": "d82d41440ab317fdc4553b079be908d7a888b44327b7e8e62507081d6fc0a873"
+              }
+            ],
+            "ensures": [
+              {
+                "kind": "file_sha256",
+                "path": "index.json",
+                "value": "0d6ff2fa97f854143425a6dd847dacb0c2b5939c8259bd62eadec229cde383e7"
+              },
+              {
+                "kind": "file_sha256",
+                "path": "index-shared-counter.json",
+                "value": "bc237aec467eef4ad72ab44c19ed2edbed79f7b5824a2e7ebfb3faf583433e66"
+              }
+            ],
+            "observes": [
+              "index.json",
+              "index-shared-counter.json"
+            ],
+            "source_hashes_sha256": "23d52b7aea7b163a7d57f2c89e4bb742abc3aa8b8490ea8f759d995486fde560",
+            "source_binding_count": 16
+          }
+        ]
+      },
+      "handoff_id": "668b85216fe2324cb0f4ba13d2dcf1a821eb8953d2353cf8fd21ea56b8d61754",
+      "handoff_input_digest": "18594e494b3b639107368d95a76880c8345bbc3e93436422be8fa82bcc954517",
+      "handoff_execution_authorized": false,
+      "wall_s": 0.1808097169996472,
+      "execution": {
+        "schema": "botte.skill-run/v1",
+        "run_id": "34e9f44b8ea3461783328a0676b8a247",
+        "plan_sha256": "39e63a65a93771a68881c91731b5c5552ba1248b364d03cc68ce8a401f3ab8cd",
+        "context_sha256": "3120421daf0ecb2e34d5d949a5f6099bf688f7cd941f011ffe86fd3cf444f7fd",
+        "mode": "execution",
+        "complete": true,
+        "summary": {
+          "blocked": 0,
+          "failed": 0,
+          "pending": 0,
+          "running": 0,
+          "skipped": 0,
+          "stale": 0,
+          "uncertain": 0,
+          "unverified": 0,
+          "verified": 3
+        },
+        "coverage": "declared local file checks only; other effects are unobserved",
+        "child_cost": null,
+        "full_report_sha256": "a269463d936c9af1838242b7459010964105f2b1cb7191d2be7a1638eaaa2a78",
+        "results": [
+          {
+            "id": "prep-shared",
+            "status": "verified",
+            "started": true,
+            "reused": false,
+            "exit_code": 0,
+            "duration_s": 0.056394,
+            "note": "declared checks passed",
+            "changed_paths": [
+              "prep-shared-counter.json",
+              "prepared-shared.json"
+            ],
+            "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "output_bytes": 0,
+            "source_checks": {
+              "count": 16,
+              "all_passed": true,
+              "failed": []
+            },
+            "source_checks_after": {
+              "count": 16,
+              "all_passed": true,
+              "failed": []
+            },
+            "precondition_checks": {
+              "count": 1,
+              "all_passed": true,
+              "failed": []
+            },
+            "postcondition_checks": {
+              "count": 2,
+              "all_passed": true,
+              "failed": []
+            }
+          },
+          {
+            "id": "summary-shared",
+            "status": "verified",
+            "started": true,
+            "reused": false,
+            "exit_code": 0,
+            "duration_s": 0.057362,
+            "note": "declared checks passed",
+            "changed_paths": [
+              "summary-shared-counter.json",
+              "summary.json"
+            ],
+            "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "output_bytes": 0,
+            "source_checks": {
+              "count": 16,
+              "all_passed": true,
+              "failed": []
+            },
+            "source_checks_after": {
+              "count": 16,
+              "all_passed": true,
+              "failed": []
+            },
+            "precondition_checks": {
+              "count": 1,
+              "all_passed": true,
+              "failed": []
+            },
+            "postcondition_checks": {
+              "count": 2,
+              "all_passed": true,
+              "failed": []
+            }
+          },
+          {
+            "id": "index-shared",
+            "status": "verified",
+            "started": true,
+            "reused": false,
+            "exit_code": 0,
+            "duration_s": 0.038115,
+            "note": "declared checks passed",
+            "changed_paths": [
+              "index-shared-counter.json",
+              "index.json"
+            ],
+            "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "output_bytes": 0,
+            "source_checks": {
+              "count": 16,
+              "all_passed": true,
+              "failed": []
+            },
+            "source_checks_after": {
+              "count": 16,
+              "all_passed": true,
+              "failed": []
+            },
+            "precondition_checks": {
+              "count": 1,
+              "all_passed": true,
+              "failed": []
+            },
+            "postcondition_checks": {
+              "count": 2,
+              "all_passed": true,
+              "failed": []
+            }
+          }
+        ]
+      },
+      "counters": {
+        "prep-a": 0,
+        "prep-b": 0,
+        "prep-shared": 1,
+        "summary-separate": 0,
+        "index-separate": 0,
+        "summary-shared": 1,
+        "index-shared": 1
+      },
+      "checkpoint_sha256": "59e955aa663abb7b53cc0e1b4d1bd83263f5f8105fe1a1a00ca3b59384a749d3",
+      "output_sha256": {
+        "summary.json": "65e9faa353f1666af5aabdf070c0b2fe59227ebea33f6dd54504ed86140f283c",
+        "index.json": "0d6ff2fa97f854143425a6dd847dacb0c2b5939c8259bd62eadec229cde383e7"
+      },
+      "preparation_count": 1
+    }
+  ],
+  "checks": {
+    "supervising_sources_before_match": true,
+    "analysis_preserves_input_and_nonselection": true,
+    "declared_opportunity_compared": true,
+    "separate_sources_before_match": true,
+    "separate_verified_exact_outputs": true,
+    "separate_supplied_plan_and_handoff_preserved": true,
+    "separate_each_expected_stage_once": true,
+    "separate_snapshot_sources_after_match": true,
+    "shared_sources_before_match": true,
+    "shared_verified_exact_outputs": true,
+    "shared_supplied_plan_and_handoff_preserved": true,
+    "shared_each_expected_stage_once": true,
+    "shared_snapshot_sources_after_match": true,
+    "same_expected_terminal_outputs_between_cases": true,
+    "observed_fixed_preparations_two_versus_one": true,
+    "planning_input_preserved_after_execution": true,
+    "supervising_sources_after_match": true,
+    "temporary_projects_deleted": true,
+    "both_cases_executed": true
+  },
+  "failures": [],
+  "active_operations": [],
+  "usage": {
+    "elapsed_wall_s": 0.46330534099251963,
+    "tokens": null,
+    "money": null,
+    "energy_wh": null,
+    "peak_ram_gib": null,
+    "human_minutes": null
+  },
+  "gain_claim": null,
+  "limitations": [
+    "One fixed local correctness demonstration; equality of these outputs does not qualify arbitrary shared work.",
+    "The shared operation and full candidate plans are explicitly supplied, not inferred from similar names or commands.",
+    "Planning costs are synthetic estimates; observed preparation counts are separate execution evidence.",
+    "Two preparations versus one is specific to this fixture; no general time, token, money, energy or quality gain is established.",
+    "Observed wall time includes setup and checks; it is not a representative performance benchmark.",
+    "Source/checkpoint hashes establish content consistency, not authenticity or user authority.",
+    "The analyser grants no selection or execution authority; --run and existing Conductor confirmation cover only this fixed pilot.",
+    "Temporary projects and checkpoints are deleted; no production, network, model or robot resources are invoked."
+  ],
+  "planning_input": {
+    "schema": "parcimonia.plan-synergies/v1",
+    "comparison_request": {
+      "schema": "parcimonia.plan-preferences/v1",
+      "currency": "EUR",
+      "projects": [
+        {
+          "id": "a",
+          "goals": [
+            "summary"
+          ]
+        },
+        {
+          "id": "b",
+          "goals": [
+            "index"
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "id": "prep-a",
+          "needs": [],
+          "projects": [
+            "a"
+          ],
+          "metrics": {
+            "elapsed_minutes": 1,
+            "human_minutes": null,
+            "money": null,
+            "tokens": null,
+            "energy_wh": null,
+            "peak_ram_gib": null
+          },
+          "provenance": {
+            "kind": "estimate",
+            "ref": "synthetic-fixed-pilot-not-measured-cost"
+          }
+        },
+        {
+          "id": "prep-b",
+          "needs": [],
+          "projects": [
+            "b"
+          ],
+          "metrics": {
+            "elapsed_minutes": 1,
+            "human_minutes": null,
+            "money": null,
+            "tokens": null,
+            "energy_wh": null,
+            "peak_ram_gib": null
+          },
+          "provenance": {
+            "kind": "estimate",
+            "ref": "synthetic-fixed-pilot-not-measured-cost"
+          }
+        },
+        {
+          "id": "prep-shared",
+          "needs": [],
+          "projects": [
+            "a",
+            "b"
+          ],
+          "metrics": {
+            "elapsed_minutes": 1,
+            "human_minutes": null,
+            "money": null,
+            "tokens": null,
+            "energy_wh": null,
+            "peak_ram_gib": null
+          },
+          "provenance": {
+            "kind": "estimate",
+            "ref": "synthetic-fixed-pilot-not-measured-cost"
+          }
+        },
+        {
+          "id": "summary-separate",
+          "needs": [
+            "prep-a"
+          ],
+          "projects": [
+            "a"
+          ],
+          "metrics": {
+            "elapsed_minutes": 1,
+            "human_minutes": null,
+            "money": null,
+            "tokens": null,
+            "energy_wh": null,
+            "peak_ram_gib": null
+          },
+          "provenance": {
+            "kind": "estimate",
+            "ref": "synthetic-fixed-pilot-not-measured-cost"
+          }
+        },
+        {
+          "id": "index-separate",
+          "needs": [
+            "prep-b"
+          ],
+          "projects": [
+            "b"
+          ],
+          "metrics": {
+            "elapsed_minutes": 1,
+            "human_minutes": null,
+            "money": null,
+            "tokens": null,
+            "energy_wh": null,
+            "peak_ram_gib": null
+          },
+          "provenance": {
+            "kind": "estimate",
+            "ref": "synthetic-fixed-pilot-not-measured-cost"
+          }
+        },
+        {
+          "id": "summary-shared",
+          "needs": [
+            "prep-shared"
+          ],
+          "projects": [
+            "a"
+          ],
+          "metrics": {
+            "elapsed_minutes": 1,
+            "human_minutes": null,
+            "money": null,
+            "tokens": null,
+            "energy_wh": null,
+            "peak_ram_gib": null
+          },
+          "provenance": {
+            "kind": "estimate",
+            "ref": "synthetic-fixed-pilot-not-measured-cost"
+          }
+        },
+        {
+          "id": "index-shared",
+          "needs": [
+            "prep-shared"
+          ],
+          "projects": [
+            "b"
+          ],
+          "metrics": {
+            "elapsed_minutes": 1,
+            "human_minutes": null,
+            "money": null,
+            "tokens": null,
+            "energy_wh": null,
+            "peak_ram_gib": null
+          },
+          "provenance": {
+            "kind": "estimate",
+            "ref": "synthetic-fixed-pilot-not-measured-cost"
+          }
+        }
+      ],
+      "candidates": [
+        {
+          "id": "separate",
+          "steps": [
+            "prep-a",
+            "summary-separate",
+            "prep-b",
+            "index-separate"
+          ],
+          "goals": {
+            "a": [
+              "summary"
+            ],
+            "b": [
+              "index"
+            ]
+          }
+        },
+        {
+          "id": "shared",
+          "steps": [
+            "prep-shared",
+            "summary-shared",
+            "index-shared"
+          ],
+          "goals": {
+            "a": [
+              "summary"
+            ],
+            "b": [
+              "index"
+            ]
+          }
+        }
+      ],
+      "preferences": {
+        "priorities": [
+          {
+            "metric": "elapsed_minutes"
+          }
+        ]
+      }
+    },
+    "opportunities": [
+      {
+        "id": "same-input-preparation",
+        "baseline_candidate_id": "separate",
+        "shared_candidate_id": "shared",
+        "separate_action_ids": [
+          "prep-a",
+          "prep-b"
+        ],
+        "shared_action_id": "prep-shared",
+        "assumption_ref": "fixed-same-input-normalization-and-independently-verified-consumers"
+      }
+    ]
+  },
+  "synergy_analysis": {
+    "schema": "parcimonia.plan-synergies-report/v1",
+    "status": "analysed",
+    "input_digest": "de103ad14fbcb50f6efbd7e2a3ade42613f9ff355423cb125b6c865921e6714d",
+    "comparison_input_digest": "18594e494b3b639107368d95a76880c8345bbc3e93436422be8fa82bcc954517",
+    "currency": "EUR",
+    "ranking": [
+      "shared",
+      "separate"
+    ],
+    "recommended_candidate_id": "shared",
+    "remaining_unknown_candidates": [],
+    "optimality_scope": "known_eligible_candidates_only",
+    "preferences": {
+      "priorities": [
+        {
+          "metric": "elapsed_minutes"
+        }
+      ]
+    },
+    "selected_candidate_id": null,
+    "selection_status": "not_selected",
+    "candidates": [
+      {
+        "id": "separate",
+        "status": "eligible",
+        "totals": {
+          "elapsed_minutes": 4,
+          "human_minutes": null,
+          "money": null,
+          "tokens": null,
+          "energy_wh": null,
+          "peak_ram_gib": null
+        },
+        "project_totals": {
+          "a": {
+            "elapsed_minutes": 2,
+            "human_minutes": null,
+            "money": null,
+            "tokens": null,
+            "energy_wh": null,
+            "peak_ram_gib": null
+          },
+          "b": {
+            "elapsed_minutes": 4,
+            "human_minutes": null,
+            "money": null,
+            "tokens": null,
+            "energy_wh": null,
+            "peak_ram_gib": null
+          }
+        },
+        "reason_counts": {},
+        "structural_status": "valid",
+        "rank": 2,
+        "reasons": [],
+        "reasons_omitted": 0
+      },
+      {
+        "id": "shared",
+        "status": "eligible",
+        "totals": {
+          "elapsed_minutes": 3,
+          "human_minutes": null,
+          "money": null,
+          "tokens": null,
+          "energy_wh": null,
+          "peak_ram_gib": null
+        },
+        "project_totals": {
+          "a": {
+            "elapsed_minutes": 2,
+            "human_minutes": null,
+            "money": null,
+            "tokens": null,
+            "energy_wh": null,
+            "peak_ram_gib": null
+          },
+          "b": {
+            "elapsed_minutes": 3,
+            "human_minutes": null,
+            "money": null,
+            "tokens": null,
+            "energy_wh": null,
+            "peak_ram_gib": null
+          }
+        },
+        "reason_counts": {},
+        "structural_status": "valid",
+        "rank": 1,
+        "reasons": [],
+        "reasons_omitted": 0
+      }
+    ],
+    "opportunities": [
+      {
+        "id": "same-input-preparation",
+        "baseline_candidate_id": "separate",
+        "shared_candidate_id": "shared",
+        "separate_action_ids": [
+          "prep-a",
+          "prep-b"
+        ],
+        "shared_action_id": "prep-shared",
+        "assumption_ref": "fixed-same-input-normalization-and-independently-verified-consumers",
+        "status": "compared",
+        "preferred_eligible_candidate_id": "shared",
+        "global_delta": {
+          "elapsed_minutes": -1,
+          "human_minutes": null,
+          "money": null,
+          "tokens": null,
+          "energy_wh": null,
+          "peak_ram_gib": null
+        },
+        "project_deltas": {
+          "a": {
+            "elapsed_minutes": 0,
+            "human_minutes": null,
+            "money": null,
+            "tokens": null,
+            "energy_wh": null,
+            "peak_ram_gib": null
+          },
+          "b": {
+            "elapsed_minutes": -1,
+            "human_minutes": null,
+            "money": null,
+            "tokens": null,
+            "energy_wh": null,
+            "peak_ram_gib": null
+          }
+        },
+        "group_metrics": {
+          "separate_totals": {
+            "elapsed_minutes": 2,
+            "human_minutes": null,
+            "money": null,
+            "tokens": null,
+            "energy_wh": null,
+            "peak_ram_gib": null
+          },
+          "shared_totals": {
+            "elapsed_minutes": 1,
+            "human_minutes": null,
+            "money": null,
+            "tokens": null,
+            "energy_wh": null,
+            "peak_ram_gib": null
+          },
+          "delta": {
+            "elapsed_minutes": -1,
+            "human_minutes": null,
+            "money": null,
+            "tokens": null,
+            "energy_wh": null,
+            "peak_ram_gib": null
+          },
+          "scope": "declared_group_actions_only"
+        },
+        "delta_rounding": {
+          "global": {},
+          "projects": {},
+          "group": {}
+        },
+        "action_changes": {
+          "added": {
+            "ids": [
+              "index-shared",
+              "prep-shared",
+              "summary-shared"
+            ],
+            "count": 3,
+            "omitted": 0
+          },
+          "removed": {
+            "ids": [
+              "index-separate",
+              "prep-a",
+              "prep-b",
+              "summary-separate"
+            ],
+            "count": 4,
+            "omitted": 0
+          }
+        },
+        "attribution_to_sharing_verified": false
+      }
+    ],
+    "delta_convention": "shared_minus_baseline",
+    "exact_delta_values": [],
+    "delta_publication": "Numeric deltas may round; delta_rounding contains integer indices into exact_delta_values for affected values only, including underflows. Each indexed value is an exact signed Decimal string. Empty maps mean no numeric information was lost.",
+    "comparison_scope": "whole_candidates_with_all_action_and_order_changes",
+    "planning_model": "serial_declared_metrics",
+    "project_cost_allocation": "full_beneficiary_cost_not_additive_across_projects",
+    "project_elapsed_minutes": "time_from_plan_start_to_last_beneficiary_action",
+    "detail_caps": {
+      "opportunities": 32,
+      "candidate_reasons": 8,
+      "goals_per_reason": 4,
+      "changed_action_ids": 32
+    },
+    "claims": {
+      "equivalence_verified": false,
+      "source_verified": false,
+      "goal_coverage_verified": false,
+      "attribution_to_sharing_verified": false,
+      "universal_optimality": false,
+      "measured_gain": null
+    },
+    "boundaries": {
+      "execution": false,
+      "selection": false,
+      "models": false,
+      "network": false,
+      "collection": false,
+      "storage": false,
+      "catalogue_rewrite": false
+    },
+    "execution_authorized": false,
+    "limitations": [
+      "Sharing equivalence, source authenticity and goal coverage are caller declarations, not verified facts.",
+      "Whole-candidate differences include all changed actions and ordering, not only the declared sharing group.",
+      "Group costs describe only the listed actions and do not establish causal savings or a feasible standalone subplan.",
+      "Costs follow the existing serial declared model; RAM is a maximum, not a live-resource measurement.",
+      "Negative shared-minus-baseline cost means a declared reduction, not measured savings or a guarantee.",
+      "Unknown costs remain unknown; comparison overhead and unlisted costs are excluded.",
+      "Recommendations do not select a plan or grant execution authority; a trusted controller supplies commands and checks."
+    ]
+  },
+  "comparison_input_digest": "18594e494b3b639107368d95a76880c8345bbc3e93436422be8fa82bcc954517",
+  "temporary_projects_deleted": true,
+  "decision": "fixed_shared_prerequisite_verified",
+  "total_pilot_wall_s": 0.46330534099251963,
+  "timing_scope": "setup, source snapshots, planning/choice/handoff, real commands, checks and cleanup; excludes serialization and host assessment"
+}

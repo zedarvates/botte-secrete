@@ -1,0 +1,102 @@
+{
+  "schema": "parcimonia.plan-preferences-validation/v1",
+  "observed_at": "2026-11-01T10:15:50.884829+01:00",
+  "base_commit": "74cde92ef53a9c59a1bc0fc4f08bb6074172f359",
+  "source_digest": "02519afe75ab7269feec283e66d8cfbc1710a03fcd707bb1e96be0cd924cb117",
+  "source_sha256": {
+    "scripts/run_tests.py": "54316ef4642caecb91413379bd5e2d950db673882a5a215cac39cea57c16d0f3",
+    "skills/conductor/cli.py": "9e128e3c931805fe797ea107c25b2b89d24eaf15f30fe21346f12cc3c307051d",
+    "skills/conductor/preferences.py": "f2ecb6b33c0646a68afa29396a91bc3fbf7a171b4e7833ff0c50d6ca939e2929",
+    "skills/conductor/test_preferences.py": "52903faab1be5767277962b548ec306968edbdeac61cabe2c6a78097b230c6f4",
+    "skills/llm_mcp/server.py": "4434ec53286f0e50d13f27b61f86d64132698fb59ae7960d280f4ea18904552e",
+    "skills/llm_mcp/test_plan_preferences.py": "4d7ac7c2319b0e980320e5f5230edceb52280330cfdb8e6aa70245dba618a3e8",
+    "skills/preflight/test_parcimonia.py": "1658f9642baf8dc2167bd7f0cae1c232983192aec9f33fa9f9137e35013995d2",
+    "examples/parcimonia_plan_preferences.json": "b277c428361d7a9126e70e92caf232e899f5b78baa81f72e1b2aa2297206b04d"
+  },
+  "environment": {
+    "platform": "Linux",
+    "python": "3.12.14"
+  },
+  "checks": {
+    "canonical_changed": {
+      "command": "python scripts/run_tests.py --changed -q",
+      "suites": 27,
+      "passed": 734,
+      "failed": 0,
+      "scope": "changed-file selection, not full repository suite"
+    },
+    "new_behavior_and_boundary_tests": {
+      "passed": 41,
+      "failed": 0,
+      "core": 33,
+      "cli_mcp": 8
+    },
+    "pre_commit_fast": {
+      "passed": true,
+      "python_files": 7
+    },
+    "python_3_10_grammar": {
+      "passed": true,
+      "files": 7,
+      "runtime_3_10_tested": false
+    },
+    "whitespace": {
+      "passed": true
+    },
+    "local_document_links": {
+      "broken_found": 0,
+      "coverage": "incomplete; existing unsupported Markdown constructs"
+    },
+    "checkup": {
+      "exit_code": 0,
+      "directives_score": 100,
+      "local_mcp_config": "missing in this checkout; installed or global configuration and runtime not inspected"
+    }
+  },
+  "synthetic_preference_trials": [
+    {
+      "profile": "money_first",
+      "input_digest": "5de9de139577d9a9a137f25d300d061c83123cb24c3e9e8e1b7e1caf05ed546d",
+      "winner": "economical",
+      "expected": "economical",
+      "matched": true
+    },
+    {
+      "profile": "time_first",
+      "input_digest": "87525d9cc3427d0f489768e2ad43b5a6a3c9b831c361898ceb5fffe634238360",
+      "winner": "rapid",
+      "expected": "rapid",
+      "matched": true
+    },
+    {
+      "profile": "demo_first",
+      "input_digest": "a6645e980884248087aa0766fea7b9ce509d7effe5b51b87bcc27ebe067d876e",
+      "winner": "rapid",
+      "expected": "rapid",
+      "matched": true
+    }
+  ],
+  "independent_review": {
+    "status": "two findings corrected and regressions verified; no other important defect confirmed",
+    "corrections": [
+      "empty comparison file path cannot enter execution branch",
+      "dense dependency reasons bounded before accumulation with full cause counts"
+    ],
+    "four_candidate_dense_case": {
+      "input_bytes": 557655,
+      "before_report_bytes": 10152845,
+      "after_report_bytes": 22217,
+      "source": "independent local reviewer reproduction"
+    }
+  },
+  "boundaries": {
+    "plan_execution": false,
+    "robotics_qualification": false,
+    "ros_adapter": false,
+    "motor_control": false,
+    "production_activation": false,
+    "telemetry_collector": false,
+    "measured_project_gain": null
+  },
+  "scope": "Serial comparison of supplied declared plans, goals and costs. Fixture results do not establish real task efficiency or universal optimality."
+}

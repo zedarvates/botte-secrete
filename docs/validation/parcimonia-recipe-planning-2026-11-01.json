@@ -1,0 +1,142 @@
+{
+  "schema": "parcimonia.recipe-planning-validation/v1",
+  "observed_at": "2026-11-01T13:13:18.900576+01:00",
+  "parent_commit": "923f0af030c5d12a9e2e94775e6b4dae1c6d71c2",
+  "source_sha256": {
+    "scripts/plan_validation_pilot.py": "84003091a6f0d5ddb9f31b52761ef018e1d2739775d4093959267806dc299c5f",
+    "scripts/run_tests.py": "d53625ebafef9b9931faff5cae210c2c785ebcc8f570b9f2aa3c870a5fae9f19",
+    "scripts/test_plan_validation_pilot.py": "0882925812a4d662e8c86d44bebe539c1c6a497e8a173a13c4b0fc657b787272",
+    "skills/conductor/cli.py": "2583e613f55dbff5e38086e97ff9bae7b839726228b406f2491265050a8a0b5a",
+    "skills/conductor/handoff.py": "fe395126159e4b8a14f16dfe30c3f5da56ecc258c672c58a337f898fb391a747",
+    "skills/conductor/preferences.py": "790ad7c4b674405d956f4f13810f9e894997c447ae242187b59049c4c486b8a8",
+    "skills/conductor/recipes.py": "104277fb87cc506650a1952883f93a96054b43cf184ed68beda13158f30871ea",
+    "skills/conductor/selection.py": "9eebd7126cb663948defb1b2c34ede7842a6f78bea026fd675ebfafc28aad1e1",
+    "skills/conductor/test_handoff.py": "5ce8f9806d31788ccba4acc7f6e2404f7807ebf513d4f3739f457148df83b1ff",
+    "skills/conductor/test_preferences.py": "af4bf3373d8c6f7e474a267bce8f4967b786d12dd0a21284250e76de46790780",
+    "skills/conductor/test_recipes.py": "362b36ce80095d4458ccd85894933fba0038b6ef9a5138e9f7c13d6fa9e0ce95",
+    "skills/conductor/test_selection.py": "6eab486a55998e5ae8b2f12dd09d658bdf7e18dcd1c664dd05801bc5abb65e93",
+    "skills/llm_mcp/server.py": "563b8cf83fa6f97396676a90df8c4e07233860bbd27b280f572dd28787462790",
+    "skills/llm_mcp/test_plan_preferences.py": "03a8e3336708070dc1064fee8d171f58fc99d47d892422ab16a2b9a03d6dbb42",
+    "skills/llm_mcp/test_plan_recipes.py": "c6b9a15903ac8a1b58758ef5e83a4e90016681e9e09a888c73452c38c9e40cdc",
+    "skills/llm_mcp/test_plan_selection.py": "ed5e347ca9740383b050277dd51ecebfcfdc1bfc7e2c823f4213c0dd9e221311",
+    "skills/preflight/test_parcimonia.py": "2d44958142e09640f0385dfc4c1edff1d38dcde8d47ed60c8206052b2a8ac59f",
+    "examples/parcimonia_plan_preferences.json": "b277c428361d7a9126e70e92caf232e899f5b78baa81f72e1b2aa2297206b04d",
+    "examples/parcimonia_recipe_planning.json": "37d8f6cd560cdf387fb926954a405e8a79b0fc495231ac740ed4908adee05e61"
+  },
+  "environment": {
+    "platform": "Linux",
+    "python": "3.12.14"
+  },
+  "checks": {
+    "planner": {
+      "passed": 25,
+      "failed": 0
+    },
+    "new_interfaces": {
+      "passed": 8,
+      "failed": 0
+    },
+    "pilot_contracts": {
+      "passed": 6,
+      "failed": 0
+    },
+    "canonical_changed": {
+      "status": "passed",
+      "command": "python scripts/run_tests.py --changed -q",
+      "suites": 27,
+      "passed": 825,
+      "failed": 0,
+      "scope": "changed-file selection; not full repository suite"
+    },
+    "pre_commit_fast": {
+      "passed": true,
+      "python_files": 17
+    },
+    "python_3_10_grammar": {
+      "passed": true,
+      "files": 17,
+      "runtime_3_10_tested": false
+    },
+    "local_document_links": {
+      "exit_code": 0,
+      "broken_found": 0,
+      "coverage": "incomplete; existing unsupported Markdown constructs"
+    },
+    "checkup": {
+      "exit_code": 0,
+      "directives_score": 100,
+      "local_mcp_config": "missing in this checkout; installed/global runtime not checked"
+    }
+  },
+  "synthetic_construction": {
+    "recipe_input_digest": "a9958a372cb2e4948bf9c87c6aa56b58e3f4d5ec6799bf140ee96b889f64814a",
+    "search": {
+      "attempted": 4,
+      "candidate_count": 4,
+      "rejected_combinations": 0,
+      "duplicate_combinations": 0,
+      "complete": true,
+      "truncation_reason": null,
+      "limits": {
+        "max_candidates": 16,
+        "max_expansions": 256
+      }
+    },
+    "candidate_count": 4,
+    "comparison_input_digest": "b51fb692b5ba68995daa6a6fa4db6b2bbf5fcf16b4506aacbf568eb5c3b2f720",
+    "offered_options": 4,
+    "selected_candidate_id": null,
+    "source_verified": false,
+    "goal_coverage_verified": false
+  },
+  "real_isolated_pilot": {
+    "evidence_ref": "docs/validation/plan-validation-pilot-2026-11-01.json",
+    "sha256": "f9688d5926192c1e2698f7b67a757f9880dc1996b97b67d088ef0252e1598181",
+    "runs": 6,
+    "accepted_runs": 6,
+    "test_ids_per_run": 12,
+    "source_files": 16,
+    "source_hashes_still_match": true,
+    "median_time_to_verified_result_s": {
+      "batched": 0.30585939199954737,
+      "split": 0.8341723759949673
+    },
+    "decision": "retain_reference",
+    "recommended_candidate_id": "batched",
+    "selected_candidate_id": null,
+    "measurement_kind": "same-sample observed calibration, not forecast accuracy",
+    "unmeasured_costs": [
+      "tokens",
+      "money",
+      "energy_wh",
+      "peak_ram_gib",
+      "human_minutes"
+    ]
+  },
+  "independent_review": {
+    "blockers_remaining": 0,
+    "corrected": "dense missing-dependency work repeated per recipe combination",
+    "bounded_counterexample": {
+      "input_bytes": 805504,
+      "attempted": 4096,
+      "causes_counted": 268435456,
+      "closure_computations": 1,
+      "retained_diagnostics": 64,
+      "report_bytes": 6530,
+      "wall_s": 0.243,
+      "observation_source": "independent local reviewer; narrow stress fixture, not project efficiency benchmark"
+    }
+  },
+  "boundaries": {
+    "unrestricted_goal_interpretation": false,
+    "wiki_retrieval": false,
+    "executable_command_generation": false,
+    "planner_execution": false,
+    "pilot_fixed_test_commands_executed": true,
+    "production_deployment": false,
+    "telemetry_collection": false,
+    "ros_or_motor_control": false,
+    "global_gain_or_optimality_claimed": false
+  },
+  "scope": "Bounded recipe combinations with one deterministic serial order each, compatible with existing comparison/choice contracts. Physical feasibility and recipe semantics remain unverified; limits may leave alternatives unexplored."
+}

@@ -1,0 +1,314 @@
+{
+  "schema": "parcimonia.plan-replanning/v1",
+  "previous_request": {
+    "schema": "parcimonia.plan-preferences/v1",
+    "currency": "EUR",
+    "projects": [
+      {
+        "id": "demo",
+        "goals": [
+          "reviewed"
+        ]
+      }
+    ],
+    "actions": [
+      {
+        "id": "prepare",
+        "needs": [],
+        "projects": [
+          "demo"
+        ],
+        "metrics": {
+          "elapsed_minutes": 5,
+          "human_minutes": 5,
+          "money": 5,
+          "tokens": 5,
+          "energy_wh": 5,
+          "peak_ram_gib": 5
+        },
+        "provenance": {
+          "kind": "estimate",
+          "ref": "illustrative-only-not-execution-evidence"
+        }
+      },
+      {
+        "id": "review",
+        "needs": [
+          "prepare"
+        ],
+        "projects": [
+          "demo"
+        ],
+        "metrics": {
+          "elapsed_minutes": 2,
+          "human_minutes": 2,
+          "money": 2,
+          "tokens": 2,
+          "energy_wh": 2,
+          "peak_ram_gib": 2
+        },
+        "provenance": {
+          "kind": "estimate",
+          "ref": "illustrative-only-not-execution-evidence"
+        }
+      }
+    ],
+    "candidates": [
+      {
+        "id": "original",
+        "steps": [
+          "prepare",
+          "review"
+        ],
+        "goals": {
+          "demo": [
+            "reviewed"
+          ]
+        }
+      }
+    ],
+    "preferences": {
+      "priorities": [
+        {
+          "metric": "money"
+        },
+        {
+          "metric": "elapsed_minutes"
+        }
+      ]
+    }
+  },
+  "previous_handoff": {
+    "schema": "parcimonia.plan-handoff/v1",
+    "status": "prepared_unverified",
+    "input_digest": "5664d041c3ba1a9c0c5105c838438ebffe64a1fd3316ea98c2eaf3911e86e3dd",
+    "selected_candidate_id": "original",
+    "selection_receipt": {
+      "schema": "parcimonia.plan-selection/v1",
+      "request_schema": "parcimonia.plan-preferences/v1",
+      "input_digest": "5664d041c3ba1a9c0c5105c838438ebffe64a1fd3316ea98c2eaf3911e86e3dd",
+      "selected_candidate_id": "original",
+      "recommended_candidate_id": "original",
+      "selected_plan": {
+        "candidate_id": "original",
+        "steps": [
+          "prepare",
+          "review"
+        ],
+        "goals": {
+          "demo": [
+            "reviewed"
+          ]
+        },
+        "projects": [
+          {
+            "id": "demo",
+            "goals": [
+              "reviewed"
+            ]
+          }
+        ],
+        "totals": {
+          "elapsed_minutes": 7,
+          "human_minutes": 7,
+          "money": 7,
+          "tokens": 7,
+          "energy_wh": 7,
+          "peak_ram_gib": 5
+        },
+        "project_totals": {
+          "demo": {
+            "elapsed_minutes": 7,
+            "human_minutes": 7,
+            "money": 7,
+            "tokens": 7,
+            "energy_wh": 7,
+            "peak_ram_gib": 5
+          }
+        },
+        "unknown_metrics": [],
+        "shared_actions": [],
+        "goal_coverage": "declared_unverified"
+      },
+      "currency": "EUR",
+      "planning_model": "serial_declared_metrics",
+      "project_cost_allocation": "full_beneficiary_cost_not_additive_across_projects",
+      "project_elapsed_minutes": "time_from_plan_start_to_last_beneficiary_action",
+      "choice_origin": "caller_declared",
+      "selection_status": "selected",
+      "execution_authorized": false,
+      "claim": {
+        "source_verified": false,
+        "goal_coverage_verified": false,
+        "universal_optimality": false,
+        "measured_gain": null,
+        "choice_authority_verified": false
+      },
+      "boundaries": {
+        "models": false,
+        "network": false,
+        "execution": false,
+        "collection": false,
+        "storage": false
+      },
+      "selection_id": "e03239c9808e1a44ad53261264a77a7edbec0391cf8874390c982d57d5880091"
+    },
+    "execution_plan": {
+      "schema": "botte.skill-plan/v1",
+      "goal": "Illustrative declared local review",
+      "context": "illustrative-only-controller-must-supply-real-plan",
+      "steps": [
+        {
+          "id": "prepare",
+          "capability": "illustrative",
+          "command": "python trusted_worker.py prepare",
+          "local": true,
+          "needs": [],
+          "requires": [
+            {
+              "kind": "file_exists",
+              "path": "input.json"
+            }
+          ],
+          "ensures": [
+            {
+              "kind": "json_equals",
+              "path": "prepare.json",
+              "pointer": "/ready",
+              "value": true
+            }
+          ],
+          "observes": [
+            "prepare.json"
+          ],
+          "source_hashes": {
+            "trusted_worker.py": "0000000000000000000000000000000000000000000000000000000000000000"
+          }
+        },
+        {
+          "id": "review",
+          "capability": "illustrative",
+          "command": "python trusted_worker.py review",
+          "local": true,
+          "needs": [
+            "prepare"
+          ],
+          "requires": [
+            {
+              "kind": "file_exists",
+              "path": "input.json"
+            }
+          ],
+          "ensures": [
+            {
+              "kind": "json_equals",
+              "path": "review.json",
+              "pointer": "/ready",
+              "value": true
+            }
+          ],
+          "observes": [
+            "review.json"
+          ],
+          "source_hashes": {
+            "trusted_worker.py": "0000000000000000000000000000000000000000000000000000000000000000"
+          }
+        }
+      ]
+    },
+    "execution_plan_sha256": "d591dba185cc459abaa8772866b82677a571f8d15003624e74f005914950e917",
+    "execution_authorized": false,
+    "limitations": [
+      "Step identifiers and dependencies do not verify command semantics or goals.",
+      "Declared costs are not verified execution costs or guarantees.",
+      "Caller identity, user choice authority and execution authority are not verified.",
+      "Sources, prerequisites, results and current project files are not checked.",
+      "Command safety and effects are not verified; existing execution gates apply."
+    ],
+    "handoff_id": "34a315699dec08551e92a93a37d7d0a5354cad4c5c3dd6a92847b95eaa5142a8"
+  },
+  "current_request": {
+    "schema": "parcimonia.plan-preferences/v1",
+    "currency": "EUR",
+    "projects": [
+      {
+        "id": "demo",
+        "goals": [
+          "reviewed"
+        ]
+      }
+    ],
+    "actions": [
+      {
+        "id": "prepare",
+        "needs": [],
+        "projects": [
+          "demo"
+        ],
+        "metrics": {
+          "elapsed_minutes": 5,
+          "human_minutes": 5,
+          "money": 5,
+          "tokens": 5,
+          "energy_wh": 5,
+          "peak_ram_gib": 5
+        },
+        "provenance": {
+          "kind": "estimate",
+          "ref": "illustrative-only-not-execution-evidence"
+        }
+      },
+      {
+        "id": "review",
+        "needs": [
+          "prepare"
+        ],
+        "projects": [
+          "demo"
+        ],
+        "metrics": {
+          "elapsed_minutes": 2,
+          "human_minutes": 2,
+          "money": 2,
+          "tokens": 2,
+          "energy_wh": 2,
+          "peak_ram_gib": 2
+        },
+        "provenance": {
+          "kind": "estimate",
+          "ref": "illustrative-only-not-execution-evidence"
+        }
+      }
+    ],
+    "candidates": [
+      {
+        "id": "original",
+        "steps": [
+          "prepare",
+          "review"
+        ],
+        "goals": {
+          "demo": [
+            "reviewed"
+          ]
+        }
+      }
+    ],
+    "preferences": {
+      "priorities": [
+        {
+          "metric": "money"
+        },
+        {
+          "metric": "elapsed_minutes"
+        }
+      ],
+      "limits": {
+        "money": 2,
+        "elapsed_minutes": 2,
+        "peak_ram_gib": 8
+      }
+    }
+  },
+  "budget_scope": "remaining_work"
+}

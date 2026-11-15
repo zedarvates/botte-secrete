@@ -1,0 +1,101 @@
+{
+  "schema": "parcimonia.plan-selection-handoff-validation/v1",
+  "observed_at": "2026-11-01T12:43:24.664420+01:00",
+  "parent_commit": "f18430af9e3cd377f38a8ba12e8b7e007bf3ca10",
+  "source_sha256": {
+    "scripts/run_tests.py": "734924434bb3c48fe66a1637ba6e762862aeace4aa0b6070e30c550b5dde4e52",
+    "skills/conductor/cli.py": "8627f42b373bcb6d3284da849c4a9731a2c4057ee8c0b037395e6347ab7f560a",
+    "skills/conductor/handoff.py": "fe395126159e4b8a14f16dfe30c3f5da56ecc258c672c58a337f898fb391a747",
+    "skills/conductor/preferences.py": "790ad7c4b674405d956f4f13810f9e894997c447ae242187b59049c4c486b8a8",
+    "skills/conductor/selection.py": "9eebd7126cb663948defb1b2c34ede7842a6f78bea026fd675ebfafc28aad1e1",
+    "skills/conductor/test_handoff.py": "5ce8f9806d31788ccba4acc7f6e2404f7807ebf513d4f3739f457148df83b1ff",
+    "skills/conductor/test_preferences.py": "af4bf3373d8c6f7e474a267bce8f4967b786d12dd0a21284250e76de46790780",
+    "skills/conductor/test_selection.py": "6eab486a55998e5ae8b2f12dd09d658bdf7e18dcd1c664dd05801bc5abb65e93",
+    "skills/llm_mcp/server.py": "b98b01cf0e6139d61a579f88693fca0b35157d197f70458b8b3b58c60a30a3db",
+    "skills/llm_mcp/test_plan_preferences.py": "03a8e3336708070dc1064fee8d171f58fc99d47d892422ab16a2b9a03d6dbb42",
+    "skills/llm_mcp/test_plan_selection.py": "ed5e347ca9740383b050277dd51ecebfcfdc1bfc7e2c823f4213c0dd9e221311",
+    "skills/preflight/test_parcimonia.py": "d66767aba775ae714bf9c884a37564d35e621f034a7ed544330a34c8ae2f014b",
+    "examples/parcimonia_plan_preferences.json": "b277c428361d7a9126e70e92caf232e899f5b78baa81f72e1b2aa2297206b04d"
+  },
+  "environment": {
+    "platform": "Linux",
+    "python": "3.12.14"
+  },
+  "checks": {
+    "targeted_selection_handoff_and_interfaces": {
+      "selection": 14,
+      "handoff": 18,
+      "new_cli_mcp": 10,
+      "existing_cli_mcp": 10,
+      "passed": 52,
+      "failed": 0
+    },
+    "canonical_changed": {
+      "status": "passed",
+      "command": "python scripts/run_tests.py --changed -q",
+      "suites": 27,
+      "passed": 786,
+      "failed": 0,
+      "scope": "changed-file selection; not full repository suite"
+    },
+    "pre_commit_fast": {
+      "passed": true,
+      "python_files": 12
+    },
+    "python_3_10_grammar": {
+      "passed": true,
+      "files": 12,
+      "runtime_3_10_tested": false
+    },
+    "local_document_links": {
+      "exit_code": 0,
+      "broken_found": 0,
+      "coverage": "incomplete; existing unsupported Markdown constructs"
+    },
+    "checkup": {
+      "exit_code": 0,
+      "directives_score": 100,
+      "local_mcp_config": "missing in this checkout; installed/global configuration and runtime not inspected"
+    }
+  },
+  "synthetic_roundtrip": {
+    "input_digest": "eec7b4f90675bb22e830a7da7a59628765503ee5f793e53d172d0237ea7fa8db",
+    "recommended_candidate_id": "economical",
+    "selected_candidate_id": "rapid",
+    "selection_id": "c5b1a1efda48b35195350bea065d70ca1d2673149ce25c0275012a49045d9136",
+    "selection_revalidated": true,
+    "handoff_id": "f64c186b394ed9be1836ea0c3f76a21e62f5c3de15a4b22014df38a3804460b2",
+    "handoff_revalidated": true,
+    "handoff_status": "prepared_unverified",
+    "execution_plan_sha256": "83b3e2a58b07772d45acfcbf200fe3b954cd586ace62a5f8a098eb63b71ef975",
+    "steps": [
+      "shared",
+      "fast-demo",
+      "fast-plugin"
+    ],
+    "execution_authorized": false,
+    "commands": "synthetic interface fixture only; never executed"
+  },
+  "independent_review": {
+    "blockers_confirmed": 0,
+    "targeted_passed": 42,
+    "checks": [
+      "typed canonical receipt and handoff reconstruction",
+      "stale input and modified receipt rejection",
+      "nonrecommended eligible option retained",
+      "exact step order and dependency match",
+      "empty paths and incompatible CLI flags cannot reach execution",
+      "supplied commands and verification contracts preserved"
+    ]
+  },
+  "boundaries": {
+    "choice_authority_verified": false,
+    "plan_execution": false,
+    "live_sources_or_resources_verified": false,
+    "new_executor": false,
+    "robotics_or_ros_qualification": false,
+    "network_collection": false,
+    "measured_project_gain": null
+  },
+  "scope": "Prepared document consistency only. User choice authority, command semantics/safety, actual resources, declared costs and goal achievement remain unverified. Existing Conductor execution and checkpoint rules are unchanged."
+}
