@@ -51,8 +51,8 @@ def bin_pack(items: list, capacity: float) -> dict:
     """Pack (name, size) items into the fewest bins of `capacity` (FFD).
 
     First-Fit-Decreasing: sort items big→small, place each in the first bin it
-    fits. Deterministic; near-optimal bin count. Oversized items get their own
-    flagged bin.
+    fits. Deterministic; near-optimal bin count. Oversized items are reported
+    separately in `oversize` and are not placed in bins.
     """
     if capacity <= 0:
         return {"error": "capacity must be > 0"}
