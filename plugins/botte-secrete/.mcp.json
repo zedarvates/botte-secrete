@@ -2,7 +2,10 @@
   "mcpServers": {
     "botte-llm": {
       "type": "stdio",
-      "command": "botte-mcp"
+      "command": "botte-mcp",
+      "env": {
+        "BOTTE_MCP_LAZY_TOOLS": "0"
+      }
     }
   }
 }

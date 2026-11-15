@@ -56,7 +56,7 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(result['context']['text'], '')
 
     def test_duplicates_require_caller_selection(self):
-        self.path.write_text('func spawn():\n    pass\nfunc spawn():\n    return\n', encoding='utf-8')
+        self.path.write_text('func spawn():\n    pass\nfunc spawn():\n    return\n', encoding='utf-8', newline="\n")
         self.assertEqual(workflow.prepare_code_context(str(self.path), 'spawn')['status'], 'ambiguous')
         selected = workflow.prepare_code_context(str(self.path), 'spawn', occurrence=2, before=0, after=1)
         self.assertEqual(selected['context']['text'], 'func spawn():\n    return\n')
@@ -65,7 +65,7 @@ class WorkflowTests(unittest.TestCase):
         missing = workflow.prepare_code_context(str(self.path), 'missing')
         self.assertEqual(missing['status'], 'not_found')
         self.assertEqual(missing['context']['text'], '')
-        self.path.write_text('func spawn():\n' + '    pass\n' * 90, encoding='utf-8')
+        self.path.write_text('func spawn():\n' + '    pass\n' * 90, encoding='utf-8', newline="\n")
         limited = workflow.prepare_code_context(str(self.path), 'spawn', before=0, after=90, max_context_bytes=256)
         self.assertFalse(limited['context']['window_complete'])
         self.assertLessEqual(limited['context']['context_bytes'], 256)

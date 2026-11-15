@@ -9,7 +9,7 @@ cloud sont des intégrations facultatives.
 
 [![CI](https://github.com/zedarvates/botte-secrete/actions/workflows/ci.yml/badge.svg)](https://github.com/zedarvates/botte-secrete/actions)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
-[![Version source](https://img.shields.io/badge/source_version-1.11.0-55d6be)](pyproject.toml)
+[![Version source](https://img.shields.io/badge/source_version-1.11.2-55d6be)](pyproject.toml)
 [![Licence MIT](https://img.shields.io/badge/licence-MIT-7b8cff)](LICENSE)
 
 [English](README.md) · [Essayer](#essayer-la-démonstration-hors-ligne) · [Plugin Codex](#connecter-votre-agent) · [Fonctions](docs/capabilities.fr.md) · [Documentation](docs/README.md)
@@ -130,7 +130,7 @@ installé par défaut. Consultez le
 | Source | Usage |
 |---|---|
 | [Version stable v1.11.1](https://github.com/zedarvates/botte-secrete/releases/tag/v1.11.1) | Installation publiée recommandée ; les notes relient les fichiers et les limites de validation. |
-| Ces sources (`1.11.0` dans [pyproject.toml](pyproject.toml)) | Développement ; le numéro seul n'identifie pas la version publiée. Conservez le SHA des sources. |
+| Ces sources (`1.11.2` dans [pyproject.toml](pyproject.toml)) | Développement ; le numéro seul n'identifie pas la version publiée. Conservez le SHA des sources. |
 | [Branche pilote 2.0.0rc2](https://github.com/zedarvates/botte-secrete/releases/tag/v2.0.0rc2) | Préversion historique distincte pour des pilotes Factory Assurance limités ; lire son périmètre et ses preuves. |
 
 La version stable consigne une validation Windows et Ubuntu sous WSL. Elle ne
