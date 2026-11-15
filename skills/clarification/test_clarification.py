@@ -6,6 +6,7 @@ import unittest
 
 from skills.clarification import (
     ClarificationRequest, Question, QuestionPriority, dartagnan_clarify,
+    aramis_clarify, rochefort_clarify,
 )
 
 
@@ -67,6 +68,13 @@ class ClarificationTests(unittest.TestCase):
         self.assertNotIn(1, request.fill_defaults())
         self.assertEqual([q.number for q in request.blocking_questions()], [1])
         self.assertEqual(request.blocking_questions({1: "Already authorized in task"}), [])
+
+    def test_dynamic_usage_is_unknown_without_evidence(self):
+        for request in (aramis_clarify("python"), rochefort_clarify("report")):
+            with self.subTest(agent=request.agent_name):
+                self.assertNotIn(2, request.fill_defaults())
+                self.assertIn(2, [q.number for q in request.pending_questions()])
+                self.assertNotIn(2, [q.number for q in request.pending_questions({2: "verified"})])
 
 
 if __name__ == "__main__":

@@ -202,8 +202,7 @@ def aramis_clarify(project_type: str) -> ClarificationRequest:
         number=2,
         text="Y a-t-il des skills/appels dynamiques (getattr, eval, importlib) que je devrais savoir avant d'exclure du code ?",
         priority=QuestionPriority.HIGH,
-        default_answer="Non, traiter tout le code comme statique",
-        context="Évite les faux positifs de dead code"
+        context="Inconnu tant que les usages dynamiques ne sont pas vérifiés"
     ))
 
     cr.questions.append(Question(
@@ -241,8 +240,7 @@ def rochefort_clarify(audit_report_path: str) -> ClarificationRequest:
         number=2,
         text="Le projet utilise-t-il des frameworks qui font des appels dynamiques (Django, FastAPI, plugins) ?",
         priority=QuestionPriority.MEDIUM,
-        default_answer="Non",
-        context="Change la détection de dead code"
+        context="Inconnu tant que les usages de frameworks ne sont pas vérifiés"
     ))
 
     return cr
