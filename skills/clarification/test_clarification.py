@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import unittest
+from pathlib import Path
 
 from skills.clarification import (
     ClarificationRequest, Question, QuestionPriority, dartagnan_clarify,
@@ -75,6 +76,16 @@ class ClarificationTests(unittest.TestCase):
                 self.assertNotIn(2, request.fill_defaults())
                 self.assertIn(2, [q.number for q in request.pending_questions()])
                 self.assertNotIn(2, [q.number for q in request.pending_questions({2: "verified"})])
+
+    def test_role_prompts_do_not_assume_no_dynamic_usage(self):
+        root = Path(__file__).resolve().parents[2]
+        for path in ("skills/mousquetaires/prompts/aramis.md", "skills/cardinal/prompts/rochefort.md"):
+            with self.subTest(path=path):
+                text = (root / path).read_text(encoding="utf-8")
+                line = next(line for line in text.splitlines() if line.startswith("2. 🟠 Appels dynamiques")
+                            or line.startswith("2. 🟡 Frameworks dynamiques"))
+                self.assertIn("inconnu", line)
+                self.assertNotIn("défaut: NON", line)
 
 
 if __name__ == "__main__":
