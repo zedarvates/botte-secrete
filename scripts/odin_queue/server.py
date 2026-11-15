@@ -14,6 +14,7 @@ from urllib.parse import urlsplit
 
 from .codex import CodexEngine, SimulationEngine
 from .state import Queue, QueuePersistenceError, SupervisorLock
+from skills.host_resources import HostMemoryGuard
 
 ASSETS = Path(__file__).parent
 
@@ -125,7 +126,8 @@ def make_http(service, port=8775, token=None):
                 if path == "/api/jobs":
                     job = service.queue.submit(title=data.get("title"), prompt=data.get("prompt"),
                                                cwd=data.get("cwd"), dedupe_key=data.get("dedupe_key"),
-                                               thread_id=data.get("thread_id") or None, audit=data.get("audit", False))
+                                               thread_id=data.get("thread_id") or None, audit=data.get("audit", False),
+                                               estimated_ram_gib=data.get("estimated_ram_gib"))
                     self._json(200, {"id": job["id"]})
                 elif path == "/api/control":
                     service.queue.pause(data.get("paused"))
@@ -178,6 +180,9 @@ def main(argv=None):
     parser.add_argument("--state", type=Path, help="Journal privé de cette file ; pas un registre métier Kanboard")
     parser.add_argument("--port", type=int, default=8775)
     parser.add_argument("--max-running", type=int, default=5, choices=range(1, 6))
+    parser.add_argument("--resource-state", type=Path, help="Registre mémoire commun aux superviseurs du même poste")
+    parser.add_argument("--job-ram-gib", type=float, default=4, help="Budget RAM par défaut d’un tour (Gio)")
+    parser.add_argument("--system-ram-gib", type=float, default=2, help="Marge système minimale (Gio, au moins 10 %% de la RAM)")
     parser.add_argument("--codex-executable", help="Chemin de l’exécutable Codex installé")
     parser.add_argument("--demo-duration", type=float, default=12)
     args = parser.parse_args(argv)
@@ -186,6 +191,10 @@ def main(argv=None):
         parser.error("Définir au moins une racine avec --root ; aucun accès global implicite.")
     if args.demo_duration <= 0 or args.demo_duration > 3600:
         parser.error("Durée de démonstration invalide.")
+    import math
+    if (not math.isfinite(args.job_ram_gib) or not 0.25 <= args.job_ram_gib <= 1024
+            or not math.isfinite(args.system_ram_gib) or not 2 <= args.system_ram_gib <= 1024):
+        parser.error("Budgets mémoire invalides (tour : 0,25–1024 Gio ; système : 2–1024 Gio).")
     base = Path(os.environ.get("LOCALAPPDATA") or os.environ.get("XDG_STATE_HOME") or (Path.home() / ".local" / "state")) / "botte-secrete" / "odin-queue"
     path = args.state or base / ("queue-" + mode + ".json")
     roots = args.root
@@ -195,7 +204,10 @@ def main(argv=None):
         roots = [str(demo_root)]
     try:
         with SupervisorLock(str(path) + ".lock"):
-            queue = Queue(path, roots, capacity=args.max_running, mode=mode)
+            guard = HostMemoryGuard(path=args.resource_state,
+                                    system_reserve_bytes=int(args.system_ram_gib * 1024**3)) if args.live else None
+            queue = Queue(path, roots, capacity=args.max_running, mode=mode, memory_guard=guard,
+                          job_memory_bytes=int(args.job_ram_gib * 1024**3))
             if args.live:
                 executable = args.codex_executable or shutil.which("codex")
                 if not executable:

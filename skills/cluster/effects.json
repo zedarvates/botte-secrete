@@ -1,19 +1,20 @@
 {
   "schema": "botte.capability-effects/v1",
   "capability_id": "zedarvates/botte-secrete:skills/cluster",
-  "contract_version": "0.4.0",
+  "contract_version": "0.5.0",
   "source_hashes": {
     "SKILL.md": "576f07bb030ae1f0fbe5dc2d4aeb991de0a018d7daf5742aa2cdff1a587d697b",
     "__init__.py": "9b861b5bcf9b20bff41fe1f8ec0498792f80c4dafcbb167706d510551b2410d5",
     "cluster.py": "b15fc14cb9ffad0e23c689ad5dd5d05c40fe44b524f8f979f910fcd23a411af4",
-    "agent.py": "9555f284098642f500ed689fee7641ab7a7d5a76361176fd6f593aad010c053a",
+    "agent.py": "850f774c728ac2934471b009167b0f700ff185f54bfb53a7af28001af462ad01",
     "cli.py": "6e1b1702807f99be13f9ad4d974194caeef0a18fb61d487f9fc6be53d6172be9"
   },
   "preconditions": [
     "Choose status, pick, report saving, delegation or receiver maintenance; a status request is not necessarily read-only.",
     "Resolve discovery scope and review the llm_backends declaration when registry refresh can occur.",
     "Use the existing task authorization and trusted endpoint configuration for delegation; non-loopback delegation requires HTTPS and a token.",
-    "Receiver maintenance additionally depends on operator-configured named commands and their own consequences."
+    "Receiver maintenance additionally depends on operator-configured named commands and their own consequences.",
+    "Receiver maintenance requires fresh host RAM/commit headroom and a shared host-local reservation path for participating supervisors. A declared estimate is not a hard process limit."
   ],
   "expected_effects": [
     {
@@ -50,11 +51,11 @@
     },
     {
       "effect": "Serving the reference receiver listens for tasks; permitted maintenance runs operator-defined subprocesses.",
-      "scope": "Receiver host, listening socket, inherited process environment and resources touched by configured commands.",
+      "scope": "Receiver host, listening socket, shared host-memory registry and lock, inherited process environment and resources touched by configured commands.",
       "likelihood": "conditional",
-      "basis": "agent exposes named read actions and _run_named requires a configured command plus confirm=True.",
-      "impact": "Consumes service resources and can mutate the host through approved commands. Output may disclose host data; process exit alone is not task proof.",
-      "verification": "Inject a runner for a named fixture command; verify unknown/unconfirmed commands do not launch and inspect result/error output."
+      "basis": "agent read actions bypass admission; _run_named requires a configured command, confirm=True, a persistent RAM reservation and an immediate recheck. Shared guard code lives in ../host_resources.py, outside these local source hashes.",
+      "impact": "Consumes RAM and writes persistent budgets before launching approved subprocesses. Reservations survive every launched command until local verified-stop reconciliation, including exit 0, because descendants or services can remain. Low/unknown memory refuses new commands; diagnostic actions remain available.",
+      "verification": "Run skills.cluster.test_cluster and skills.test_host_resources: rejected/unconfirmed/low-memory commands do not launch, fresh recheck precedes spawn, exit 0/nonzero and timeout retain budgets, and read diagnostics remain accessible."
     },
     {
       "effect": "Inside an explicitly enabled observation session, expose instrumented calls, LRU write samples and delegation POST attempts in a separate partial evidence report.",
@@ -88,7 +89,8 @@
     "strategy": "Reconcile discovery/LRU state separately from remote task resources. Restore only appropriate retained state; rollback of maintenance belongs to the selected command and receiver.",
     "residual_effects": [
       "Remote work, output disclosures and consumed resources are not undone by a caller timeout.",
-      "LRU state has no history or atomic cross-process reservation."
+      "LRU state has no history or atomic cross-process reservation.",
+      "RAM reservations are not automatically expired. Restore a consistent registry or release exact keys only after verifying execution, descendants and services have stopped; reverting source does not remove reservations."
     ]
   },
   "retry": {
@@ -103,7 +105,8 @@
       "llm_backends and report implementations are external to these local source hashes.",
       "Custom receiver implementations and maintenance command configurations determine additional effects.",
       "No exactly-once delegation, remote cancellation or fleet rollback is provided.",
-      "Observation covers selected calls, writes and transport-response facets. A token, successful HTTP response or delegated=True does not authenticate evidence of remote task completion; other background effects remain unverified."
+      "Observation covers selected calls, writes and transport-response facets. A token, successful HTTP response or delegated=True does not authenticate evidence of remote task completion; other background effects remain unverified.",
+      "Host RAM gates cover participating queue/receiver paths sharing the same local registry; native sessions and other supervisors have no forecast reservation unless integrated. Windows native deployment remains unqualified by Linux fixture tests."
     ],
     "evidence_refs": [
       "cluster.py:status",

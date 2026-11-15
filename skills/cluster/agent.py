@@ -19,12 +19,19 @@ Pure stdlib (http.server). The cluster's `delegate(host, task)` POSTs
 from __future__ import annotations
 
 import json
+import math
 import os
 import platform
 import shutil
+import uuid
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Callable
+
+from skills.host_resources import HostMemoryGuard, probe_memory
+
+_GIB = 1024 ** 3
+_DEFAULT_COMMAND_RAM_GIB = 4
 
 
 # ── whitelisted, read-only actions ──────────────────────────────────────────
@@ -42,7 +49,12 @@ def _machine_status(_args: dict) -> dict:
             load = os.getloadavg()
         except OSError:
             load = None
-    return {"hostname": platform.node(), "hardware": hw, "loadavg": load}
+    try:
+        memory = probe_memory()
+    except (OSError, ValueError):
+        memory = {"status": "unknown", "reason": "measurement_unavailable"}
+    return {"hostname": platform.node(), "hardware": hw, "loadavg": load,
+            "memory": memory}
 
 
 def _disk(_args: dict) -> dict:
@@ -128,6 +140,14 @@ _COMMANDS: dict[str, dict] = {}
 _CMD_TIMEOUT = 120
 
 
+def _command_ram_bytes(spec: dict) -> int:
+    amount = spec.get("estimated_ram_gib", _DEFAULT_COMMAND_RAM_GIB)
+    if (isinstance(amount, bool) or not isinstance(amount, (int, float))
+            or not 0.25 <= amount <= 1024 or not math.isfinite(amount)):
+        raise ValueError("invalid command RAM estimate")
+    return math.ceil(amount * _GIB)
+
+
 def load_commands(path) -> dict:
     """Load the operator's maintenance command whitelist from a JSON file."""
     try:
@@ -137,8 +157,13 @@ def load_commands(path) -> dict:
     out = {}
     for name, spec in (doc.get("commands", doc) or {}).items():
         if isinstance(spec, dict) and isinstance(spec.get("cmd"), list):
+            try:
+                _command_ram_bytes(spec)
+            except ValueError:
+                continue  # An invalid explicit estimate must never use the default.
             out[name] = {"cmd": [str(a) for a in spec["cmd"]],
-                         "desc": str(spec.get("desc", ""))}
+                         "desc": str(spec.get("desc", "")),
+                         "estimated_ram_gib": spec.get("estimated_ram_gib", _DEFAULT_COMMAND_RAM_GIB)}
     return out
 
 
@@ -152,13 +177,44 @@ def _run_named(name: str, confirm: bool) -> dict:
     if confirm is not True:
         return {"ok": False, "error": "confirmation required: pass confirm=true",
                 "command": name, "desc": spec["desc"], "will_run": spec["cmd"]}
+    key = "cluster-command:" + uuid.uuid4().hex
+    try:
+        requested = _command_ram_bytes(spec)
+        guard = HostMemoryGuard()
+        admission = guard.reserve(key, requested)
+    except (OSError, ValueError, RuntimeError):
+        return {"ok": False, "command": name, "error": "memory admission unavailable"}
+    if admission.get("allowed") is not True:
+        return {"ok": False, "command": name, "error": "memory admission refused",
+                "memory": admission}
+    # Recheck fresh host pressure immediately before launching the command.
+    try:
+        admission = guard.check(key)
+    except (OSError, ValueError, RuntimeError):
+        admission = {"allowed": False, "reason": "resource_state_unavailable"}
+    if admission.get("allowed") is not True:
+        refused = {"ok": False, "command": name, "error": "memory admission refused",
+                   "memory": admission}
+        try:
+            guard.release(key)
+        except (OSError, ValueError, RuntimeError):
+            refused.update(reservation_retained=True, reservation_key=key)
+        return refused
     try:
         proc = subprocess.run(spec["cmd"], capture_output=True, text=True,
                               timeout=_CMD_TIMEOUT)
-        return {"ok": proc.returncode == 0, "command": name, "exit": proc.returncode,
-                "output": ((proc.stdout or "") + (proc.stderr or ""))[-2000:]}
     except (OSError, subprocess.SubprocessError) as e:
-        return {"ok": False, "command": name, "error": str(e)}
+        # Timeout kills/waits the direct child, but descendants can still be
+        # alive. Retain the budget until its actual effects are reconciled.
+        return {"ok": False, "command": name, "error": str(e),
+                "reservation_retained": True, "reservation_key": key,
+                "reservation_note": "Vérifier l'arrêt des descendants/services avant libération locale."}
+    # Even exit 0 only proves that this command returned. It may have started a
+    # detached process or service, so its budget needs local reconciliation.
+    return {"ok": proc.returncode == 0, "command": name, "exit": proc.returncode,
+            "output": ((proc.stdout or "") + (proc.stderr or ""))[-2000:],
+            "reservation_retained": True, "reservation_key": key,
+            "reservation_note": "Vérifier l'arrêt des descendants/services avant libération locale."}
 
 
 def handle_task(payload: dict) -> dict:

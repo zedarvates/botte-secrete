@@ -10,6 +10,10 @@ on:
       - 'pyproject.toml'
       - 'scripts/verify_codex_plugin_host.py'
       - 'scripts/verify_parcimonia_candidate.py'
+      - 'scripts/odin_queue/**'
+      - 'scripts/odin_codex_queue.py'
+      - 'scripts/test_odin_codex_queue.py'
+      - 'scripts/diagnose_codex_windows.ps1'
       - '.github/workflows/codex-plugin-host.yml'
 
 permissions:
@@ -35,6 +39,35 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
+      - name: Verify shared RAM admission and local queue lifecycle
+        shell: python
+        run: |
+          import os, pathlib, subprocess, sys
+          repo = pathlib.Path(os.environ['GITHUB_WORKSPACE']).resolve()
+          env = os.environ.copy()
+          env['PYTHONPATH'] = str(repo)
+          env['BOTTE_NN_AUTO_LABELS'] = '0'
+          env['PYTHONIOENCODING'] = 'utf-8'
+          env['PYTHONUTF8'] = '1'
+          commands = [
+              ['-m', 'skills.test_host_resources'],
+              ['scripts/test_odin_codex_queue.py'],
+              ['-m', 'skills.cluster.test_cluster'],
+          ]
+          for command in commands:
+              subprocess.run([sys.executable, *command], cwd=repo, env=env, check=True)
+          if os.name == 'nt':
+              sys.path.insert(0, str(repo))
+              from skills.host_resources import probe_memory
+              sample = probe_memory()
+              assert sample['source'] == 'windows' and sample['commit_required'] is True
+              assert type(sample['total_bytes']) is int and sample['total_bytes'] > 0
+              assert type(sample['available_bytes']) is int and 0 <= sample['available_bytes'] <= sample['total_bytes']
+              assert type(sample['commit_available_bytes']) is int and sample['commit_available_bytes'] >= 0
+              print('Native Windows RAM and commit measurement verified.')
+              parse_script = "$tokens=$null; $errors=$null; [System.Management.Automation.Language.Parser]::ParseFile($env:BOTTE_DIAGNOSTIC_SCRIPT,[ref]$tokens,[ref]$errors) | Out-Null; if ($errors.Count) { $errors | ForEach-Object { Write-Error $_.Message }; exit 1 }; Write-Output 'Windows diagnostic PowerShell syntax verified.'"
+              parse_env = {**env, 'BOTTE_DIAGNOSTIC_SCRIPT': str(repo / 'scripts/diagnose_codex_windows.ps1')}
+              subprocess.run(['pwsh', '-NoProfile', '-NonInteractive', '-Command', parse_script], cwd=repo, env=parse_env, check=True)
       - name: Build and install the runtime and pinned Codex in fresh runner state
         shell: python
         run: |

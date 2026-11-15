@@ -54,6 +54,10 @@ SUITES = [
     ("readme_runner", [sys.executable, "scripts/test_readme_runner_contract.py"], "scripts/"),
     ("odin_codex_queue", [sys.executable, "scripts/test_odin_codex_queue.py"], (
         "scripts/odin_queue/", "scripts/odin_codex_queue.py", "scripts/test_odin_codex_queue.py",
+        "skills/host_resources.py",
+    )),
+    ("host_resources", [sys.executable, "-m", "skills.test_host_resources"], (
+        "skills/host_resources.py", "skills/test_host_resources.py",
     )),
     ("response_cache_exact", [sys.executable, "-m", "skills.response_cache.test_exact"], "skills/response_cache/"),
     ("universal_compressor", [sys.executable, "-m", "skills.universal_compressor.test_universal_compressor"], "skills/universal_compressor/"),
@@ -108,7 +112,9 @@ SUITES = [
     )),
     ("capabilities", [sys.executable, "-m", "skills.capabilities.test_capabilities"], "skills/capabilities/"),
     ("capability_effects", [sys.executable, "-m", "skills.capabilities.test_effects"], "skills/capabilities/"),
-    ("cluster", [sys.executable, "-m", "skills.cluster.test_cluster"], "skills/cluster/"),
+    ("cluster", [sys.executable, "-m", "skills.cluster.test_cluster"], (
+        "skills/cluster/", "skills/host_resources.py",
+    )),
     ("conductor", [sys.executable, "-m", "skills.conductor.test_conductor"], "skills/conductor/"),
     ("conductor_effects", [sys.executable, "-m", "skills.conductor.test_effects"], "skills/conductor/"),
     ("verified_runs", [sys.executable, "-m", "skills.conductor.test_verified"], "skills/conductor/"),

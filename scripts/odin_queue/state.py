@@ -11,6 +11,8 @@ import threading
 import time
 import uuid
 
+from skills.host_resources import HostMemoryGuard
+
 OCCUPIED = {"starting", "running", "waiting_approval", "cancelling", "unknown"}
 TERMINAL = {"completed", "failed", "interrupted", "cancelled"}
 
@@ -27,13 +29,16 @@ class SupervisorLock:
 
     def __enter__(self):
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        self.handle = self.path.open("a+b")
-        self.handle.seek(0)
-        if not self.handle.read(1):
-            self.handle.write(b"0")
-            self.handle.flush()
-        self.handle.seek(0)
+        # Windows refuses even a read of a byte locked by another process.
+        # Initialize once without inspecting the existing owner's locked byte.
         try:
+            with self.path.open("xb") as initial:
+                initial.write(b"0")
+        except FileExistsError:
+            pass
+        self.handle = self.path.open("r+b")
+        try:
+            self.handle.seek(0)
             if os.name == "nt":
                 import msvcrt
                 msvcrt.locking(self.handle.fileno(), msvcrt.LK_NBLCK, 1)
@@ -61,7 +66,8 @@ def overlaps(first, second):
 
 class Queue:
     """The serving process must hold SupervisorLock for this spool's lifetime."""
-    def __init__(self, path, roots, capacity=5, recover=True, mode="simulation"):
+    def __init__(self, path, roots, capacity=5, recover=True, mode="simulation",
+                 memory_guard=None, job_memory_bytes=4 * 1024**3):
         if isinstance(capacity, bool) or not isinstance(capacity, int) or not 1 <= capacity <= 5:
             raise ValueError("La capacité doit être comprise entre 1 et 5.")
         self.path = Path(path)
@@ -69,6 +75,12 @@ class Queue:
         if not self.roots or any(not Path(p).is_dir() for p in self.roots):
             raise ValueError("Définir au moins un dossier de travail existant.")
         self.capacity = capacity
+        if type(job_memory_bytes) is not int or not 0 < job_memory_bytes <= 1024 * 1024**3:
+            raise ValueError("Budget mémoire par défaut invalide.")
+        self.job_memory_bytes = job_memory_bytes
+        self.memory_guard = memory_guard or (HostMemoryGuard() if mode == "codex" else None)
+        self.memory_status = {"enabled": self.memory_guard is not None, "allowed": None,
+                              "reason": "not_checked" if self.memory_guard else "simulation"}
         if mode not in {"simulation", "codex"}:
             raise ValueError("Mode d’exécution invalide.")
         self.lock = threading.RLock()
@@ -82,11 +94,42 @@ class Queue:
                     or any(j.get("status") not in OCCUPIED | TERMINAL | {"queued"} for j in self.data["jobs"])):
                 raise ValueError("Journal de file incompatible ou altéré.")
         self._committed_data = copy.deepcopy(self.data)
+        if self.memory_guard:
+            # Import already occupied work before any new supervisor admission.
+            # Recovery records a debt even if today's free RAM is insufficient.
+            self.memory_guard.retain_many({self.memory_key(j["id"]): j.get("estimated_ram_bytes", self.job_memory_bytes)
+                                           for j in self.data["jobs"]
+                                           if j["status"] in OCCUPIED or j.get("memory_reconciliation_required")})
         if recover and any(j["status"] in OCCUPIED for j in self.data["jobs"]):
             for job in self.data["jobs"]:
                 if job["status"] in OCCUPIED:
                     job.update(status="unknown", pending=[], note="Ancienne exécution à vérifier ; aucun rejeu automatique.")
             self._commit()
+
+    def memory_key(self, job_id):
+        return str(self.path.resolve()) + ":" + job_id
+
+    def check_memory(self, job_id):
+        """Recheck just before each RPC start; unknown work keeps its reservation."""
+        with self.lock:
+            self.ensure_available()
+            job = self._job(job_id)
+            if job["status"] not in OCCUPIED or job["status"] == "unknown":
+                return False
+            if not self.memory_guard:
+                return True
+            result = self.memory_guard.check(self.memory_key(job_id))
+            self.memory_status = {"enabled": True, **result}
+            if not result["allowed"]:
+                self.event(job_id, "unknown", note="Départ suspendu : contrôle mémoire refusé (" + result["reason"] + ").")
+                return False
+            return True
+
+    def _release_memory(self, job_id):
+        if self.memory_guard:
+            # Called only after a durable terminal transition. A failed release
+            # stays conservative and must not permit a second launch.
+            self.memory_guard.release(self.memory_key(job_id))
 
     def ensure_available(self):
         with self.lock:
@@ -131,7 +174,8 @@ class Queue:
                 return job
         raise ValueError("Discussion introuvable.")
 
-    def submit(self, *, title, prompt, cwd, dedupe_key, thread_id=None, audit=False):
+    def submit(self, *, title, prompt, cwd, dedupe_key, thread_id=None, audit=False,
+               estimated_ram_gib=None):
         if (not isinstance(title, str) or not 1 <= len(title.strip()) <= 160
                 or not isinstance(prompt, str) or not 1 <= len(prompt.strip()) <= 32000
                 or not isinstance(dedupe_key, str) or not 1 <= len(dedupe_key) <= 160
@@ -149,6 +193,12 @@ class Queue:
             raise ValueError("Dossier hors des racines autorisées.")
         payload = {"title": title.strip(), "prompt": prompt, "cwd": directory,
                    "thread_id": thread_id, "audit": audit}
+        if estimated_ram_gib is not None:
+            import math
+            if (isinstance(estimated_ram_gib, bool) or not isinstance(estimated_ram_gib, (int, float))
+                    or not math.isfinite(estimated_ram_gib) or not 0.25 <= estimated_ram_gib <= 1024):
+                raise ValueError("Estimation RAM invalide (0,25 à 1024 Gio).")
+            payload["estimated_ram_bytes"] = int(estimated_ram_gib * 1024**3)
         fingerprint = hashlib.sha256(json.dumps(payload, sort_keys=True).encode("utf-8")).hexdigest()
         with self.lock:
             for job in self.data["jobs"]:
@@ -186,8 +236,23 @@ class Queue:
                     job.update(status="failed", note="Dossier disparu ou destination modifiée avant exécution.")
                     self._commit()
                     continue
+                if self.memory_guard:
+                    result = self.memory_guard.reserve(self.memory_key(job["id"]),
+                                                       job.get("estimated_ram_bytes", self.job_memory_bytes))
+                    self.memory_status = {"enabled": True, **result}
+                    if not result["allowed"]:
+                        continue
                 job.update(status="starting", updated_at=time.time())
-                self._commit()
+                try:
+                    self._commit()
+                except QueuePersistenceError:
+                    # No caller can have launched this claim before its return.
+                    # Keep the reservation if the release itself cannot persist.
+                    try:
+                        self._release_memory(job["id"])
+                    except (OSError, ValueError, RuntimeError):
+                        pass
+                    raise
                 return copy.deepcopy(job)
             return None
 
@@ -212,6 +277,9 @@ class Queue:
                 if status not in {"completed", "failed", "interrupted"}:
                     raise ValueError("Statut terminal Codex inconnu.")
                 job.update(status=status, pending=[], note=fields.get("note", ""))
+                if self.memory_guard:
+                    # RPC completion alone cannot prove child/service shutdown.
+                    job["memory_reconciliation_required"] = True
             elif kind == "unknown":
                 job.update(status="unknown", pending=[], note=fields.get("note", "Connexion perdue ; arrêt à vérifier."))
             elif kind == "approval":
@@ -260,9 +328,12 @@ class Queue:
             raise ValueError("Vérifier explicitement l’arrêt de l’ancienne exécution.")
         with self.lock:
             job = self._job(job_id)
-            if job["status"] != "unknown":
-                raise ValueError("Seules les anciennes exécutions inconnues peuvent être réconciliées.")
-            job.update(status="interrupted", note="Arrêt confirmé par le propriétaire ; aucun rejeu.", updated_at=time.time())
+            if job["status"] != "unknown" and not (job["status"] in TERMINAL and job.get("memory_reconciliation_required")):
+                raise ValueError("Aucune exécution ou réservation à réconcilier.")
+            self._release_memory(job_id)
+            if job["status"] == "unknown":
+                job["status"] = "interrupted"
+            job.update(memory_reconciliation_required=False, note="Arrêt confirmé par le propriétaire ; aucun rejeu.", updated_at=time.time())
             self._commit()
 
     def pause(self, paused):
@@ -292,4 +363,5 @@ class Queue:
             return {"schema_version": 1, "revision": self.data["revision"], "capacity": self.capacity,
                     "occupied": len(active), "queued": position, "paused": self.data["paused"],
                     "recovery_required": any(j["status"] == "unknown" for j in active),
+                    "memory": copy.deepcopy(self.memory_status),
                     "roots": self.roots, "jobs": jobs}

@@ -11,6 +11,7 @@
 <label>Titre<input name="title" required maxlength="160" placeholder="Ex. Vérifier les tests StoryCore"></label>
 <label>Dossier de travail<input name="cwd" required list="roots" placeholder="Chemin absolu du dépôt"><datalist id="roots"></datalist></label>
 <label>Travail demandé<textarea name="prompt" required maxlength="32000" rows="4" placeholder="Objectif, limites et résultat attendu"></textarea></label>
+<label>RAM prévue pour ce tour (Gio, facultatif)<input name="estimated_ram_gib" type="number" min="0.25" max="1024" step="0.25" placeholder="Budget du superviseur par défaut"></label>
 <label class="checkbox"><input type="checkbox" name="audit">Audit : terminal en lecture seule</label>
 <label>Discussion Codex existante (facultatif)<input name="thread_id" maxlength="160" placeholder="Identifiant vérifié pour continuer cette discussion"></label>
 <button class="primary" type="submit">Mettre en file</button></form></details>
