@@ -837,8 +837,8 @@ TOOLS = [
                        "an optimal makespan. No model or network calls.",
         "inputSchema": {"type": "object", "properties": {
             "tasks": {"type": "array", "maxItems": 1024, "description": "Task names, 'name:cost' strings, or [name, cost] pairs.",
-                      "items": {"anyOf": [{"type": "string", "maxLength": 512}, {"type": "array", "minItems": 2,
-                                          "maxItems": 2, "prefixItems": [{"type": "string", "maxLength": 256},
+                      "items": {"anyOf": [{"type": "string", "minLength": 1, "maxLength": 512, "pattern": "\\S"}, {"type": "array", "minItems": 2,
+                                          "maxItems": 2, "prefixItems": [{"type": "string", "minLength": 1, "maxLength": 256, "pattern": "\\S"},
                                                                        {"anyOf": [{"type": "number", "minimum": 0}, {"type": "string", "maxLength": 256}]}]}]}},
             "workers": {"type": "array", "minItems": 1, "maxItems": 64, "uniqueItems": True, "items": {"type": "string", "minLength": 1, "maxLength": 256}},
             "strategy": {"type": "string", "enum": ["lpt", "bounded"],

@@ -1,3 +1,10 @@
+# Candidate 1.11.2
+
+The 1.11.1 evidence below is historical and does not validate a 1.11.2
+installation. Qualify the 1.11.2 runtime and plugin from the same final
+source revision, including the native MCP discovery and actual tool calls,
+before claiming a working installation.
+
 # Validation scope for the 1.11.1 delivery
 
 This guide is bundled with the plugin so the standalone marketplace archive

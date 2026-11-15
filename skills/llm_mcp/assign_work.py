@@ -7,6 +7,7 @@ def normalize_tasks(tasks: list) -> list[tuple[str, float]]:
     result = []
     for task in tasks:
         if isinstance(task, str):
+            max_name_length = 512
             if len(task) > 512:
                 raise ValueError("task is too long")
             if ":" in task:
@@ -14,11 +15,14 @@ def normalize_tasks(tasks: list) -> list[tuple[str, float]]:
             else:
                 name, raw_cost = task, 1
         elif isinstance(task, (list, tuple)) and len(task) == 2:
+            max_name_length = 256
             name, raw_cost = task
         else:
             raise ValueError("task must be a name, name:cost, or [name, cost] pair")
-        if not isinstance(name, str) or not name.strip() or len(name) > 256:
+        if not isinstance(name, str) or not name.strip():
             raise ValueError("task name must be a non-empty string")
+        if len(name) > max_name_length:
+            raise ValueError("task name is too long")
         if isinstance(raw_cost, str) and len(raw_cost) > 256:
             raise ValueError("task cost is too long")
         if isinstance(raw_cost, bool):
