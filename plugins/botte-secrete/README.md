@@ -1,21 +1,21 @@
 # Botte Secrète Codex plugin
 
-This version 1.11.1 plugin supplies one workflow skill and an MCP stdio connection.
+This version 1.11.2 plugin supplies one workflow skill and an MCP stdio connection.
 Its executable runtime is installed separately; installing this plugin does not
 install Python, Botte Secrète, optional dependencies, models or credentials.
 
-This package is part of Botte Secrète 1.11.1. Use the runtime wheel and marketplace
+This package is part of Botte Secrète 1.11.2. Use the runtime wheel and marketplace
 from the same official release or full reviewed commit. The delivery manifest
 binds the exact source files, archives and validation reports.
 
 ## Install the official release
 
-Install the 1.11.1 runtime wheel from the GitHub release in a dedicated Python
+Install the 1.11.2 runtime wheel from the GitHub release in a dedicated Python
 environment, and make its botte-mcp command available on Codex's PATH. Register
 the marketplace at the release tag, then install this plugin:
 
 ```sh
-codex plugin marketplace add zedarvates/botte-secrete --ref v1.11.1
+codex plugin marketplace add zedarvates/botte-secrete --ref v1.11.2
 codex plugin add botte-secrete@botte-secrete-marketplace
 ```
 
@@ -155,10 +155,10 @@ Use the documented cachebuster flow below for local iteration.
 
 For local development, update the checkout and replace the plugin manifest's
 build suffix with a new UTC timestamp, such as
-`1.11.1+codex.local-20261031-184516`. Keep the version prefix before `+`; replace
+`1.11.2+codex.local-20261031-184516`. Keep the version prefix before `+`; replace
 an existing suffix instead of appending another one. This changes the local
 Codex cache key without incrementing the release version for each edit. The
-release manifest stays at `1.11.1`.
+release manifest stays at `1.11.2`.
 
 Confirm that the selected marketplace is the local checkout you edited, then
 run `codex plugin add botte-secrete@botte-secrete-marketplace` again. Marketplace

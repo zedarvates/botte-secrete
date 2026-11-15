@@ -3,7 +3,7 @@ name: botte-secrete
 description: Use connected Botte Secrète and Parcimonia for first assessment of research, GitHub/PR review, tool selection, code changes and software or game test planning, and for deterministic statistics, exact file duplicates or local Markdown links. Use without requiring a Botte mention; skip trivial conversation and obvious direct actions. Requires a separately installed compatible runtime.
 license: MIT
 metadata:
-  version: "1.11.1"
+  version: "1.11.2"
 ---
 
 # Botte Secrète local workflow

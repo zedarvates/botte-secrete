@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## v1.11.2 (candidate)
+
+- Bound MCP assignment inputs and keep weighted-cost validation and fallback visible.
+- Reconcile the 1.11.1 release source with the current main branch.
+
 ## v1.11.1 (2026-10-31)
 
 - Advertise the complete MCP catalog in the Codex plugin by setting
