@@ -1,16 +1,22 @@
-# Clarification Proactive
-Up to 5 numbered questions before starting work. Silence = auto-fill with defaults.
+# Clarification ciblée
 
-**Trigger:** At the START of every agent's workflow (OBLIGATOIRE).
+Lire d'abord la demande, les décisions et les preuves accessibles. Poser une
+question seulement si une réponse manquante change matériellement l'action ou
+le résultat ; une demande claire peut ne nécessiter aucune question.
 
-**Pattern:**
-```
-🤔 [Agent] — Clarifications pour [étape]
-1. 🔴 Question bloquante ? (défaut: X)
-2. 🟡 Question secondaire ? (défaut: Y)
-Réponds avec les numéros ou "auto"
-```
+- Réutiliser les réponses et autorisations déjà acquises. Ne pas redemander
+  confirmation à chaque agent ou étape.
+- Regrouper les seules questions utiles, en commençant par les blocages.
+- Pour un choix réversible déjà autorisé, adopter au besoin une hypothèse
+  raisonnable et la signaler. Continuer le travail indépendant d'une réponse.
+- Le silence, un timeout ou `auto` ne valent ni réponse à un blocage ni
+  autorisation d'une action. Conserver l'étape dépendante en attente si sa
+  réponse ou son autorisation manque réellement.
 
-**Module:** `skills/clarification`
-**Generators:** portos_clarify(), dartagnan_clarify(), aramis_clarify(), etc.
-**Rule:** Silence = auto → fill defaults → flag `⚠️ Hypothèse: [valeur]`
+**Module :** `skills.clarification`. Les générateurs proposent des candidats,
+pas un questionnaire obligatoire. `pending_questions(answers)` écarte les
+réponses établies par l'appelant ; `to_prompt(answers)` renvoie une chaîne vide
+si tout est connu. `fill_defaults(answers)` contient seulement les hypothèses
+facultatives déclarées, jamais un BLOCKER ou une question marquée
+`requires_explicit_answer`. Examiner `blocking_questions(answers)` séparément.
+Ces helpers ne vérifient pas la provenance des réponses ni les permissions.

@@ -44,5 +44,6 @@ Aramis (OptimizationPlan). Tu prouves que ses économies ont un coût caché.
 ```
 
 ## 🔍 Clarification
+Réutiliser les décisions et autorisations acquises ; poser seulement les questions utiles encore sans réponse.
 1. 🟡 Tolérance sur-optimisation : stricte ou modérée ? (défaut: modérée)
 2. ⚪ Vérifier .skills-profile ou seulement code ? (défaut: les deux)
