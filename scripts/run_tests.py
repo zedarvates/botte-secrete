@@ -39,6 +39,10 @@ SUITES = [
     ("report_effects", [sys.executable, "-m", "skills.report.test_effects"], "skills/report/"),
     ("prefix_effects", [sys.executable, "-m", "skills.prefix_pruner.test_prefix_effects"], "skills/prefix_"),
     ("e2e", [sys.executable, "skills/test_e2e.py"], ""),
+    ("clarification", [sys.executable, "-m", "skills.clarification.test_clarification"], (
+        "skills/clarification/", "skills/mousquetaires/prompts/athos.md",
+        "skills/mousquetaires/prompts/aramis.md", "skills/cardinal/prompts/rochefort.md",
+    )),
     ("completion_proof", [sys.executable, "-m", "skills.completion_proof.test_completion_proof"], "skills/completion_proof/"),
     ("completion_verify", [sys.executable, "-m", "skills.completion_proof.test_verify"], "skills/completion_proof/"),
     ("factory_assurance", [sys.executable, "-m", "skills.factory_assurance.test_factory_assurance"], "skills/factory_assurance/"),
@@ -56,6 +60,7 @@ SUITES = [
         "scripts/odin_queue/", "scripts/odin_codex_queue.py", "scripts/test_odin_codex_queue.py",
     )),
     ("response_cache_exact", [sys.executable, "-m", "skills.response_cache.test_exact"], "skills/response_cache/"),
+    ("response_cache_lifecycle", [sys.executable, "-m", "skills.response_cache.test_lifecycle"], "skills/response_cache/"),
     ("universal_compressor", [sys.executable, "-m", "skills.universal_compressor.test_universal_compressor"], "skills/universal_compressor/"),
     ("compression_benchmark", [sys.executable, "-m", "skills.universal_compressor.test_benchmark"], "skills/universal_compressor/"),
     ("caveman", [sys.executable, "-m", "skills.caveman.test_caveman"], "skills/caveman/"),
@@ -166,6 +171,14 @@ SUITES = [
     ("harness_executor", [sys.executable, "-m", "skills.local_harness.test_executor"], "skills/local_harness/"),
     ("harness_bench", [sys.executable, "-m", "skills.local_harness.test_bench"], "skills/local_harness/"),
     ("worker_benchmark", [sys.executable, "-m", "skills.local_harness.test_worker_benchmark"], "skills/local_harness/"),
+    ("execution_contracts", [sys.executable, "-m", "skills.execution_harness.test_execution_harness"], (
+        "skills/execution_harness/", "skills/trajectory/", "skills/memory_hub/",
+    )),
+    ("needle2_advisory", [sys.executable, "-m", "skills.tool_router.test_runner"], (
+        "skills/tool_router/", "skills/memory_hub/shared_contract.py", "skills/cli.py",
+        "docs/validation/needle2-study-validation-v1.json",
+        "docs/validation/needle2-study-protocol-v1.json",
+    )),
     ("migration_audit", [sys.executable, "-m", "skills.migration_audit.test_migration_audit"], "skills/migration_audit/"),
     ("memory_quarantine", [sys.executable, "-m", "skills.memory_hub.test_quarantine"], "skills/memory_hub/"),
     ("action_memory", [sys.executable, "-m", "skills.memory_hub.test_action_memory"], "skills/memory_hub/"),

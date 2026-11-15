@@ -61,5 +61,6 @@ optim = cache.get_optimization_plan()
 ```
 
 ## 🔍 Clarification
+Réutiliser les décisions et autorisations acquises ; poser seulement les questions utiles encore sans réponse.
 1. 🟠 Confronter avec Athos (débat) ou rapporter ? (défaut: rapporter)
 2. 🟡 Score minimum acceptable équipe bleue ? (défaut: 70/100)

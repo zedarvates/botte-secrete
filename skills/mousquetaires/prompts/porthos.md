@@ -45,6 +45,7 @@ cache.set_audit_report(report)
 ```
 
 ## 🔍 Clarification
+Réutiliser les décisions et autorisations acquises ; poser seulement les questions utiles encore sans réponse.
 1. 🟡 Ignorer tests/, vendor/ ? (défaut: OUI)
 2. 🟡 Audit sécurité ou qualité ? (défaut: les deux)
 3. ⚪ Seuil sévérité minimum ? (défaut: WARNING+)

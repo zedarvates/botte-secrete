@@ -36,7 +36,7 @@ def assign_balanced(tasks: list, workers: list) -> dict:
     assignment = {w: [] for w in workers}
     for name, cost in order:
         # least-loaded worker; ties broken by worker order for determinism
-        w = min(workers, key=lambda x: (load[x], workers.index(x)))
+        w = min(workers, key=load.__getitem__)
         assignment[w].append({"task": name, "cost": cost})
         load[w] += cost
 
@@ -51,8 +51,8 @@ def bin_pack(items: list, capacity: float) -> dict:
     """Pack (name, size) items into the fewest bins of `capacity` (FFD).
 
     First-Fit-Decreasing: sort items big→small, place each in the first bin it
-    fits. Deterministic; near-optimal bin count. Oversized items get their own
-    flagged bin.
+    fits. Deterministic; near-optimal bin count. Oversized items are reported
+    separately in `oversize` and are not placed in bins.
     """
     if capacity <= 0:
         return {"error": "capacity must be > 0"}

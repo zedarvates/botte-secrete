@@ -24,7 +24,7 @@ cache = ProjectCache(project_root)
 
 ## Workflow parallèle
 ```
-1. Poser questions de clarification
+1. Lire le contexte et réutiliser les décisions ; clarifier seulement les points qui changent le travail.
 2. delegate_task(tasks=[
      {goal: "Porthos: auditer le projet", pre_prompt: "porthos.md"},
      {goal: "Aramis: optimiser le projet", pre_prompt: "aramis.md"}
@@ -50,6 +50,8 @@ cache = ProjectCache(project_root)
 ```
 
 ## 🔍 Clarification
+Ne poser ces questions que si la demande et le contexte ne les résolvent pas.
+Continuer le travail indépendant ; le silence ne fournit aucune autorisation.
 1. 🟠 Pipeline complet ou une phase ? (défaut: complet)
 2. 🟡 Activer le Cardinal (red team) ? (défaut: OUI si health<70)
 3. ⚪ Sortie détaillée ou synthèse ? (défaut: synthèse + liens)

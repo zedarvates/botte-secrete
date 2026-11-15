@@ -3,6 +3,12 @@ name: Public dashboard artifact
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
+    paths:
+      - .github/workflows/dashboard-pages.yml
+      - scripts/run_tests.py
+      - skills/tool_router/test_runner.py
   workflow_dispatch:
   schedule:
     - cron: "17 4 * * 1"
@@ -11,7 +17,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: public-dashboard
+  group: public-dashboard-${{ github.event.pull_request.number || 'main' }}
   cancel-in-progress: true
 
 jobs:
@@ -27,7 +33,7 @@ jobs:
           cache: pip
 
       - name: Install project dependencies
-        run: pip install -e .
+        run: pip install -e '.[memory-test]'
 
       - name: Verify repository
         run: python scripts/run_tests.py -q
@@ -41,7 +47,7 @@ jobs:
           path: _site
 
   deploy:
-    if: vars.BOTTE_ENABLE_PAGES == 'true'
+    if: github.event_name != 'pull_request' && vars.BOTTE_ENABLE_PAGES == 'true'
     needs: build
     runs-on: ubuntu-latest
     permissions:

@@ -1,0 +1,98 @@
+{
+  "schema_version": "botte.needle2-study-validation/v1",
+  "recorded_at": "2026-09-10T05:15:19.364285+00:00",
+  "pilot_source_commit": "1b485183c4e95d483d9a7529fc5b9ee169030873",
+  "frozen_local_commit_before_inference": "17fff9a1cbbb10755ddc2107b30d6c9a0b44128d",
+  "frozen_local_tree": "b2ab6a080566044193d47eb50447a8b804031d24",
+  "refreeze": {
+    "refrozen_at_utc": "2026-09-21T15:56:51.167780+00:00",
+    "reason": "Protocol re-frozen after an unrelated read-only skills/cli.py entry-point change; no study input, split, catalog, threshold or model configuration changed.",
+    "previous_pilot_source_commit": "4be4f8a486500dc7363f0915dc1e5bcf2193aea7",
+    "evidence_reanchored_not_reexecuted": true,
+    "new_inference_attempts": 0
+  },
+  "evidence_sha256": {
+    "docs/validation/needle2-study-protocol-v1.json": "212eaeeb5aa2dc7874e1e887e4ae608cc8c55bf8dc65a1d9120165335a1ee026",
+    "docs/validation/needle2-study-calibration-native-v1.json": "f69c2cb9a5afc7aa7e4e39c42d4e81b08755eb1c551c1456129cf2a74c854c43",
+    "docs/validation/needle2-study-calibration-generalist-v1.json": "aa687677205540d56868741a7f452de551d0ae1afd0662f4049ea280c5ec9fc1",
+    "docs/validation/needle2-study-selection-v1.json": "137bb053489316f064634c2052f84824238890374e873c7dc10747ceef111071",
+    "docs/validation/needle2-study-comparison-v1.json": "87d4071b34b476725e390f8ded65ff4af300e4107757933df3ae7073accb3868",
+    "skills/tool_router/test_needle2_study.py": "650d9bb9b1ff830477c25d80ed1c65fb70ec83b78ae24cdb1c8e5296ec9d3edd",
+    "docs/needle2-calibration-study.md": "c2ee0a1fcbd762e0215971a27270093c32b9719cd5cb1e279d90ada50b603e9d"
+  },
+  "native_needle_case_attempts": 20,
+  "real_generalist_case_attempts": 20,
+  "validation_case_attempts": 0,
+  "runtime_errors": 0,
+  "selection_decision": "stop_insufficient_safe_coverage",
+  "validation_not_run_reason": "predeclared coverage and breadth condition failed on calibration",
+  "generalist": {
+    "repo": "Qwen/Qwen2.5-0.5B-Instruct-GGUF",
+    "revision": "9217f5db79a29953eb74d5343926648285ec7e67",
+    "artifact": "qwen2.5-0.5b-instruct-q8_0.gguf",
+    "weights_sha256": "ca59ca7f13d0e15a8cfa77bd17e65d24f6844b554a7b6c12e07a5f89ff76844e",
+    "weights_bytes": 675710816,
+    "runtime": "ggml-org/llama.cpp b10809",
+    "archive_sha256": "5e34434ddc6d03cd1584f403201aff0d4bd1a5793a72ff7e286532dfd1e4b941",
+    "server_binary_sha256": "07723ae07835bdf11cf0d00d68eb4df8308df0603f689c64c9f841a626cad01d",
+    "hashes_checked_before_execution": true,
+    "cpu_threads": 4,
+    "parallel_slots": 1,
+    "context_tokens": 4096,
+    "gpu_layers": 0,
+    "prompt_cache": false,
+    "weights_loaded_before_requests": true,
+    "server_shutdown_completed": true
+  },
+  "checks": [
+    {
+      "command": "python -m pytest --rootdir=. -q skills/tool_router/test_needle2_study.py skills/tool_router/test_needle2.py skills/tool_router/test_tool_router.py",
+      "passed": 80,
+      "exit_code": 0,
+      "seconds": 1.76,
+      "scope": "fixture and integration tests, not model quality"
+    },
+    {
+      "command": "python -m skills.checkup.cli .",
+      "exit_code": 0,
+      "directives_score": 95,
+      "infra_score": 24,
+      "remaining_limitation": "MCP not wired in this workspace"
+    },
+    {
+      "command": "git diff --check",
+      "exit_code": 0
+    },
+    {
+      "command": "python scripts/check_docs_links.py",
+      "exit_code": 0,
+      "markdown_files": 66,
+      "broken_local_links": 0
+    },
+    {
+      "command": "python scripts/test_readme_commands.py",
+      "exit_code": 0,
+      "passed": 11,
+      "failed": 0,
+      "skipped": 11
+    },
+    {
+      "command": "python scripts/pre-commit-check.py --fast",
+      "exit_code": 0,
+      "staged_python_files": 1
+    }
+  ],
+  "executed": false,
+  "activation_allowed": false,
+  "memory_writes": 0,
+  "tool_calls_executed": 0,
+  "successful_action_ledger_eligible": false,
+  "limitations": [
+    "authored synthetic calibration sample, not independent user-task evaluation",
+    "reserved validation split has not been run",
+    "small 0.5B generalist is not representative of every local model",
+    "different native and HTTP paths; no end-to-end speedup claim",
+    "no homelab or Windows qualification",
+    "no native peak-memory or power measurement"
+  ]
+}

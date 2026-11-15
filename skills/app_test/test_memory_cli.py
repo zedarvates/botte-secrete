@@ -8,6 +8,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from contextlib import closing
 
 from skills.app_test.prioritization import prioritize_checks
 
@@ -53,7 +54,7 @@ class MemoryCliTests(unittest.TestCase):
             second, result = self.call(*args)
             self.assertEqual(second, 0, result)
             self.assertEqual(result["persistence"]["status"], "already_present")
-            with sqlite3.connect(root/"memory"/"demo.sqlite") as conn:
+            with closing(sqlite3.connect(root/"memory"/"demo.sqlite")) as conn:
                 self.assertEqual(conn.execute("SELECT COUNT(*) FROM memory_entries").fetchone()[0], 0)
                 rows = conn.execute("SELECT version,access_count,quarantined,executable_instruction FROM memory_quarantine").fetchall()
                 self.assertEqual(rows, [(1,0,1,0)])

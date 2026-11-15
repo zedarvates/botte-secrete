@@ -8,11 +8,11 @@
     "registry.py": "5b35c77358bf7899d8bc3d2bbaacb5f933a2e18921378bebc7dfab42fa8d5b36",
     "cli.py": "f8eaadf7ef1c670aaaffe42c3ead23947406875c7effa890a8d61d424e80398d",
     "effects.py": "3965c5d1f84f1ca1b932f12944493ffc14e3458062db54f098b5ccbb2741be47",
-    "observations.py": "3f3538ce6f8b342b9c42e13c1560e77b9e350e8dd1f579b567fbc7763643ce97",
+    "observations.py": "99634fb1dbc3b38d05a14731147a8cf59eb439f2e0abe60700ab46bb92037e9f",
     "observation_schema.py": "f346c90c6979d9bab0608d32f08e3b86c39d3dfbcdfe2484118c530fe4e1bbd2",
     "network_observations.py": "c91421fb04df629dafcbe167f83f52336424c6750589854fa39578aefe7239a5",
     "review.py": "587f0c731d65faba80291310a3063d3552253c432f2807cc97c018c7a786cc2c",
-    "evidence.py": "8bf8385424cbfa38eb8df9979cb2398ea1120b94f96be41e383826b0ab4d2d6e"
+    "evidence.py": "8b3264b4622d5b2aeecd96d294ba1e8f9f9cd1dbec614d675d31a2cc8128c5f8"
   },
   "preconditions": [
     "Python 3.10+ and a readable skill tree; local discovery only.",
