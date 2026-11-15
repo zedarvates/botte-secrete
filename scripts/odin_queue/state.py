@@ -28,12 +28,14 @@ class SupervisorLock:
     def __enter__(self):
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self.handle = self.path.open("a+b")
-        self.handle.seek(0)
-        if not self.handle.read(1):
-            self.handle.write(b"0")
-            self.handle.flush()
-        self.handle.seek(0)
         try:
+            # Inspect size without reading a byte held by another Windows
+            # supervisor. Keep initialization failures inside cleanup as well.
+            self.handle.seek(0, os.SEEK_END)
+            if self.handle.tell() == 0:
+                self.handle.write(b"0")
+                self.handle.flush()
+            self.handle.seek(0)
             if os.name == "nt":
                 import msvcrt
                 msvcrt.locking(self.handle.fileno(), msvcrt.LK_NBLCK, 1)

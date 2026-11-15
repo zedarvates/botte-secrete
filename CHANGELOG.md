@@ -2,7 +2,37 @@
 
 ## Unreleased
 
-## v1.11.0 (unreleased)
+## v1.11.1 (2026-10-31)
+
+- Advertise the complete MCP catalog in the Codex plugin by setting
+  `BOTTE_MCP_LAZY_TOOLS=0`. Specialized methods are registered directly in Codex;
+  discovery text is no longer mistaken for native method registration.
+- Verify the actual plugin launch environment and complete pre-call tool catalog
+  in distribution tests; align installed-runtime and Codex host probes with
+  direct specialized calls. Compact runtime mode remains available to other clients.
+
+- Bundle validation-scope and MCP-diagnostic guides inside the Codex plugin;
+  resolve both README links within the standalone marketplace package.
+- Distinguish local delivery preparation, historical candidate qualification,
+  remote publication and runtime installation in the package README.
+- Check that all plugin Markdown links stay inside the distributable plugin.
+- Align runtime and plugin metadata at 1.11.1. See the
+  [corrective delivery notes](docs/releases/1.11.1.md) and accompanying manifest.
+  This preparation performs no publication or active-installation replacement.
+
+## v1.11.0 (2026-10-31, local stable build)
+
+- Serialize persistent cache access across cooperating processes and threads;
+  refresh stale instances, preserve clear/expiry decisions, reject invalid
+  expiration inputs and retain semantic supervision/context fingerprints.
+- Fix Windows report and observation reads after overwrites by comparing ctime
+  only within the same stat API. Keep full before/after mutation checks.
+- Fix Windows supervisor-lock cleanup and portable byte-sensitive fixtures,
+  sandbox subprocesses, path expectations and SQLite test connection cleanup.
+- Include real cache lifecycle/concurrency regressions in the canonical runner.
+- See [local release notes](docs/releases/1.11.0.md) and the delivery manifest
+  for exact artifact hashes and platform-specific validation. The published
+  stable release is unchanged until an explicit publication.
 
 - Connect selective local preflight assessment and project policy to Parcimonia,
   broaden the plugin skill's task triggers, and document candidate installation

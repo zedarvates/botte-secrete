@@ -1,6 +1,6 @@
 {
   "name": "botte-secrete",
-  "version": "1.11.0",
+  "version": "1.11.1",
   "description": "Connect Codex to an independently installed Botte Secrète local runtime for context, routing and evidence workflows.",
   "author": {
     "name": "Zedarvates"

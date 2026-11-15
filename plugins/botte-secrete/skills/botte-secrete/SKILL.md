@@ -3,7 +3,7 @@ name: botte-secrete
 description: Use connected Botte Secrète and Parcimonia for first assessment of research, GitHub/PR review, tool selection, code changes and software or game test planning, and for deterministic statistics, exact file duplicates or local Markdown links. Use without requiring a Botte mention; skip trivial conversation and obvious direct actions. Requires a separately installed compatible runtime.
 license: MIT
 metadata:
-  version: "1.11.0"
+  version: "1.11.1"
 ---
 
 # Botte Secrète local workflow
@@ -22,6 +22,20 @@ metadata:
 4. Report actual results, relevant evidence and remaining prerequisites. Keep
    measured results separate from estimates; no token, price or speed saving is
    established by a helper merely avoiding a model call.
+
+## Native specialized tools in Codex
+
+The official Codex plugin starts `botte-mcp` with `BOTTE_MCP_LAZY_TOOLS=0`.
+Its MCP tools/list advertises the complete runtime catalog and input schemas,
+including compute_statistics, find_file_duplicates and check_local_links.
+Inspect the tools actually offered by Codex and call their native methods
+for the selected operation. Do not launch a separate MCP server or stdio client
+to substitute for a method that the host should expose.
+
+The optional compact mode is for other clients. Its find_tool response is a
+textual discovery aid; it does not register a new method in a host. Use that
+helper only when it is actually offered. Authorization, backend prerequisites
+and input validation remain unchanged; listing a schema executes no tool.
 
 ## Parcimonia first assessment
 

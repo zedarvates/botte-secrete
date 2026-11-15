@@ -27,7 +27,7 @@ class ReviewTests(unittest.TestCase):
                 "---\nname: memory\ndescription: Inspect memory records.\n---\n"
                 f"Read {mode}. Do not delete records.\n"
                 "Prerequisite: the caller supplies the authorized project.\n",
-                encoding="utf-8")
+                encoding="utf-8", newline="\n")
             self.paths.append(str(path))
         self.catalog = finder.load_catalog([self.root])
         self.matches = finder.rank("inspect memory", self.catalog)
@@ -136,7 +136,7 @@ class ReviewTests(unittest.TestCase):
         path = self.root / "skills" / "skill_finder" / "SKILL.md"
         path.parent.mkdir(parents=True)
         body = "---\nname: private_memory\ndescription: Inspect private records.\n---\nPrivate fixture only."
-        path.write_text(body, encoding="utf-8")
+        path.write_text(body, encoding="utf-8", newline="\n")
         previous_directory = Path.cwd()
         try:
             os.chdir(self.root)
