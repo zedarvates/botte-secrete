@@ -1,0 +1,221 @@
+# Botte Secrète capabilities and evidence
+
+[Back to the README](../README.md) · [Français](capabilities.fr.md)
+
+This guide retains the technical detail from the source README. For a published
+release, use its matching source, feature contracts and dated validation.
+
+## Understand and inspect the small models
+
+**You can inspect the code and the micro-NN weights.** Botte's small predictors
+help choose a route or compare an asset with previous examples. Their output
+is a hint; it is not evidence that a task is correct or complete.
+
+| Mechanism | In plain language | What you can inspect |
+|---|---|---|
+| **Micro-NN** — small neural network | A small calculator turns numeric features, such as task complexity, into a category or score. Its learned **weights and biases** are the numbers used in that calculation. It does not generate text. | [JSON weights](../skills/botte_nn/models/), [feature extraction](../skills/botte_nn/features.py), [inference code](../skills/botte_nn/cli.py) and [training code](../skills/botte_nn/training/) |
+| **k-NN** — k-nearest neighbors | Looks for the most similar previously verified examples and uses their outcomes to suggest a result. Asset Quality Memory exposes its neighbors and abstains when support is insufficient. | [Comparison and memory code](../skills/asset_quality/memory.py), [usage contract](../skills/asset_quality/SKILL.md) and [public example](../examples/asset-quality/mesh-report.json) |
+
+For example, a micro-NN may suggest a local route for a simple task. The k-NN
+baseline may compare a mesh report with verified meshes from the same family.
+Deterministic checks and the applicable verification policy remain necessary.
+
+### Public files on Hugging Face
+
+| Public repository | What is actually available |
+|---|---|
+| [Botte Nano-NN](https://huggingface.co/zedgamer/botte-nano-nn) | [Six JSON weight files](https://huggingface.co/zedgamer/botte-nano-nn/tree/main/models), readable in the browser and downloadable; for example [binary_router.json](https://huggingface.co/zedgamer/botte-nano-nn/blob/main/models/binary_router.json). The model card declares MIT. |
+| [Asset Quality Memory k-NN](https://huggingface.co/zedgamer/asset-quality-memory-knn) | [A public model card and source links](https://huggingface.co/zedgamer/asset-quality-memory-knn/tree/main). This k-NN baseline has no neural weight file; its example memory remains project-local and is not published. |
+
+Public access was checked without credentials on **14 September 2026**.
+The Hub's six-file micro-NN snapshot is **not a synchronized copy** of the eleven
+JSON models in this GitHub source tree. Use the weights and feature contracts
+from the same version; consult the [dated inventory](model-transparency-check.json)
+and [publication/provenance rules](huggingface-publication.md).
+
+Open weights make inspection possible; they do not establish accuracy or
+production readiness. Read the [grounding roadmap](plans/2026-08-06_micro-nn-grounding-roadmap.md)
+for validation requirements. The core source is [MIT licensed](../LICENSE); the
+public Hub cards also declare MIT. No private neighbor ledger needs to be shared
+to understand the algorithm.
+
+## Why Botte Secrète?
+
+Agent workflows often spend expensive model tokens on work that does not need a
+large model: classifying a request, selecting a tool, deduplicating logs,
+checking a schema, or recalling an exact result. Botte adds a cheap decision
+layer before the model call.
+
+```mermaid
+flowchart LR
+    A["Agent task"] --> B["Policy and capability discovery"]
+    B --> C{"Cheapest capable path"}
+    C --> D["Rules and deterministic tools"]
+    C --> E["Micro-NN classifiers"]
+    C --> F["Local LLM"]
+    C --> G["Cloud LLM"]
+    D --> H["Verification"]
+    E --> H
+    F --> H
+    G --> H
+    H -->|pass| I["Compact result"]
+    H -->|abstain or fail| C
+```
+
+The default principle is simple: **use the least expensive path that can be
+verified**. Local does not mean trusted; model output still passes through
+structured checks, evidence checks, or an explicit escalation path.
+
+## What it includes
+
+| Area | What it does | Entry point |
+|---|---|---|
+| Routing | Chooses deterministic, local, or cloud execution | `botte route` |
+| Quality memory | Learns from verified outcomes and explains shadow k-NN advice | `botte qa` |
+| Asset quality | Gates and compares images, textures, meshes, animations, and Godot packages | `botte asset-qa` |
+| Project checkup | Audits policy, directives, metrics, security, and drift | `botte doctor` |
+| Context reduction | Compresses logs, JSON, tool output, and selected context | `universal_compressor`, `context_budget` |
+| Micro-NN belt | Runs tiny classifiers for routing hints; these are not LLMs | `botte belt` |
+| Local models | Discovers OpenAI-compatible local backends such as LM Studio or Ollama | `llm_backends` |
+| Adaptive local runtime | Configures task-specific engine profiles and reuses shared or external memory | `botte runtime` |
+| MCP | Exposes routing, discovery, audit, and optimization tools over stdio | `botte-mcp` |
+| Dashboard | Renders public-safe snapshots and local operational views | `botte dashboard` |
+| Strategic outsider | Challenges assumptions shared by blue and red teams before costly decisions | `monte_cristo` |
+
+Detailed module contracts live in each `skills/<name>/SKILL.md`. Cross-module
+flows and trust boundaries are described in the
+[architecture guide](ARCHITECTURE.md).
+
+## Configure Botte with your own LLM
+
+For an installation tailored by **your own LLM**, use the
+[portable runtime setup guide](adaptive-local-runtime.md). It provides a
+copyable agent instruction, offline hardware/configuration tools, shared and
+external memory adapters, and paired trials of preconfigured native engines.
+Draft templates make no hardware, engine-support or speedup assumptions.
+
+```bash
+botte runtime inspect
+botte runtime template --topology single --memory none
+```
+
+## Strategic agent: Monte Cristo
+
+**Monte Cristo is Botte Secrète's independent, read-only strategic outsider.**
+Blue-team agents improve a system and red-team agents challenge it; Monte Cristo
+steps above both when they may share the same inherited assumptions.
+
+![Monte Cristo strategic governance flow](assets/monte-cristo-governance.svg)
+
+_Maintained governance schema; it explains authority and approval boundaries,
+not a runtime trace._
+
+Use it before an expensive architecture reset, research commitment, migration,
+or decision shaped by sunk cost. Do not use it for routine code review or a
+narrow verified fix. It returns bounded `KEEP`, `REPAIR`, `REPLACE`, `RETIRE`,
+or `INVESTIGATE` proposals with evidence and a validation gate. It cannot edit,
+deploy, purchase, publish, or execute its recommendations; consequential moves
+require human approval and a separate implementation agent.
+
+![Monte Cristo route decision emitted by the bundled CLI](assets/monte-cristo-cli.svg)
+
+_Reproducible CLI capture from the bundled deterministic offline route evaluator;
+it demonstrates activation wiring, not the quality of open-ended verdicts._
+
+```bash
+python -m skills.monte_cristo.cli route "Should we replace this inherited architecture?" --material --pretty
+python -m skills.monte_cristo.cli template "Reassess the platform direction" --pretty
+python -m skills.monte_cristo.cli eval --pretty
+```
+
+Read the [agent definition](../agents/monte-cristo.md), the
+[usage guide](../skills/monte_cristo/README.md), and the
+[validated report contract](../skills/monte_cristo/report.schema.json).
+
+## Measured benchmark
+
+The bundled benchmark exercises compression, pruning, context selection, and
+the micro-NN belt on a fixed synthetic corpus. It is a regression benchmark,
+not a promise for every repository or workload.
+
+Micro-NN activation follows the
+[grounding roadmap](plans/2026-08-06_micro-nn-grounding-roadmap.md): no new
+model is activated while an existing predictor still lacks an auditable label
+source, production verdicts, calibration, and rollback gate. Run `checkup` or
+`python -m skills.nn_audit.cli skills/botte_nn --json` for the current status.
+
+Asset Factory integrations can use the separate [Asset Quality Memory](../skills/asset_quality/SKILL.md):
+deterministic integrity and licence gates run first, then a family-isolated,
+explainable k-NN baseline advises in shadow mode. The bundled
+[mesh report](../examples/asset-quality/mesh-report.json) is a complete input
+example. No raw asset bytes or local paths enter its verified memory.
+
+The existing MIT-licensed
+[Botte Nano-NN repository on Hugging Face](https://huggingface.co/zedgamer/botte-nano-nn)
+hosts a portable snapshot of the micro-NN format. Its source, feature contracts,
+tests, and maturity status remain authoritative here. Weight publication is
+blocked unless the [offline Hub provenance gate](../skills/hf_provenance/SKILL.md)
+finds a complete, grounded, SHA-256-identical inventory. The separate
+[Asset Quality Memory k-NN repository on Hugging Face](https://huggingface.co/zedgamer/asset-quality-memory-knn)
+documents the shadow-only baseline; private neighbor ledgers stay local. See the
+[publication checklist](huggingface-publication.md).
+
+![Measured reduction on bundled samples](assets/benchmark-compression.svg)
+
+_Measured on the bundled synthetic samples; results vary with content. See the
+[visual provenance and regeneration notes](screenshots-plan.md)._
+
+Reproduce both the benchmark chart and the routing capture:
+
+```bash
+python scripts/generate_docs_visuals.py
+python scripts/benchmark_full.py --json
+```
+
+Code is returned unchanged. JSON compaction preserves every value; logs retain
+distinct lines and their order. Sizes are UTF-8 bytes, not billed tokens.
+Reversible originals live only in the current process, until it exits or its
+store is cleared. The CLI does not provide durable restoration.
+
+```bash
+python -m skills.universal_compressor.cli compress /path/to/file.log --type log
+```
+
+See the [compression integrity and comparison protocol](plans/2026-09-13-compression-integrity.md).
+
+## Architecture at a glance
+
+```mermaid
+flowchart TB
+    Agent["Coding agent or automation"] --> MCP["Botte CLI / MCP tool plane"]
+    MCP --> Policy["Policy, budget, and safety gates"]
+    Policy --> Discover["Capabilities and skill discovery"]
+    Discover --> Route["Router and micro-NN hints"]
+    Route --> Execute["Deterministic tools, local models, or cloud providers"]
+    Execute --> Verify["Harness and structured verification"]
+    Verify --> Observe["Events, metrics, cache, and dashboard"]
+    Observe -. feedback .-> Route
+
+    Target["Target project"] <--> MCP
+    Local["Local model server"] <--> Execute
+    Cloud["Optional cloud provider"] <--> Execute
+```
+
+Botte does not own the coding agent, target repository, model server, or cloud
+provider. See the [architecture guide](ARCHITECTURE.md) for data flow,
+trust boundaries, and authoritative modules.
+
+## Safety and system impact
+
+| Surface | Default behavior |
+|---|---|
+| Network | No network call for deterministic workflows; model and `--fresh` operations are explicit |
+| Telemetry | No product analytics or phone-home telemetry |
+| Services | No daemon, startup entry, `sudo`, or scheduled task installed by default |
+| Target projects | Bootstrap merges MCP configuration without replacing unrelated servers |
+| Local event data | Stored under the target project's `.botte/` when the feature is used |
+| Fleet view | Opt-in registry; no filesystem-wide discovery |
+| Cloud credentials | Read from the environment by provider adapters; never required for local workflows |
+
+Report vulnerabilities privately as described in [SECURITY.md](../SECURITY.md).
+
