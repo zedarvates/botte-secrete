@@ -97,6 +97,16 @@ class AssessmentTests(unittest.TestCase):
             with self.subTest(task=task):
                 self.assertEqual(assess_task(task)["intent"], expected)
 
+    def test_french_repair_requests_are_code_work(self):
+        for task in ("Corrigez les tests", "Réparez les tests", "Répare le module", "Réparer le module"):
+            with self.subTest(task=task):
+                self.assertEqual(assess_task(task)["intent"], "code_work")
+
+    def test_explicit_french_repair_after_github_search_requires_review(self):
+        result = assess_task("Cherche les PR GitHub puis réparez les tests")
+        self.assertEqual(result["status"], "abstained")
+        self.assertIn("code_work", result["detected_intents"])
+
     def test_unknown_or_multiple_workflows_abstain(self):
         for task in ("Bonjour", "Fix code and translate the document", "Create a game"):
             with self.subTest(task=task):

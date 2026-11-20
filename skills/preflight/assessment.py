@@ -16,6 +16,8 @@ MAX_TOOLS = 64
 MAX_SHORTLIST = 5
 MAX_BUDGET = 16_000
 _NAME = re.compile(r"[A-Za-z0-9_.:/-]{1,160}\Z")
+_FRENCH_REPAIR = r"corrige[rz]?|repare[rz]?"
+_CODE_CHANGE = rf"debug|debugger|compile|compiler|build|refactor|refactoriser|bug|fix|{_FRENCH_REPAIR}"
 
 _RULES = {
     "local_links": r"\b(links?|liens?|references?)\b",
@@ -24,7 +26,7 @@ _RULES = {
     "github_research": r"\b(github|pull requests?|prs?)\b",
     "software_testing": r"\b(tests?|testing|pytest|unittest|regression|regressions|tester|teste|testez)\b",
     "game_playtest": r"\b(playtest|playtests|gameplay|jeux?|games?|jouable|jouer|jeu video|video game)\b",
-    "code_work": r"\b(code|debug|debugger|compile|compiler|build|refactor|refactoriser|bug|corrige|corriger|fix)\b",
+    "code_work": rf"\b(?:code|{_CODE_CHANGE})\b",
     "content_transform": r"\b(summarize|summarise|resume|resumer|translate|traduire|traduis|format|reformat|reformater|compress|compresser|extract|extraire|convert|convertir)\b",
     "read_analysis": r"\b(read|lire|lis|analyze|analyse|analyser|inspect|inspecter|evaluate|evaluer|audit|review|recherche|rechercher|search|find)\b",
 }
@@ -87,7 +89,7 @@ def _github_subject_labels(normalized: str, labels: list[str]) -> tuple[list[str
         return labels, False
     commands = {
         "software_testing": r"(?:run|rerun|execute|launch|start|perform|carry out|test|tester|teste|testez|executer|execute|lancer|lance|lancez|relancer|relance|effectuer|effectue|effectuez|faire|fais|faites|passer|passe|passez|realiser|realise|realisez|running|executing|testing)\b",
-        "code_work": r"(?:fix|debug|compile|build|refactor|change|modify|patch|correct|repair|corriger|corrige|corrigez|compiler|refactoriser|debugger|modifier|modifie|modifiez|changer|changez|reparer|repare|reparez|fixing|debugging|compiling|building|refactoring|changing|modifying|patching|correcting|repairing)\b",
+        "code_work": rf"(?:fix|debug|compile|build|refactor|change|modify|patch|correct|repair|{_FRENCH_REPAIR}|compiler|refactoriser|debugger|modifier|modifie|modifiez|changer|changez|fixing|debugging|compiling|building|refactoring|changing|modifying|patching|correcting|repairing)\b",
     }
     subjects = {
         "software_testing": r"test\s+(?:results?|failures?|errors?|regressions?|coverage|logs?|reports?)\b",
@@ -133,7 +135,7 @@ def _task_labels(task: str) -> tuple[list[str], list[str]]:
         fuzzy_request = re.search(r"\b(similar|similarity|semblables?|similaires?|ressemblance|approximate|approximatifs?)\b", normalized)
         if not searching or not file_scope or fuzzy_request:
             labels.remove("file_duplicates")
-        elif "code_work" in labels and not re.search(r"\b(debug|debugger|compile|compiler|build|refactor|refactoriser|bug|corrige|corriger|fix)\b", normalized):
+        elif "code_work" in labels and not re.search(rf"\b(?:{_CODE_CHANGE})\b", normalized):
             labels.remove("code_work")
     if "statistics" in labels:
         calculating = re.search(r"\b(calculate|calculates|calculating|compute|computes|computing|calcul|calculer|calcule|calculez|determiner)\b|\b(mean|median|moyenne|mediane)\s+(of|de|des)\b", normalized)
@@ -163,7 +165,7 @@ def _task_labels(task: str) -> tuple[list[str], list[str]]:
     if "game_playtest" in labels and "software_testing" in labels:
         labels.remove("software_testing")
     if "software_testing" in labels and "code_work" in labels:
-        change_requested = re.search(r"\b(debug|debugger|compile|compiler|build|refactor|refactoriser|bug|corrige|corriger|fix)\b", normalized)
+        change_requested = re.search(rf"\b(?:{_CODE_CHANGE})\b", normalized)
         labels.remove("software_testing" if change_requested else "code_work")
     return labels, reasons
 

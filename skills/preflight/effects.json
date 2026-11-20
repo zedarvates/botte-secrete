@@ -6,7 +6,7 @@
     "SKILL.md": "e02020df92fdf0b44fb659784e70a521c5d73abc0c37f0731342b8f908071870",
     "hook.py": "0e6c6d12f8a75d2cbc4f82f71e05b50fc437266198b24bf02eef18d8a199c61a",
     "policy.py": "842d86bcfd516df035162dc4bfadac29e74cd0b49229ccc600df9e4ff4d700b0",
-    "assessment.py": "c9bec4cc5e5acf1e7aa7eaac86ce4692442cdb866f383f7ce904d35ad024c503"
+    "assessment.py": "fe275cc8b1925c1a3fde33a555e3d6e1c6ada0130424e9cb4cd658d0dd939f61"
   },
   "preconditions": [
     "Distinguish the read-only prompt hook from installation or policy-authoring operations that write project files.",
