@@ -80,6 +80,48 @@ optional `botte bootstrap /path/to/your-project` command writes project-local
 configuration and reports under `.botte/`, preserving unrelated MCP servers.
 Keep machine-specific configuration out of version control.
 
+## Automatic assessment with a Codex hook
+
+For automatic assessment at prompt submission, configure a lifecycle hook in
+your agent host (harness). You can still call the tools manually. Installing the
+plugin connects the tools and supplies workflow instructions.
+
+1. Use a reviewed Botte Secrète source checkout with Python 3.10+. In the project
+   you want to automate, merge this example into `.codex/hooks.json`. Replace the
+   example paths with absolute paths to that checkout and use the Python command
+   available to Codex.
+
+```json
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -X utf8 /opt/botte-secrete/skills/preflight/hook.py",
+            "commandWindows": "python -X utf8 C:/tools/botte-secrete/skills/preflight/hook.py",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+2. Open the trusted project in local Codex, then review and trust the hook via
+   `/hooks` in the CLI or **Settings → Hooks** in the desktop app.
+3. Submit `Run the pytest suite` and inspect the hook result for
+   `[botte preflight] Parcimonia: software_testing`. The handler assesses the
+   prompt locally and returns advisory context. Codex still decides whether to
+   use a tool under the session's permissions.
+
+For another harness, register its equivalent prompt-submission event, adapt
+the input and output contract, and test it in that host. The JSON above targets
+local Codex. [Codex hook configuration](https://learn.chatgpt.com/docs/hooks).
+
+
 ## Adapt Botte Secrète to your own use
 
 I recommend asking your AI assistant (your “superintelligence”) to study this

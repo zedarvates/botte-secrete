@@ -42,9 +42,10 @@ The plugin's skill metadata now covers these work types without requiring a
 Botte mention. Project guidance uses the same first-assessment rule. The local
 preflight hook performs a selective assessment itself and supplies bounded
 guidance; the host should reuse it rather than repeat the classification.
-Trivial requests emit no hook context. This hook is integrated with Claude Code,
-not Codex or Work cloud; those surfaces use available skills/tools and host
-selection. No package can guarantee that a host will choose a skill every turn.
+Trivial requests emit no hook context. Claude Code has its own wiring. Local
+Codex can run the same handler through an explicitly configured project hook.
+Work cloud uses the tools and instructions available to its host. See the
+[Codex hook example](../README.md#automatic-assessment-with-a-codex-hook).
 
 Inputs: task at most 16 KiB UTF-8, at most 64 tool records, each description at
 most 2 KiB, budget 0–16000 estimated metadata tokens. The estimate uses character
@@ -181,7 +182,7 @@ New users receive instructions through committed and packaged entry points:
 | Repository `AGENTS.md` | Links the committed `.botte/policy.md` before substantive work |
 | `skills.preflight.policy.DEFAULT_POLICY` | Writes the same Parcimonia section into a new project's `.botte/policy.md` |
 | Bootstrap `--create-agents-md` | Creates a missing `AGENTS.md`, links an existing `CLAUDE.md` when present, and points to the policy |
-| `skills.preflight.hook` | Runs selective local advisory assessment on Claude Code `UserPromptSubmit`; executes no selected tool |
+| `skills.preflight.hook` | Runs selective local advisory assessment on `UserPromptSubmit` when wired in Claude Code or local Codex |
 | Codex plugin `skills/botte-secrete/SKILL.md` | Carries self-contained assessment, reuse and fallback instructions inside the installable subset |
 
 The bootstrap retains existing policy and instruction files. Merge new guidance
