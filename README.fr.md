@@ -83,6 +83,49 @@ La commande facultative `botte bootstrap /path/to/your-project` écrit la
 configuration et les rapports du projet sous `.botte/`, en conservant les
 serveurs MCP sans rapport. Ne versionnez pas la configuration propre à la machine.
 
+## Évaluation automatique avec un hook Codex
+
+Pour lancer l’évaluation automatiquement à l’envoi d’une demande, configurez
+un hook dans l’environnement qui pilote l’agent (le *harness*). L’appel manuel
+des outils reste possible. Le plugin connecte les outils et fournit des consignes
+de travail.
+
+1. Utilisez une copie relue des sources de Botte Secrète et Python 3.10 ou plus
+   récent. Dans le projet à automatiser, fusionnez cet exemple dans
+   `.codex/hooks.json`. Remplacez les chemins d’exemple par les chemins absolus
+   vers cette copie et utilisez la commande Python accessible à Codex.
+
+```json
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -X utf8 /opt/botte-secrete/skills/preflight/hook.py",
+            "commandWindows": "python -X utf8 C:/tools/botte-secrete/skills/preflight/hook.py",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+2. Ouvrez le projet de confiance dans Codex local, puis examinez et approuvez le
+   hook via `/hooks` dans le terminal ou **Paramètres → Hooks** dans l’application.
+3. Envoyez `Lance les tests pytest` et cherchez
+   `[botte preflight] Parcimonia: software_testing` dans le résultat du hook.
+   Le script évalue la demande localement et fournit un avis. Codex décide
+   ensuite s’il faut appeler un outil selon les permissions de la session.
+
+Pour un autre harness, enregistrez l’événement équivalent à l’envoi d’une demande,
+adaptez le format d’entrée et de sortie, puis testez dans cet environnement.
+Le JSON ci-dessus cible Codex local. [Configuration des hooks Codex](https://learn.chatgpt.com/docs/hooks).
+
+
 ## Adaptez Botte Secrète à vos usages
 
 Je vous conseille de demander à votre assistant IA (votre « super intelligence »)
