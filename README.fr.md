@@ -90,10 +90,10 @@ un hook dans l’environnement qui pilote l’agent (le *harness*). L’appel ma
 des outils reste possible. Le plugin connecte les outils et fournit des consignes
 de travail.
 
-1. Utilisez une copie relue des sources de Botte Secrète et Python 3.10 ou plus
-   récent. Dans le projet à automatiser, fusionnez cet exemple dans
-   `.codex/hooks.json`. Remplacez les chemins d’exemple par les chemins absolus
-   vers cette copie et utilisez la commande Python accessible à Codex.
+1. Utilisez Python 3.10 ou plus récent et une copie relue de Botte Secrète qui
+   prend en charge `hook.py --codex`. Dans le projet à automatiser, fusionnez cet
+   exemple dans `.codex/hooks.json`. Utilisez les chemins absolus de cette copie
+   et la commande Python accessible à Codex.
 
 ```json
 {
@@ -103,8 +103,8 @@ de travail.
         "hooks": [
           {
             "type": "command",
-            "command": "python3 -X utf8 /opt/botte-secrete/skills/preflight/hook.py",
-            "commandWindows": "python -X utf8 C:/tools/botte-secrete/skills/preflight/hook.py",
+            "command": "python3 -X utf8 /opt/botte-secrete/skills/preflight/hook.py --codex",
+            "commandWindows": "python -X utf8 C:/tools/botte-secrete/skills/preflight/hook.py --codex",
             "timeout": 5
           }
         ]

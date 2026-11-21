@@ -1,10 +1,10 @@
 {
   "schema": "botte.capability-effects/v1",
   "capability_id": "zedarvates/botte-secrete:skills/preflight",
-  "contract_version": "0.2.0",
+  "contract_version": "0.3.0",
   "source_hashes": {
     "SKILL.md": "e02020df92fdf0b44fb659784e70a521c5d73abc0c37f0731342b8f908071870",
-    "hook.py": "23c46b0dfe14059573f7313e8e1b274edd4e1dc4da7c0975449166dcdf129d43",
+    "hook.py": "0e6c6d12f8a75d2cbc4f82f71e05b50fc437266198b24bf02eef18d8a199c61a",
     "policy.py": "842d86bcfd516df035162dc4bfadac29e74cd0b49229ccc600df9e4ff4d700b0",
     "assessment.py": "c9bec4cc5e5acf1e7aa7eaac86ce4692442cdb866f383f7ce904d35ad024c503"
   },
@@ -17,11 +17,11 @@
   "expected_effects": [
     {
       "effect": "Read a bounded submitted prompt and project path, assess supported work locally, and selectively emit advisory preflight context to stdout.",
-      "scope": "Accepted prompt/event text, local Botte/project skill metadata and the current Claude Code hook context receiving stdout; no model, network request or tool execution occurs in this path.",
+      "scope": "Accepted prompt/event text, local Botte/project skill metadata and the receiving Claude Code or local Codex hook context. This path makes no model or network calls and launches no tools.",
       "likelihood": "conditional",
-      "basis": "hook.py accepts bounded JSON events or plain prompts and calls assessment.assess_task. Unsupported, trivial, negated, malformed or oversized work emits no context; a detected mixed workflow may emit an abstention notice. Supported intents receive bounded specific guidance, with optional filtered skill-name hints except for GitHub research. Hook errors leave the prompt unblocked.",
+      "basis": "hook.py accepts bounded JSON events or plain prompts and calls assessment.assess_task. Unsupported, trivial, negated, malformed or oversized work emits no context. A detected mixed workflow may emit an abstention notice. Supported intents receive bounded specific guidance, with optional filtered skill-name hints except for GitHub research. The default renders plain text and --codex wraps the same context in UserPromptSubmit JSON. Hook errors leave the prompt unblocked.",
       "impact": "Adds task-specific advice and possible skill names to the receiving model context. It consumes local CPU/I/O and host context, while availability, authorization, timing and savings remain unverified.",
-      "verification": "Use fixed prompt/cwd fixtures for supported calculations, duplicates, local links and GitHub work, mixed/negated work, malformed events and failures. Assert specific evidence guidance survives, output bounds and exit zero hold, and no project writes, process launch or network calls occur."
+      "verification": "Use fixed prompt/cwd fixtures for supported calculations, duplicates, local links and GitHub work, mixed/negated work, malformed events and failures. Verify bounded context, exit zero, no project writes, process launch or network calls, and correct Codex JSON or empty output with --codex."
     },
     {
       "effect": "Create a default .botte/policy.md when policy.write_default is called and no policy exists, or replace it only when overwrite is explicitly requested.",
@@ -45,7 +45,7 @@
       "effect": "Future agents may choose local tools, improve prompts or run checkups because injected or committed policy guidance remains in their context.",
       "scope": "Later task routing, model/tool selection, token use and project maintenance decisions.",
       "likelihood": "plausible",
-      "basis": "The existing Claude Code hook emits guidance selectively; separately committed policy and instruction pointers persist. The consuming host must load them and choose actions; no instruction is installed into an unsupported host by this hook.",
+      "basis": "Claude Code and local Codex can receive selective guidance when their hooks are configured. Separately committed policy and instruction pointers persist. The consuming host loads them and chooses actions.",
       "impact": "Guidance may influence routing, but lexical matches and repeated instructions do not establish suitability, tool availability, fewer tokens or better results. Stale or over-broad guidance can bias later choices.",
       "verification": "Compare a fixed set of representative tasks with and without the preflight context; record selected routes, task quality, total cost and abstentions rather than assuming the policy helped."
     },
@@ -78,7 +78,7 @@
       "The declaration does not bind bootstrap/deployer code that may wire the hook into harness settings, so installation-side writes must be assessed separately.",
       "The actual local model/tool availability and quality are runtime properties not verified by this skill.",
       "The hook intentionally swallows exceptions; absence of injected context can therefore look like ordinary success unless the caller verifies stdout when that distinction matters.",
-      "Skill-finder ranking is an imported dependency outside these source hashes. Matching metadata does not validate a capability, and this Claude Code hook does not provide a Codex/Work-cloud lifecycle adapter."
+      "Skill-finder ranking is an imported dependency outside these source hashes. Matching metadata does not validate a capability. The --codex response mode targets local Codex; cloud lifecycle wiring needs separate verification."
     ],
     "evidence_refs": [
       "hook.py:_read_input",

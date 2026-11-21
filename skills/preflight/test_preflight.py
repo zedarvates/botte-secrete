@@ -180,6 +180,22 @@ class PreflightTests(unittest.TestCase):
                     self.assertEqual(result.stdout, "")
                 self.assertLessEqual(len(result.stdout.encode("utf-8")), hook.MAX_CONTEXT_BYTES)
 
+    def test_codex_cli_returns_native_json_or_no_output(self):
+        command = [sys.executable, "-X", "utf8", str(ROOT / "skills/preflight/hook.py"), "--codex"]
+        for prompt, expected in (("Lance les tests pytest", "software_testing"), ("Bonjour", "")):
+            with self.subTest(prompt=prompt):
+                event = {"hook_event_name": "UserPromptSubmit", "cwd": str(ROOT), "prompt": prompt}
+                result = subprocess.run(command, cwd=ROOT.parent, input=json.dumps(event),
+                                        capture_output=True, text=True, encoding="utf-8", timeout=10)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(result.stderr, "")
+                if expected:
+                    output = json.loads(result.stdout)["hookSpecificOutput"]
+                    self.assertEqual(output["hookEventName"], "UserPromptSubmit")
+                    self.assertIn(f"Parcimonia: {expected}", output["additionalContext"])
+                else:
+                    self.assertEqual(result.stdout, "")
+
     def test_missing_assessment_module_cannot_break_hook_startup(self):
         code = """import io, json, sys
 sys.modules['skills.preflight.assessment'] = None
