@@ -43,7 +43,8 @@ Botte mention. Project guidance uses the same first-assessment rule. The local
 preflight hook performs a selective assessment itself and supplies bounded
 guidance; the host should reuse it rather than repeat the classification.
 Trivial requests emit no hook context. Claude Code has its own wiring. Local
-Codex can run the same handler through an explicitly configured project hook.
+Codex can run the same handler with `--codex`, which wraps its context in the
+JSON response for `UserPromptSubmit`.
 Work cloud uses the tools and instructions available to its host. See the
 [Codex hook example](../README.md#automatic-assessment-with-a-codex-hook).
 

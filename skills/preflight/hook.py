@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Selective local Parcimonia assessment for Claude Code's prompt hook.
+"""Selective local Parcimonia assessment for user prompt hooks.
 
 Read a bounded UserPromptSubmit event (or a plain prompt) from stdin. Assess it
 without a model, network call or tool execution, and emit short advisory context
 only for supported work or a detected mixed workflow. Unknown and trivial
 prompts emit nothing. Any failure leaves the user's prompt unblocked.
 
-This is the existing Claude Code hook, not a Codex/Work-cloud lifecycle hook.
+Plain text is the default for Claude Code. Use --codex for Codex's JSON response.
 """
 
 from __future__ import annotations
@@ -117,11 +117,16 @@ def build_context(prompt: str, project: Path) -> str:
         return ""
 
 
-def main() -> int:
+def main(*, codex: bool = False) -> int:
     try:
         prompt, cwd = _read_input()
         context = build_context(prompt, cwd) if prompt else ""
         if context:
+            if codex:
+                context = json.dumps({"hookSpecificOutput": {
+                    "hookEventName": "UserPromptSubmit",
+                    "additionalContext": context,
+                }})
             sys.stdout.write(context + "\n")
     except Exception:
         # A failed hook must never block the user's prompt.
@@ -130,4 +135,4 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    raise SystemExit(main(codex="--codex" in sys.argv[1:]))
